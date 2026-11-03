@@ -138,3 +138,19 @@
 | Modal Thiết Lập Thông Báo Hệ Thống | [`NotificationSettingsModal.tsx`](file:///d:/SmartParkingHub/smart-parking-app-v2/src/features/profile/components/NotificationSettingsModal.tsx) | Notification Settings API | **New Feature (SMS slot, Push App, Email XML+PDF)** |
 | Modal Cập Nhật Ảnh Định Danh eKYC | [`AvatarUploadModal.tsx`](file:///d:/SmartParkingHub/smart-parking-app-v2/src/features/profile/components/AvatarUploadModal.tsx) | Avatar Storage API | **New Feature (Preview trực quan, AI OCR scanner)** |
 | Shimmer Loading Placeholder | [`ProfileSkeleton.tsx`](file:///d:/SmartParkingHub/smart-parking-app-v2/src/features/profile/components/ProfileSkeleton.tsx) | — | **Preserved (Zero-layout-shift placeholder)** |
+
+---
+
+## 10. SCR-022 Driver Change Password & Security Hub (Đổi mật khẩu bảo mật tài khoản)
+| Thành phần giao diện / Khối chức năng | File triển khai v2 | Tương ứng Backend Microservice | Trạng thái Parity / Cải tiến |
+|---|---|---|---|
+| Command Header, Fretrix Ticker & Badge 95 ngày | [`ChangePasswordCommandHeader.tsx`](file:///d:/SmartParkingHub/smart-parking-app-v2/src/features/change-password/components/ChangePasswordCommandHeader.tsx) | `ROLE_DRIVER` | **Enhanced (Fretrix Protocol v4.2 & Commercial Truck)** |
+| Sidebar Điều Hướng & 3 Quy Tắc An Ninh Fretrix | [`SecurityPolicySidebar.tsx`](file:///d:/SmartParkingHub/smart-parking-app-v2/src/features/change-password/components/SecurityPolicySidebar.tsx) | Security Rules | **New Feature (3 quy chuẩn Fretrix & Hotline 24/7)** |
+| Quản Lý Trạng Thái 02 Thiết Bị Kích Hoạt | [`SecurityPolicySidebar.tsx`](file:///d:/SmartParkingHub/smart-parking-app-v2/src/features/change-password/components/SecurityPolicySidebar.tsx) | Device Audit API | **New Feature (Samsung S23 Ultra & Tablet Cabin 51D)** |
+| Form Nhập Liệu 3 Trường Ẩn/Hiện Ký Tự | [`ChangePasswordForm.tsx`](file:///d:/SmartParkingHub/smart-parking-app-v2/src/features/change-password/components/ChangePasswordForm.tsx) | `POST /api/v1/users/me/password` | **Preserved & Enhanced (Lock icons, toggle eye buttons)** |
+| Thước Đo Độ Mạnh Mật Khẩu (4 Bars & Checklist 2x2) | [`PasswordStrengthMeter.tsx`](file:///d:/SmartParkingHub/smart-parking-app-v2/src/features/change-password/components/PasswordStrengthMeter.tsx) | Realtime Validator | **New Feature (Yếu / TB / Khá / Mạnh Chuẩn Fretrix)** |
+| Phản Hồi Khớp Mật Khẩu Thời Gian Thực | [`ChangePasswordForm.tsx`](file:///d:/SmartParkingHub/smart-parking-app-v2/src/features/change-password/components/ChangePasswordForm.tsx) | Client Matcher | **Enhanced (Thông báo khớp 100% / chưa trùng khớp)** |
+| Checkbox Đăng Xuất Khỏi Thiết Bị Khác | [`ChangePasswordForm.tsx`](file:///d:/SmartParkingHub/smart-parking-app-v2/src/features/change-password/components/ChangePasswordForm.tsx) | User Session Payload | **New Feature (Chấm dứt phiên làm việc trên tablet cabin)** |
+| Banner Đồng Bộ Mã QR Cổng Barie Tự Động | [`TerminalQrSyncBanner.tsx`](file:///d:/SmartParkingHub/smart-parking-app-v2/src/features/change-password/components/TerminalQrSyncBanner.tsx) | Gate Subsystem | **New Feature (Ký số lại mã QR Pass trong 60 giây)** |
+| Modal Khôi Phục Mật Khẩu Qua SMS OTP | [`SmsRecoveryModal.tsx`](file:///d:/SmartParkingHub/smart-parking-app-v2/src/features/change-password/components/SmsRecoveryModal.tsx) | SMS OTP Service | **New Feature (Khôi phục an toàn 2 lớp khi quên pass)** |
+| Shimmer Loading Placeholder | [`ChangePasswordSkeleton.tsx`](file:///d:/SmartParkingHub/smart-parking-app-v2/src/features/change-password/components/ChangePasswordSkeleton.tsx) | — | **Preserved (Zero-layout-shift placeholder)** |
