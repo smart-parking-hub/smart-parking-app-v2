@@ -10,6 +10,7 @@ import { VirtualQueuesPage } from '@/features/queues'
 import { DriverPaymentsPage } from '@/features/payments'
 import { VehiclesPage } from '@/features/vehicles'
 import { ProfilePage } from '@/features/profile'
+import { ChangePasswordPage } from '@/features/change-password'
 import {
   LandingPage,
   DriverSolutionsPage,
@@ -66,6 +67,10 @@ export const router = createBrowserRouter([
         path: 'profile',
         element: <ProfilePage />,
       },
+      {
+        path: 'change-password',
+        element: <ChangePasswordPage />,
+      },
     ],
   },
   {
@@ -107,6 +112,10 @@ export const router = createBrowserRouter([
       {
         path: 'profile',
         element: <ProfilePage />,
+      },
+      {
+        path: 'change-password',
+        element: <ChangePasswordPage />,
       },
     ],
   },
@@ -157,6 +166,16 @@ export const router = createBrowserRouter([
       {
         index: true,
         element: <ProfilePage />,
+      },
+    ],
+  },
+  {
+    path: '/change-password',
+    element: <DriverLayout />,
+    children: [
+      {
+        index: true,
+        element: <ChangePasswordPage />,
       },
     ],
   },

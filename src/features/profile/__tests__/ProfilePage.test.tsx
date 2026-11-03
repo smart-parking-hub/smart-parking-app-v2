@@ -127,36 +127,15 @@ describe('SCR-021 ProfilePage (Hồ Sơ Bác Tài & Thông Tin Trực Ban)', () 
     expect(screen.getByDisplayValue('Trần Quốc Tuấn')).toBeInTheDocument()
   })
 
-  it('opens and submits ChangePasswordModal from sidebar nav', async () => {
-    const passwordSpy = vi.spyOn(profileApi, 'changeMyPasswordApi').mockResolvedValue()
-
+  it('links to /change-password when clicking Đổi mật khẩu bảo mật in sidebar nav', async () => {
     renderProfilePage()
 
     await waitFor(() => {
       expect(screen.getByText('Đổi mật khẩu bảo mật')).toBeInTheDocument()
     })
 
-    fireEvent.click(screen.getByText('Đổi mật khẩu bảo mật'))
-
-    expect(screen.getByText('Đổi Mật Khẩu Bảo Mật')).toBeInTheDocument()
-    expect(screen.getByText('BẢO VỆ TÀI KHOẢN VẬN HÀNH')).toBeInTheDocument()
-
-    // Fill fields
-    const currentInput = screen.getByLabelText(/Mật khẩu hiện tại/i)
-    const newInput = screen.getByLabelText(/^Mật khẩu mới/i)
-    const confirmInput = screen.getByLabelText(/Xác nhận mật khẩu mới/i)
-
-    fireEvent.change(currentInput, { target: { value: 'CurrentPass123' } })
-    fireEvent.change(newInput, { target: { value: 'NewSecret456' } })
-    fireEvent.change(confirmInput, { target: { value: 'NewSecret456' } })
-
-    const submitBtn = screen.getByRole('button', { name: /Cập Nhật Mật Khẩu/i })
-    fireEvent.click(submitBtn)
-
-    await waitFor(() => {
-      expect(passwordSpy).toHaveBeenCalledWith('CurrentPass123', 'NewSecret456')
-      expect(screen.getByText('Đổi mật khẩu thành công!')).toBeInTheDocument()
-    })
+    const changePasswordLink = screen.getByText('Đổi mật khẩu bảo mật').closest('a')
+    expect(changePasswordLink).toHaveAttribute('href', '/change-password')
   })
 
   it('opens NotificationSettingsModal from sidebar and toggles preferences', async () => {

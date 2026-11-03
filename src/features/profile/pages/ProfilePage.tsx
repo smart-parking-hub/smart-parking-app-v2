@@ -150,7 +150,7 @@ export function ProfilePage() {
             />
 
             <ProfileSidebarNav
-              onOpenChangePassword={() => setIsChangePasswordOpen(true)}
+              activeTab="profile"
               onOpenNotificationSettings={() => setIsNotificationSettingsOpen(true)}
             />
 

@@ -18,3 +18,4 @@
 | `SCR-019` | Driver Payment History & VAT Invoices (Lịch sử thanh toán & HĐĐT VAT) | `/payments` (`/dashboard/payments`) | `features/payments`      | Stitch HTML/CSS (`web_standard`) | **IMPLEMENTED** | Sẵn sàng nghiệm thu |
 | `SCR-020` | Driver Vehicles Management & Fleet Operations (Quản lý phương tiện & Đồng bộ ALPR) | `/vehicles` (`/dashboard/vehicles`) | `features/vehicles`      | Stitch HTML/CSS (`web_standard`) | **IMPLEMENTED** | Sẵn sàng nghiệm thu |
 | `SCR-021` | Driver Profile & eKYC Operations Workbench (Hồ sơ bác tài & Thông tin trực ban) | `/profile` (`/dashboard/profile`, `/driver/profile`) | `features/profile`       | Stitch HTML/CSS (`web_standard`) | **IMPLEMENTED** | Sẵn sàng nghiệm thu |
+| `SCR-022` | Driver Change Password & Security Hub (Đổi mật khẩu bảo mật tài khoản) | `/change-password` (`/dashboard/change-password`) | `features/change-password` | Stitch HTML/CSS (`web_standard`) | **IMPLEMENTED** | Sẵn sàng nghiệm thu |
