@@ -7,6 +7,7 @@ import { SearchParkingPage } from '@/features/parking-search'
 import { ParkingDetailPage } from '@/features/parking-detail'
 import { MyBookingsPage } from '@/features/bookings'
 import { VirtualQueuesPage } from '@/features/queues'
+import { DriverPaymentsPage } from '@/features/payments'
 import {
   LandingPage,
   DriverSolutionsPage,
@@ -51,6 +52,10 @@ export const router = createBrowserRouter([
         path: 'queues',
         element: <VirtualQueuesPage />,
       },
+      {
+        path: 'payments',
+        element: <DriverPaymentsPage />,
+      },
     ],
   },
   {
@@ -81,6 +86,10 @@ export const router = createBrowserRouter([
         path: 'queues',
         element: <VirtualQueuesPage />,
       },
+      {
+        path: 'payments',
+        element: <DriverPaymentsPage />,
+      },
     ],
   },
   {
@@ -100,6 +109,16 @@ export const router = createBrowserRouter([
       {
         index: true,
         element: <VirtualQueuesPage />,
+      },
+    ],
+  },
+  {
+    path: '/payments',
+    element: <DriverLayout />,
+    children: [
+      {
+        index: true,
+        element: <DriverPaymentsPage />,
       },
     ],
   },

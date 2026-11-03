@@ -84,3 +84,21 @@
 | Bảng Lịch Sử Lượt Xếp Hàng & Bộ lọc | [`QueueHistoryTable.tsx`](file:///d:/SmartParkingHub/smart-parking-app-v2/src/features/queues/components/QueueHistoryTable.tsx) | `GET /api/v1/queues` | **Preserved (Search & Status Filter)** |
 | Quy định Vận Hành Hàng Đợi 4 Bento Cards | [`QueueRegulationsSection.tsx`](file:///d:/SmartParkingHub/smart-parking-app-v2/src/features/queues/components/QueueRegulationsSection.tsx) | Public / Driver | **Enhanced (Bento Regulations)** |
 | Shimmer Loading Placeholder | [`QueueSkeleton.tsx`](file:///d:/SmartParkingHub/smart-parking-app-v2/src/features/queues/components/QueueSkeleton.tsx) | — | **Preserved (Smooth UX)** |
+
+
+---
+
+## 6. Màn Hình SCR-019: Lịch Sử Thanh Toán & Hóa Đơn Điện Tử VAT (Driver Payments & VAT Invoices — Route `/payments` & `/dashboard/payments`)
+
+| Khối Giao Diện Cũ / Stitch | Thành Phần React 19 (`smart-parking-app-v2`) | API / Quyền hạn | Trạng thái Parity |
+|---|---|---|---|
+| Top Scrim Ticker CQT TT78 | [`PaymentsCommandHeader.tsx`](file:///d:/SmartParkingHub/smart-parking-app-v2/src/features/payments/components/PaymentsCommandHeader.tsx) | `ROLE_DRIVER` | **Enhanced (Realtime TT78 Ticker)** |
+| 4 Thẻ Bento Chỉ Số Tài Chính | [`FinancialMetricsBento.tsx`](file:///d:/SmartParkingHub/smart-parking-app-v2/src/features/payments/components/FinancialMetricsBento.tsx) | `ROLE_DRIVER` | **Enhanced (Zero-Green Bento Metrics)** |
+| Bộ Lọc Tra Cứu & Segmented Tags | [`TransactionFilterToolbar.tsx`](file:///d:/SmartParkingHub/smart-parking-app-v2/src/features/payments/components/TransactionFilterToolbar.tsx) | `ROLE_DRIVER` | **Enhanced (5 Categories + 2 Statuses)** |
+| Bảng Kê Giao Dịch 8 Cột PayOS & Tiền Bãi | [`MasterTransactionTable.tsx`](file:///d:/SmartParkingHub/smart-parking-app-v2/src/features/payments/components/MasterTransactionTable.tsx) | `GET /api/v1/payments` | **Full Match (Interactive Row Selector & Pagination)** |
+| Thanh Tra Biên Lai Chi Tiết (7 Cột) | [`ReceiptInspectorPanel.tsx`](file:///d:/SmartParkingHub/smart-parking-app-v2/src/features/payments/components/ReceiptInspectorPanel.tsx) | `ROLE_DRIVER` | **Enhanced (Breakdown Điện Lạnh 380V & HĐĐT)** |
+| Đồng Bộ Kế Toán Doanh Nghiệp (MISA/FAST) | [`EnterpriseAccountingPanel.tsx`](file:///d:/SmartParkingHub/smart-parking-app-v2/src/features/payments/components/EnterpriseAccountingPanel.tsx) | Local / User Settings | **New Feature (TT78 Direct Dispatch)** |
+| Modal Cấu Hình Hóa Đơn Công Ty | [`CompanyInvoiceConfigModal.tsx`](file:///d:/SmartParkingHub/smart-parking-app-v2/src/features/payments/components/CompanyInvoiceConfigModal.tsx) | Local / User Profile | **New Feature (MST, Email, ERP)** |
+| Modal Xuất Báo Cáo Excel / PDF | [`ExportReportModal.tsx`](file:///d:/SmartParkingHub/smart-parking-app-v2/src/features/payments/components/ExportReportModal.tsx) | Client / Report API | **New Feature (Audit Ledger Export)** |
+| Modal Gửi Biên Lai Điện Tử Qua Email | [`SendReceiptEmailModal.tsx`](file:///d:/SmartParkingHub/smart-parking-app-v2/src/features/payments/components/SendReceiptEmailModal.tsx) | Notification API | **New Feature (Instant Accountant Dispatch)** |
+| Shimmer Loading Placeholder | [`PaymentsSkeleton.tsx`](file:///d:/SmartParkingHub/smart-parking-app-v2/src/features/payments/components/PaymentsSkeleton.tsx) | — | **Preserved (Smooth UX)** |
