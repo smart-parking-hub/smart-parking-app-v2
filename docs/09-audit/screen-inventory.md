@@ -12,3 +12,4 @@
 | `SCR-008` | Logistics Insights (Trang Tin Tức & Báo Cáo Chuyên Ngành) | `/insights` (`/tin-tuc`)            | `features/landing`       | Stitch HTML/CSS (`web_standard`) | **IMPLEMENTED** | Sẵn sàng nghiệm thu |
 | `SCR-014` | Driver Dashboard Home (Tổng quan Tài xế)            | `/dashboard` (`/driver/dashboard`)        | `features/dashboard`     | Stitch HTML/CSS (`web_standard`) | **IMPLEMENTED** | Sẵn sàng nghiệm thu |
 | `SCR-015` | Interactive Parking Search & Map (Bản đồ tìm bãi)   | `/parking` (`/dashboard/search`)          | `features/parking-search`| Stitch HTML/CSS (`web_standard`) | **IMPLEMENTED** | Sẵn sàng nghiệm thu |
+| `SCR-016` | Parking Details & Reservation (Chi tiết bãi & Đặt chỗ) | `/parking/:id` (`/dashboard/parking/:id`) | `features/parking-detail`| Stitch HTML/CSS (`web_standard`) | **IMPLEMENTED** | Sẵn sàng nghiệm thu |
