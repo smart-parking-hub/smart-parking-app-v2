@@ -9,3 +9,4 @@
 | `SCR-005` | API & Developer Docs (Trang Kết Nối API & Webhooks) | `/api-docs` (`/ket-noi-api`)              | `features/landing` | Stitch HTML/CSS (`web_standard`) | **IMPLEMENTED** | Đã nghiệm thu       |
 | `SCR-006` | About Us (Trang Về Chúng Tôi & Sứ Mệnh)             | `/about` (`/ve-chung-toi`)                | `features/landing` | Stitch HTML/CSS (`web_standard`) | **IMPLEMENTED** | Đã nghiệm thu       |
 | `SCR-007` | Careers & Recruitment (Trang Tuyển Dụng Nhân Tài)   | `/careers` (`/tuyen-dung`)                | `features/landing` | Stitch HTML/CSS (`web_standard`) | **IMPLEMENTED** | Sẵn sàng nghiệm thu |
+| `SCR-008` | Logistics Insights (Trang Tin Tức & Báo Cáo Chuyên Ngành) | `/insights` (`/tin-tuc`) | `features/landing` | Stitch HTML/CSS (`web_standard`) | **IMPLEMENTED** | Sẵn sàng nghiệm thu |

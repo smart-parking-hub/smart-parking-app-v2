@@ -6,6 +6,7 @@ export * from './pages/PricingPage'
 export * from './pages/ApiDocsPage'
 export * from './pages/AboutUsPage'
 export * from './pages/CareersPage'
+export * from './pages/InsightsPage'
 
 // Common Components
 export * from './components/common/LandingNavbar'
@@ -68,3 +69,10 @@ export * from './components/careers/CareersJobListSection'
 export * from './components/careers/CareersProcessSection'
 export * from './components/careers/CareersFastApplySection'
 export * from './components/careers/CareersApplyModal'
+
+// Insights / Blog Components (Trang Tin Tức & Báo Cáo Chuyên Ngành - SCR-008)
+export * from './components/insights/InsightsHeroSection'
+export * from './components/insights/InsightsFeaturedSection'
+export * from './components/insights/InsightsArticlesGridSection'
+export * from './components/insights/InsightsNewsletterSection'
+export * from './components/insights/InsightsCtaBanner'

@@ -9,6 +9,7 @@ import {
   ApiDocsPage,
   AboutUsPage,
   CareersPage,
+  InsightsPage,
 } from '@/features/landing'
 
 export const router = createBrowserRouter([
@@ -63,6 +64,18 @@ export const router = createBrowserRouter([
   {
     path: '/tuyen-dung',
     element: <CareersPage />,
+  },
+  {
+    path: '/insights',
+    element: <InsightsPage />,
+  },
+  {
+    path: '/tin-tuc',
+    element: <InsightsPage />,
+  },
+  {
+    path: '/bai-viet',
+    element: <InsightsPage />,
   },
   {
     path: '/crm',
