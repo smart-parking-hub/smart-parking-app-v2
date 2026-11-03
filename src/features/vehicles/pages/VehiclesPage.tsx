@@ -25,7 +25,10 @@ import { EditVehicleModal } from '../components/EditVehicleModal'
 import { ViewInspectionDossierModal } from '../components/ViewInspectionDossierModal'
 import { DeleteVehicleConfirmModal } from '../components/DeleteVehicleConfirmModal'
 import { ExportFleetModal } from '../components/ExportFleetModal'
+import { FleetOperationsSidebarCard } from '../components/FleetOperationsSidebarCard'
 import { VehiclesSkeleton } from '../components/VehiclesSkeleton'
+import { ProfileSidebarNav } from '../../profile/components/ProfileSidebarNav'
+import { NotificationSettingsModal } from '../../profile/components/NotificationSettingsModal'
 
 export function VehiclesPage() {
   const [loading, setLoading] = useState(true)
@@ -43,6 +46,7 @@ export function VehiclesPage() {
   const [dossierVehicle, setDossierVehicle] = useState<VehicleItem | null>(null)
   const [deletingVehicle, setDeletingVehicle] = useState<VehicleItem | null>(null)
   const [isExportOpen, setIsExportOpen] = useState(false)
+  const [isNotificationSettingsOpen, setIsNotificationSettingsOpen] = useState(false)
   const [isAdding, setIsAdding] = useState(false)
   const [isSavingEdit, setIsSavingEdit] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
@@ -208,35 +212,49 @@ export function VehiclesPage() {
           onOpenRegister={() => setIsRegisterOpen(true)}
         />
 
-        {/* Bento KPI Section */}
-        <VehiclesKpiBento metrics={computedMetrics} />
+        {/* Master 2-Column Grid (4 Cols Sidebar + 8 Cols Operations) */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+          {/* Left Column (4 cols): Cấu hình tài khoản vận hành Navigation & Fleet Operations Card */}
+          <aside className="lg:col-span-4 flex flex-col gap-5">
+            <ProfileSidebarNav
+              activeTab="vehicles"
+              onOpenNotificationSettings={() => setIsNotificationSettingsOpen(true)}
+            />
 
-        {/* Filter Toolbar */}
-        <VehicleFilterToolbar
-          search={search}
-          onSearchChange={setSearch}
-          typeFilter={typeFilter}
-          onTypeFilterChange={setTypeFilter}
-          statusFilter={statusFilter}
-          onStatusFilterChange={setStatusFilter}
-          onReset={handleResetFilter}
-          totalCount={vehicles.length}
-          tractorCount={computedMetrics.tractorCount}
-          trailerCount={computedMetrics.trailerCount}
-        />
+            <FleetOperationsSidebarCard />
+          </aside>
 
-        {/* Full-Width Master Table Section */}
-        <div className="w-full flex flex-col gap-6">
-          <VehicleMasterTable
-            vehicles={filteredVehicles}
-            onSetDefault={handleSetDefault}
-            onEdit={(v) => setEditingVehicle(v)}
-            onViewDossier={(v) => setDossierVehicle(v)}
-            onDelete={(v) => setDeletingVehicle(v)}
-            onOpenRegister={() => setIsRegisterOpen(true)}
-          />
+          {/* Right Column (8 cols): Fleet Bento KPI, Filters & Table */}
+          <div className="lg:col-span-8 flex flex-col gap-6">
+            {/* Bento KPI Section */}
+            <VehiclesKpiBento metrics={computedMetrics} />
 
-          <AlprGateSyncBanner />
+            {/* Filter Toolbar */}
+            <VehicleFilterToolbar
+              search={search}
+              onSearchChange={setSearch}
+              typeFilter={typeFilter}
+              onTypeFilterChange={setTypeFilter}
+              statusFilter={statusFilter}
+              onStatusFilterChange={setStatusFilter}
+              onReset={handleResetFilter}
+              totalCount={vehicles.length}
+              tractorCount={computedMetrics.tractorCount}
+              trailerCount={computedMetrics.trailerCount}
+            />
+
+            {/* Master Table Section with ZERO horizontal scroll */}
+            <VehicleMasterTable
+              vehicles={filteredVehicles}
+              onSetDefault={handleSetDefault}
+              onEdit={(v) => setEditingVehicle(v)}
+              onViewDossier={(v) => setDossierVehicle(v)}
+              onDelete={(v) => setDeletingVehicle(v)}
+              onOpenRegister={() => setIsRegisterOpen(true)}
+            />
+
+            <AlprGateSyncBanner />
+          </div>
         </div>
       </div>
 
@@ -274,6 +292,11 @@ export function VehiclesPage() {
         vehicles={vehicles}
         isOpen={isExportOpen}
         onClose={() => setIsExportOpen(false)}
+      />
+
+      <NotificationSettingsModal
+        isOpen={isNotificationSettingsOpen}
+        onClose={() => setIsNotificationSettingsOpen(false)}
       />
     </main>
   )

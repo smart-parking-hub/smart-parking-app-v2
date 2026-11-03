@@ -12,6 +12,7 @@ import { VehiclesPage } from '@/features/vehicles'
 import { ProfilePage } from '@/features/profile'
 import { ChangePasswordPage } from '@/features/change-password'
 import { PaymentReturnPage } from '@/features/payment-return'
+import { PaymentCancelPage } from '@/features/payment-cancel'
 import {
   LandingPage,
   DriverSolutionsPage,
@@ -78,7 +79,7 @@ export const router = createBrowserRouter([
       },
       {
         path: 'payment/cancel',
-        element: <PaymentReturnPage mode="cancel" />,
+        element: <PaymentCancelPage />,
       },
     ],
   },
@@ -132,7 +133,7 @@ export const router = createBrowserRouter([
       },
       {
         path: 'payment/cancel',
-        element: <PaymentReturnPage mode="cancel" />,
+        element: <PaymentCancelPage />,
       },
     ],
   },
@@ -212,7 +213,7 @@ export const router = createBrowserRouter([
     children: [
       {
         index: true,
-        element: <PaymentReturnPage mode="cancel" />,
+        element: <PaymentCancelPage />,
       },
     ],
   },
