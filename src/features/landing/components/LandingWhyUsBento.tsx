@@ -1,3 +1,5 @@
+import { Radio, Receipt, ShieldCheck } from 'lucide-react'
+
 export function LandingWhyUsBento() {
   return (
     <section className="bg-brand-navy py-20 sm:py-28 relative overflow-hidden" id="giai-phap-chu-bai">
@@ -27,7 +29,7 @@ export function LandingWhyUsBento() {
                 <span className="bg-slate-800 text-brand-orange border border-slate-700 text-xs font-semibold px-3 py-1 rounded-full uppercase">
                   SLA Cam Kết 99.8%
                 </span>
-                <span className="material-symbols-outlined text-slate-400">verified_user</span>
+                <ShieldCheck className="h-5 w-5 text-slate-400" aria-hidden="true" />
               </div>
               <h3 className="font-sora font-bold text-2xl sm:text-3xl text-white mb-4">
                 Không Còn Cảnh Đậu Tràn Lề Đường Chờ Lốt Cảng Biển
@@ -61,7 +63,7 @@ export function LandingWhyUsBento() {
             {/* Small Bento 1 */}
             <div className="bg-brand-navy-light rounded-2xl border border-slate-700/80 p-6 hover:border-slate-500 transition-colors">
               <div className="w-10 h-10 rounded-lg bg-slate-800 flex items-center justify-center text-brand-orange mb-4">
-                <span className="material-symbols-outlined text-[24px]">sensors</span>
+                <Radio className="h-6 w-6" aria-hidden="true" />
               </div>
               <h4 className="font-sora font-bold text-lg text-white mb-2">Giám Sát Vị Trí Realtime 0ms</h4>
               <p className="font-inter text-xs text-slate-300 leading-relaxed">
@@ -72,7 +74,7 @@ export function LandingWhyUsBento() {
             {/* Small Bento 2 */}
             <div className="bg-brand-navy-light rounded-2xl border border-slate-700/80 p-6 hover:border-slate-500 transition-colors">
               <div className="w-10 h-10 rounded-lg bg-slate-800 flex items-center justify-center text-brand-orange mb-4">
-                <span className="material-symbols-outlined text-[24px]">receipt_long</span>
+                <Receipt className="h-6 w-6" aria-hidden="true" />
               </div>
               <h4 className="font-sora font-bold text-lg text-white mb-2">Đối Soát &amp; Thanh Toán PayOS T+1</h4>
               <p className="font-inter text-xs text-slate-300 leading-relaxed">
@@ -83,7 +85,7 @@ export function LandingWhyUsBento() {
             {/* Small Bento 3 */}
             <div className="bg-brand-navy-light rounded-2xl border border-slate-700/80 p-6 hover:border-slate-500 transition-colors">
               <div className="w-10 h-10 rounded-lg bg-slate-800 flex items-center justify-center text-brand-orange mb-4">
-                <span className="material-symbols-outlined text-[24px]">shield_with_heart</span>
+                <ShieldCheck className="h-6 w-6" aria-hidden="true" />
               </div>
               <h4 className="font-sora font-bold text-lg text-white mb-2">Bảo Hiểm Hàng Hóa &amp; Xe Lưu Bãi</h4>
               <p className="font-inter text-xs text-slate-300 leading-relaxed">

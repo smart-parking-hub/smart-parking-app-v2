@@ -1,3 +1,5 @@
+import { Truck } from 'lucide-react'
+
 export function LandingFooter() {
   return (
     <footer className="w-full bg-brand-navy text-slate-400 py-16 border-t border-slate-800" id="lien-he">
@@ -7,7 +9,7 @@ export function LandingFooter() {
           <div>
             <div className="flex items-center gap-2 mb-4">
               <div className="w-8 h-8 rounded-lg bg-slate-800 flex items-center justify-center text-white">
-                <span className="material-symbols-outlined text-[20px]">local_shipping</span>
+                <Truck className="h-5 w-5 text-white" aria-hidden="true" />
               </div>
               <span className="font-sora font-bold text-lg text-white">
                 SMART<span className="text-brand-orange">TRUCK</span>

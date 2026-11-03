@@ -1,6 +1,17 @@
+import { ArrowRight, SlidersHorizontal, Star, StarHalf } from 'lucide-react'
+
 export function LandingHeroSection() {
   const heroImage =
     'https://lh3.googleusercontent.com/aida-public/AB6AXuA4ig97Cnuonq7Ww5GfB1GaBLig34jDUJzG2pLI21FDH47vqUk8ecTZwu6yfDDsu1ZZqkJrYKLysKr6BIEIbSE8CUsPu5RiYj9_S5kYW-leMZGAFNKkw_GEklWj-EmFSQZ96Udu32sEa1KUSlsupNA1ngpRuCcFEzkHahc-ECwx2D_NIbw_1YOMHUKPqQHWHHLDPIj1mBAgfbLvW66ZaAnF9RoxHpc8bKgC621qKWo0'
+
+  const partners = [
+    'TÂN CẢNG SÀI GÒN',
+    'CÁT LÁI ICD',
+    'CÁI MÉP - THỊ VẢI',
+    'ĐÌNH VŨ HẢI PHÒNG',
+    'SÓNG THẦN LOGISTICS',
+    'TIÊN SƠN ICD',
+  ]
 
   return (
     <section className="relative bg-brand-navy overflow-hidden pt-12 pb-24 md:pt-16 md:pb-32">
@@ -39,25 +50,25 @@ export function LandingHeroSection() {
                 href="#tim-bai"
               >
                 <span>ĐẶT CHỖ BÃI XE NGAY</span>
-                <span className="material-symbols-outlined text-[20px]">arrow_forward</span>
+                <ArrowRight className="h-5 w-5" aria-hidden="true" />
               </a>
               <a
                 className="inline-flex items-center justify-center gap-2 bg-brand-navy-light/80 hover:bg-slate-800 text-white border border-slate-700 font-sora font-semibold text-sm sm:text-base px-6 py-4 rounded-xl transition-all"
                 href="#giai-phap-chu-bai"
               >
-                <span className="material-symbols-outlined text-[20px] text-slate-400">tune</span>
+                <SlidersHorizontal className="h-5 w-5 text-slate-400" aria-hidden="true" />
                 <span>ĐIỀU PHỐI CHUỖI CUNG ỨNG</span>
               </a>
             </div>
 
             {/* Social Proof Strip */}
             <div className="pt-6 flex flex-wrap items-center gap-6 border-t border-slate-800/80 w-full mt-4">
-              <div className="flex items-center gap-1.5 text-brand-orange">
-                <span className="material-symbols-outlined text-[20px]">star</span>
-                <span className="material-symbols-outlined text-[20px]">star</span>
-                <span className="material-symbols-outlined text-[20px]">star</span>
-                <span className="material-symbols-outlined text-[20px]">star</span>
-                <span className="material-symbols-outlined text-[20px]">star_half</span>
+              <div className="flex items-center gap-1 text-brand-orange">
+                <Star className="h-5 w-5 fill-brand-orange text-brand-orange" aria-hidden="true" />
+                <Star className="h-5 w-5 fill-brand-orange text-brand-orange" aria-hidden="true" />
+                <Star className="h-5 w-5 fill-brand-orange text-brand-orange" aria-hidden="true" />
+                <Star className="h-5 w-5 fill-brand-orange text-brand-orange" aria-hidden="true" />
+                <StarHalf className="h-5 w-5 fill-brand-orange text-brand-orange" aria-hidden="true" />
                 <span className="font-sora font-bold text-white text-sm ml-1">4.9 / 5.0</span>
               </div>
               <div className="h-4 w-px bg-slate-800 hidden sm:block"></div>
@@ -75,6 +86,8 @@ export function LandingHeroSection() {
                   className="w-full h-full object-cover"
                   alt="Xe container tại bãi đỗ logistics thông minh ban đêm"
                   src={heroImage}
+                  fetchPriority="high"
+                  loading="eager"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-brand-navy via-brand-navy/30 to-transparent"></div>
 
@@ -111,12 +124,11 @@ export function LandingHeroSection() {
             KẾT NỐI HỆ THỐNG CẢNG BIỂN &amp; HÃNG TÀU HÀNG ĐẦU VIỆT NAM
           </p>
           <div className="flex flex-wrap items-center justify-center gap-8 sm:gap-14 opacity-75 grayscale hover:grayscale-0 transition-all">
-            <span className="font-sora font-bold text-slate-400 text-lg sm:text-xl tracking-wider">TÂN CẢNG SÀI GÒN</span>
-            <span className="font-sora font-bold text-slate-400 text-lg sm:text-xl tracking-wider">CÁT LÁI ICD</span>
-            <span className="font-sora font-bold text-slate-400 text-lg sm:text-xl tracking-wider">CÁI MÉP - THỊ VẢI</span>
-            <span className="font-sora font-bold text-slate-400 text-lg sm:text-xl tracking-wider">ĐÌNH VŨ HẢI PHÒNG</span>
-            <span className="font-sora font-bold text-slate-400 text-lg sm:text-xl tracking-wider">SÓNG THẦN LOGISTICS</span>
-            <span className="font-sora font-bold text-slate-400 text-lg sm:text-xl tracking-wider">TIÊN SƠN ICD</span>
+            {partners.map((partner) => (
+              <span key={partner} className="font-sora font-bold text-slate-400 text-lg sm:text-xl tracking-wider">
+                {partner}
+              </span>
+            ))}
           </div>
         </div>
       </div>

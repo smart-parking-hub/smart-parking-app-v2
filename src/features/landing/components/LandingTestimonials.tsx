@@ -1,3 +1,5 @@
+import { ArrowLeft, ArrowRight, Star, StarHalf } from 'lucide-react'
+
 export function LandingTestimonials() {
   const testimonials = [
     {
@@ -47,16 +49,18 @@ export function LandingTestimonials() {
           </div>
           <div className="flex items-center gap-2">
             <button
-              aria-label="Previous testimonial"
+              type="button"
+              aria-label="Đánh giá trước đó"
               className="w-12 h-12 rounded-xl border border-brand-border bg-white text-slate-700 hover:bg-slate-100 flex items-center justify-center transition-colors cursor-pointer"
             >
-              <span className="material-symbols-outlined text-[20px]">west</span>
+              <ArrowLeft className="h-5 w-5" aria-hidden="true" />
             </button>
             <button
-              aria-label="Next testimonial"
+              type="button"
+              aria-label="Đánh giá tiếp theo"
               className="w-12 h-12 rounded-xl border border-brand-border bg-white text-slate-700 hover:bg-slate-100 flex items-center justify-center transition-colors cursor-pointer"
             >
-              <span className="material-symbols-outlined text-[20px]">east</span>
+              <ArrowRight className="h-5 w-5" aria-hidden="true" />
             </button>
           </div>
         </div>
@@ -74,13 +78,15 @@ export function LandingTestimonials() {
             >
               <div>
                 <div className="flex items-center gap-1 text-brand-orange mb-6">
-                  <span className="material-symbols-outlined text-[18px]">star</span>
-                  <span className="material-symbols-outlined text-[18px]">star</span>
-                  <span className="material-symbols-outlined text-[18px]">star</span>
-                  <span className="material-symbols-outlined text-[18px]">star</span>
-                  <span className="material-symbols-outlined text-[18px]">
-                    {t.stars === 5 ? 'star' : 'star_half'}
-                  </span>
+                  <Star className="h-4.5 w-4.5 fill-brand-orange text-brand-orange" aria-hidden="true" />
+                  <Star className="h-4.5 w-4.5 fill-brand-orange text-brand-orange" aria-hidden="true" />
+                  <Star className="h-4.5 w-4.5 fill-brand-orange text-brand-orange" aria-hidden="true" />
+                  <Star className="h-4.5 w-4.5 fill-brand-orange text-brand-orange" aria-hidden="true" />
+                  {t.stars === 5 ? (
+                    <Star className="h-4.5 w-4.5 fill-brand-orange text-brand-orange" aria-hidden="true" />
+                  ) : (
+                    <StarHalf className="h-4.5 w-4.5 fill-brand-orange text-brand-orange" aria-hidden="true" />
+                  )}
                 </div>
                 <p
                   className={

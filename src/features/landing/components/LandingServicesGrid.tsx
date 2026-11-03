@@ -1,3 +1,5 @@
+import { ArrowRight, ChevronRight } from 'lucide-react'
+
 export function LandingServicesGrid() {
   const services = [
     {
@@ -68,6 +70,7 @@ export function LandingServicesGrid() {
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                     alt={item.title}
                     src={item.img}
+                    loading="lazy"
                   />
                   <span className="absolute top-3 left-3 bg-brand-navy/90 text-white text-[11px] font-semibold px-2.5 py-1 rounded">
                     {item.tag}
@@ -81,17 +84,15 @@ export function LandingServicesGrid() {
                     {item.desc}
                   </p>
                   <div className="font-inter text-xs text-slate-500 space-y-1">
-                    {item.specs.map((spec, i) => (
-                      <div key={i}>• {spec}</div>
+                    {item.specs.map((spec) => (
+                      <div key={spec}>• {spec}</div>
                     ))}
                   </div>
                 </div>
               </div>
               <div className="px-6 pb-6 pt-2 border-t border-slate-100 flex items-center justify-between">
                 <span className="font-inter text-xs font-semibold text-brand-orange">{item.slots}</span>
-                <span className="material-symbols-outlined text-[18px] text-brand-orange group-hover:translate-x-1 transition-transform">
-                  arrow_forward
-                </span>
+                <ArrowRight className="h-4.5 w-4.5 text-brand-orange group-hover:translate-x-1 transition-transform" aria-hidden="true" />
               </div>
             </div>
           ))}
@@ -104,7 +105,7 @@ export function LandingServicesGrid() {
             href="#bang-gia"
           >
             <span>XEM TẤT CẢ 320+ ĐIỂM BÃI ĐỖ XE</span>
-            <span className="material-symbols-outlined text-[18px]">chevron_right</span>
+            <ChevronRight className="h-4.5 w-4.5" aria-hidden="true" />
           </a>
         </div>
       </div>

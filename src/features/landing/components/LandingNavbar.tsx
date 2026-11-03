@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import { Truck, Headset } from 'lucide-react'
 
 export function LandingNavbar() {
   return (
@@ -7,7 +8,7 @@ export function LandingNavbar() {
         {/* Brand Logo */}
         <Link className="flex items-center gap-2.5 shrink-0 group" to="/">
           <div className="w-10 h-10 rounded-lg bg-brand-navy flex items-center justify-center text-white shadow-sm transition-transform group-hover:scale-105">
-            <span className="material-symbols-outlined text-[24px]">local_shipping</span>
+            <Truck className="h-6 w-6 text-white" aria-hidden="true" />
           </div>
           <div className="flex items-center gap-1.5">
             <span className="font-sora font-bold text-xl tracking-tight text-brand-navy">
@@ -47,7 +48,7 @@ export function LandingNavbar() {
             className="hidden sm:flex items-center gap-2 text-slate-600 hover:text-brand-navy text-sm font-semibold transition-colors"
             href="tel:19006868"
           >
-            <span className="material-symbols-outlined text-[20px] text-slate-400">headset_mic</span>
+            <Headset className="h-5 w-5 text-slate-400" aria-hidden="true" />
             <span>1900 6868</span>
           </a>
           <div className="h-4 w-px bg-slate-200 hidden sm:block"></div>
