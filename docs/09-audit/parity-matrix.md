@@ -102,3 +102,21 @@
 | Modal Xuất Báo Cáo Excel / PDF | [`ExportReportModal.tsx`](file:///d:/SmartParkingHub/smart-parking-app-v2/src/features/payments/components/ExportReportModal.tsx) | Client / Report API | **New Feature (Audit Ledger Export)** |
 | Modal Gửi Biên Lai Điện Tử Qua Email | [`SendReceiptEmailModal.tsx`](file:///d:/SmartParkingHub/smart-parking-app-v2/src/features/payments/components/SendReceiptEmailModal.tsx) | Notification API | **New Feature (Instant Accountant Dispatch)** |
 | Shimmer Loading Placeholder | [`PaymentsSkeleton.tsx`](file:///d:/SmartParkingHub/smart-parking-app-v2/src/features/payments/components/PaymentsSkeleton.tsx) | — | **Preserved (Smooth UX)** |
+
+---
+
+## 8. SCR-020 Driver Vehicles Management & Fleet Operations (Quản lý phương tiện & Đồng bộ ALPR)
+| Thành phần giao diện / Khối chức năng | File triển khai v2 | Tương ứng Backend Microservice | Trạng thái Parity / Cải tiến |
+|---|---|---|---|
+| Command Header & ALPR Ticker Strip | [`VehiclesCommandHeader.tsx`](file:///d:/SmartParkingHub/smart-parking-app-v2/src/features/vehicles/components/VehiclesCommandHeader.tsx) | ALPR Gateway Protocol (v3.8-TLS) | **New Feature (Cục Đăng Kiểm & Cổng Cảng)** |
+| 4 Thẻ Bento KPI Đội Xe | [`VehiclesKpiBento.tsx`](file:///d:/SmartParkingHub/smart-parking-app-v2/src/features/vehicles/components/VehiclesKpiBento.tsx) | `GET /api/v1/vehicles` | **New Feature (Tải trọng, Xe mặc định, ALPR rate)** |
+| Bộ Lọc & Tìm Kiếm Phương Tiện | [`VehicleFilterToolbar.tsx`](file:///d:/SmartParkingHub/smart-parking-app-v2/src/features/vehicles/components/VehicleFilterToolbar.tsx) | Client Search + Filter Params | **New Feature (Tìm biển số, phân loại, trạng thái)** |
+| Bảng Quản Lý Danh Mục Phương Tiện (6 Cột) | [`VehicleMasterTable.tsx`](file:///d:/SmartParkingHub/smart-parking-app-v2/src/features/vehicles/components/VehicleMasterTable.tsx) | `GET /api/v1/vehicles` | **Preserved & Enhanced (Tải trọng trục, hạn KĐ, ALPR)** |
+| Banner Đồng Bộ ALPR Barie & Cân Tải | [`AlprGateSyncBanner.tsx`](file:///d:/SmartParkingHub/smart-parking-app-v2/src/features/vehicles/components/AlprGateSyncBanner.tsx) | ALPR Service / Gate Subsystem | **New Feature (Cam kết mở gate ≤ 0.2s)** |
+| Panel Khai Báo Hồ Sơ Vận Hành (4 Cols) | [`RegisterVehicleFormPanel.tsx`](file:///d:/SmartParkingHub/smart-parking-app-v2/src/features/vehicles/components/RegisterVehicleFormPanel.tsx) | `POST /api/v1/vehicles` | **Preserved & Enhanced (OCR đăng kiểm, tải trọng)** |
+| Modal Cập Nhật Thông Tin Xe | [`EditVehicleModal.tsx`](file:///d:/SmartParkingHub/smart-parking-app-v2/src/features/vehicles/components/EditVehicleModal.tsx) | `PUT /api/v1/vehicles/{id}` | **New Feature (SCR-MOD-04 Dialog Cập nhật xe)** |
+| Modal Xem Hồ Sơ Kỹ Thuật & Đăng Kiểm | [`ViewInspectionDossierModal.tsx`](file:///d:/SmartParkingHub/smart-parking-app-v2/src/features/vehicles/components/ViewInspectionDossierModal.tsx) | National Registry Dossier API | **New Feature (Số khung, số máy, BH TNDS, in phiếu)** |
+| Modal Xác Nhận Hủy Phương Tiện | [`DeleteVehicleConfirmModal.tsx`](file:///d:/SmartParkingHub/smart-parking-app-v2/src/features/vehicles/components/DeleteVehicleConfirmModal.tsx) | `DELETE /api/v1/vehicles/{id}` | **Preserved (Soft delete an toàn, chặn xóa xe mặc định)** |
+| Modal Xuất Báo Cáo Đội Xe Excel / PDF | [`ExportFleetModal.tsx`](file:///d:/SmartParkingHub/smart-parking-app-v2/src/features/vehicles/components/ExportFleetModal.tsx) | Client / Report API | **New Feature (Xuất sổ tay đối soát cảng)** |
+| Shimmer Loading Placeholder | [`VehiclesSkeleton.tsx`](file:///d:/SmartParkingHub/smart-parking-app-v2/src/features/vehicles/components/VehiclesSkeleton.tsx) | — | **Preserved (Zero-layout-shift placeholder)** |
+
