@@ -74,3 +74,40 @@ export type MerchantParkingLotPageResponse = {
   totalPages: number
   totalElements: number
 }
+
+export type CreateMerchantParkingLotRequest = {
+  name: string
+  address: string
+  latitude: number
+  longitude: number
+}
+
+export type ParkingLotImageItem = {
+  id?: number
+  parkingLotId?: number
+  fileName?: string
+  originalFileName?: string
+  contentType?: string
+  fileUrl?: string
+  isCover?: boolean
+  file?: File
+  previewUrl: string
+  name: string
+  sizeBytes: number
+}
+
+export type AiContentSegments = {
+  logisticsCapacity: string
+  safetyRegulations: string
+  circulationGuide: string
+}
+
+export type CreateParkingLotDraft = {
+  name: string
+  address: string
+  latitude?: number
+  longitude?: number
+  aiContent?: AiContentSegments
+  updatedAt?: string
+}
+
