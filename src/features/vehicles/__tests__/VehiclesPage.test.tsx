@@ -285,4 +285,29 @@ describe('SCR-020 VehiclesPage (Quản Lý Phương Tiện Của Tôi)', () => {
       expect(screen.getAllByText('51D-894.12').length).toBeGreaterThanOrEqual(1)
     })
   })
+
+  it('renders operational account sidebar and opens notification settings modal', async () => {
+    const user = userEvent.setup()
+    render(
+      <MemoryRouter>
+        <VehiclesPage />
+      </MemoryRouter>
+    )
+
+    await waitFor(() => {
+      expect(screen.getByText('CẤU HÌNH TÀI KHOẢN VẬN HÀNH')).toBeInTheDocument()
+    })
+
+    // Sidebar items
+    expect(screen.getByText('Thông tin cá nhân & Giấy phép')).toBeInTheDocument()
+    expect(screen.getByText('Đội xe của tôi')).toBeInTheDocument()
+    expect(screen.getByText('Lịch sử cước & Hóa đơn VAT')).toBeInTheDocument()
+    expect(screen.getByText('Đổi mật khẩu bảo mật')).toBeInTheDocument()
+
+    // Notification settings modal
+    const notifBtn = screen.getByRole('button', { name: /Thiết lập thông báo hệ thống/i })
+    await user.click(notifBtn)
+
+    expect(screen.getByText('Thiết Lập Thông Báo Hệ Thống')).toBeInTheDocument()
+  })
 })

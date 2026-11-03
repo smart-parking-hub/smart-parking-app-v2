@@ -7,7 +7,7 @@ interface VehiclesKpiBentoProps {
 
 export function VehiclesKpiBento({ metrics }: VehiclesKpiBentoProps) {
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+    <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 mb-6">
       {/* Card 1: Total Vehicles */}
       <div className="bg-white p-5 md:p-6 rounded-2xl border border-slate-200 shadow-xs flex flex-col justify-between min-h-[140px]">
         <div className="flex items-center justify-between text-slate-500">
