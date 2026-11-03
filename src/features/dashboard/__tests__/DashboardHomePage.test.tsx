@@ -128,16 +128,17 @@ describe('SCR-014: Driver Dashboard Home (Tổng quan Tài xế)', () => {
   it('renders DriverLayout with shared Header and Footer', () => {
     renderWithProviders(<DriverLayout />)
 
-    // Header elements
+    // Header elements (hotline and 'TRỰC TUYẾN' removed per design request)
     const brandElements = screen.getAllByText(/SMARTTRUCK/i)
     expect(brandElements.length).toBeGreaterThanOrEqual(1)
     expect(screen.getByText(/DRIVER OPS/i)).toBeInTheDocument()
-    expect(screen.getByText(/HOTLINE ĐIỀU PHỐI 24\/7:/i)).toBeInTheDocument()
-    expect(screen.getAllByText(/1900 6868/i).length).toBeGreaterThanOrEqual(1)
+    expect(screen.queryByText(/TRỰC TUYẾN/i)).not.toBeInTheDocument()
+    expect(screen.queryByText(/HOTLINE ĐIỀU PHỐI 24\/7:/i)).not.toBeInTheDocument()
 
-    // Footer elements
+    // Footer elements (support hotline retained)
     expect(screen.getByText(/V2.8.4-OPS/i)).toBeInTheDocument()
     expect(screen.getByText(/ISO\/IEC 27001:2022/i)).toBeInTheDocument()
+    expect(screen.getByText(/1900 6868/i)).toBeInTheDocument()
     expect(screen.getByText(/SmartTruckHub Logistics Network/i)).toBeInTheDocument()
   })
 })

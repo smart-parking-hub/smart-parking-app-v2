@@ -4,7 +4,6 @@ import {
   Bell,
   Menu,
   X,
-  PhoneCall,
   User,
   LogOut,
   KeyRound,
@@ -118,22 +117,8 @@ export function DriverHeader() {
           </nav>
         </div>
 
-        {/* Right Section: Hotline, Notifications, User Profile & Mobile Toggle */}
+        {/* Right Section: Notifications, User Profile & Mobile Toggle */}
         <div className="flex items-center gap-3">
-          {/* Hotline 24/7 */}
-          <div className="hidden md:flex items-center gap-2 px-3 py-1.5 bg-[#233144] rounded text-xs text-[#eaf1ff] border border-white/5">
-            <PhoneCall className="text-[#d95f00] w-4 h-4 shrink-0" />
-            <span className="uppercase font-medium text-[#7c839b] text-[11px]">
-              HOTLINE ĐIỀU PHỐI 24/7:
-            </span>
-            <a
-              href="tel:19006868"
-              className="font-bold text-white font-mono hover:text-[#d95f00] transition-colors"
-            >
-              1900 6868
-            </a>
-          </div>
-
           {/* Notifications Link */}
           <Link
             to="/notifications"
@@ -146,26 +131,21 @@ export function DriverHeader() {
             </span>
           </Link>
 
-          {/* User Profile Pill & Dropdown */}
+          {/* User Profile Pill & Dropdown (Bỏ chữ TRỰC TUYẾN) */}
           <div className="relative">
             <button
               type="button"
               onClick={() => setUserDropdownOpen(!userDropdownOpen)}
-              className="flex items-center gap-2.5 p-1 pr-3 rounded bg-[#233144] hover:bg-[#2d3e56] transition-colors border border-white/5 cursor-pointer text-left focus:outline-none"
+              className="flex items-center gap-2.5 p-1.5 pr-3.5 rounded-lg bg-[#233144] hover:bg-[#2d3e56] transition-colors border border-white/5 cursor-pointer text-left focus:outline-none"
             >
               <div className="w-8 h-8 rounded bg-black text-white flex items-center justify-center font-bold text-xs uppercase shadow-inner shrink-0">
                 {getInitials(driverName)}
               </div>
               <div className="hidden sm:flex flex-col text-left">
-                <div className="flex items-center gap-1.5">
-                  <span className="text-xs text-white font-medium leading-none">
-                    {driverName}
-                  </span>
-                  <span className="bg-[#dce9ff] text-[#001c3b] text-[10px] font-bold px-1.5 py-0.5 rounded leading-none uppercase">
-                    TRỰC TUYẾN
-                  </span>
-                </div>
-                <span className="font-mono text-[#7c839b] text-[11px] leading-tight mt-0.5">
+                <span className="text-xs text-white font-medium leading-none">
+                  {driverName}
+                </span>
+                <span className="font-mono text-[#7c839b] text-[11px] leading-tight mt-1">
                   {driverPhone}
                 </span>
               </div>
@@ -203,7 +183,7 @@ export function DriverHeader() {
                   <button
                     type="button"
                     onClick={handleLogout}
-                    className="w-full flex items-center gap-2.5 px-4 py-2 text-rose-400 hover:text-rose-300 hover:bg-[#233144] transition-colors text-left"
+                    className="w-full flex items-center gap-2.5 px-4 py-2 text-rose-400 hover:text-rose-300 hover:bg-[#233144] transition-colors text-left cursor-pointer"
                   >
                     <LogOut className="w-4 h-4" />
                     <span>Đăng xuất</span>
@@ -248,14 +228,9 @@ export function DriverHeader() {
               </Link>
             )
           })}
-          <div className="pt-2 border-t border-[#233144] mt-2 flex items-center justify-between text-xs text-[#7c839b]">
-            <span className="flex items-center gap-1.5">
-              <ShieldCheck className="w-4 h-4 text-emerald-400" />
-              Tài khoản lái xe đã xác thực
-            </span>
-            <a href="tel:19006868" className="text-[#d95f00] font-bold font-mono">
-              1900 6868
-            </a>
+          <div className="pt-2 border-t border-[#233144] mt-2 flex items-center gap-1.5 text-xs text-[#7c839b]">
+            <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0" />
+            <span>Tài khoản lái xe đã xác thực an toàn</span>
           </div>
         </div>
       )}
