@@ -1,6 +1,7 @@
 import { createBrowserRouter } from 'react-router-dom'
 import { RootLayout } from '@/layouts/RootLayout'
 import { DriverLayout } from '@/layouts/DriverLayout'
+import { MerchantLayout } from '@/layouts/MerchantLayout'
 import { BaselineOverviewPage } from '@/app/pages/BaselineOverviewPage'
 import { DashboardHomePage } from '@/features/dashboard'
 import { SearchParkingPage } from '@/features/parking-search'
@@ -14,6 +15,7 @@ import { ChangePasswordPage } from '@/features/change-password'
 import { PaymentReturnPage } from '@/features/payment-return'
 import { PaymentCancelPage } from '@/features/payment-cancel'
 import { NotificationsPage } from '@/features/notifications'
+import { MerchantDashboardPage } from '@/features/merchant/dashboard'
 import {
   LandingPage,
   DriverSolutionsPage,
@@ -315,6 +317,48 @@ export const router = createBrowserRouter([
   {
     path: '/tin-tuc',
     element: <InsightsPage />,
+  },
+  {
+    path: '/merchant',
+    element: <MerchantLayout />,
+    children: [
+      {
+        index: true,
+        element: <MerchantDashboardPage />,
+      },
+      {
+        path: 'dashboard',
+        element: <MerchantDashboardPage />,
+      },
+      {
+        path: 'parking-lots',
+        element: <MerchantDashboardPage />,
+      },
+      {
+        path: 'bookings',
+        element: <MerchantDashboardPage />,
+      },
+      {
+        path: 'qr-scanner',
+        element: <MerchantDashboardPage />,
+      },
+      {
+        path: 'revenue',
+        element: <MerchantDashboardPage />,
+      },
+      {
+        path: 'withdrawals',
+        element: <MerchantDashboardPage />,
+      },
+      {
+        path: 'disputes',
+        element: <MerchantDashboardPage />,
+      },
+      {
+        path: 'profile',
+        element: <MerchantDashboardPage />,
+      },
+    ],
   },
   {
     path: '/crm',
