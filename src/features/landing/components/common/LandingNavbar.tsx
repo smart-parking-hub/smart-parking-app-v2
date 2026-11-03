@@ -18,10 +18,35 @@ export function LandingNavbar() {
     location.pathname.includes('about') || location.pathname.includes('ve-chung-toi')
   const isCareersPage =
     location.pathname.includes('careers') || location.pathname.includes('tuyen-dung')
+  const isInsightsPage =
+    location.pathname.includes('insights') ||
+    location.pathname.includes('tin-tuc') ||
+    location.pathname.includes('bai-viet')
   const isHomePage =
-    !isDriverPage && !isOwnerPage && !isPricingPage && !isApiPage && !isAboutPage && !isCareersPage
+    !isDriverPage &&
+    !isOwnerPage &&
+    !isPricingPage &&
+    !isApiPage &&
+    !isAboutPage &&
+    !isCareersPage &&
+    !isInsightsPage
 
-  const navLinks = isCareersPage
+  const navLinks = isInsightsPage
+    ? [
+        { label: 'Trang chủ', href: '/' },
+        { label: 'Giải pháp Tài xế', href: '/driver-solutions' },
+        { label: 'Giải pháp Chủ bãi', href: '/owner-solutions' },
+        { label: 'Bảng giá', href: '/pricing' },
+        { label: 'Kết nối API', href: '/api-docs' },
+        { label: 'Về chúng tôi', href: '/about' },
+        {
+          label: 'Tin tức & Báo cáo',
+          href: '/insights',
+          isCurrent: true,
+        },
+        { label: 'Liên hệ', href: '#lien-he' },
+      ]
+    : isCareersPage
     ? [
         { label: 'Trang chủ', href: '/' },
         { label: 'Giải pháp Tài xế', href: '/driver-solutions' },
@@ -181,20 +206,24 @@ export function LandingNavbar() {
 
   const closeMobileMenu = () => setMobileMenuOpen(false)
 
-  const ctaLabel = isCareersPage
-    ? 'Ứng tuyển ngay'
-    : isAboutPage
-      ? 'Gia nhập mạng lưới'
+  const ctaLabel = isInsightsPage
+    ? 'Đăng ký bản tin'
+    : isCareersPage
+      ? 'Ứng tuyển ngay'
+      : isAboutPage
+        ? 'Gia nhập mạng lưới'
       : isApiPage
         ? 'Nhận Sandbox Key'
         : isOwnerPage
           ? 'Hợp tác bãi đỗ'
           : 'Tìm bãi đỗ ngay'
 
-  const ctaHref = isCareersPage
-    ? '#vi-tri-tuyen-dung'
-    : isAboutPage
-      ? '#gia-nhap'
+  const ctaHref = isInsightsPage
+    ? '#categoryFilterBar'
+    : isCareersPage
+      ? '#vi-tri-tuyen-dung'
+      : isAboutPage
+        ? '#gia-nhap'
       : isApiPage
         ? '#sandbox-register'
         : isOwnerPage

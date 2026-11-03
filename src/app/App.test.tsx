@@ -8,10 +8,11 @@ import {
   ApiDocsPage,
   AboutUsPage,
   CareersPage,
+  InsightsPage,
 } from '@/features/landing'
 import { App } from './App'
 
-describe('SmartTruckHub - 7 Distinct Landing Screens', () => {
+describe('SmartTruckHub - 8 Distinct Landing Screens', () => {
   describe('Trang Chủ (Home Landing Page - SCR-001)', () => {
     it('renders home hero and all 8 main sections successfully', () => {
       render(<App />)
@@ -725,6 +726,140 @@ describe('SmartTruckHub - 7 Distinct Landing Screens', () => {
       expect(
         screen.getByText(/Đã tiếp nhận hồ sơ! HR sẽ liên hệ qua email trong 24h\./i),
       ).toBeInTheDocument()
+    })
+  })
+
+  describe('Trang Tin Tức & Báo Cáo Chuyên Ngành (Logistics Insights - SCR-008)', () => {
+    it('renders hero with category tabs, search input, featured spotlight report, filtered articles grid, newsletter subscription and bottom CTA', () => {
+      render(
+        <MemoryRouter initialEntries={['/insights']}>
+          <InsightsPage />
+        </MemoryRouter>,
+      )
+
+      // 1. Insights Hero Section
+      expect(
+        screen.getByText(/BẢN TIN CHUYÊN NGÀNH · TRÍ TUỆ LOGISTICS 4\.0/i),
+      ).toBeInTheDocument()
+      expect(
+        screen.getByRole('heading', {
+          name: /Phân Tích Bến Bãi, Dữ Liệu Tải Trọng & Dòng Chảy Vận Tải\./i,
+        }),
+      ).toBeInTheDocument()
+
+      // 2. Featured Article Spotlight
+      expect(screen.getByText(/BÁO CÁO THỰC THẦU · THÁNG 10\/2026/i)).toBeInTheDocument()
+      expect(
+        screen.getByRole('heading', {
+          name: /Chi Phí Ẩn Của Việc Đậu Xe Ven Quốc Lộ: Phân Tích Thiệt Hại 180 Triệu\/Năm/i,
+        }),
+      ).toBeInTheDocument()
+      expect(screen.getByText(/3\.8 L\/giờ/i)).toBeInTheDocument()
+      expect(screen.getByText(/180 tr\/năm/i)).toBeInTheDocument()
+      expect(screen.getByText(/^4\.2x$/i)).toBeInTheDocument()
+      expect(screen.getByText(/Bãi Đình Vũ, Hải Phòng · Báo Cáo Khảo Sát/i)).toBeInTheDocument()
+
+      // 3. Category Tabs & Interactive Filtering
+      expect(screen.getByText(/CHUYÊN ĐỀ PHÂN TÍCH & HƯỚNG DẪN THỰC THI/i)).toBeInTheDocument()
+      expect(
+        screen.getByRole('heading', {
+          name: /Bài Viết & Cẩm Nang Mới Nhất/i,
+        }),
+      ).toBeInTheDocument()
+
+      // Verify all 6 articles rendered initially
+      expect(
+        screen.getByRole('heading', {
+          name: /Kinh Nghiệm Tăng 32% Doanh Thu Khai Thác Bãi Xe Nhờ Ứng Dụng Barie ALPR/i,
+        }),
+      ).toBeInTheDocument()
+      expect(
+        screen.getByRole('heading', {
+          name: /Hướng Dẫn Quy Trình Xuất Hóa Đơn Điện Tử Tự Động Theo Thông Tư 78/i,
+        }),
+      ).toBeInTheDocument()
+      expect(
+        screen.getByRole('heading', {
+          name: /Cẩm Nang Bác Tài: Bản Đồ Cầu Yếu, Giới Hạn Tĩnh Không/i,
+        }),
+      ).toBeInTheDocument()
+
+      // Filter by "Dành Cho Tài Xế"
+      const driverTab = screen.getByRole('tab', { name: /Dành Cho Tài Xế/i })
+      fireEvent.click(driverTab)
+      expect(
+        screen.getByRole('heading', {
+          name: /Cẩm Nang Bác Tài: Bản Đồ Cầu Yếu, Giới Hạn Tĩnh Không/i,
+        }),
+      ).toBeInTheDocument()
+      expect(
+        screen.queryByRole('heading', {
+          name: /Kinh Nghiệm Tăng 32% Doanh Thu Khai Thác Bãi Xe/i,
+        }),
+      ).not.toBeInTheDocument()
+
+      // Filter by "Công Nghệ & API"
+      const techTab = screen.getByRole('tab', { name: /Công Nghệ & API/i })
+      fireEvent.click(techTab)
+      expect(
+        screen.getByRole('heading', {
+          name: /Tích Hợp API Điều Phối SmartTruck Vào Phần Mềm SAP\/MISA/i,
+        }),
+      ).toBeInTheDocument()
+
+      // Reset to "Tất Cả"
+      const allTab = screen.getByRole('tab', { name: /Tất Cả/i })
+      fireEvent.click(allTab)
+      expect(
+        screen.getByRole('heading', {
+          name: /Kinh Nghiệm Tăng 32% Doanh Thu Khai Thác Bãi Xe/i,
+        }),
+      ).toBeInTheDocument()
+
+      // 4. Live Search Filter
+      const searchInput = screen.getByPlaceholderText(/Tìm kiếm bài viết, mã bến, chỉ số\.\.\./i)
+      fireEvent.change(searchInput, { target: { value: 'SAP/MISA' } })
+      expect(
+        screen.getByRole('heading', {
+          name: /Tích Hợp API Điều Phối SmartTruck Vào Phần Mềm SAP\/MISA/i,
+        }),
+      ).toBeInTheDocument()
+      expect(
+        screen.queryByRole('heading', {
+          name: /Cẩm Nang Bác Tài/i,
+        }),
+      ).not.toBeInTheDocument()
+
+      // Clear Search
+      fireEvent.change(searchInput, { target: { value: '' } })
+      expect(
+        screen.getByRole('heading', {
+          name: /Kinh Nghiệm Tăng 32% Doanh Thu Khai Thác Bãi Xe/i,
+        }),
+      ).toBeInTheDocument()
+
+      // 5. Weekly Newsletter Subscription Form
+      expect(
+        screen.getByRole('heading', {
+          name: /Nhận Báo Cáo Tải Trọng & Xu Hướng Giá Cước Sáng Thứ Hai Hàng Tuần/i,
+        }),
+      ).toBeInTheDocument()
+      const emailInput = screen.getByPlaceholderText(/Nhập email doanh nghiệp của bạn\.\.\./i)
+      fireEvent.change(emailInput, { target: { value: 'logistics.manager@tan-cang.vn' } })
+      const subscribeButton = screen.getByRole('button', { name: /ĐĂNG KÝ BẢN TIN/i })
+      fireEvent.click(subscribeButton)
+      expect(
+        screen.getByText(/Cảm ơn bạn đã đăng ký nhận bản tin thị trường Fretrix!/i),
+      ).toBeInTheDocument()
+
+      // 6. Bottom CTA Banner
+      expect(
+        screen.getByRole('heading', {
+          name: /Sẵn Sàng Tối Ưu Hóa Chi Phí Lưu Bãi Cho Đội Xe Của Bạn\?/i,
+        }),
+      ).toBeInTheDocument()
+      expect(screen.getByRole('link', { name: /Tìm Bãi Đỗ Ngay/i })).toBeInTheDocument()
+      expect(screen.getByRole('link', { name: /Dành Cho Chủ Bãi/i })).toBeInTheDocument()
     })
   })
 })
