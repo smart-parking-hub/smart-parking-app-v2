@@ -1,11 +1,16 @@
+// Pages
 export * from './pages/LandingPage'
-export * from './components/LandingNavbar'
-export * from './components/LandingHeroSection'
-export * from './components/LandingMetricsBanner'
-export * from './components/LandingServicesGrid'
-export * from './components/LandingWhyUsBento'
-export * from './components/LandingHowItWorks'
-export * from './components/LandingPricingMatrix'
-export * from './components/LandingTestimonials'
-export * from './components/LandingConversionCta'
-export * from './components/LandingFooter'
+
+// Common Components
+export * from './components/common/LandingNavbar'
+export * from './components/common/LandingFooter'
+
+// Home Components (Trang Chủ - SCR-001)
+export * from './components/home/HomeHeroSection'
+export * from './components/home/LandingMetricsBanner'
+export * from './components/home/LandingServicesGrid'
+export * from './components/home/LandingWhyUsBento'
+export * from './components/home/LandingHowItWorks'
+export * from './components/home/LandingPricingMatrix'
+export * from './components/home/HomeTestimonials'
+export * from './components/home/HomeConversionCta'

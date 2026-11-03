@@ -34,7 +34,7 @@ export function LandingHowItWorks() {
 
   return (
     <section className="bg-white py-20 sm:py-28" id="quy-trinh">
-      <div className="max-w-310 mx-auto px-6">
+      <div className="max-w-[1240px] mx-auto px-6">
         {/* Section Title */}
         <div className="text-center max-w-xl mx-auto mb-16">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded bg-slate-100 border border-slate-200 text-brand-orange text-xs font-semibold uppercase tracking-wider mb-3">

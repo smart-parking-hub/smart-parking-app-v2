@@ -1,9 +1,6 @@
-import { useState } from 'react'
 import { ArrowLeft, ArrowRight, Star, StarHalf } from 'lucide-react'
 
-export function LandingTestimonials() {
-  const [offset, setOffset] = useState(0)
-
+export function HomeTestimonials() {
   const testimonials = [
     {
       id: 1,
@@ -37,20 +34,9 @@ export function LandingTestimonials() {
     },
   ]
 
-  const handlePrev = () => {
-    setOffset((prev) => (prev === 0 ? testimonials.length - 1 : prev - 1))
-  }
-
-  const handleNext = () => {
-    setOffset((prev) => (prev === testimonials.length - 1 ? 0 : prev + 1))
-  }
-
-  // Rotate list according to user interaction
-  const displayedList = testimonials.map((_, i) => testimonials[(i + offset) % testimonials.length])
-
   return (
     <section className="bg-white py-20 sm:py-28">
-      <div className="max-w-310 mx-auto px-6">
+      <div className="max-w-[1240px] mx-auto px-6">
         <div className="flex flex-col md:flex-row md:items-end justify-between mb-16 gap-6">
           <div>
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded bg-slate-100 border border-slate-200 text-brand-orange text-xs font-semibold uppercase tracking-wider mb-3">
@@ -65,16 +51,14 @@ export function LandingTestimonials() {
             <button
               type="button"
               aria-label="Đánh giá trước đó"
-              onClick={handlePrev}
-              className="w-12 h-12 rounded-xl border border-brand-border bg-white text-slate-700 hover:bg-slate-100 hover:text-brand-orange flex items-center justify-center transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-orange"
+              className="w-12 h-12 rounded-xl border border-brand-border bg-white text-slate-700 hover:bg-slate-100 flex items-center justify-center transition-colors cursor-pointer"
             >
               <ArrowLeft className="h-5 w-5" aria-hidden="true" />
             </button>
             <button
               type="button"
               aria-label="Đánh giá tiếp theo"
-              onClick={handleNext}
-              className="w-12 h-12 rounded-xl border border-brand-border bg-white text-slate-700 hover:bg-slate-100 hover:text-brand-orange flex items-center justify-center transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-orange"
+              className="w-12 h-12 rounded-xl border border-brand-border bg-white text-slate-700 hover:bg-slate-100 flex items-center justify-center transition-colors cursor-pointer"
             >
               <ArrowRight className="h-5 w-5" aria-hidden="true" />
             </button>
@@ -83,7 +67,7 @@ export function LandingTestimonials() {
 
         {/* 3 Testimonial Cards Grid */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {displayedList.map((t) => (
+          {testimonials.map((t) => (
             <div
               key={t.id}
               className={

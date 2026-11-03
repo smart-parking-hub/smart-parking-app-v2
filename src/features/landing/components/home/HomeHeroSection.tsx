@@ -1,6 +1,6 @@
 import { ArrowRight, SlidersHorizontal, Star, StarHalf } from 'lucide-react'
 
-export function LandingHeroSection() {
+export function HomeHeroSection() {
   const heroImage =
     'https://lh3.googleusercontent.com/aida-public/AB6AXuA4ig97Cnuonq7Ww5GfB1GaBLig34jDUJzG2pLI21FDH47vqUk8ecTZwu6yfDDsu1ZZqkJrYKLysKr6BIEIbSE8CUsPu5RiYj9_S5kYW-leMZGAFNKkw_GEklWj-EmFSQZ96Udu32sEa1KUSlsupNA1ngpRuCcFEzkHahc-ECwx2D_NIbw_1YOMHUKPqQHWHHLDPIj1mBAgfbLvW66ZaAnF9RoxHpc8bKgC621qKWo0'
 
@@ -16,10 +16,10 @@ export function LandingHeroSection() {
   return (
     <section className="relative bg-brand-navy overflow-hidden pt-12 pb-24 md:pt-16 md:pb-32">
       {/* Ambient Radial Glows */}
-      <div className="absolute -top-32 right-10 w-145 h-145 bg-brand-orange/10 rounded-full blur-3xl pointer-events-none"></div>
-      <div className="absolute bottom-0 left-1/4 w-105 h-105 bg-slate-800/40 rounded-full blur-2xl pointer-events-none"></div>
+      <div className="absolute -top-32 right-10 w-[580px] h-[580px] bg-brand-orange/10 rounded-full blur-3xl pointer-events-none"></div>
+      <div className="absolute bottom-0 left-1/4 w-[420px] h-[420px] bg-slate-800/40 rounded-full blur-2xl pointer-events-none"></div>
 
-      <div className="max-w-310 mx-auto px-6 relative z-10">
+      <div className="max-w-[1240px] mx-auto px-6 relative z-10">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-8 items-center">
           {/* Left Column: Copy & Actions */}
           <div className="lg:col-span-7 flex flex-col items-start space-y-6">
@@ -46,24 +46,24 @@ export function LandingHeroSection() {
             {/* Dual Button Action Group */}
             <div className="flex flex-wrap items-center gap-4 pt-2 w-full sm:w-auto">
               <a
-                className="inline-flex items-center justify-center gap-2 bg-brand-orange hover:bg-brand-orange-hover text-white font-sora font-semibold text-sm sm:text-base px-7 py-4 rounded-xl shadow-lg shadow-brand-orange/20 transition-all hover:scale-[1.02] active:scale-[0.99]"
+                className="inline-flex items-center justify-center gap-2 bg-brand-orange hover:bg-brand-orange-hover text-white font-sora font-semibold text-sm sm:text-base px-7 py-4 rounded-xl shadow-lg shadow-brand-orange/20 transition-all hover:scale-[1.02] active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-orange"
                 href="#tim-bai"
               >
                 <span>ĐẶT CHỖ BÃI XE NGAY</span>
                 <ArrowRight className="h-5 w-5" aria-hidden="true" />
               </a>
               <a
-                className="inline-flex items-center justify-center gap-2 bg-brand-navy-light/80 hover:bg-slate-800 text-white border border-slate-700 font-sora font-semibold text-sm sm:text-base px-6 py-4 rounded-xl transition-all"
-                href="#giai-phap-chu-bai"
+                className="inline-flex items-center justify-center gap-2 bg-brand-navy-light/80 hover:bg-slate-800 text-white border border-slate-700 font-sora font-semibold text-sm sm:text-base px-6 py-4 rounded-xl transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400"
+                href="#dieu-phoi"
               >
                 <SlidersHorizontal className="h-5 w-5 text-slate-400" aria-hidden="true" />
                 <span>ĐIỀU PHỐI CHUỖI CUNG ỨNG</span>
               </a>
             </div>
 
-            {/* Social Proof Strip */}
+            {/* Fretrix Social Proof Strip */}
             <div className="pt-6 flex flex-wrap items-center gap-6 border-t border-slate-800/80 w-full mt-4">
-              <div className="flex items-center gap-1 text-brand-orange">
+              <div className="flex items-center gap-1.5 text-brand-orange">
                 <Star className="h-5 w-5 fill-brand-orange text-brand-orange" aria-hidden="true" />
                 <Star className="h-5 w-5 fill-brand-orange text-brand-orange" aria-hidden="true" />
                 <Star className="h-5 w-5 fill-brand-orange text-brand-orange" aria-hidden="true" />
@@ -81,15 +81,15 @@ export function LandingHeroSection() {
           {/* Right Column: Fretrix Floating Terminal Card */}
           <div className="lg:col-span-5 relative w-full">
             <div className="relative rounded-3xl overflow-hidden bg-brand-navy-light border border-slate-700/80 shadow-2xl p-3">
-              <div className="relative w-full h-95 sm:h-110 rounded-2xl overflow-hidden">
+              <div className="relative w-full h-[380px] sm:h-[440px] rounded-2xl overflow-hidden">
                 <img
                   className="w-full h-full object-cover"
-                  alt="Xe container tại bãi đỗ logistics thông minh ban đêm"
+                  alt="A heavy duty prime mover truck container parked at a high-tech illuminated logistics terminal at night"
                   src={heroImage}
                   fetchPriority="high"
                   loading="eager"
                 />
-                <div className="absolute inset-0 bg-linear-to-t from-brand-navy via-brand-navy/30 to-transparent"></div>
+                <div className="absolute inset-0 bg-gradient-to-t from-brand-navy via-brand-navy/30 to-transparent"></div>
 
                 {/* Floating Pill Top Right */}
                 <div className="absolute top-4 right-4 bg-brand-navy/90 backdrop-blur-md border border-slate-700 px-3.5 py-2 rounded-xl flex items-center gap-2">

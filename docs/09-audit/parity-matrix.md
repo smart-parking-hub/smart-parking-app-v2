@@ -1,15 +1,24 @@
-# Capability Parity Matrix — SCR-001: Public Landing Page
+# Capability Parity Matrix — Public Landing Page (SCR-001)
 
-| Chức năng cũ (`smart-parking-app`) | Thể hiện trên Stitch HTML | Triển khai mới (`smart-parking-app-v2`) | API / Quyền hạn | Trạng thái Parity |
-|---|---|---|---|---|
-| Navbar & Hotline | Sticky Navbar với Logo SMARTTRUCK HUB, Hotline 1900 6868 | `LandingNavbar.tsx` | Public | **Preserved (Enhanced)** |
-| Hero Headline & CTA | Hero Dark Navy (`#060D1A`), Dual Buttons Đặt chỗ & Điều phối | `LandingHeroSection.tsx` | Public | **Preserved (Full Redesign)** |
-| Thống kê chỗ trống & lượt xe | Floating Terminal Card + Live Metric Bar (99.4% mở tự động, 320+ cụm bãi) | `LandingHeroSection.tsx` | Public | **Preserved (Enhanced)** |
-| Chỉ số vận hành (4 columns) | Metrics Banner 20K+ lượt, 320+ bãi, 99.8% SLA, 24/7 điều phối | `LandingMetricsBanner.tsx` | Public | **Preserved** |
-| Danh mục dịch vụ (Benefit grid) | 4 Service Cards (Container depot, Xe tải nặng, Trạm nghỉ, Hàng đợi ảo) | `LandingServicesGrid.tsx` | Public | **Preserved (Enhanced)** |
-| Dành cho chủ bãi & SLA | Bento Grid (SLA 99.8%, Cảm biến 0ms, PayOS T+1, Bảo hiểm 2 tỷ) | `LandingWhyUsBento.tsx` | Public | **Preserved (Enhanced)** |
-| Quy trình lưu bãi | 4 bước tuyến tính (Tìm bãi -> Quét QR -> Đỗ xe -> Xuất bãi) | `LandingHowItWorks.tsx` | Public | **Preserved** |
-| Bảng giá xe (Pricing Matrix) | Matrix 4 loại xe (Nhẹ, Nặng, Container 40ft, 45ft) + nút Đặt chỗ | `LandingPricingMatrix.tsx` | Link to `/search` | **Preserved (Enhanced)** |
-| Đánh giá khách hàng (Social Proof) | 3 Testimonials (Đông Đô Logistics, Bãi Cường Phát, Bác tài Bắc Nam) | `LandingTestimonials.tsx` | Public | **Preserved** |
-| CTA chuyển đổi cuối trang | Dark Navy Banner + Dual CTA + 3 Trust check badges | `LandingConversionCta.tsx` | Public | **Preserved** |
-| Footer liên hệ & pháp lý | 4-column footer, hotline, email, ISO 27001, PayOS | `LandingFooter.tsx` | Public | **Preserved** |
+> Phiên bản thiết kế: Stitch HTML `web_standard`  
+> Module: `src/features/landing`  
+> Route: `/` (Trang Chủ)  
+> Subfolders: `components/home/`, `components/common/`  
+> Kiểm thử: Typecheck (0 error), Lint (0 warning, 0 error), Test (1/1 pass), Build (Pass)
+
+---
+
+## 1. Màn Hình SCR-001: Trang Chủ (Home Landing Page — Route `/`)
+
+| Khối Giao Diện Stitch | Thành Phần React 19 (`smart-parking-app-v2`) | API / Quyền hạn | Trạng thái Parity |
+|---|---|---|---|
+| Sticky Navbar | [`LandingNavbar.tsx`](file:///d:/Documents/JAVA%20WEB%20SERVICE/SmartParkingHub/smart-parking-app-v2/src/features/landing/components/common/LandingNavbar.tsx) | Public | **Preserved (Full Match)** |
+| 1. Hero Section ("Sự Kết Tinh Giữa Công Nghệ Và Bãi Đỗ Xe Tải") | [`HomeHeroSection.tsx`](file:///d:/Documents/JAVA%20WEB%20SERVICE/SmartParkingHub/smart-parking-app-v2/src/features/landing/components/home/HomeHeroSection.tsx) | Public | **Preserved (Full Match)** |
+| 2. Metrics Banner (4 cột số liệu 20K+, 320+ bãi, 99.8% SLA, 24/7 điều phối) | [`LandingMetricsBanner.tsx`](file:///d:/Documents/JAVA%20WEB%20SERVICE/SmartParkingHub/smart-parking-app-v2/src/features/landing/components/home/LandingMetricsBanner.tsx) | Public | **Preserved (Full Match)** |
+| 3. Danh Mục Dịch VỤ Chuyên Dụng (4 nhóm bãi container, xe tải nặng, trạm nghỉ, AI gate) | [`LandingServicesGrid.tsx`](file:///d:/Documents/JAVA%20WEB%20SERVICE/SmartParkingHub/smart-parking-app-v2/src/features/landing/components/home/LandingServicesGrid.tsx) | Public | **Preserved (Full Match)** |
+| 4. Why Us Bento ("Được Thiết Kế Cho Doanh Nghiệp Không Thể Chấp Nhận Rủi Ro") | [`LandingWhyUsBento.tsx`](file:///d:/Documents/JAVA%20WEB%20SERVICE/SmartParkingHub/smart-parking-app-v2/src/features/landing/components/home/LandingWhyUsBento.tsx) | Public | **Preserved (Full Match)** |
+| 5. Quy Trình 4 Bước Đơn Giản (Tìm bãi, Quét QR, Lưu bãi, Xuất bãi) | [`LandingHowItWorks.tsx`](file:///d:/Documents/JAVA%20WEB%20SERVICE/SmartParkingHub/smart-parking-app-v2/src/features/landing/components/home/LandingHowItWorks.tsx) | Public | **Preserved (Full Match)** |
+| 6. Biểu Phí Niêm Yết Minh Bạch (Bảng so sánh 4 phân khúc phương tiện) | [`LandingPricingMatrix.tsx`](file:///d:/Documents/JAVA%20WEB%20SERVICE/SmartParkingHub/smart-parking-app-v2/src/features/landing/components/home/LandingPricingMatrix.tsx) | Public | **Preserved (Full Match)** |
+| 7. Bảo Chứng Khách Hàng (3 Review Đông Đô, Cường Phát, Lê Minh Hùng) | [`HomeTestimonials.tsx`](file:///d:/Documents/JAVA%20WEB%20SERVICE/SmartParkingHub/smart-parking-app-v2/src/features/landing/components/home/HomeTestimonials.tsx) | Public | **Preserved (Full Match)** |
+| 8. Final Conversion Banner ("Sẵn Sàng Số Hóa Điểm Đỗ Xe Tải") | [`HomeConversionCta.tsx`](file:///d:/Documents/JAVA%20WEB%20SERVICE/SmartParkingHub/smart-parking-app-v2/src/features/landing/components/home/HomeConversionCta.tsx) | Public | **Preserved (Full Match)** |
+| 4-Column Footer & Pháp Lý | [`LandingFooter.tsx`](file:///d:/Documents/JAVA%20WEB%20SERVICE/SmartParkingHub/smart-parking-app-v2/src/features/landing/components/common/LandingFooter.tsx) | Public | **Preserved (Full Match)** |

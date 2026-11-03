@@ -1,6 +1,6 @@
 import { CheckCircle2, Handshake, Truck } from 'lucide-react'
 
-export function LandingConversionCta() {
+export function HomeConversionCta() {
   const highlights = [
     'Không cần hợp đồng giấy tờ rườm rà',
     'Tích hợp thiết bị Barie sẵn có trong 48h',
@@ -10,7 +10,7 @@ export function LandingConversionCta() {
   return (
     <section className="bg-brand-navy py-20 sm:py-28 relative overflow-hidden border-t border-slate-800">
       <div className="absolute inset-0 bg-radial-[at_top] from-slate-800/40 via-brand-navy to-brand-navy pointer-events-none"></div>
-      <div className="max-w-310 mx-auto px-6 relative z-10 text-center">
+      <div className="max-w-[1240px] mx-auto px-6 relative z-10 text-center">
         <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-brand-navy-light border border-slate-700 mb-6">
           <span className="w-2 h-2 rounded-full bg-brand-orange"></span>
           <span className="font-inter text-xs font-semibold text-brand-orange uppercase tracking-wider">
