@@ -23,3 +23,4 @@
 | `SCR-024` | PayOS Payment Cancel & Berth Preservation Hub (Thông báo hủy thanh toán & Bảo lưu slot) | `/payment/cancel` | `features/payment-cancel` | Stitch HTML/CSS (`web_standard`) | **IMPLEMENTED** | Sẵn sàng nghiệm thu |
 | `SCR-025` | Driver Notifications Center (Trung tâm thông báo & Nhật ký tác vụ) | `/notifications` | `features/notifications` | Stitch HTML/CSS (`web_standard`) | **IMPLEMENTED** | Sẵn sàng nghiệm thu |
 | `SCR-026` | Merchant Executive Dashboard (Bảng điều khiển tổng quan vận hành & Doanh thu chủ bãi) | `/merchant`, `/merchant/dashboard` | `features/merchant/dashboard` | Stitch HTML/CSS (`web_dashboard`) | **IMPLEMENTED** | Sẵn sàng nghiệm thu |
+| `SCR-027` | Merchant Legal & Banking Profile (Hồ sơ pháp lý & Tài khoản nhận tiền chủ bãi) | `/merchant/profile` | `features/merchant/profile` | Stitch HTML/CSS (`web_dashboard`) | **IMPLEMENTED** | Sẵn sàng nghiệm thu |

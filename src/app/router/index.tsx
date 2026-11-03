@@ -16,6 +16,7 @@ import { PaymentReturnPage } from '@/features/payment-return'
 import { PaymentCancelPage } from '@/features/payment-cancel'
 import { NotificationsPage } from '@/features/notifications'
 import { MerchantDashboardPage } from '@/features/merchant/dashboard'
+import { MerchantProfilePage } from '@/features/merchant/profile'
 import {
   LandingPage,
   DriverSolutionsPage,
@@ -356,7 +357,7 @@ export const router = createBrowserRouter([
       },
       {
         path: 'profile',
-        element: <MerchantDashboardPage />,
+        element: <MerchantProfilePage />,
       },
     ],
   },
