@@ -11,6 +11,7 @@ import { DriverPaymentsPage } from '@/features/payments'
 import { VehiclesPage } from '@/features/vehicles'
 import { ProfilePage } from '@/features/profile'
 import { ChangePasswordPage } from '@/features/change-password'
+import { PaymentReturnPage } from '@/features/payment-return'
 import {
   LandingPage,
   DriverSolutionsPage,
@@ -71,6 +72,14 @@ export const router = createBrowserRouter([
         path: 'change-password',
         element: <ChangePasswordPage />,
       },
+      {
+        path: 'payment/success',
+        element: <PaymentReturnPage mode="success" />,
+      },
+      {
+        path: 'payment/cancel',
+        element: <PaymentReturnPage mode="cancel" />,
+      },
     ],
   },
   {
@@ -116,6 +125,14 @@ export const router = createBrowserRouter([
       {
         path: 'change-password',
         element: <ChangePasswordPage />,
+      },
+      {
+        path: 'payment/success',
+        element: <PaymentReturnPage mode="success" />,
+      },
+      {
+        path: 'payment/cancel',
+        element: <PaymentReturnPage mode="cancel" />,
       },
     ],
   },
@@ -176,6 +193,36 @@ export const router = createBrowserRouter([
       {
         index: true,
         element: <ChangePasswordPage />,
+      },
+    ],
+  },
+  {
+    path: '/payment/success',
+    element: <DriverLayout />,
+    children: [
+      {
+        index: true,
+        element: <PaymentReturnPage mode="success" />,
+      },
+    ],
+  },
+  {
+    path: '/payment/cancel',
+    element: <DriverLayout />,
+    children: [
+      {
+        index: true,
+        element: <PaymentReturnPage mode="cancel" />,
+      },
+    ],
+  },
+  {
+    path: '/payment/return',
+    element: <DriverLayout />,
+    children: [
+      {
+        index: true,
+        element: <PaymentReturnPage mode="success" />,
       },
     ],
   },
