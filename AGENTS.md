@@ -138,7 +138,7 @@ Every data-driven screen must consider loading, initial empty, filtered empty, e
 > [!CRITICAL]
 > Whenever the user provides or pastes Stitch HTML/CSS or requests a UI screen implementation, the agent **MUST ALWAYS** accompany the request with and strictly enforce the **11 Strict Execution Rules**, **8-Phase Execution Order**, and **Completion Conditions** defined below and in `.agents/rules/15-stitch-screen-by-screen.md`.
 
-### 8.1. 11 Strict Execution Rules
+### 8.1. 13 Strict Execution Rules
 1. **Single-Screen Boundary:** Implement exactly ONE screen per task.
 2. **Full Intake Inspection:** Read the complete HTML/CSS and all style declarations before writing any code.
 3. **Approved Visual Authority:** Stitch is the approved visual reference.
@@ -150,6 +150,8 @@ Every data-driven screen must consider loading, initial empty, filtered empty, e
 9. **No Static HTML Cut:** Never deliver raw static HTML or `dangerouslySetInnerHTML` as the final product.
 10. **Zero Cross-Screen Bleed:** Do NOT modify or refactor unrelated screens.
 11. **Hard Stop Gate:** Do NOT proceed to the next screen until the user formally reviews and approves the current screen.
+12. **Zero-Error & Zero-Warning Gate:** Clean all red errors (TypeScript `tsc --noEmit`, build, test, runtime console) and yellow warnings (ESLint `eslint .`, unused variables, hook warnings). Both must report 0 Errors and 0 Warnings.
+13. **Component Reusability & Placement Assessment:** Rigorously evaluate whether components should reside in `shared/components/` (generic domain-agnostic UI), `entities/` (reusable business concepts), or `features/<feature>/components/` (screen-specific UI). Do not pollute shared blindly.
 
 ### 8.2. 8-Phase Execution Order
 - **Phase 1: Analyze Stitch source:** Parse layout structure, tokens, components, responsive breakpoints, and placeholder elements.

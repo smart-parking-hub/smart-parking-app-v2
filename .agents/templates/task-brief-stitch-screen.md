@@ -22,6 +22,8 @@ Bạn phải tuân thủ AGENTS.md, toàn bộ rules liên quan và skill `stitc
 9. Không sử dụng HTML tĩnh làm sản phẩm hoàn chỉnh.
 10. Không tự ý thay đổi các màn hình khác.
 11. Không bắt đầu màn hình tiếp theo khi chưa được tôi chấp thuận.
+12. **Cổng kiểm tra Zero-Error & Zero-Warning:** Quét sạch toàn bộ lỗi đỏ (typecheck, build, test, console) và cảnh báo vàng (linter, unused variables, React hook warnings) mới được tính là hoàn thành.
+13. **Đánh giá tính tái sử dụng và vị trí lưu trữ:** Phải đánh giá từng component có dùng nhiều chỗ không, phân loại rõ ràng vị trí đặt (`shared/components/` vs `entities/` vs `features/<feature>/components/`).
 
 ## EXECUTION ORDER
 
@@ -31,15 +33,15 @@ Phase 2: Inspect existing frontend and backend contracts.
 
 Phase 3: Create capability parity matrix.
 
-Phase 4: Report implementation plan and unresolved issues.
+Phase 4: Report implementation plan and architectural placement.
 
 Phase 5: Implement the screen.
 
 Phase 6: Integrate real API, permissions and business logic.
 
-Phase 7: Run tests, build and visual comparison.
+Phase 7: Run tests, build, linter and verify 0 Errors / 0 Warnings.
 
-Phase 8: Update documentation and report results.
+Phase 8: Update documentation, report results with reusability assessment.
 
 ## COMPLETION CONDITIONS
 
@@ -48,12 +50,12 @@ Không được tuyên bố hoàn thành chỉ vì giao diện đã render.
 Phải kiểm tra:
 - Visual fidelity against Stitch.
 - Existing business capability parity.
-- API integration.
-- Permission enforcement.
+- Zero Red Errors (typecheck, build, test, runtime).
+- Zero Yellow Warnings (linter, unused vars, hook warnings).
+- Reusability & placement assessment reported.
+- API integration & permission enforcement.
 - Loading, error, empty and success states.
-- Responsive behavior.
-- Accessibility and keyboard interactions.
-- TypeScript, lint, tests and production build.
+- Responsive behavior & Accessibility (a11y).
 
 Cuối cùng, báo cáo chính xác những gì đã làm, chưa làm, lỗi còn tồn tại và bằng chứng kiểm thử.
 

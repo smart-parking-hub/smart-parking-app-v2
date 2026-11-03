@@ -149,7 +149,7 @@ cp .env.example .env
 
 Mọi yêu cầu chuyển đổi giao diện từ Stitch sang React bắt buộc phải tuân theo quy chuẩn **`# TASK: IMPLEMENT ONE STITCH SCREEN INTO EXISTING CRM`** được quy định tại [`.agents/rules/15-stitch-screen-by-screen.md`](.agents/rules/15-stitch-screen-by-screen.md).
 
-### 11 Quy Tắc Thực Thi Nghiêm Ngặt:
+### 13 Quy Tắc Thực Thi Nghiêm Ngặt:
 1. **Chỉ làm đúng 1 màn hình** trong mỗi task.
 2. **Đọc toàn bộ HTML/CSS** trước khi viết code.
 3. Stitch là **thẩm quyền trực quan cao nhất**.
@@ -161,6 +161,8 @@ Mọi yêu cầu chuyển đổi giao diện từ Stitch sang React bắt buộc
 9. **Không dùng HTML thô** hoặc `dangerouslySetInnerHTML`.
 10. **Không gây ảnh hưởng (side-effect)** sang các màn hình khác.
 11. **DỪNG LẠI (HALT)** và chờ nghiệm thu trước khi qua màn hình tiếp theo.
+12. **Cổng kiểm tra Zero-Error & Zero-Warning:** Quét sạch toàn bộ lỗi đỏ (typecheck, build, test, runtime console) và cảnh báo vàng (linter, unused variables, hook warnings) đạt 0 Errors / 0 Warnings mới được tính là hoàn thành.
+13. **Đánh giá tính tái sử dụng và vị trí lưu trữ:** Đánh giá từng component có dùng nhiều chỗ không, phân loại rõ ràng vị trí đặt (`shared/components/` vs `entities/` vs `features/<feature>/components/`).
 
 ### Thứ tự 8 giai đoạn:
 * **Phase 1:** Analyze Stitch source.
