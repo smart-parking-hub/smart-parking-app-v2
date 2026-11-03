@@ -1,10 +1,9 @@
 import {
-  Zap,
-  Thermometer,
   Edit,
   Eye,
   Trash2,
   Info,
+  CheckCircle2,
 } from 'lucide-react'
 import type { VehicleItem } from '../types/vehicleTypes'
 
@@ -44,28 +43,28 @@ export function VehicleMasterTable({
         </div>
       </div>
 
-      {/* Master Table Card */}
+      {/* Master Table Card - Fits full width without scrollbars on standard desktop */}
       <div className="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden w-full">
-        <div className="overflow-x-auto w-full">
-          <table className="w-full text-left border-collapse min-w-[1050px]">
+        <div className="w-full overflow-x-auto">
+          <table className="w-full text-left border-collapse table-auto md:table-fixed">
             <thead>
               <tr className="bg-slate-100/90 text-slate-700 font-mono text-xs uppercase tracking-wider border-b border-slate-200">
-                <th className="py-4 px-5 font-semibold w-[24%] min-w-[240px] whitespace-nowrap">
+                <th className="py-3.5 px-4 font-semibold w-[28%]">
                   Phương Tiện / Biển Số
                 </th>
-                <th className="py-4 px-5 font-semibold w-[24%] min-w-[240px] whitespace-nowrap">
+                <th className="py-3.5 px-4 font-semibold w-[24%]">
                   Cấu Hình Quy Cách
                 </th>
-                <th className="py-4 px-5 font-semibold w-[18%] min-w-[180px] whitespace-nowrap">
-                  Tải Trọng Trục
+                <th className="py-3.5 px-4 font-semibold w-[16%]">
+                  Tải Trọng Kéo Theo
                 </th>
-                <th className="py-4 px-5 font-semibold w-[14%] min-w-[150px] whitespace-nowrap">
+                <th className="py-3.5 px-4 font-semibold w-[14%]">
                   Hạn Kiểm Định
                 </th>
-                <th className="py-4 px-5 font-semibold w-[10%] min-w-[130px] whitespace-nowrap">
-                  Barie ALPR
+                <th className="py-3.5 px-3 font-semibold w-[8%] text-center">
+                  Cổng ALPR
                 </th>
-                <th className="py-4 px-5 font-semibold w-[10%] min-w-[140px] text-right whitespace-nowrap">
+                <th className="py-3.5 px-4 font-semibold w-[10%] text-right">
                   Thao Tác
                 </th>
               </tr>
@@ -91,110 +90,94 @@ export function VehicleMasterTable({
                 </tr>
               ) : (
                 vehicles.map((v) => (
-                  <tr key={v.id} className="hover:bg-slate-50/80 transition-colors">
-                    {/* 1. Plate & Identity */}
-                    <td className="py-5 px-5 align-middle">
-                      <div className="flex flex-col gap-1.5">
-                        <div className="flex items-center gap-2.5 whitespace-nowrap">
-                          <span className="font-mono text-lg md:text-xl font-bold text-slate-900 tracking-tight whitespace-nowrap">
+                  <tr
+                    key={v.id}
+                    className="hover:bg-slate-50/90 transition-colors group cursor-pointer"
+                    onClick={() => onViewDossier(v)}
+                    title="Bấm để xem hồ sơ kỹ thuật chi tiết"
+                  >
+                    {/* 1. Plate & Brand */}
+                    <td className="py-4 px-4 align-middle">
+                      <div className="flex flex-col gap-1">
+                        <div className="flex items-center gap-2">
+                          <span className="font-mono text-base lg:text-lg font-bold text-slate-900 tracking-tight">
                             {v.licensePlate}
                           </span>
                           {v.isDefault ? (
-                            <span className="bg-orange-100 text-orange-800 border border-orange-200 text-xs font-mono font-bold px-2 py-0.5 rounded uppercase tracking-wider whitespace-nowrap">
+                            <span className="bg-orange-100 text-orange-800 border border-orange-200 text-[11px] font-mono font-bold px-2 py-0.5 rounded uppercase tracking-wider shrink-0">
                               MẶC ĐỊNH
                             </span>
                           ) : v.vehicleClass === 'TRAILER' ? (
-                            <span className="bg-slate-100 text-slate-700 text-xs font-mono font-bold px-2 py-0.5 rounded uppercase whitespace-nowrap">
+                            <span className="bg-slate-100 text-slate-700 text-[11px] font-mono font-bold px-1.5 py-0.5 rounded uppercase shrink-0">
                               RƠ-MOÓC
                             </span>
                           ) : (
-                            <span className="bg-slate-100 text-slate-500 text-xs font-mono font-bold px-2 py-0.5 rounded uppercase whitespace-nowrap">
+                            <span className="bg-slate-100 text-slate-500 text-[11px] font-mono font-bold px-1.5 py-0.5 rounded uppercase shrink-0">
                               DỰ PHÒNG
                             </span>
                           )}
                         </div>
-                        <div className="font-semibold text-slate-800 text-sm md:text-base whitespace-nowrap">
+                        <div className="font-semibold text-slate-800 text-xs lg:text-sm truncate">
                           {v.brandModel}
-                        </div>
-                        <div className="font-mono text-xs text-slate-500 whitespace-nowrap">
-                          {v.originDetails}
                         </div>
                       </div>
                     </td>
 
                     {/* 2. Specs */}
-                    <td className="py-5 px-5 align-middle">
-                      <div className="flex flex-col gap-1.5">
-                        <span className="font-bold text-slate-900 text-sm md:text-base whitespace-nowrap">
+                    <td className="py-4 px-4 align-middle">
+                      <div className="flex flex-col gap-0.5">
+                        <span className="font-bold text-slate-900 text-xs lg:text-sm truncate">
                           {v.specDetails}
                         </span>
-                        <span className="text-sm text-slate-600 whitespace-nowrap">{v.subSpecText}</span>
-                        {v.needsShorePower && (
-                          <div className="flex items-center gap-1.5 text-xs font-mono text-orange-700 bg-orange-50 px-2 py-0.5 rounded w-max border border-orange-200 whitespace-nowrap">
-                            <Zap className="w-3.5 h-3.5 text-orange-600 shrink-0" />
-                            <span>Cần nguồn điện 3-Pha bãi</span>
-                          </div>
-                        )}
-                        {v.temperatureRange && (
-                          <div className="flex items-center gap-1.5 text-xs font-mono text-slate-600 whitespace-nowrap">
-                            <Thermometer className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                            <span>Dải nhiệt: {v.temperatureRange}</span>
-                          </div>
-                        )}
+                        <span className="text-xs text-slate-500 truncate">
+                          {v.subSpecText}
+                        </span>
                       </div>
                     </td>
 
                     {/* 3. Axle Tonnage */}
-                    <td className="py-5 px-5 align-middle">
-                      <div className="flex flex-col gap-1 font-mono text-sm">
-                        <div className="text-slate-800 whitespace-nowrap">
-                          <span className="text-slate-500 font-normal">Bản thân:</span>{' '}
-                          <span className="font-semibold">{v.curbWeightTon} Tấn</span>
-                        </div>
-                        <div className="text-slate-900 font-bold whitespace-nowrap">
-                          <span className="text-slate-500 font-normal">Kéo theo:</span>{' '}
-                          <span className="text-orange-600 font-bold">{v.towingWeightTon} Tấn</span>
-                        </div>
-                        <div className="text-xs text-slate-500 whitespace-nowrap">{v.axleConfig}</div>
+                    <td className="py-4 px-4 align-middle">
+                      <div className="flex flex-col gap-0.5 font-mono">
+                        <span className="text-sm lg:text-base font-bold text-orange-600">
+                          {v.towingWeightTon} Tấn
+                        </span>
+                        <span className="text-xs text-slate-500">
+                          Tự trọng: {v.curbWeightTon}T
+                        </span>
                       </div>
                     </td>
 
                     {/* 4. Inspection Expiry */}
-                    <td className="py-5 px-5 align-middle">
-                      <div className="flex flex-col gap-1.5 whitespace-nowrap">
-                        <span className="bg-slate-900 text-white font-mono text-xs font-semibold px-2.5 py-1 rounded w-max whitespace-nowrap">
+                    <td className="py-4 px-4 align-middle">
+                      <div className="flex flex-col gap-1">
+                        <span className="bg-slate-900 text-white font-mono text-xs font-semibold px-2 py-0.5 rounded w-max">
                           {v.inspectionExpiryDate}
                         </span>
-                        <span className="text-xs font-mono text-slate-500 whitespace-nowrap">
+                        <span className="text-xs font-mono text-slate-500 truncate">
                           {v.inspectionRemainingText}
-                        </span>
-                        <span className="text-xs font-mono text-slate-700 whitespace-nowrap">
-                          {v.insuranceNumber}
                         </span>
                       </div>
                     </td>
 
                     {/* 5. Barie ALPR Gateway */}
-                    <td className="py-5 px-5 align-middle">
-                      <div className="flex flex-col gap-1 whitespace-nowrap">
-                        <div className="flex items-center gap-2 text-sm font-bold text-slate-900 whitespace-nowrap">
-                          <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 shrink-0" />
-                          <span className="whitespace-nowrap">{v.alprSyncText}</span>
-                        </div>
-                        <span className="text-xs font-mono text-slate-500 whitespace-nowrap">
-                          {v.alprSubText}
-                        </span>
+                    <td className="py-4 px-3 align-middle text-center">
+                      <div className="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-700 bg-emerald-50 border border-emerald-200/80 px-2 py-1 rounded-md">
+                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                        <span>Online</span>
                       </div>
                     </td>
 
                     {/* 6. Action buttons */}
-                    <td className="py-5 px-5 align-middle text-right whitespace-nowrap">
-                      <div className="flex items-center justify-end gap-2 whitespace-nowrap">
+                    <td
+                      className="py-4 px-4 align-middle text-right"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <div className="flex items-center justify-end gap-1.5">
                         {!v.isDefault && (
                           <button
                             type="button"
                             onClick={() => onSetDefault(v.id)}
-                            className="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-semibold whitespace-nowrap transition-colors cursor-pointer"
+                            className="px-2 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-800 text-[11px] font-semibold whitespace-nowrap transition-colors cursor-pointer"
                             title="Đặt làm phương tiện mặc định"
                           >
                             Chọn mặc định
@@ -202,25 +185,25 @@ export function VehicleMasterTable({
                         )}
                         <button
                           type="button"
-                          onClick={() => onEdit(v)}
-                          className="p-2 rounded-lg hover:bg-slate-100 text-slate-600 hover:text-slate-900 transition-colors cursor-pointer"
-                          title="Chỉnh sửa xe"
-                        >
-                          <Edit className="w-4 h-4" />
-                        </button>
-                        <button
-                          type="button"
                           onClick={() => onViewDossier(v)}
-                          className="p-2 rounded-lg hover:bg-slate-100 text-slate-600 hover:text-slate-900 transition-colors cursor-pointer"
+                          className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-600 hover:text-slate-900 transition-colors cursor-pointer"
                           title="Xem hồ sơ kiểm định"
                         >
                           <Eye className="w-4 h-4" />
                         </button>
                         <button
                           type="button"
+                          onClick={() => onEdit(v)}
+                          className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-600 hover:text-slate-900 transition-colors cursor-pointer"
+                          title="Chỉnh sửa xe"
+                        >
+                          <Edit className="w-4 h-4" />
+                        </button>
+                        <button
+                          type="button"
                           disabled={v.isDefault}
                           onClick={() => onDelete(v)}
-                          className={`p-2 rounded-lg transition-colors cursor-pointer ${
+                          className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
                             v.isDefault
                               ? 'opacity-30 cursor-not-allowed text-slate-400'
                               : 'hover:bg-rose-50 text-slate-600 hover:text-rose-600'
@@ -239,11 +222,11 @@ export function VehicleMasterTable({
         </div>
 
         {/* Table Bottom Meta Bar */}
-        <div className="p-4 bg-slate-50/90 border-t border-slate-200/80 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs md:text-sm text-slate-500">
+        <div className="p-3.5 sm:p-4 bg-slate-50/90 border-t border-slate-200/80 flex flex-col sm:flex-row items-center justify-between gap-2.5 text-xs text-slate-500">
           <div className="flex items-center gap-2">
             <Info className="w-4 h-4 text-orange-600 shrink-0" />
             <span>
-              Lưu ý: Mọi phương tiện cập nhật tải trọng mới sẽ được đối soát tự động trong 15 phút với cơ sở dữ liệu đăng kiểm quốc gia.
+              Mẹo: Nhấp vào bất kỳ hàng phương tiện nào để mở xem đầy đủ số khung, số máy, tem và sổ kiểm định.
             </span>
           </div>
           <div className="flex items-center gap-2 shrink-0 font-mono">
