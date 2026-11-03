@@ -14,6 +14,7 @@ export type AccountSidebarTab =
   | 'vehicles'
   | 'payments'
   | 'change-password'
+  | 'notifications'
 
 export interface ProfileSidebarNavProps {
   activeTab?: AccountSidebarTab
@@ -146,20 +147,32 @@ export function ProfileSidebarNav({
         </Link>
       )}
 
-      {/* Nav Link 5: Notifications Modal */}
-      <button
-        type="button"
-        onClick={onOpenNotificationSettings}
-        className="flex items-center justify-between px-5 py-4 hover:bg-slate-50 text-slate-600 hover:text-slate-900 border-l-4 border-transparent transition-colors text-left cursor-pointer"
-      >
-        <div className="flex items-center gap-3">
-          <BellRing className="w-5 h-5 text-slate-500" />
-          <span className="text-xs md:text-sm font-medium">
-            Thiết lập thông báo hệ thống
-          </span>
+      {/* Nav Link 5: Notifications */}
+      {activeTab === 'notifications' ? (
+        <div className="flex items-center justify-between px-5 py-4 bg-orange-50/60 text-slate-900 border-l-4 border-orange-600 transition-colors">
+          <div className="flex items-center gap-3">
+            <BellRing className="w-5 h-5 text-orange-600" />
+            <span className="text-xs md:text-sm font-bold">
+              Thiết lập thông báo hệ thống
+            </span>
+          </div>
+          <ArrowRight className="w-4 h-4 text-orange-600" />
         </div>
-        <ChevronRight className="w-4 h-4 text-slate-400" />
-      </button>
+      ) : (
+        <Link
+          to="/notifications"
+          onClick={onOpenNotificationSettings}
+          className="flex items-center justify-between px-5 py-4 hover:bg-slate-50 text-slate-600 hover:text-slate-900 border-l-4 border-transparent transition-colors text-left cursor-pointer"
+        >
+          <div className="flex items-center gap-3">
+            <BellRing className="w-5 h-5 text-slate-500" />
+            <span className="text-xs md:text-sm font-medium">
+              Thiết lập thông báo hệ thống
+            </span>
+          </div>
+          <ChevronRight className="w-4 h-4 text-slate-400" />
+        </Link>
+      )}
     </nav>
   )
 }

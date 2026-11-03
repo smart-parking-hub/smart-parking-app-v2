@@ -13,6 +13,7 @@ import { ProfilePage } from '@/features/profile'
 import { ChangePasswordPage } from '@/features/change-password'
 import { PaymentReturnPage } from '@/features/payment-return'
 import { PaymentCancelPage } from '@/features/payment-cancel'
+import { NotificationsPage } from '@/features/notifications'
 import {
   LandingPage,
   DriverSolutionsPage,
@@ -81,6 +82,10 @@ export const router = createBrowserRouter([
         path: 'payment/cancel',
         element: <PaymentCancelPage />,
       },
+      {
+        path: 'notifications',
+        element: <NotificationsPage />,
+      },
     ],
   },
   {
@@ -134,6 +139,10 @@ export const router = createBrowserRouter([
       {
         path: 'payment/cancel',
         element: <PaymentCancelPage />,
+      },
+      {
+        path: 'notifications',
+        element: <NotificationsPage />,
       },
     ],
   },
@@ -224,6 +233,16 @@ export const router = createBrowserRouter([
       {
         index: true,
         element: <PaymentReturnPage mode="success" />,
+      },
+    ],
+  },
+  {
+    path: '/notifications',
+    element: <DriverLayout />,
+    children: [
+      {
+        index: true,
+        element: <NotificationsPage />,
       },
     ],
   },
