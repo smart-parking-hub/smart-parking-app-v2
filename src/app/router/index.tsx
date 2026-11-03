@@ -5,6 +5,7 @@ import { BaselineOverviewPage } from '@/app/pages/BaselineOverviewPage'
 import { DashboardHomePage } from '@/features/dashboard'
 import { SearchParkingPage } from '@/features/parking-search'
 import { ParkingDetailPage } from '@/features/parking-detail'
+import { MyBookingsPage } from '@/features/bookings'
 import {
   LandingPage,
   DriverSolutionsPage,
@@ -41,6 +42,10 @@ export const router = createBrowserRouter([
         path: 'parking/:id',
         element: <ParkingDetailPage />,
       },
+      {
+        path: 'bookings',
+        element: <MyBookingsPage />,
+      },
     ],
   },
   {
@@ -62,6 +67,20 @@ export const router = createBrowserRouter([
       {
         path: 'parking/:id',
         element: <ParkingDetailPage />,
+      },
+      {
+        path: 'bookings',
+        element: <MyBookingsPage />,
+      },
+    ],
+  },
+  {
+    path: '/bookings',
+    element: <DriverLayout />,
+    children: [
+      {
+        index: true,
+        element: <MyBookingsPage />,
       },
     ],
   },
