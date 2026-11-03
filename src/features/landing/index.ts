@@ -2,6 +2,7 @@
 export * from './pages/LandingPage'
 export * from './pages/DriverSolutionsPage'
 export * from './pages/OwnerSolutionsPage'
+export * from './pages/PricingPage'
 
 // Common Components
 export * from './components/common/LandingNavbar'
@@ -34,3 +35,10 @@ export * from './components/owner-solutions/OwnerWorkflowSection'
 export * from './components/owner-solutions/OwnerTestimonialsSection'
 export * from './components/owner-solutions/OwnerFaqSection'
 export * from './components/owner-solutions/OwnerOnboardingFormSection'
+
+// Pricing Components (Trang Bảng Giá - SCR-001D)
+export * from './components/pricing/PricingHeroSection'
+export * from './components/pricing/PricingCardsSection'
+export * from './components/pricing/PricingComparisonTableSection'
+export * from './components/pricing/PricingFaqSection'
+export * from './components/pricing/PricingCtaBanner'

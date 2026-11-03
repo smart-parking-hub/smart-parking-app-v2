@@ -1,7 +1,12 @@
 import { createBrowserRouter } from 'react-router-dom'
 import { RootLayout } from '@/layouts/RootLayout'
 import { BaselineOverviewPage } from '@/app/pages/BaselineOverviewPage'
-import { LandingPage, DriverSolutionsPage, OwnerSolutionsPage } from '@/features/landing'
+import {
+  LandingPage,
+  DriverSolutionsPage,
+  OwnerSolutionsPage,
+  PricingPage,
+} from '@/features/landing'
 
 export const router = createBrowserRouter([
   {
@@ -23,6 +28,14 @@ export const router = createBrowserRouter([
   {
     path: '/giai-phap-chu-bai',
     element: <OwnerSolutionsPage />,
+  },
+  {
+    path: '/pricing',
+    element: <PricingPage />,
+  },
+  {
+    path: '/bang-gia',
+    element: <PricingPage />,
   },
   {
     path: '/crm',

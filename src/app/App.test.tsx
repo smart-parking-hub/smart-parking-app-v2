@@ -1,10 +1,14 @@
 import { fireEvent, render, screen } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { describe, it, expect } from 'vitest'
-import { DriverSolutionsPage, OwnerSolutionsPage } from '@/features/landing'
+import {
+  DriverSolutionsPage,
+  OwnerSolutionsPage,
+  PricingPage,
+} from '@/features/landing'
 import { App } from './App'
 
-describe('SmartTruckHub - 3 Distinct Landing Screens', () => {
+describe('SmartTruckHub - 4 Distinct Landing Screens', () => {
   describe('Trang Chủ (Home Landing Page - SCR-001)', () => {
     it('renders home hero and all 8 main sections successfully', () => {
       render(<App />)
@@ -159,7 +163,6 @@ describe('SmartTruckHub - 3 Distinct Landing Screens', () => {
       // Test interactive slider change
       const slotsSlider = screen.getByLabelText(/Sức chứa và quy mô bãi container/i)
       fireEvent.change(slotsSlider, { target: { value: '200' } })
-      // 200 * 0.75 * 1.25 * 80000 * 30 = 450.000.000 ₫
       expect(screen.getByText(/450\.000\.000 ₫/i)).toBeInTheDocument()
 
       // 4. 5 Merchant Suite Features
@@ -220,6 +223,83 @@ describe('SmartTruckHub - 3 Distinct Landing Screens', () => {
 
       expect(screen.getByText(/Đăng Ký Thành Công!/i)).toBeInTheDocument()
       expect(screen.getByText(/0988776655/i)).toBeInTheDocument()
+    })
+  })
+
+  describe('Trang Bảng Giá (Pricing Page - SCR-001D)', () => {
+    it('renders pricing hero, 3 pricing cards with interactive billing switch, comparison table, FAQ and CTA banner', () => {
+      render(
+        <MemoryRouter>
+          <PricingPage />
+        </MemoryRouter>,
+      )
+
+      // 1. Pricing Hero
+      expect(
+        screen.getByText(/BIỂU PHÍ NIÊM YẾT VẬN HÀNH · MINH BẠCH 100%/i),
+      ).toBeInTheDocument()
+      expect(
+        screen.getByRole('heading', {
+          name: /Định Phí Rõ Ràng\. Tối Ưu Chi Phí Đỗ Cho/i,
+        }),
+      ).toBeInTheDocument()
+
+      // 2. 3 Tier Cards
+      expect(
+        screen.getByRole('heading', { name: /Tài xế & Chủ xe/i }),
+      ).toBeInTheDocument()
+      expect(screen.getByText(/^0 đ$/)).toBeInTheDocument()
+
+      expect(
+        screen.getByRole('heading', { name: /Đội xe & Doanh nghiệp 3PL/i }),
+      ).toBeInTheDocument()
+      // Default: turn payment -> 990.000 đ
+      expect(screen.getByText(/990\.000 đ/i)).toBeInTheDocument()
+
+      expect(
+        screen.getByRole('heading', { name: /Chủ bãi & Depot/i }),
+      ).toBeInTheDocument()
+      expect(screen.getByText(/^5%$/)).toBeInTheDocument()
+
+      // 3. Interactive Billing Switch
+      const monthlyButton = screen.getByRole('button', {
+        name: /Hợp đồng tháng/i,
+      })
+      fireEvent.click(monthlyButton)
+      expect(screen.getByText(/841\.500 đ/i)).toBeInTheDocument()
+
+      const turnButton = screen.getByRole('button', {
+        name: /Thanh toán theo lượt/i,
+      })
+      fireEvent.click(turnButton)
+      expect(screen.getByText(/990\.000 đ/i)).toBeInTheDocument()
+
+      // 4. Feature Comparison Table
+      expect(screen.getByText(/ĐỐI CHIẾU NĂNG LỰC HỆ THỐNG/i)).toBeInTheDocument()
+      expect(
+        screen.getByRole('heading', {
+          name: /Bảng So Sánh Tính Năng Chi Tiết/i,
+        }),
+      ).toBeInTheDocument()
+      expect(screen.getByText(/Ví công nợ tập trung \(Fleet Corporate Wallet\)/i)).toBeInTheDocument()
+
+      // 5. Pricing FAQ
+      expect(screen.getByText(/HỖ TRỢ & GIẢI ĐÁP/i)).toBeInTheDocument()
+      expect(
+        screen.getByRole('heading', {
+          name: /Câu Hỏi Thường Gặp Về Biểu Phí/i,
+        }),
+      ).toBeInTheDocument()
+      expect(
+        screen.getByText(/Tài xế sử dụng app SmartTruckHub có bị thu bất kỳ loại phí nào không\?/i),
+      ).toBeInTheDocument()
+
+      // 6. Bottom CTA
+      expect(
+        screen.getByRole('heading', {
+          name: /Sẵn Sàng Tối Ưu Chi Phí Dừng Đỗ & Quản Lý Đội Xe\?/i,
+        }),
+      ).toBeInTheDocument()
     })
   })
 })

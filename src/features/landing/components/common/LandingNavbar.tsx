@@ -10,102 +10,128 @@ export function LandingNavbar() {
     location.pathname.includes('driver-solutions') || location.pathname.includes('giai-phap-tai-xe')
   const isOwnerPage =
     location.pathname.includes('owner-solutions') || location.pathname.includes('giai-phap-chu-bai')
-  const isHomePage = !isDriverPage && !isOwnerPage
+  const isPricingPage =
+    location.pathname.includes('pricing') || location.pathname.includes('bang-gia')
+  const isHomePage = !isDriverPage && !isOwnerPage && !isPricingPage
 
-  const navLinks = isOwnerPage
+  const navLinks = isPricingPage
     ? [
         { label: 'Trang chủ', href: '/' },
+        { label: 'Giải pháp Tài xế', href: '/driver-solutions' },
+        { label: 'Giải pháp Chủ bãi', href: '/owner-solutions' },
         {
-          label: 'Giải pháp Chủ bãi',
-          href: '/owner-solutions',
+          label: 'Bảng giá',
+          href: '/pricing',
           isCurrent: true,
         },
-        {
-          label: 'Giải pháp Tài xế',
-          href: '/driver-solutions',
-          isCurrent: false,
-        },
-        {
-          label: 'Bảng giá & ROI',
-          href: '#roi-calculator',
-        },
-        {
-          label: 'Hạ tầng IoT',
-          href: '#tinh-nang',
-        },
-        {
-          label: 'Quy trình',
-          href: '#quy-trinh',
-        },
-        {
-          label: 'Liên hệ',
-          href: '#onboarding-form',
-        },
+        { label: 'Kết nối API', href: '/#api' },
+        { label: 'Liên hệ', href: '#lien-he' },
       ]
-    : isDriverPage
+    : isOwnerPage
       ? [
           { label: 'Trang chủ', href: '/' },
           {
-            label: 'Giải pháp Tài xế',
-            href: '/driver-solutions',
+            label: 'Giải pháp Chủ bãi',
+            href: '/owner-solutions',
             isCurrent: true,
           },
           {
-            label: 'Chủ bãi',
-            href: '/owner-solutions',
-            isCurrent: false,
-          },
-          {
-            label: 'Quy trình',
-            href: '#quy-trinh-tai-xe',
-          },
-          {
-            label: 'Tiện ích bãi',
-            href: '#bo-loc-tien-ich',
-          },
-          {
-            label: 'Liên hệ',
-            href: '#lien-he',
-          },
-        ]
-      : [
-          {
-            label: 'Trang chủ',
-            href: '/',
-            isCurrent: isHomePage,
-          },
-          {
             label: 'Giải pháp Tài xế',
             href: '/driver-solutions',
             isCurrent: false,
           },
           {
-            label: 'Chủ bãi',
-            href: '/owner-solutions',
-            isCurrent: false,
+            label: 'Bảng giá & ROI',
+            href: '/pricing',
+          },
+          {
+            label: 'Hạ tầng IoT',
+            href: '#tinh-nang',
           },
           {
             label: 'Quy trình',
             href: '#quy-trinh',
           },
           {
-            label: 'Bảng giá',
-            href: '#bang-gia',
-          },
-          {
-            label: 'Kết nối API',
-            href: '#api',
-          },
-          {
             label: 'Liên hệ',
-            href: '#lien-he',
+            href: '#onboarding-form',
           },
         ]
+      : isDriverPage
+        ? [
+            { label: 'Trang chủ', href: '/' },
+            {
+              label: 'Giải pháp Tài xế',
+              href: '/driver-solutions',
+              isCurrent: true,
+            },
+            {
+              label: 'Chủ bãi',
+              href: '/owner-solutions',
+              isCurrent: false,
+            },
+            {
+              label: 'Quy trình',
+              href: '#quy-trinh-tai-xe',
+            },
+            {
+              label: 'Bảng giá',
+              href: '/pricing',
+            },
+            {
+              label: 'Tiện ích bãi',
+              href: '#bo-loc-tien-ich',
+            },
+            {
+              label: 'Liên hệ',
+              href: '#lien-he',
+            },
+          ]
+        : [
+            {
+              label: 'Trang chủ',
+              href: '/',
+              isCurrent: isHomePage,
+            },
+            {
+              label: 'Giải pháp Tài xế',
+              href: '/driver-solutions',
+              isCurrent: false,
+            },
+            {
+              label: 'Chủ bãi',
+              href: '/owner-solutions',
+              isCurrent: false,
+            },
+            {
+              label: 'Bảng giá',
+              href: '/pricing',
+              isCurrent: false,
+            },
+            {
+              label: 'Quy trình',
+              href: '#quy-trinh',
+            },
+            {
+              label: 'Kết nối API',
+              href: '#api',
+            },
+            {
+              label: 'Liên hệ',
+              href: '#lien-he',
+            },
+          ]
 
   const closeMobileMenu = () => setMobileMenuOpen(false)
 
   const ctaLabel = isOwnerPage ? 'Hợp tác bãi đỗ' : 'Tìm bãi đỗ ngay'
-  const ctaHref = isOwnerPage ? '#onboarding-form' : isDriverPage ? '#tim-bai-ngay' : '#tim-bai'
+  const ctaHref = isOwnerPage
+    ? '#onboarding-form'
+    : isDriverPage
+      ? '#tim-bai-ngay'
+      : isPricingPage
+        ? '/driver-solutions'
+        : '#tim-bai'
 
   return (
     <header className="sticky top-0 inset-x-0 z-50 bg-white/95 backdrop-blur-md border-b border-brand-border">
