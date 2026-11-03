@@ -6,10 +6,11 @@ import {
   OwnerSolutionsPage,
   PricingPage,
   ApiDocsPage,
+  AboutUsPage,
 } from '@/features/landing'
 import { App } from './App'
 
-describe('SmartTruckHub - 5 Distinct Landing Screens', () => {
+describe('SmartTruckHub - 6 Distinct Landing Screens', () => {
   describe('Trang Chủ (Home Landing Page - SCR-001)', () => {
     it('renders home hero and all 8 main sections successfully', () => {
       render(<App />)
@@ -61,7 +62,7 @@ describe('SmartTruckHub - 5 Distinct Landing Screens', () => {
   describe('Trang Giải Pháp Tài Xế (Driver Solutions Page - SCR-001B)', () => {
     it('renders driver-specific hero, pain points, workflow and interactive amenity filter', () => {
       render(
-        <MemoryRouter>
+        <MemoryRouter initialEntries={['/driver-solutions']}>
           <DriverSolutionsPage />
         </MemoryRouter>,
       )
@@ -124,7 +125,7 @@ describe('SmartTruckHub - 5 Distinct Landing Screens', () => {
   describe('Trang Giải Pháp Chủ Bãi (Owner Solutions Page - SCR-001C)', () => {
     it('renders owner hero, pain points, interactive ROI calculator, merchant features, workflow, testimonials, FAQ and registration form', () => {
       render(
-        <MemoryRouter>
+        <MemoryRouter initialEntries={['/owner-solutions']}>
           <OwnerSolutionsPage />
         </MemoryRouter>,
       )
@@ -230,7 +231,7 @@ describe('SmartTruckHub - 5 Distinct Landing Screens', () => {
   describe('Trang Bảng Giá (Pricing Page - SCR-001D)', () => {
     it('renders pricing hero, 3 pricing cards with interactive billing switch, comparison table, FAQ and CTA banner', () => {
       render(
-        <MemoryRouter>
+        <MemoryRouter initialEntries={['/pricing']}>
           <PricingPage />
         </MemoryRouter>,
       )
@@ -315,7 +316,7 @@ describe('SmartTruckHub - 5 Distinct Landing Screens', () => {
       })
 
       render(
-        <MemoryRouter>
+        <MemoryRouter initialEntries={['/api-docs']}>
           <ApiDocsPage />
         </MemoryRouter>,
       )
@@ -431,6 +432,113 @@ describe('SmartTruckHub - 5 Distinct Landing Screens', () => {
       ).toBeInTheDocument()
       expect(screen.getByText(/YÊU CẦU CẤP MÔI TRƯỜNG SANDBOX/i)).toBeInTheDocument()
       expect(screen.getByText(/TẢI BỘ SDK PYTHON & NODEJS \/ JAVA/i)).toBeInTheDocument()
+    })
+  })
+
+  describe('Trang Về Chúng Tôi (About Us Page - SCR-001F)', () => {
+    it('renders about hero with 4 metrics, narrative with quote, 4 core principles, roadmap timeline, leadership team and action banner', () => {
+      render(
+        <MemoryRouter initialEntries={['/about']}>
+          <AboutUsPage />
+        </MemoryRouter>,
+      )
+
+      // 1. Hero
+      expect(
+        screen.getByText(/SỨ MỆNH SỐ HÓA HẠ TẦNG LOGISTICS · KHỞI TẠO NĂM 2024/i),
+      ).toBeInTheDocument()
+      expect(
+        screen.getByRole('heading', {
+          name: /Chúng Tôi Xây Dựng Hạ Tầng Điểm Đỗ Cho Mọi Bánh Xe Container Lăn Bánh\./i,
+        }),
+      ).toBeInTheDocument()
+      expect(screen.getByText(/^320\+$/)).toBeInTheDocument()
+      expect(screen.getByText(/^45,000\+$/)).toBeInTheDocument()
+      expect(screen.getByText(/^18%$/)).toBeInTheDocument()
+      expect(screen.getByText(/^0 vụ$/)).toBeInTheDocument()
+
+      // 2. Narrative Section
+      expect(
+        screen.getByText(/BỐI CẢNH THỰC ĐỊA & KHỞI NGUYÊN/i),
+      ).toBeInTheDocument()
+      expect(
+        screen.getByRole('heading', {
+          name: /Nghịch Lý Bến Bãi Tại Các Cụm Cảng Huyết Mạch Việt Nam/i,
+        }),
+      ).toBeInTheDocument()
+      expect(screen.getByText(/^3-4 Giờ$/)).toBeInTheDocument()
+      expect(screen.getByText(/^0\.2 Giây$/)).toBeInTheDocument()
+      expect(screen.getByText(/^100%$/)).toBeInTheDocument()
+      expect(
+        screen.getByText(/Công nghệ logistics không nằm ở những khẩu hiệu xa vời/i),
+      ).toBeInTheDocument()
+
+      // 3. Core Principles
+      expect(screen.getByText(/QUY CHUẨN VẬN HÀNH/i)).toBeInTheDocument()
+      expect(
+        screen.getByRole('heading', {
+          name: /4 Trụ Cột Giá Trị Cốt Lõi/i,
+        }),
+      ).toBeInTheDocument()
+      expect(
+        screen.getByRole('heading', {
+          name: /Minh Bạch \(Radical Transparency\)/i,
+        }),
+      ).toBeInTheDocument()
+      expect(
+        screen.getByRole('heading', {
+          name: /An Toàn \(Zero-Compromise Security\)/i,
+        }),
+      ).toBeInTheDocument()
+      expect(
+        screen.getByRole('heading', {
+          name: /Tốc Độ \(Sub-Second Latency\)/i,
+        }),
+      ).toBeInTheDocument()
+      expect(
+        screen.getByRole('heading', {
+          name: /Cộng Đồng \(Driver-First Empathy\)/i,
+        }),
+      ).toBeInTheDocument()
+
+      // 4. Roadmap Milestones
+      expect(screen.getByText(/HÀNH TRÌNH PHÁT TRIỂN/i)).toBeInTheDocument()
+      expect(
+        screen.getByRole('heading', {
+          name: /Cột Mốc Kiến Tạo Hạ Tầng Số/i,
+        }),
+      ).toBeInTheDocument()
+      expect(screen.getByText(/^2024$/)).toBeInTheDocument()
+      expect(screen.getByText(/^2025$/)).toBeInTheDocument()
+      expect(screen.getByText(/^2026$/)).toBeInTheDocument()
+      expect(screen.getByText(/^2027$/)).toBeInTheDocument()
+      expect(screen.getByText(/GIAI ĐOẠN HIỆN TẠI/i)).toBeInTheDocument()
+
+      // 5. Leadership & Advisory
+      expect(screen.getByText(/ĐỘI NGŨ CHUYÊN GIA/i)).toBeInTheDocument()
+      expect(
+        screen.getByRole('heading', {
+          name: /Ban Lãnh Đạo & Cố Vấn Logistics/i,
+        }),
+      ).toBeInTheDocument()
+      expect(
+        screen.getByRole('heading', { name: /Nguyễn Hoàng Nam/i }),
+      ).toBeInTheDocument()
+      expect(
+        screen.getByRole('heading', { name: /Trần Bảo Long/i }),
+      ).toBeInTheDocument()
+      expect(
+        screen.getByRole('heading', { name: /Đặng Quốc Hưng/i }),
+      ).toBeInTheDocument()
+
+      // 6. Action Banner
+      expect(screen.getByText(/HỢP TÁC CHIẾN LƯỢC/i)).toBeInTheDocument()
+      expect(
+        screen.getByRole('heading', {
+          name: /Đồng Hành Cùng Chúng Tôi Kiến Tạo Tương Lai Vận Tải Việt Nam/i,
+        }),
+      ).toBeInTheDocument()
+      expect(screen.getByText(/LIÊN HỆ ĐỐI TÁC CHIẾN LƯỢC/i)).toBeInTheDocument()
     })
   })
 })

@@ -4,6 +4,7 @@ export * from './pages/DriverSolutionsPage'
 export * from './pages/OwnerSolutionsPage'
 export * from './pages/PricingPage'
 export * from './pages/ApiDocsPage'
+export * from './pages/AboutUsPage'
 
 // Common Components
 export * from './components/common/LandingNavbar'
@@ -51,3 +52,10 @@ export * from './components/api-docs/ApiSolutionsBentoSection'
 export * from './components/api-docs/ApiWorkflowSection'
 export * from './components/api-docs/ApiCtaBanner'
 
+// About Us Components (Trang Về Chúng Tôi - SCR-001F)
+export * from './components/about-us/AboutHeroSection'
+export * from './components/about-us/AboutNarrativeSection'
+export * from './components/about-us/AboutCorePrinciplesSection'
+export * from './components/about-us/AboutRoadmapSection'
+export * from './components/about-us/AboutLeadershipSection'
+export * from './components/about-us/AboutCtaBanner'

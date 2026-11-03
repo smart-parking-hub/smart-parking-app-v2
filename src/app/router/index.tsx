@@ -7,6 +7,7 @@ import {
   OwnerSolutionsPage,
   PricingPage,
   ApiDocsPage,
+  AboutUsPage,
 } from '@/features/landing'
 
 export const router = createBrowserRouter([
@@ -45,6 +46,14 @@ export const router = createBrowserRouter([
   {
     path: '/ket-noi-api',
     element: <ApiDocsPage />,
+  },
+  {
+    path: '/about',
+    element: <AboutUsPage />,
+  },
+  {
+    path: '/ve-chung-toi',
+    element: <AboutUsPage />,
   },
   {
     path: '/crm',
