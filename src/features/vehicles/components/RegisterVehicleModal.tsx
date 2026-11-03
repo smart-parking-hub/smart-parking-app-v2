@@ -98,24 +98,24 @@ export function RegisterVehicleModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs">
-      <div className="bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-xl max-h-[90vh] overflow-y-auto flex flex-col animate-in fade-in zoom-in-95 duration-150">
-        {/* Header */}
-        <div className="p-5 border-b border-slate-200 bg-slate-50 sticky top-0 z-10 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-orange-100 text-orange-600 flex items-center justify-center">
-              <Truck className="w-5 h-5" />
+      <div className="bg-white rounded-3xl shadow-2xl border border-slate-200/90 w-full max-w-[480px] max-h-[92vh] overflow-y-auto flex flex-col animate-in fade-in zoom-in-95 duration-150">
+        {/* Header matching Image 2 */}
+        <div className="p-6 border-b border-slate-100 flex items-start justify-between relative">
+          <div className="flex items-start gap-3.5 pr-8">
+            <div className="mt-0.5 text-orange-600 shrink-0">
+              <Truck className="w-6 h-6" />
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h3 className="font-sora font-bold text-slate-900 text-lg">
+                <h3 className="font-sora font-bold text-slate-900 text-lg leading-tight">
                   Khai Báo Hồ Sơ Vận Hành
                 </h3>
-                <span className="font-mono text-[11px] font-bold px-2 py-0.5 rounded bg-slate-200 text-slate-800 tracking-wider uppercase">
+                <span className="font-mono text-[11px] font-bold px-2 py-0.5 rounded bg-slate-100 text-slate-700 tracking-wider uppercase shrink-0">
                   CHUẨN ĐĂNG KIỂM
                 </span>
               </div>
-              <p className="text-xs text-slate-600 mt-0.5">
-                Đăng ký đầu kéo hoặc rơ-moóc mới vào danh mục đội xe. Tự động đồng bộ sang trạm cân và cổng ALPR.
+              <p className="text-xs text-slate-500 mt-1 leading-relaxed">
+                Đăng ký đầu kéo hoặc rơ-moóc mới vào danh mục đội xe. Dữ liệu sẽ tự động đồng bộ sang trạm cân và cổng ALPR.
               </p>
             </div>
           </div>
@@ -123,7 +123,8 @@ export function RegisterVehicleModal({
           <button
             type="button"
             onClick={onClose}
-            className="p-2 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-200/60 transition-colors"
+            className="absolute top-5 right-5 p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
+            title="Đóng cửa sổ"
           >
             <X className="w-5 h-5" />
           </button>
@@ -183,8 +184,8 @@ export function RegisterVehicleModal({
             </select>
           </div>
 
-          {/* 3. Weights */}
-          <div className="grid grid-cols-2 gap-4">
+          {/* 3. Weights 2 cols */}
+          <div className="grid grid-cols-2 gap-3">
             <div className="flex flex-col gap-1.5">
               <label htmlFor="modal-reg-curb" className="text-xs font-bold text-slate-700 font-mono">
                 Bản thân (Tấn)
@@ -217,8 +218,8 @@ export function RegisterVehicleModal({
             </div>
           </div>
 
-          {/* 4. Brand & Year */}
-          <div className="grid grid-cols-3 gap-4">
+          {/* 4. Brand & Year 2 cols */}
+          <div className="grid grid-cols-3 gap-3">
             <div className="col-span-2 flex flex-col gap-1.5">
               <label htmlFor="modal-reg-brand" className="text-xs font-bold text-slate-700 font-mono">
                 Nhãn Hiệu / Model
@@ -256,7 +257,7 @@ export function RegisterVehicleModal({
             </label>
             <label
               htmlFor="modal-reg-doc"
-              className="border-2 border-dashed border-slate-300 hover:border-orange-400 bg-slate-50/60 hover:bg-orange-50/30 rounded-xl p-4 text-center cursor-pointer transition-colors flex flex-col items-center justify-center gap-2"
+              className="border-2 border-dashed border-slate-300 hover:border-orange-400 bg-slate-50/60 hover:bg-orange-50/30 rounded-xl p-4 text-center cursor-pointer transition-colors flex flex-col items-center justify-center gap-1.5"
             >
               <input
                 id="modal-reg-doc"
@@ -272,7 +273,7 @@ export function RegisterVehicleModal({
                 </div>
               ) : (
                 <>
-                  <UploadCloud className="w-6 h-6 text-slate-400" />
+                  <UploadCloud className="w-7 h-7 text-slate-400" />
                   <span className="text-sm font-semibold text-slate-700">
                     Tải lên tệp sổ kiểm định hoặc cà vẹt
                   </span>
@@ -302,28 +303,21 @@ export function RegisterVehicleModal({
             </div>
           </label>
 
-          {/* Actions */}
-          <div className="mt-4 pt-4 border-t border-slate-200 flex items-center justify-end gap-3">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-4 py-2.5 rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-100 transition-colors"
-            >
-              Hủy Bỏ
-            </button>
+          {/* Action Button - 100% width orange button matching Image 2 */}
+          <div className="mt-3">
             <button
               type="submit"
               disabled={isSubmitting}
-              className="py-2.5 px-6 rounded-xl bg-orange-600 hover:bg-orange-700 text-white font-semibold text-sm shadow-sm transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+              className="w-full h-12 rounded-xl bg-orange-600 hover:bg-orange-700 active:scale-[0.99] text-white font-bold text-sm shadow-md shadow-orange-600/20 transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
             >
               {isSubmitting ? (
                 <>
-                  <RefreshCw className="w-4 h-4 animate-spin" />
+                  <RefreshCw className="w-5 h-5 animate-spin" />
                   <span>Đang kết nối cổng ALPR...</span>
                 </>
               ) : (
                 <>
-                  <PlusCircle className="w-4 h-4" />
+                  <PlusCircle className="w-5 h-5" />
                   <span>Đăng Ký &amp; Đồng Bộ ALPR</span>
                 </>
               )}

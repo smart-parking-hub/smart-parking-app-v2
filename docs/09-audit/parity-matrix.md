@@ -120,3 +120,21 @@
 | Modal Xuất Báo Cáo Đội Xe Excel / PDF | [`ExportFleetModal.tsx`](file:///d:/SmartParkingHub/smart-parking-app-v2/src/features/vehicles/components/ExportFleetModal.tsx) | Client / Report API | **New Feature (Xuất sổ tay đối soát cảng)** |
 | Shimmer Loading Placeholder | [`VehiclesSkeleton.tsx`](file:///d:/SmartParkingHub/smart-parking-app-v2/src/features/vehicles/components/VehiclesSkeleton.tsx) | — | **Preserved (Zero-layout-shift placeholder)** |
 
+
+---
+
+## 9. SCR-021 Driver Profile & eKYC Operations Workbench (Hồ sơ bác tài & Thông tin trực ban)
+| Thành phần giao diện / Khối chức năng | File triển khai v2 | Tương ứng Backend Microservice | Trạng thái Parity / Cải tiến |
+|---|---|---|---|
+| Command Header & Live Station Status | [`ProfileCommandHeader.tsx`](file:///d:/SmartParkingHub/smart-parking-app-v2/src/features/profile/components/ProfileCommandHeader.tsx) | Live Station Dispatch Hub | **New Feature (Cảng Cát Lái SP-PSA Live Status)** |
+| Thẻ Định Danh Bác Tài & 4 Bento KPIs | [`DriverIdentityCard.tsx`](file:///d:/SmartParkingHub/smart-parking-app-v2/src/features/profile/components/DriverIdentityCard.tsx) | `GET /api/v1/users/me` | **Preserved & Enhanced (48 Chuyến, 4.95 Rating, FC Chuyên Nghiệp)** |
+| Thanh Điều Hướng Hồ Sơ Sidebar (5 Mục) | [`ProfileSidebarNav.tsx`](file:///d:/SmartParkingHub/smart-parking-app-v2/src/features/profile/components/ProfileSidebarNav.tsx) | App Routing & Modals | **Preserved (Profile, 3 Xe, 18 HĐ, Đổi MK, Thông Báo)** |
+| Cảnh Báo Quy Chuẩn eKYC 20 Phút | [`DispatchHelpNote.tsx`](file:///d:/SmartParkingHub/smart-parking-app-v2/src/features/profile/components/DispatchHelpNote.tsx) | Central Dispatch Policy | **New Feature (Quy định đối soát Cục Đường Bộ)** |
+| Khối 1: Thông Tin Cá Nhân & GPLX FC | [`PersonalInfoSection.tsx`](file:///d:/SmartParkingHub/smart-parking-app-v2/src/features/profile/components/PersonalInfoSection.tsx) | `PUT /api/v1/users/me` | **Preserved & Enhanced (Ẩn/hiện CCCD, OTP phone, GPLX Cục GTVT)** |
+| Khối 2: Liên Hệ Khẩn Cấp Trực Ban 24/7 | [`EmergencyContactsSection.tsx`](file:///d:/SmartParkingHub/smart-parking-app-v2/src/features/profile/components/EmergencyContactsSection.tsx) | User Emergency Profile | **Preserved (02 Kênh Điều phối + Gia đình)** |
+| Khối 3: Cấu Hình Hóa Đơn Doanh Nghiệp VAT | [`EnterpriseInvoiceSection.tsx`](file:///d:/SmartParkingHub/smart-parking-app-v2/src/features/profile/components/EnterpriseInvoiceSection.tsx) | VAT Invoice Dispatch | **Preserved (Tên DN, MST, Email kế toán, XML+PDF)** |
+| Thanh Thao Tác Hồ Sơ (Actions Bar) | [`ProfileActionsBar.tsx`](file:///d:/SmartParkingHub/smart-parking-app-v2/src/features/profile/components/ProfileActionsBar.tsx) | User Form Handlers | **Preserved (Khôi phục dữ liệu gốc, Lưu thay đổi hồ sơ)** |
+| Modal Đổi Mật Khẩu Vận Hành | [`ChangePasswordModal.tsx`](file:///d:/SmartParkingHub/smart-parking-app-v2/src/features/profile/components/ChangePasswordModal.tsx) | `POST /api/v1/users/me/password` | **New Feature (Xác thực 3 lớp mật khẩu)** |
+| Modal Thiết Lập Thông Báo Hệ Thống | [`NotificationSettingsModal.tsx`](file:///d:/SmartParkingHub/smart-parking-app-v2/src/features/profile/components/NotificationSettingsModal.tsx) | Notification Settings API | **New Feature (SMS slot, Push App, Email XML+PDF)** |
+| Modal Cập Nhật Ảnh Định Danh eKYC | [`AvatarUploadModal.tsx`](file:///d:/SmartParkingHub/smart-parking-app-v2/src/features/profile/components/AvatarUploadModal.tsx) | Avatar Storage API | **New Feature (Preview trực quan, AI OCR scanner)** |
+| Shimmer Loading Placeholder | [`ProfileSkeleton.tsx`](file:///d:/SmartParkingHub/smart-parking-app-v2/src/features/profile/components/ProfileSkeleton.tsx) | — | **Preserved (Zero-layout-shift placeholder)** |

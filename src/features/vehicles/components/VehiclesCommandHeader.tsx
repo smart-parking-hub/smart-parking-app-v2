@@ -48,12 +48,12 @@ export function VehiclesCommandHeader({
           </p>
         </div>
 
-        {/* Top Buttons */}
+        {/* Top Buttons matching Image 3 */}
         <div className="flex flex-wrap items-center gap-3 shrink-0">
           <button
             type="button"
             onClick={onOpenExport}
-            className="h-11 px-5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 font-semibold text-xs md:text-sm flex items-center gap-2 transition-colors border border-slate-200 cursor-pointer"
+            className="h-12 px-5 rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-800 font-semibold text-xs md:text-sm flex items-center gap-2 transition-colors border border-slate-200 cursor-pointer"
           >
             <Download className="w-4 h-4 text-slate-600" />
             <span>XUẤT DANH SÁCH ĐỘI XE</span>
@@ -62,9 +62,9 @@ export function VehiclesCommandHeader({
           <button
             type="button"
             onClick={onOpenRegister}
-            className="h-11 px-6 rounded-xl bg-orange-600 hover:bg-orange-700 text-white font-semibold text-xs md:text-sm flex items-center gap-2 shadow-sm shadow-orange-600/20 transition-all active:scale-[0.99] cursor-pointer"
+            className="h-12 px-7 rounded-2xl bg-orange-600 hover:bg-orange-700 text-white font-bold text-sm flex items-center gap-2.5 shadow-sm shadow-orange-600/30 transition-all active:scale-[0.99] cursor-pointer"
           >
-            <PlusCircle className="w-4 h-4" />
+            <PlusCircle className="w-5 h-5 shrink-0" />
             <span>+ ĐĂNG KÝ PHƯƠNG TIỆN MỚI</span>
           </button>
         </div>

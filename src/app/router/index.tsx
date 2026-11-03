@@ -9,6 +9,7 @@ import { MyBookingsPage } from '@/features/bookings'
 import { VirtualQueuesPage } from '@/features/queues'
 import { DriverPaymentsPage } from '@/features/payments'
 import { VehiclesPage } from '@/features/vehicles'
+import { ProfilePage } from '@/features/profile'
 import {
   LandingPage,
   DriverSolutionsPage,
@@ -61,6 +62,10 @@ export const router = createBrowserRouter([
         path: 'vehicles',
         element: <VehiclesPage />,
       },
+      {
+        path: 'profile',
+        element: <ProfilePage />,
+      },
     ],
   },
   {
@@ -98,6 +103,10 @@ export const router = createBrowserRouter([
       {
         path: 'vehicles',
         element: <VehiclesPage />,
+      },
+      {
+        path: 'profile',
+        element: <ProfilePage />,
       },
     ],
   },
@@ -138,6 +147,16 @@ export const router = createBrowserRouter([
       {
         index: true,
         element: <VehiclesPage />,
+      },
+    ],
+  },
+  {
+    path: '/profile',
+    element: <DriverLayout />,
+    children: [
+      {
+        index: true,
+        element: <ProfilePage />,
       },
     ],
   },
