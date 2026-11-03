@@ -4,6 +4,8 @@ import type {
   VehicleClassification,
   VehicleOption,
 } from '../types/parkingSearchTypes'
+import { Select, type SelectGroup, type SelectOption } from '../../../shared/components/Select'
+import { cn } from '../../../shared/utils/cn'
 
 interface TopFilterBarProps {
   filters: SearchFilterState
@@ -11,12 +13,22 @@ interface TopFilterBarProps {
   onChangeFilters: (updated: Partial<SearchFilterState>) => void
 }
 
-const VEHICLE_TYPES: { type: VehicleClassification; label: string }[] = [
-  { type: 'CONTAINER', label: 'Container 40/45FT' },
-  { type: 'HEAVY_TRUCK', label: 'Tải nặng (>10T)' },
-  { type: 'MEDIUM_TRUCK', label: 'Tải trung (3.5-10T)' },
-  { type: 'LIGHT_TRUCK', label: 'Tải nhỏ (<3.5T)' },
-  { type: 'SEDAN_SUV', label: 'Khách / Sedan' },
+const STANDARD_CLASSIFICATIONS: {
+  type: VehicleClassification
+  label: string
+  badge?: string
+}[] = [
+  { type: 'CONTAINER', label: 'Container 40/45FT', badge: 'Standard' },
+  { type: 'HEAVY_TRUCK', label: 'Tải nặng (>10T)', badge: '>10T' },
+  { type: 'MEDIUM_TRUCK', label: 'Tải trung (3.5-10T)', badge: '3.5-10T' },
+  { type: 'LIGHT_TRUCK', label: 'Tải nhỏ (<3.5T)', badge: '<3.5T' },
+  { type: 'SEDAN_SUV', label: 'Khách / Sedan', badge: 'Sedan/SUV' },
+]
+
+const SORT_OPTIONS: SelectOption[] = [
+  { value: 'distance', label: 'Gần nhất (Distance)' },
+  { value: 'price', label: 'Giá thấp nhất' },
+  { value: 'rating', label: 'Đánh giá trạm cao nhất' },
 ]
 
 export function TopFilterBar({
@@ -24,121 +36,121 @@ export function TopFilterBar({
   vehicles,
   onChangeFilters,
 }: TopFilterBarProps) {
-  const handleSelectVehicle = (vehicleId: string) => {
-    const v = vehicles.find((item) => item.id === vehicleId)
-    onChangeFilters({
-      selectedVehicleId: vehicleId,
-      vehicleType: v ? v.type : filters.vehicleType,
-    })
+  const handleSelectVehicle = (val: string) => {
+    if (val.startsWith('type:')) {
+      const type = val.replace('type:', '') as VehicleClassification
+      onChangeFilters({
+        selectedVehicleId: val,
+        vehicleType: type,
+      })
+    } else {
+      const v = vehicles.find((item) => item.id === val)
+      onChangeFilters({
+        selectedVehicleId: val,
+        vehicleType: v ? v.type : filters.vehicleType,
+      })
+    }
   }
+
+  // Determine current select value
+  const selectValue = filters.selectedVehicleId.startsWith('type:')
+    ? filters.selectedVehicleId
+    : vehicles.some((v) => v.id === filters.selectedVehicleId)
+      ? filters.selectedVehicleId
+      : `type:${filters.vehicleType}`
+
+  const vehicleGroups: SelectGroup[] = [
+    {
+      label: 'Xe điều hành của bạn',
+      options: vehicles.map((v) => ({
+        value: v.id,
+        label: v.label,
+      })),
+    },
+    {
+      label: 'Loại phương tiện & Tải trọng',
+      options: STANDARD_CLASSIFICATIONS.map((c) => ({
+        value: `type:${c.type}`,
+        label: c.label,
+        badge: c.badge,
+      })),
+    },
+  ]
+
+  // Dynamic slider background calculation for smooth progress
+  const radiusPercent = Math.round(((filters.radiusKm - 1) / (50 - 1)) * 100)
 
   return (
     <section className="w-full bg-white shadow-sm rounded-2xl p-4 lg:p-5 mb-5 border border-slate-200/80">
-      <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4">
-        {/* Left: Vehicle Selector & Type Badges */}
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 flex-1">
-          {/* Vehicle Selector */}
-          <div className="relative min-w-[270px]">
-            <span className="text-xs text-[#45464d] block mb-1 font-medium">
-              Phương tiện điều hành
-            </span>
-            <div className="flex items-center gap-2 bg-[#eff4ff] px-3 py-2 rounded-xl border border-blue-100">
-              <Truck className="w-5 h-5 text-[#455f87] shrink-0" />
-              <select
-                className="bg-transparent text-xs lg:text-sm font-semibold text-[#0d1c2e] focus:outline-none w-full cursor-pointer"
-                value={filters.selectedVehicleId}
-                onChange={(e) => handleSelectVehicle(e.target.value)}
-                aria-label="Chọn phương tiện điều hành"
-              >
-                {vehicles.map((v) => (
-                  <option key={v.id} value={v.id}>
-                    {v.label}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
-
-          {/* Vehicle Classification Badges */}
-          <div className="flex flex-col flex-1">
-            <span className="text-xs text-[#45464d] block mb-1 font-medium">
-              Loại phương tiện tải trọng
-            </span>
-            <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0">
-              {VEHICLE_TYPES.map(({ type, label }) => {
-                const isActive = filters.vehicleType === type
-                return (
-                  <button
-                    key={type}
-                    type="button"
-                    onClick={() => onChangeFilters({ vehicleType: type })}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-colors cursor-pointer ${
-                      isActive
-                        ? 'bg-black text-white shadow-sm'
-                        : 'bg-[#eff4ff] text-[#0d1c2e] hover:bg-[#dce9ff]'
-                    }`}
-                  >
-                    {label}
-                  </button>
-                )
-              })}
-            </div>
-          </div>
+      {/* 3 Even Columns: 1. Phương tiện điều hành -> 2. Sắp xếp theo -> 3. Bán kính quét */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-5 lg:gap-6 items-start">
+        {/* 1. Phương tiện điều hành */}
+        <div className="flex flex-col w-full">
+          <span className="text-xs text-[#45464d] block mb-1.5 font-medium">
+            Phương tiện điều hành
+          </span>
+          <Select
+            value={selectValue}
+            onChange={handleSelectVehicle}
+            groups={vehicleGroups}
+            prefixIcon={<Truck className="w-4 h-4 text-[#455f87] shrink-0" />}
+            ariaLabel="Phương tiện điều hành"
+            variant="subtle"
+          />
         </div>
 
-        {/* Right: Radius Slider + Sort + Full Lot Checkbox */}
-        <div className="flex flex-wrap sm:flex-nowrap items-center gap-4 border-t lg:border-t-0 pt-3 lg:pt-0 border-slate-100">
-          {/* Radius Slider */}
-          <div className="flex flex-col min-w-[160px]">
-            <div className="flex items-center justify-between mb-1">
-              <span className="text-xs text-[#45464d]">Bán kính quét:</span>
-              <span className="font-mono text-[#d95f00] font-bold text-xs">
-                {filters.radiusKm} km
-              </span>
-            </div>
-            <input
-              type="range"
-              min="1"
-              max="50"
-              value={filters.radiusKm}
-              onChange={(e) => onChangeFilters({ radiusKm: Number(e.target.value) })}
-              className="w-full h-1.5 bg-slate-200 rounded-lg cursor-pointer accent-[#d95f00]"
-              aria-label="Bán kính quét"
-            />
-          </div>
+        {/* 2. Sắp xếp theo */}
+        <div className="flex flex-col w-full">
+          <span className="text-xs text-[#45464d] block mb-1.5 font-medium">
+            Sắp xếp theo
+          </span>
+          <Select
+            value={filters.sortBy}
+            onChange={(val) =>
+              onChangeFilters({
+                sortBy: val as 'distance' | 'price' | 'rating',
+              })
+            }
+            options={SORT_OPTIONS}
+            ariaLabel="Tiêu chí sắp xếp"
+            variant="subtle"
+          />
+        </div>
 
-          {/* Sort Select */}
-          <div className="flex flex-col min-w-[130px]">
-            <span className="text-xs text-[#45464d] mb-1">Sắp xếp theo</span>
-            <select
-              className="bg-[#eff4ff] text-[#0d1c2e] text-xs font-semibold py-2 px-3 rounded-xl focus:outline-none cursor-pointer border border-blue-100"
-              value={filters.sortBy}
-              onChange={(e) =>
-                onChangeFilters({
-                  sortBy: e.target.value as 'distance' | 'price' | 'rating',
-                })
-              }
-              aria-label="Tiêu chí sắp xếp"
-            >
-              <option value="distance">Gần nhất (Distance)</option>
-              <option value="price">Giá thấp nhất</option>
-              <option value="rating">Đánh giá trạm cao nhất</option>
-            </select>
+        {/* 3. Bán kính quét */}
+        <div className="flex flex-col w-full">
+          <div className="flex items-center justify-between mb-1">
+            <span className="text-xs text-[#45464d] font-medium">Bán kính quét:</span>
+            <span className="font-mono text-[#d95f00] font-bold text-xs bg-orange-50 border border-orange-200/60 px-2 py-0.5 rounded-full">
+              {filters.radiusKm} km
+            </span>
           </div>
-
-          {/* Full lot toggle */}
-          <div className="flex flex-col justify-end pt-3 sm:pt-0">
-            <label className="flex items-center gap-2 cursor-pointer select-none">
-              <input
-                type="checkbox"
-                checked={filters.includeFull}
-                onChange={(e) => onChangeFilters({ includeFull: e.target.checked })}
-                className="w-4 h-4 rounded text-[#d95f00] focus:ring-0 cursor-pointer accent-[#d95f00]"
-              />
-              <span className="text-xs text-[#0d1c2e] font-medium whitespace-nowrap">
-                Hiện bãi đã đầy
-              </span>
-            </label>
+          <input
+            type="range"
+            min="1"
+            max="50"
+            value={filters.radiusKm}
+            onChange={(e) => onChangeFilters({ radiusKm: Number(e.target.value) })}
+            className="w-full custom-range-slider"
+            style={{
+              background: `linear-gradient(to right, #d95f00 0%, #d95f00 ${radiusPercent}%, #e2e8f0 ${radiusPercent}%, #e2e8f0 100%)`,
+            }}
+            aria-label="Bán kính quét"
+          />
+          <div className="flex items-center justify-between text-[11px] text-slate-400 mt-1 font-medium">
+            {[5, 15, 30, 50].map((km) => (
+              <button
+                key={km}
+                type="button"
+                onClick={() => onChangeFilters({ radiusKm: km })}
+                className={cn(
+                  'px-1.5 py-0.5 rounded hover:text-[#d95f00] transition-colors cursor-pointer',
+                  filters.radiusKm === km && 'font-bold text-[#d95f00] bg-orange-50',
+                )}
+              >
+                {km}km
+              </button>
+            ))}
           </div>
         </div>
       </div>

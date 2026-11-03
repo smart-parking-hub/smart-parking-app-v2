@@ -305,7 +305,7 @@ describe('SCR-020 VehiclesPage (Quản Lý Phương Tiện Của Tôi)', () => {
     expect(screen.getByText('Đổi mật khẩu bảo mật')).toBeInTheDocument()
 
     // Notification settings modal
-    const notifBtn = screen.getByRole('button', { name: /Thiết lập thông báo hệ thống/i })
+    const notifBtn = screen.getByText(/Thiết lập thông báo hệ thống/i)
     await user.click(notifBtn)
 
     expect(screen.getByText('Thiết Lập Thông Báo Hệ Thống')).toBeInTheDocument()

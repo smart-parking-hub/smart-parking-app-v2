@@ -24,7 +24,7 @@ export function SearchParkingPage() {
     radiusKm: 15,
     sortBy: 'distance',
     includeFull: true,
-    keyword: 'Cụm Cảng Cát Lái, TP. Thủ Đức, TP.HCM',
+    keyword: '',
   })
 
   const [selectedLotId, setSelectedLotId] = useState<number>(1)
@@ -59,12 +59,25 @@ export function SearchParkingPage() {
   return (
     <div className="w-full min-h-[calc(100vh-140px)] bg-[#f8f9ff]">
       <div className="max-w-[1280px] mx-auto px-4 lg:px-8 py-6">
-        {/* Top Control Filter Bar */}
+        {/* Top Control Filter Bar: 3 Evenly Spaced Columns (Phương tiện -> Sắp xếp -> Bán kính) */}
         <TopFilterBar
           filters={filters}
           vehicles={fallbackVehicleOptions}
           onChangeFilters={handleFilterChange}
         />
+
+        {/* Full-width Search & Result Stats Bar with 'Hiện bãi đã đầy' Toggle */}
+        <div className="w-full mb-5">
+          <SmartLocationBar
+            value={filters.keyword}
+            onChange={(keyword) => handleFilterChange({ keyword })}
+            onLocateMe={handleLocateMe}
+            totalResults={lots.length}
+            radiusKm={filters.radiusKm}
+            includeFull={filters.includeFull}
+            onToggleIncludeFull={(includeFull) => handleFilterChange({ includeFull })}
+          />
+        </div>
 
         {/* Loading State */}
         {isLoading ? (
@@ -90,23 +103,10 @@ export function SearchParkingPage() {
             </button>
           </div>
         ) : (
-          /* Split View Workbench */
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
-            {/* Left Column: Search & Operational Yard List (5 cols ~ 42%) */}
+          /* Split View Workbench: Left Yard List (max 2 cards visible with internal scrollbar) and Right Map */
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start mt-2">
+            {/* Left Column: Operational Yard List (5 cols ~ 42%) */}
             <div className="lg:col-span-5 flex flex-col gap-4">
-              <SmartLocationBar
-                value={filters.keyword}
-                onChange={(keyword) => handleFilterChange({ keyword })}
-                onLocateMe={handleLocateMe}
-                totalResults={lots.length}
-                radiusKm={filters.radiusKm}
-                filterLabel={
-                  filters.vehicleType === 'CONTAINER'
-                    ? 'Container 40/45FT'
-                    : filters.vehicleType
-                }
-              />
-
               <YardCardList
                 lots={lots}
                 selectedLotId={selectedLotId}

@@ -48,7 +48,7 @@ export function YardCardItem({
   return (
     <div
       onClick={() => onSelect(lot)}
-      className={`bg-white rounded-2xl p-5 shadow-sm relative overflow-hidden transition-all duration-200 border cursor-pointer ${
+      className={`bg-white rounded-2xl p-5 shadow-sm relative overflow-hidden transition-all duration-200 border cursor-pointer shrink-0 ${
         isSelected
           ? 'border-[#d95f00] ring-2 ring-[#d95f00]/20 shadow-md'
           : 'border-slate-200/80 hover:border-slate-300'

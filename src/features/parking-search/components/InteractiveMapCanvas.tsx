@@ -31,7 +31,7 @@ export function InteractiveMapCanvas({
   const activeLot = selectedLot || lots[0]
 
   return (
-    <div className="flex flex-col gap-3 sticky top-[80px]">
+    <div className="flex flex-col gap-3 sticky top-[96px] pt-1">
       {/* Realistic Container Map Canvas */}
       <div className="relative w-full h-[680px] bg-[#e4ebf5] rounded-2xl overflow-hidden shadow-sm select-none border border-slate-200">
         {/* Cartographic Grid/Tile Surface Background */}
