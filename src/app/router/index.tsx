@@ -6,6 +6,7 @@ import { DashboardHomePage } from '@/features/dashboard'
 import { SearchParkingPage } from '@/features/parking-search'
 import { ParkingDetailPage } from '@/features/parking-detail'
 import { MyBookingsPage } from '@/features/bookings'
+import { VirtualQueuesPage } from '@/features/queues'
 import {
   LandingPage,
   DriverSolutionsPage,
@@ -46,6 +47,10 @@ export const router = createBrowserRouter([
         path: 'bookings',
         element: <MyBookingsPage />,
       },
+      {
+        path: 'queues',
+        element: <VirtualQueuesPage />,
+      },
     ],
   },
   {
@@ -72,6 +77,10 @@ export const router = createBrowserRouter([
         path: 'bookings',
         element: <MyBookingsPage />,
       },
+      {
+        path: 'queues',
+        element: <VirtualQueuesPage />,
+      },
     ],
   },
   {
@@ -81,6 +90,16 @@ export const router = createBrowserRouter([
       {
         index: true,
         element: <MyBookingsPage />,
+      },
+    ],
+  },
+  {
+    path: '/queues',
+    element: <DriverLayout />,
+    children: [
+      {
+        index: true,
+        element: <VirtualQueuesPage />,
       },
     ],
   },

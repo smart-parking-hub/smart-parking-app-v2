@@ -68,3 +68,19 @@
 | 4. Hỗ Trợ & Giải Đáp Biểu Phí (5 FAQ Accordion phí tài xế, hoàn cọc 100%, công nợ VAT, phần cứng 0đ, rút tiền 24/7) | [`PricingFaqSection.tsx`](file:///d:/Documents/JAVA%20WEB%20SERVICE/SmartParkingHub/smart-parking-app-v2/src/features/landing/components/pricing/PricingFaqSection.tsx) | Public | **Preserved (Accessible)** |
 | 5. Bottom CTA Banner ("Sẵn Sàng Tối Ưu Chi Phí Dừng Đỗ & Quản Lý Đội Xe?") | [`PricingCtaBanner.tsx`](file:///d:/Documents/JAVA%20WEB%20SERVICE/SmartParkingHub/smart-parking-app-v2/src/features/landing/components/pricing/PricingCtaBanner.tsx) | Public | **Preserved (Full Match)** |
 | 4-Column Footer & Pháp Lý | [`LandingFooter.tsx`](file:///d:/Documents/JAVA%20WEB%20SERVICE/SmartParkingHub/smart-parking-app-v2/src/features/landing/components/common/LandingFooter.tsx) | Public | **Preserved (Full Match)** |
+
+
+---
+
+## 5. Màn Hình SCR-018: Hàng Đợi Ảo Thông Minh (Virtual Queues — Route `/queues` & `/dashboard/queues`)
+
+| Khối Giao Diện Cũ / Stitch | Thành Phần React 19 (`smart-parking-app-v2`) | API / Quyền hạn | Trạng thái Parity |
+|---|---|---|---|
+| Command Toolbar & Telemetry | [`QueueCommandToolbar.tsx`](file:///d:/SmartParkingHub/smart-parking-app-v2/src/features/queues/components/QueueCommandToolbar.tsx) | `ROLE_DRIVER` | **Preserved (Full Match)** |
+| Thẻ Hàng Đợi Hoạt Động (NOTIFIED / WAITING) | [`ActiveQueueCard.tsx`](file:///d:/SmartParkingHub/smart-parking-app-v2/src/features/queues/components/ActiveQueueCard.tsx) | `ROLE_DRIVER` | **Enhanced (Interactive Countdown & Radar)** |
+| Tiến trình điều phối ALPR Timeline | [`QueueTimelineFlow.tsx`](file:///d:/SmartParkingHub/smart-parking-app-v2/src/features/queues/components/QueueTimelineFlow.tsx) | `ROLE_DRIVER` | **Enhanced (Full Visual Pipeline)** |
+| Nhận Slot & Tạo Booking | [`AcceptQueueSuccessModal.tsx`](file:///d:/SmartParkingHub/smart-parking-app-v2/src/features/queues/components/AcceptQueueSuccessModal.tsx) | `POST /api/v1/queues/{id}/accept` | **Preserved (Seamless Flow)** |
+| Từ chối nhận slot & Rời hàng đợi | [`LeaveQueueConfirmModal.tsx`](file:///d:/SmartParkingHub/smart-parking-app-v2/src/features/queues/components/LeaveQueueConfirmModal.tsx) | `POST /api/v1/queues/{id}/cancel` | **Preserved (With Confirmation Guard)** |
+| Bảng Lịch Sử Lượt Xếp Hàng & Bộ lọc | [`QueueHistoryTable.tsx`](file:///d:/SmartParkingHub/smart-parking-app-v2/src/features/queues/components/QueueHistoryTable.tsx) | `GET /api/v1/queues` | **Preserved (Search & Status Filter)** |
+| Quy định Vận Hành Hàng Đợi 4 Bento Cards | [`QueueRegulationsSection.tsx`](file:///d:/SmartParkingHub/smart-parking-app-v2/src/features/queues/components/QueueRegulationsSection.tsx) | Public / Driver | **Enhanced (Bento Regulations)** |
+| Shimmer Loading Placeholder | [`QueueSkeleton.tsx`](file:///d:/SmartParkingHub/smart-parking-app-v2/src/features/queues/components/QueueSkeleton.tsx) | — | **Preserved (Smooth UX)** |
