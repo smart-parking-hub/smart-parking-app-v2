@@ -16,10 +16,27 @@ export function LandingNavbar() {
     location.pathname.includes('api-docs') || location.pathname.includes('ket-noi-api')
   const isAboutPage =
     location.pathname.includes('about') || location.pathname.includes('ve-chung-toi')
+  const isCareersPage =
+    location.pathname.includes('careers') || location.pathname.includes('tuyen-dung')
   const isHomePage =
-    !isDriverPage && !isOwnerPage && !isPricingPage && !isApiPage && !isAboutPage
+    !isDriverPage && !isOwnerPage && !isPricingPage && !isApiPage && !isAboutPage && !isCareersPage
 
-  const navLinks = isAboutPage
+  const navLinks = isCareersPage
+    ? [
+        { label: 'Trang chủ', href: '/' },
+        { label: 'Giải pháp Tài xế', href: '/driver-solutions' },
+        { label: 'Giải pháp Chủ bãi', href: '/owner-solutions' },
+        { label: 'Bảng giá', href: '/pricing' },
+        { label: 'Kết nối API', href: '/api-docs' },
+        { label: 'Về chúng tôi', href: '/about' },
+        {
+          label: 'Tuyển dụng',
+          href: '/careers',
+          isCurrent: true,
+        },
+        { label: 'Liên hệ', href: '#lien-he' },
+      ]
+    : isAboutPage
     ? [
         { label: 'Trang chủ', href: '/' },
         { label: 'Giải pháp Tài xế', href: '/driver-solutions' },
@@ -164,25 +181,29 @@ export function LandingNavbar() {
 
   const closeMobileMenu = () => setMobileMenuOpen(false)
 
-  const ctaLabel = isAboutPage
-    ? 'Gia nhập mạng lưới'
-    : isApiPage
-      ? 'Nhận Sandbox Key'
-      : isOwnerPage
-        ? 'Hợp tác bãi đỗ'
-        : 'Tìm bãi đỗ ngay'
+  const ctaLabel = isCareersPage
+    ? 'Ứng tuyển ngay'
+    : isAboutPage
+      ? 'Gia nhập mạng lưới'
+      : isApiPage
+        ? 'Nhận Sandbox Key'
+        : isOwnerPage
+          ? 'Hợp tác bãi đỗ'
+          : 'Tìm bãi đỗ ngay'
 
-  const ctaHref = isAboutPage
-    ? '#gia-nhap'
-    : isApiPage
-      ? '#sandbox-register'
-      : isOwnerPage
-        ? '#onboarding-form'
-        : isDriverPage
-          ? '#tim-bai-ngay'
-          : isPricingPage
-            ? '/driver-solutions'
-            : '#tim-bai'
+  const ctaHref = isCareersPage
+    ? '#vi-tri-tuyen-dung'
+    : isAboutPage
+      ? '#gia-nhap'
+      : isApiPage
+        ? '#sandbox-register'
+        : isOwnerPage
+          ? '#onboarding-form'
+          : isDriverPage
+            ? '#tim-bai-ngay'
+            : isPricingPage
+              ? '/driver-solutions'
+              : '#tim-bai'
 
   return (
     <header className="sticky top-0 inset-x-0 z-50 bg-white/95 backdrop-blur-md border-b border-brand-border">

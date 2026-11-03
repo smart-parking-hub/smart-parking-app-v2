@@ -5,6 +5,7 @@ export * from './pages/OwnerSolutionsPage'
 export * from './pages/PricingPage'
 export * from './pages/ApiDocsPage'
 export * from './pages/AboutUsPage'
+export * from './pages/CareersPage'
 
 // Common Components
 export * from './components/common/LandingNavbar'
@@ -59,3 +60,11 @@ export * from './components/about-us/AboutCorePrinciplesSection'
 export * from './components/about-us/AboutRoadmapSection'
 export * from './components/about-us/AboutLeadershipSection'
 export * from './components/about-us/AboutCtaBanner'
+
+// Careers Components (Trang Tuyển Dụng Nhân Tài - SCR-001G)
+export * from './components/careers/CareersHeroSection'
+export * from './components/careers/CareersCultureSection'
+export * from './components/careers/CareersJobListSection'
+export * from './components/careers/CareersProcessSection'
+export * from './components/careers/CareersFastApplySection'
+export * from './components/careers/CareersApplyModal'

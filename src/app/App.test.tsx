@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from '@testing-library/react'
+import { fireEvent, render, screen, within } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { describe, it, expect, vi } from 'vitest'
 import {
@@ -7,10 +7,11 @@ import {
   PricingPage,
   ApiDocsPage,
   AboutUsPage,
+  CareersPage,
 } from '@/features/landing'
 import { App } from './App'
 
-describe('SmartTruckHub - 6 Distinct Landing Screens', () => {
+describe('SmartTruckHub - 7 Distinct Landing Screens', () => {
   describe('Trang Chủ (Home Landing Page - SCR-001)', () => {
     it('renders home hero and all 8 main sections successfully', () => {
       render(<App />)
@@ -539,6 +540,191 @@ describe('SmartTruckHub - 6 Distinct Landing Screens', () => {
         }),
       ).toBeInTheDocument()
       expect(screen.getByText(/LIÊN HỆ ĐỐI TÁC CHIẾN LƯỢC/i)).toBeInTheDocument()
+    })
+  })
+
+  describe('Trang Tuyển Dụng Nhân Tài (Careers & Recruitment Page - SCR-001G)', () => {
+    it('renders hero with perks, culture bento cards, filterable job list with apply modal, recruitment process and fast apply form', () => {
+      render(
+        <MemoryRouter initialEntries={['/careers']}>
+          <CareersPage />
+        </MemoryRouter>,
+      )
+
+      // 1. Careers Hero Section
+      expect(
+        screen.getByText(/TUYỂN DỤNG NHÂN TÀI · CÙNG ĐỊNH HÌNH LOGISTICS SỐ/i),
+      ).toBeInTheDocument()
+      expect(
+        screen.getByRole('heading', {
+          name: /Gia Nhập Đội Ngũ Kiến Tạo Hạ Tầng Logistics Thông Minh\./i,
+        }),
+      ).toBeInTheDocument()
+      expect(screen.getByText(/^Top 10%$/)).toBeInTheDocument()
+      expect(screen.getByText(/^100% Apple \/ Dell$/)).toBeInTheDocument()
+      expect(screen.getByText(/^Bảo Hiểm PVI$/)).toBeInTheDocument()
+      expect(screen.getByText(/^Môi Trường Hybrid$/)).toBeInTheDocument()
+
+      // 2. Culture Bento Section
+      expect(screen.getByText(/ĐẶC QUYỀN & MÔI TRƯỜNG/i)).toBeInTheDocument()
+      expect(
+        screen.getByRole('heading', {
+          name: /Văn Hóa Làm Việc Thực Chiến Tại SmartTruckHub/i,
+        }),
+      ).toBeInTheDocument()
+      expect(screen.getByText(/01 \/ THỰC ĐỊA LỚN/i)).toBeInTheDocument()
+      expect(screen.getByText(/Giải Quyết Bài Toán Thực Địa Khó/i)).toBeInTheDocument()
+      expect(screen.getByText(/02 \/ TỰ CHỦ HOÀN TOÀN/i)).toBeInTheDocument()
+      expect(screen.getByText(/Quyền Tự Chủ Tuyệt Đối \(Ownership\)/i)).toBeInTheDocument()
+      expect(screen.getByText(/03 \/ ĐÃI NGỘ XỨNG ĐÁNG/i)).toBeInTheDocument()
+      expect(screen.getByText(/Lộ Trình Thăng Tiến & Cổ Phần ESOP/i)).toBeInTheDocument()
+      expect(screen.getByText(/04 \/ TOÀN DIỆN/i)).toBeInTheDocument()
+      expect(screen.getByText(/Chăm Sóc Sức Khỏe & Năng Lượng/i)).toBeInTheDocument()
+
+      // 3. Open Positions & Department Filter
+      expect(screen.getByText(/CƠ HỘI NGHỀ NGHIỆP MỞ/i)).toBeInTheDocument()
+      expect(
+        screen.getByRole('heading', {
+          name: /Các Vị Trí Trọng Yếu Đang Tuyển Dụng/i,
+        }),
+      ).toBeInTheDocument()
+
+      // Verify all 4 jobs present initially
+      expect(
+        screen.getByText(/Senior Backend Java Engineer \(Spring Boot \/ Microservices\)/i),
+      ).toBeInTheDocument()
+      expect(
+        screen.getByText(/Senior Frontend Engineer \(React \/ TypeScript \/ Tailwind\)/i),
+      ).toBeInTheDocument()
+      expect(
+        screen.getByText(/Chuyên Viên Phát Triển Thị Trường B2B \(Fleet Sales Lead\)/i),
+      ).toBeInTheDocument()
+      expect(
+        screen.getByText(/Kỹ Sư Triển Khai IoT & Camera Barie ALPR/i),
+      ).toBeInTheDocument()
+
+      // Filter by Engineering (2)
+      const engineeringTab = screen.getByRole('button', {
+        name: /Kỹ Thuật & Hệ Thống \(2\)/i,
+      })
+      fireEvent.click(engineeringTab)
+      expect(
+        screen.getByText(/Senior Backend Java Engineer \(Spring Boot \/ Microservices\)/i),
+      ).toBeInTheDocument()
+      expect(
+        screen.getByText(/Senior Frontend Engineer \(React \/ TypeScript \/ Tailwind\)/i),
+      ).toBeInTheDocument()
+      expect(
+        screen.queryByText(/Chuyên Viên Phát Triển Thị Trường B2B/i),
+      ).not.toBeInTheDocument()
+
+      // Filter by Sales (1)
+      const salesTab = screen.getByRole('button', {
+        name: /Kinh Doanh B2B \(1\)/i,
+      })
+      fireEvent.click(salesTab)
+      expect(
+        screen.getByText(/Chuyên Viên Phát Triển Thị Trường B2B \(Fleet Sales Lead\)/i),
+      ).toBeInTheDocument()
+      expect(
+        screen.queryByText(/Senior Backend Java Engineer/i),
+      ).not.toBeInTheDocument()
+
+      // Filter by Operations (1)
+      const opsTab = screen.getByRole('button', {
+        name: /Vận Hành Thực Địa \(1\)/i,
+      })
+      fireEvent.click(opsTab)
+      expect(
+        screen.getByText(/Kỹ Sư Triển Khai IoT & Camera Barie ALPR/i),
+      ).toBeInTheDocument()
+
+      // Return to All (4)
+      const allTab = screen.getByRole('button', {
+        name: /Tất Cả \(4\)/i,
+      })
+      fireEvent.click(allTab)
+      expect(
+        screen.getByText(/Senior Backend Java Engineer \(Spring Boot \/ Microservices\)/i),
+      ).toBeInTheDocument()
+
+      // 4. Interactive Apply Modal
+      const applyButtons = screen.getAllByRole('button', {
+        name: /ỨNG TUYỂN NGAY/i,
+      })
+      expect(applyButtons.length).toBe(4)
+
+      // Click first apply button (Backend Engineer)
+      fireEvent.click(applyButtons[0])
+
+      // Modal should appear
+      const modal = screen.getByRole('dialog')
+      expect(modal).toBeInTheDocument()
+      expect(within(modal).getByText(/ĐƠN ỨNG TUYỂN/i)).toBeInTheDocument()
+      expect(
+        within(modal).getByRole('heading', {
+          name: /Senior Backend Java Engineer \(Spring Boot \/ Microservices\)/i,
+        }),
+      ).toBeInTheDocument()
+
+      // Fill modal form
+      const modalNameInput = screen.getByPlaceholderText(/Trần Minh Tuấn/i)
+      const modalPhoneInput = screen.getByPlaceholderText(/0912 345 678/i)
+      const modalEmailInput = screen.getByPlaceholderText(/tuan\.tran@gmail\.com/i)
+      const modalCvInput = screen.getByPlaceholderText(/https:\/\/drive\.google\.com\/\.\.\./i)
+
+      fireEvent.change(modalNameInput, { target: { value: 'Trần Văn Sang' } })
+      fireEvent.change(modalPhoneInput, { target: { value: '0901234567' } })
+      fireEvent.change(modalEmailInput, { target: { value: 'sang.tran@example.com' } })
+      fireEvent.change(modalCvInput, { target: { value: 'https://github.com/sangtran' } })
+
+      const modalSubmit = screen.getByRole('button', {
+        name: /XÁC NHẬN NỘP HỒ SƠ/i,
+      })
+      fireEvent.click(modalSubmit)
+
+      expect(screen.getByText(/Ứng Tuyển Thành Công!/i)).toBeInTheDocument()
+
+      // 5. 4-step Recruitment Process
+      expect(screen.getByText(/MINH BẠCH & TỐC ĐỘ/i)).toBeInTheDocument()
+      expect(
+        screen.getByRole('heading', {
+          name: /Quy Trình Tuyển Dụng 4 Bước Đơn Giản/i,
+        }),
+      ).toBeInTheDocument()
+      expect(screen.getByText(/Nộp Hồ Sơ & Sàng Lọc/i)).toBeInTheDocument()
+      expect(screen.getByText(/Thời gian: 24 Giờ/i)).toBeInTheDocument()
+      expect(screen.getByText(/Phỏng Vấn Trực Tiếp/i)).toBeInTheDocument()
+      expect(screen.getByText(/Thời gian: 60 - 90 Phút/i)).toBeInTheDocument()
+      expect(screen.getByText(/Thử Nghiệm Thực Tế/i)).toBeInTheDocument()
+      expect(screen.getByText(/Thời gian: 2 - 3 Ngày/i)).toBeInTheDocument()
+      expect(screen.getByText(/Offer & Onboarding/i)).toBeInTheDocument()
+      expect(screen.getByText(/Thời gian: Trong 48 Giờ/i)).toBeInTheDocument()
+
+      // 6. Fast Apply Section
+      expect(
+        screen.getByRole('heading', {
+          name: /Không Thấy Vị Trí Phù Hợp Nhưng Vẫn Muốn Đồng Hành\?/i,
+        }),
+      ).toBeInTheDocument()
+      expect(screen.getByText(/hr@smarttruck\.vn/i)).toBeInTheDocument()
+
+      const fastNameInput = screen.getByPlaceholderText(/Nguyễn Văn A/i)
+      const fastEmailInput = screen.getByPlaceholderText(/your\.name@domain\.com/i)
+      const fastCvInput = screen.getByPlaceholderText(/https:\/\/linkedin\.com\/in\/\.\.\./i)
+
+      fireEvent.change(fastNameInput, { target: { value: 'Nguyễn Thanh Tùng' } })
+      fireEvent.change(fastEmailInput, { target: { value: 'tung.nguyen@example.com' } })
+      fireEvent.change(fastCvInput, { target: { value: 'https://linkedin.com/in/tungnguyen' } })
+
+      const fastSubmit = screen.getByRole('button', {
+        name: /GỬI HỒ SƠ ỨNG TUYỂN/i,
+      })
+      fireEvent.click(fastSubmit)
+
+      expect(
+        screen.getByText(/Đã tiếp nhận hồ sơ! HR sẽ liên hệ qua email trong 24h\./i),
+      ).toBeInTheDocument()
     })
   })
 })
