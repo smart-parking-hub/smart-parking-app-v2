@@ -19,7 +19,7 @@ interface NavLinkItem {
 const navLinks: NavLinkItem[] = [
   { to: '/dashboard', label: 'Tổng quan' },
   { to: '/parking', label: 'Bản đồ tìm bãi' },
-  { to: '/bookings', label: 'Vé & Đặt chỗ', hasBadge: true },
+  { to: '/bookings', label: 'Vé & Đặt chỗ' },
   { to: '/queues', label: 'Hàng đợi ảo' },
   { to: '/payments', label: 'Lịch sử cước' },
   { to: '/vehicles', label: 'Đội xe của tôi' },

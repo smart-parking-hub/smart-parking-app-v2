@@ -32,7 +32,8 @@ export function YardCardList({
   }
 
   return (
-    <div className="flex flex-col gap-4">
+    /* Shows ~2 cards initially, with smooth custom scrollbar on the right to view more */
+    <div className="flex flex-col gap-4 max-h-[740px] overflow-y-auto pr-2 custom-scrollbar">
       {lots.map((lot) => (
         <YardCardItem
           key={lot.id}

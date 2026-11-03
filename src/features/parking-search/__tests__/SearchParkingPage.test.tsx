@@ -47,7 +47,7 @@ describe('SCR-015: Interactive Parking Search & Map (Bản đồ tìm kiếm bã
 
     // 1. Vehicle selector & classifications
     expect(screen.getByText(/Phương tiện điều hành/i)).toBeInTheDocument()
-    expect(screen.getByText(/Container 40\/45FT/i)).toBeInTheDocument()
+    expect(screen.getAllByText(/Container 40\/45FT/i).length).toBeGreaterThanOrEqual(1)
     expect(screen.getByText(/Tải nặng \(>10T\)/i)).toBeInTheDocument()
     expect(screen.getByText(/Tải trung \(3.5-10T\)/i)).toBeInTheDocument()
     expect(screen.getByText(/Tải nhỏ \(<3.5T\)/i)).toBeInTheDocument()
