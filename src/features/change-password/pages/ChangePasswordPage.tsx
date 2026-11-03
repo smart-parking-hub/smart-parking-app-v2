@@ -14,12 +14,14 @@ import { ChangePasswordForm } from '../components/ChangePasswordForm'
 import { TerminalQrSyncBanner } from '../components/TerminalQrSyncBanner'
 import { SmsRecoveryModal } from '../components/SmsRecoveryModal'
 import { ChangePasswordSkeleton } from '../components/ChangePasswordSkeleton'
+import { NotificationSettingsModal } from '../../profile/components/NotificationSettingsModal'
 
 export function ChangePasswordPage() {
   const [loading, setLoading] = useState(true)
   const [audit, setAudit] = useState<SecurityAuditStatus>(fallbackSecurityAudit)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isSmsRecoveryOpen, setIsSmsRecoveryOpen] = useState(false)
+  const [isNotificationSettingsOpen, setIsNotificationSettingsOpen] = useState(false)
 
   useEffect(() => {
     let isMounted = true
@@ -81,6 +83,7 @@ export function ChangePasswordPage() {
           <div className="lg:col-span-4">
             <SecurityPolicySidebar
               audit={audit}
+              onOpenNotificationSettings={() => setIsNotificationSettingsOpen(true)}
               onOpenTwoFactorModal={() => setIsSmsRecoveryOpen(true)}
               onOpenDevicesModal={() => {}}
             />
@@ -103,6 +106,12 @@ export function ChangePasswordPage() {
       <SmsRecoveryModal
         isOpen={isSmsRecoveryOpen}
         onClose={() => setIsSmsRecoveryOpen(false)}
+      />
+
+      {/* Notification Settings Modal */}
+      <NotificationSettingsModal
+        isOpen={isNotificationSettingsOpen}
+        onClose={() => setIsNotificationSettingsOpen(false)}
       />
     </main>
   )

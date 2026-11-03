@@ -107,7 +107,6 @@ export function ChangePasswordModal({
             <input
               id="curr-pass"
               type="password"
-              required
               value={currentPassword}
               onChange={(e) => setCurrentPassword(e.target.value)}
               placeholder="Nhập mật khẩu cũ của bạn"
@@ -122,7 +121,6 @@ export function ChangePasswordModal({
             <input
               id="new-pass"
               type="password"
-              required
               value={newPassword}
               onChange={(e) => setNewPassword(e.target.value)}
               placeholder="Tối thiểu 6 ký tự"
@@ -137,7 +135,6 @@ export function ChangePasswordModal({
             <input
               id="conf-pass"
               type="password"
-              required
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
               placeholder="Nhập lại mật khẩu mới"

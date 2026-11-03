@@ -32,20 +32,29 @@ describe('SCR-022 ChangePasswordPage (Đổi mật khẩu bảo mật tài xế)
     expect(screen.getByText('TIÊU CHUẨN LOẠI 1 (COMMERCIAL TRUCK)')).toBeInTheDocument()
   })
 
-  it('renders sidebar with navigation items, 3 Fretrix rules, 2 active devices, and hotline', async () => {
+  it('renders synchronized account operations sidebar, 3 Fretrix rules, 2 active devices, and hotline', async () => {
     renderPage()
 
     await waitFor(() => {
-      expect(screen.getByText('Danh mục hồ sơ tài xế')).toBeInTheDocument()
+      expect(screen.getByText('CẤU HÌNH TÀI KHOẢN VẬN HÀNH')).toBeInTheDocument()
     })
 
-    // Navigation links
-    expect(screen.getByText('Thông tin cá nhân & Bằng lái')).toBeInTheDocument()
-    expect(screen.getByText('Đầu kéo & Rơ-moóc gán')).toBeInTheDocument()
-    expect(screen.getByText('Ví cước PayOS & Ngân hàng')).toBeInTheDocument()
+    // Navigation links & active state
+    expect(screen.getByText('Thông tin cá nhân & Giấy phép')).toBeInTheDocument()
+    expect(screen.getByText('Đội xe của tôi')).toBeInTheDocument()
+    expect(screen.getByText('3 XE')).toBeInTheDocument()
+    expect(screen.getByText('Lịch sử cước & Hóa đơn VAT')).toBeInTheDocument()
+    expect(screen.getByText('18 HÓA ĐƠN')).toBeInTheDocument()
     expect(screen.getByText('Đổi mật khẩu bảo mật')).toBeInTheDocument()
-    expect(screen.getByText('Phiên đăng nhập & Thiết bị')).toBeInTheDocument()
-    expect(screen.getByText('Xác thực OTP 2 lớp (2FA)')).toBeInTheDocument()
+    expect(screen.getByText('Thiết lập thông báo hệ thống')).toBeInTheDocument()
+
+    // Verify links to related portals
+    const profileLink = screen.getByText('Thông tin cá nhân & Giấy phép').closest('a')
+    expect(profileLink).toHaveAttribute('href', '/profile')
+    const vehiclesLink = screen.getByText('Đội xe của tôi').closest('a')
+    expect(vehiclesLink).toHaveAttribute('href', '/vehicles')
+    const paymentsLink = screen.getByText('Lịch sử cước & Hóa đơn VAT').closest('a')
+    expect(paymentsLink).toHaveAttribute('href', '/payments')
 
     // 3 Fretrix rules
     expect(screen.getByText('Quy chuẩn Fretrix')).toBeInTheDocument()
@@ -59,6 +68,19 @@ describe('SCR-022 ChangePasswordPage (Đổi mật khẩu bảo mật tài xế)
 
     // Hotline
     expect(screen.getByText('1900 6868')).toBeInTheDocument()
+  })
+
+  it('opens NotificationSettingsModal when clicking Thiết lập thông báo hệ thống', async () => {
+    renderPage()
+
+    await waitFor(() => {
+      expect(screen.getByText('Thiết lập thông báo hệ thống')).toBeInTheDocument()
+    })
+
+    fireEvent.click(screen.getByText('Thiết lập thông báo hệ thống'))
+
+    expect(screen.getByText('Thiết Lập Thông Báo Hệ Thống')).toBeInTheDocument()
+    expect(screen.getByText('KÊNH TRỰC BAN & ĐIỀU PHỐI BÃI')).toBeInTheDocument()
   })
 
   it('toggles password visibility on all 3 input fields', async () => {

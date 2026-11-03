@@ -1,14 +1,5 @@
-import { Link } from 'react-router-dom'
 import {
-  BadgeCheck,
-  Truck,
-  CreditCard,
-  KeyRound,
-  Laptop,
-  ShieldCheck,
   ShieldAlert,
-  ChevronRight,
-  ArrowRight,
   CheckSquare,
   Ban,
   Power,
@@ -17,94 +8,26 @@ import {
   Headphones,
 } from 'lucide-react'
 import type { SecurityAuditStatus } from '../types/changePasswordTypes'
+import { ProfileSidebarNav } from '../../profile/components/ProfileSidebarNav'
 
 interface SecurityPolicySidebarProps {
   audit: SecurityAuditStatus
+  onOpenNotificationSettings?: () => void
   onOpenTwoFactorModal?: () => void
   onOpenDevicesModal?: () => void
 }
 
 export function SecurityPolicySidebar({
   audit,
-  onOpenTwoFactorModal,
-  onOpenDevicesModal,
+  onOpenNotificationSettings,
 }: SecurityPolicySidebarProps) {
   return (
     <aside className="flex flex-col gap-5">
-      {/* 1. ProfileSidebar Navigation */}
-      <nav className="bg-white rounded-2xl p-3 border border-slate-200 shadow-xs flex flex-col gap-1">
-        <div className="px-3 py-2 mb-1">
-          <p className="font-mono text-xs text-slate-500 uppercase tracking-wider font-bold">
-            Danh mục hồ sơ tài xế
-          </p>
-        </div>
-
-        <Link
-          to="/profile"
-          className="flex items-center justify-between px-3.5 py-3 rounded-xl text-slate-700 hover:bg-slate-50 transition-colors"
-        >
-          <div className="flex items-center gap-3">
-            <BadgeCheck className="w-5 h-5 text-slate-500" />
-            <span className="text-sm font-medium">Thông tin cá nhân &amp; Bằng lái</span>
-          </div>
-          <ChevronRight className="w-4 h-4 text-slate-400" />
-        </Link>
-
-        <Link
-          to="/vehicles"
-          className="flex items-center justify-between px-3.5 py-3 rounded-xl text-slate-700 hover:bg-slate-50 transition-colors"
-        >
-          <div className="flex items-center gap-3">
-            <Truck className="w-5 h-5 text-slate-500" />
-            <span className="text-sm font-medium">Đầu kéo &amp; Rơ-moóc gán</span>
-          </div>
-          <ChevronRight className="w-4 h-4 text-slate-400" />
-        </Link>
-
-        <Link
-          to="/payments"
-          className="flex items-center justify-between px-3.5 py-3 rounded-xl text-slate-700 hover:bg-slate-50 transition-colors"
-        >
-          <div className="flex items-center gap-3">
-            <CreditCard className="w-5 h-5 text-slate-500" />
-            <span className="text-sm font-medium">Ví cước PayOS &amp; Ngân hàng</span>
-          </div>
-          <ChevronRight className="w-4 h-4 text-slate-400" />
-        </Link>
-
-        {/* Active item: Đổi mật khẩu bảo mật */}
-        <div className="flex items-center justify-between px-3.5 py-3 rounded-xl bg-slate-900 text-white font-semibold shadow-xs">
-          <div className="flex items-center gap-3">
-            <KeyRound className="w-5 h-5 text-orange-500" />
-            <span className="text-sm text-white">Đổi mật khẩu bảo mật</span>
-          </div>
-          <ArrowRight className="w-4 h-4 text-orange-500" />
-        </div>
-
-        <button
-          type="button"
-          onClick={onOpenDevicesModal}
-          className="flex items-center justify-between px-3.5 py-3 rounded-xl text-slate-700 hover:bg-slate-50 transition-colors text-left cursor-pointer"
-        >
-          <div className="flex items-center gap-3">
-            <Laptop className="w-5 h-5 text-slate-500" />
-            <span className="text-sm font-medium">Phiên đăng nhập &amp; Thiết bị</span>
-          </div>
-          <ChevronRight className="w-4 h-4 text-slate-400" />
-        </button>
-
-        <button
-          type="button"
-          onClick={onOpenTwoFactorModal}
-          className="flex items-center justify-between px-3.5 py-3 rounded-xl text-slate-700 hover:bg-slate-50 transition-colors text-left cursor-pointer"
-        >
-          <div className="flex items-center gap-3">
-            <ShieldCheck className="w-5 h-5 text-slate-500" />
-            <span className="text-sm font-medium">Xác thực OTP 2 lớp (2FA)</span>
-          </div>
-          <ChevronRight className="w-4 h-4 text-slate-400" />
-        </button>
-      </nav>
+      {/* 1. Unified Operational Account Configuration Navigation */}
+      <ProfileSidebarNav
+        activeTab="change-password"
+        onOpenNotificationSettings={onOpenNotificationSettings}
+      />
 
       {/* 2. Hộp Cảnh Báo Quy Chuẩn An Toàn Fretrix */}
       <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-xs flex flex-col gap-4">
