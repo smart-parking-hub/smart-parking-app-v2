@@ -1,18 +1,40 @@
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
 import { Truck, Headset, Menu, X } from 'lucide-react'
 
 export function LandingNavbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const location = useLocation()
+  const isDriverPage =
+    location.pathname.includes('driver-solutions') || location.pathname.includes('giai-phap-tai-xe')
 
   const navLinks = [
-    { label: 'Trang chủ', href: '/', isCurrent: true },
-    { label: 'Giải pháp Tài xế', href: '#giai-phap-tai-xe' },
-    { label: 'Chủ bãi', href: '#giai-phap-chu-bai' },
-    { label: 'Quy trình', href: '#quy-trinh' },
-    { label: 'Bảng giá', href: '#bang-gia' },
-    { label: 'Kết nối API', href: '#api' },
-    { label: 'Liên hệ', href: '#lien-he' },
+    { label: 'Trang chủ', href: '/' },
+    {
+      label: 'Giải pháp Tài xế',
+      href: '/driver-solutions',
+      isCurrent: isDriverPage,
+    },
+    {
+      label: 'Chủ bãi',
+      href: isDriverPage ? '/#giai-phap-chu-bai' : '#giai-phap-chu-bai',
+    },
+    {
+      label: 'Quy trình',
+      href: isDriverPage ? '#quy-trinh-tai-xe' : '#quy-trinh',
+    },
+    {
+      label: 'Bảng giá',
+      href: isDriverPage ? '#bo-loc-tien-ich' : '#bang-gia',
+    },
+    {
+      label: 'Kết nối API',
+      href: isDriverPage ? '/#api' : '#api',
+    },
+    {
+      label: 'Liên hệ',
+      href: '#lien-he',
+    },
   ]
 
   const closeMobileMenu = () => setMobileMenuOpen(false)
@@ -88,7 +110,7 @@ export function LandingNavbar() {
           </Link>
           <a
             className="inline-flex items-center justify-center bg-brand-orange hover:bg-brand-orange-hover text-white text-sm font-semibold px-5 py-2.5 rounded-lg shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-orange focus-visible:ring-offset-2"
-            href="#tim-bai"
+            href={isDriverPage ? '#tim-bai-ngay' : '#tim-bai'}
           >
             Tìm bãi đỗ ngay
           </a>
