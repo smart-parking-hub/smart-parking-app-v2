@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { X, Download, FileSpreadsheet, FileText, CheckCircle2 } from 'lucide-react'
 
 interface ExportReportModalProps {
@@ -18,18 +18,29 @@ export function ExportReportModal({
   const [isExporting, setIsExporting] = useState(false)
   const [isSuccess, setIsSuccess] = useState(false)
 
+  useEffect(() => {
+    let t1: NodeJS.Timeout | undefined
+    let t2: NodeJS.Timeout | undefined
+    if (isExporting) {
+      t1 = setTimeout(() => {
+        setIsExporting(false)
+        setIsSuccess(true)
+        t2 = setTimeout(() => {
+          setIsSuccess(false)
+          onClose()
+        }, 1000)
+      }, 800)
+    }
+    return () => {
+      if (t1) clearTimeout(t1)
+      if (t2) clearTimeout(t2)
+    }
+  }, [isExporting, onClose])
+
   if (!isOpen) return null
 
   const handleExport = () => {
     setIsExporting(true)
-    setTimeout(() => {
-      setIsExporting(false)
-      setIsSuccess(true)
-      setTimeout(() => {
-        setIsSuccess(false)
-        onClose()
-      }, 1000)
-    }, 800)
   }
 
   return (
