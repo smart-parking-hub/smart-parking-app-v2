@@ -1,6 +1,7 @@
 import { createBrowserRouter } from 'react-router-dom'
 import { RootLayout } from '@/layouts/RootLayout'
 import { DriverLayout } from '@/layouts/DriverLayout'
+import { MerchantLayout } from '@/layouts/MerchantLayout'
 import { BaselineOverviewPage } from '@/app/pages/BaselineOverviewPage'
 import { DashboardHomePage } from '@/features/dashboard'
 import { SearchParkingPage } from '@/features/parking-search'
@@ -14,6 +15,9 @@ import { ChangePasswordPage } from '@/features/change-password'
 import { PaymentReturnPage } from '@/features/payment-return'
 import { PaymentCancelPage } from '@/features/payment-cancel'
 import { NotificationsPage } from '@/features/notifications'
+import { MerchantDashboardPage } from '@/features/merchant/dashboard'
+import { MerchantParkingLotsPage } from '@/features/merchant/parking-lots'
+import { MerchantProfilePage } from '@/features/merchant/profile'
 import {
   LandingPage,
   DriverSolutionsPage,
@@ -317,6 +321,48 @@ export const router = createBrowserRouter([
     element: <InsightsPage />,
   },
   {
+    path: '/merchant',
+    element: <MerchantLayout />,
+    children: [
+      {
+        index: true,
+        element: <MerchantDashboardPage />,
+      },
+      {
+        path: 'dashboard',
+        element: <MerchantDashboardPage />,
+      },
+      {
+        path: 'parking-lots',
+        element: <MerchantParkingLotsPage />,
+      },
+      {
+        path: 'bookings',
+        element: <MerchantDashboardPage />,
+      },
+      {
+        path: 'qr-scanner',
+        element: <MerchantDashboardPage />,
+      },
+      {
+        path: 'revenue',
+        element: <MerchantDashboardPage />,
+      },
+      {
+        path: 'withdrawals',
+        element: <MerchantDashboardPage />,
+      },
+      {
+        path: 'disputes',
+        element: <MerchantDashboardPage />,
+      },
+      {
+        path: 'profile',
+        element: <MerchantProfilePage />,
+      },
+    ],
+  },
+  {
     path: '/crm',
     element: <RootLayout />,
     children: [
@@ -327,3 +373,4 @@ export const router = createBrowserRouter([
     ],
   },
 ])
+

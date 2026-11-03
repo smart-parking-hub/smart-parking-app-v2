@@ -92,7 +92,9 @@ export function PaymentCancelPage() {
       if (res.checkoutUrl) {
         setToastMessage(`Đang kết nối lại PayOS cho đơn ${ticket.bookingCode}...`)
         setTimeout(() => {
-          window.location.href = res.checkoutUrl
+          if (typeof window !== 'undefined' && window.location) {
+            window.location.href = res.checkoutUrl
+          }
         }, 800)
       }
     } finally {
