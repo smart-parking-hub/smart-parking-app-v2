@@ -1,6 +1,8 @@
 import { createBrowserRouter } from 'react-router-dom'
 import { RootLayout } from '@/layouts/RootLayout'
+import { DriverLayout } from '@/layouts/DriverLayout'
 import { BaselineOverviewPage } from '@/app/pages/BaselineOverviewPage'
+import { DashboardHomePage } from '@/features/dashboard'
 import {
   LandingPage,
   DriverSolutionsPage,
@@ -16,6 +18,30 @@ export const router = createBrowserRouter([
   {
     path: '/',
     element: <LandingPage />,
+  },
+  {
+    path: '/dashboard',
+    element: <DriverLayout />,
+    children: [
+      {
+        index: true,
+        element: <DashboardHomePage />,
+      },
+    ],
+  },
+  {
+    path: '/driver',
+    element: <DriverLayout />,
+    children: [
+      {
+        index: true,
+        element: <DashboardHomePage />,
+      },
+      {
+        path: 'dashboard',
+        element: <DashboardHomePage />,
+      },
+    ],
   },
   {
     path: '/driver-solutions',
