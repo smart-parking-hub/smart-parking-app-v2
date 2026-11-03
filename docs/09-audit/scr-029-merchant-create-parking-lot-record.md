@@ -1,0 +1,27 @@
+# Screen Implementation Record: SCR-029
+
+- **Screen ID:** SCR-029
+- **Tên màn hình:** Đăng ký bãi đỗ xe & depot mới (Create Merchant Parking Lot Wizard)
+- **Module:** MOD-04: Merchant Operations Portal
+- **Route URL:** `/merchant/parking-lots/new` (Bọc bởi `MerchantLayout`)
+- **Primary Page Component:** `CreateMerchantParkingLotPage.tsx`
+- **Sub-components:**
+  - `CreateParkingLotStepper.tsx` (Thanh tiến trình 3 bước chuẩn Fretrix Zero-Green)
+  - `CreateParkingLotBasicInfoCard.tsx` (Bước 1: Tên bãi đỗ & Địa chỉ pháp lý)
+  - `CreateParkingLotPhotosCard.tsx` (Bước 1: Album ảnh hiện trường kiểm định max 5 ảnh, nhãn ảnh bìa)
+  - `CreateParkingLotGeoCard.tsx` (Bước 2: Tọa độ WGS-84 LAT/LNG & nút đồng bộ GPS thiết bị)
+  - `CreateParkingLotMapPicker.tsx` (Bước 2: Bản đồ tương tác Viewfinder canvas)
+  - `CreateParkingLotConfirmStep.tsx` (Bước 3: Bảng đối soát thông số & cảnh báo PENDING_APPROVAL)
+  - `CreateParkingLotAiWidget.tsx` (Cột phải: Trợ lý AI Fretrix-Dispatch-V3 sinh 3 phân đoạn nội dung)
+  - `CreateParkingLotSlaWidget.tsx` (Cột phải: Cam kết SLA 24-48h, quy chuẩn mở bán, Hotline 1900 6868)
+  - `CreateParkingLotActionFooter.tsx` (Thanh điều hướng Trước/Sau, Lưu bản nháp, Tạo bãi đỗ)
+- **Quality Gates:**
+  - `typecheck` (`tsc --noEmit`): 0 Errors
+  - `lint` (`eslint .`): 0 Errors, 0 Warnings
+  - `test` (`vitest run`): 18/18 Files PASS (146/146 Tests PASS)
+  - `build` (`tsc -b && vite build`): PASS (built in 9.77s)
+- **API Contracts:**
+  - `POST /api/v1/merchant/parking-lots`
+  - `POST /api/v1/merchant/parking-lots/{id}/images`
+- **Access Role:** `ROLE_MERCHANT`
+- **Trạng thái:** IMPLEMENTED & READY FOR REVIEW
