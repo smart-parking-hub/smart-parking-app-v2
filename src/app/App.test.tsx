@@ -1,14 +1,15 @@
 import { fireEvent, render, screen } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi } from 'vitest'
 import {
   DriverSolutionsPage,
   OwnerSolutionsPage,
   PricingPage,
+  ApiDocsPage,
 } from '@/features/landing'
 import { App } from './App'
 
-describe('SmartTruckHub - 4 Distinct Landing Screens', () => {
+describe('SmartTruckHub - 5 Distinct Landing Screens', () => {
   describe('Trang Chủ (Home Landing Page - SCR-001)', () => {
     it('renders home hero and all 8 main sections successfully', () => {
       render(<App />)
@@ -300,6 +301,136 @@ describe('SmartTruckHub - 4 Distinct Landing Screens', () => {
           name: /Sẵn Sàng Tối Ưu Chi Phí Dừng Đỗ & Quản Lý Đội Xe\?/i,
         }),
       ).toBeInTheDocument()
+    })
+  })
+
+  describe('Trang Kết Nối API & Webhooks (API & Developer Docs - SCR-001E)', () => {
+    it('renders API hero, interactive terminal with tabs switching & copy payload, 4 bento integration modules, 3 onboarding steps and CTA banner', () => {
+      // Mock navigator.clipboard
+      const writeTextMock = vi.fn().mockResolvedValue(undefined)
+      Object.assign(navigator, {
+        clipboard: {
+          writeText: writeTextMock,
+        },
+      })
+
+      render(
+        <MemoryRouter>
+          <ApiDocsPage />
+        </MemoryRouter>,
+      )
+
+      // 1. API Hero
+      expect(
+        screen.getByText(/HẠ TẦNG KẾT NỐI MỞ · RESTFUL API & WEBHOOKS V3/i),
+      ).toBeInTheDocument()
+      expect(
+        screen.getByRole('heading', {
+          name: /Tích Hợp API Điều Phối Bãi Đỗ Vào Hệ Thống/i,
+        }),
+      ).toBeInTheDocument()
+      expect(screen.getByText(/99.98% SLA Uptime/i)).toBeInTheDocument()
+      expect(screen.getByText(/38ms Network Latency/i)).toBeInTheDocument()
+      expect(screen.getByText(/OAuth2 \/ Bearer JWT/i)).toBeInTheDocument()
+
+      // 2. Interactive Terminal & Tab Switching
+      expect(screen.getByText(/SPECS & RUNTIME RUNBOOK/i)).toBeInTheDocument()
+      expect(
+        screen.getByRole('heading', {
+          name: /Kiến Trúc API Điểm Chốt Thực Nghiệm/i,
+        }),
+      ).toBeInTheDocument()
+
+      // Default Tab 1: POST /api/v1/bookings
+      expect(screen.getByText(/Giữ chỗ thành công trong 10 phút/i)).toBeInTheDocument()
+      expect(screen.getByText(/BK-2026-8941/i)).toBeInTheDocument()
+
+      // Switch to Tab 2: GET /api/v1/parking-lots/search
+      const tab2Button = screen.getByRole('tab', {
+        name: /GET \/api\/v1\/parking-lots\/search/i,
+      })
+      fireEvent.click(tab2Button)
+      expect(screen.getByText(/"totalMatches"/i)).toBeInTheDocument()
+      expect(screen.getByText(/"Bãi Xe Logistics Cát Lái 02"/i)).toBeInTheDocument()
+
+      // Switch to Tab 3: POST /api/v1/merchant/check-in
+      const tab3Button = screen.getByRole('tab', {
+        name: /POST \/api\/v1\/merchant\/check-in/i,
+      })
+      fireEvent.click(tab3Button)
+      expect(screen.getByText(/"GATE-CATLAI-IN-01"/i)).toBeInTheDocument()
+      expect(screen.getByText(/"OPEN_BARRIER"/i)).toBeInTheDocument()
+
+      // Switch to Tab 4: HOOK booking.checked_in
+      const tab4Button = screen.getByRole('tab', {
+        name: /HOOK booking\.checked_in/i,
+      })
+      fireEvent.click(tab4Button)
+      expect(screen.getByText(/"booking\.checked_in"/i)).toBeInTheDocument()
+      expect(screen.getByText(/"ACTIVE_PARKED"/i)).toBeInTheDocument()
+
+      // Test Copy Payload button
+      const copyButton = screen.getByRole('button', {
+        name: /Sao chép payload API/i,
+      })
+      fireEvent.click(copyButton)
+      expect(writeTextMock).toHaveBeenCalled()
+      expect(screen.getByText(/Đã sao chép/i)).toBeInTheDocument()
+
+      // 3. 4 Enterprise Integration Modules (Bento)
+      expect(screen.getByText(/GIẢI PHÁP CHUYÊN NGÀNH LOGISTICS 4.0/i)).toBeInTheDocument()
+      expect(
+        screen.getByRole('heading', {
+          name: /4 Năng Lực Tích Hợp Hệ Thống Trọng Yếu/i,
+        }),
+      ).toBeInTheDocument()
+      expect(
+        screen.getByRole('heading', {
+          name: /Tự động hóa điều phối chuyến \(Auto-Dispatch Integration\)/i,
+        }),
+      ).toBeInTheDocument()
+      expect(
+        screen.getByRole('heading', {
+          name: /Cổng Webhook sự kiện thời gian thực/i,
+        }),
+      ).toBeInTheDocument()
+      expect(
+        screen.getByRole('heading', {
+          name: /Ví số doanh nghiệp tập trung \(Corporate Fleet Wallet API\)/i,
+        }),
+      ).toBeInTheDocument()
+      expect(
+        screen.getByRole('heading', {
+          name: /Đồng bộ hóa đơn điện tử VAT \(Automated e-Invoice Sync\)/i,
+        }),
+      ).toBeInTheDocument()
+
+      // 4. 3 Onboarding Steps
+      expect(screen.getByText(/ONBOARDING QUY TRÌNH KỸ THUẬT/i)).toBeInTheDocument()
+      expect(
+        screen.getByRole('heading', {
+          name: /Quy Trình 3 Bước Tích Hợp Vào Sản Phẩm/i,
+        }),
+      ).toBeInTheDocument()
+      expect(
+        screen.getByRole('heading', { name: /Nhận Sandbox Key/i }),
+      ).toBeInTheDocument()
+      expect(
+        screen.getByRole('heading', { name: /Thử Nghiệm Luồng Nghiệp Vụ/i }),
+      ).toBeInTheDocument()
+      expect(
+        screen.getByRole('heading', { name: /Ký Kết SLA & Ra Mắt/i }),
+      ).toBeInTheDocument()
+
+      // 5. Bottom CTA Banner
+      expect(screen.getByText(/CHUYÊN BIỆT CHO ĐỘI NGŨ ENGINEERING & 3PL/i)).toBeInTheDocument()
+      expect(
+        screen.getByRole('heading', {
+          name: /Sẵn Sàng Nâng Tầm Năng Lực Vận Tải Cùng SmartTruck API\?/i,
+        }),
+      ).toBeInTheDocument()
+      expect(screen.getByText(/YÊU CẦU CẤP MÔI TRƯỜNG SANDBOX/i)).toBeInTheDocument()
+      expect(screen.getByText(/TẢI BỘ SDK PYTHON & NODEJS \/ JAVA/i)).toBeInTheDocument()
     })
   })
 })

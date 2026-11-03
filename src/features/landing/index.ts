@@ -3,6 +3,7 @@ export * from './pages/LandingPage'
 export * from './pages/DriverSolutionsPage'
 export * from './pages/OwnerSolutionsPage'
 export * from './pages/PricingPage'
+export * from './pages/ApiDocsPage'
 
 // Common Components
 export * from './components/common/LandingNavbar'
@@ -42,3 +43,11 @@ export * from './components/pricing/PricingCardsSection'
 export * from './components/pricing/PricingComparisonTableSection'
 export * from './components/pricing/PricingFaqSection'
 export * from './components/pricing/PricingCtaBanner'
+
+// API Docs Components (Trang Kết Nối API & Webhooks - SCR-001E)
+export * from './components/api-docs/ApiHeroSection'
+export * from './components/api-docs/ApiTerminalSection'
+export * from './components/api-docs/ApiSolutionsBentoSection'
+export * from './components/api-docs/ApiWorkflowSection'
+export * from './components/api-docs/ApiCtaBanner'
+

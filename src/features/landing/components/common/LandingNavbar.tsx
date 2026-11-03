@@ -12,9 +12,25 @@ export function LandingNavbar() {
     location.pathname.includes('owner-solutions') || location.pathname.includes('giai-phap-chu-bai')
   const isPricingPage =
     location.pathname.includes('pricing') || location.pathname.includes('bang-gia')
-  const isHomePage = !isDriverPage && !isOwnerPage && !isPricingPage
+  const isApiPage =
+    location.pathname.includes('api-docs') || location.pathname.includes('ket-noi-api')
+  const isHomePage = !isDriverPage && !isOwnerPage && !isPricingPage && !isApiPage
 
-  const navLinks = isPricingPage
+  const navLinks = isApiPage
+    ? [
+        { label: 'Trang chủ', href: '/' },
+        { label: 'Giải pháp Tài xế', href: '/driver-solutions' },
+        { label: 'Giải pháp Chủ bãi', href: '/owner-solutions' },
+        { label: 'Bảng giá', href: '/pricing' },
+        {
+          label: 'Kết nối API',
+          href: '/api-docs',
+          isCurrent: true,
+        },
+        { label: 'Quy trình', href: '#quy-trinh' },
+        { label: 'Liên hệ', href: '#lien-he' },
+      ]
+    : isPricingPage
     ? [
         { label: 'Trang chủ', href: '/' },
         { label: 'Giải pháp Tài xế', href: '/driver-solutions' },
@@ -24,7 +40,7 @@ export function LandingNavbar() {
           href: '/pricing',
           isCurrent: true,
         },
-        { label: 'Kết nối API', href: '/#api' },
+        { label: 'Kết nối API', href: '/api-docs' },
         { label: 'Liên hệ', href: '#lien-he' },
       ]
     : isOwnerPage
@@ -49,8 +65,8 @@ export function LandingNavbar() {
             href: '#tinh-nang',
           },
           {
-            label: 'Quy trình',
-            href: '#quy-trinh',
+            label: 'Kết nối API',
+            href: '/api-docs',
           },
           {
             label: 'Liên hệ',
@@ -79,8 +95,8 @@ export function LandingNavbar() {
               href: '/pricing',
             },
             {
-              label: 'Tiện ích bãi',
-              href: '#bo-loc-tien-ich',
+              label: 'Kết nối API',
+              href: '/api-docs',
             },
             {
               label: 'Liên hệ',
@@ -109,12 +125,13 @@ export function LandingNavbar() {
               isCurrent: false,
             },
             {
-              label: 'Quy trình',
-              href: '#quy-trinh',
+              label: 'Kết nối API',
+              href: '/api-docs',
+              isCurrent: false,
             },
             {
-              label: 'Kết nối API',
-              href: '#api',
+              label: 'Quy trình',
+              href: '#quy-trinh',
             },
             {
               label: 'Liên hệ',
@@ -124,14 +141,21 @@ export function LandingNavbar() {
 
   const closeMobileMenu = () => setMobileMenuOpen(false)
 
-  const ctaLabel = isOwnerPage ? 'Hợp tác bãi đỗ' : 'Tìm bãi đỗ ngay'
-  const ctaHref = isOwnerPage
-    ? '#onboarding-form'
-    : isDriverPage
-      ? '#tim-bai-ngay'
-      : isPricingPage
-        ? '/driver-solutions'
-        : '#tim-bai'
+  const ctaLabel = isApiPage
+    ? 'Nhận Sandbox Key'
+    : isOwnerPage
+      ? 'Hợp tác bãi đỗ'
+      : 'Tìm bãi đỗ ngay'
+
+  const ctaHref = isApiPage
+    ? '#sandbox-register'
+    : isOwnerPage
+      ? '#onboarding-form'
+      : isDriverPage
+        ? '#tim-bai-ngay'
+        : isPricingPage
+          ? '/driver-solutions'
+          : '#tim-bai'
 
   return (
     <header className="sticky top-0 inset-x-0 z-50 bg-white/95 backdrop-blur-md border-b border-brand-border">

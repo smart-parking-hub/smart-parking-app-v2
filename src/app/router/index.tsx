@@ -6,6 +6,7 @@ import {
   DriverSolutionsPage,
   OwnerSolutionsPage,
   PricingPage,
+  ApiDocsPage,
 } from '@/features/landing'
 
 export const router = createBrowserRouter([
@@ -36,6 +37,14 @@ export const router = createBrowserRouter([
   {
     path: '/bang-gia',
     element: <PricingPage />,
+  },
+  {
+    path: '/api-docs',
+    element: <ApiDocsPage />,
+  },
+  {
+    path: '/ket-noi-api',
+    element: <ApiDocsPage />,
   },
   {
     path: '/crm',

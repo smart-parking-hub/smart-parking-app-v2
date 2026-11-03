@@ -81,7 +81,7 @@ export function LandingFooter() {
                 </a>
               </li>
               <li>
-                <a className="hover:text-white transition-colors" href="#api">
+                <a className="hover:text-white transition-colors" href="/api-docs">
                   Tài liệu kết nối API Swagger
                 </a>
               </li>
