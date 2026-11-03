@@ -176,23 +176,25 @@ Mọi yêu cầu chuyển đổi giao diện từ Stitch sang React bắt buộc
 
 ---
 
-## 🌿 6. Chiến Lược Nhánh Git & Tái Sử Dụng Nhánh (Rule 13)
+## 🌿 6. Chiến Lược Nhánh Git, Tách Nhánh Docs & Ngưỡng Fix Lớn (Rule 13)
 
 Tuân thủ hướng dẫn tại [`.agents/skills/git-branch-workflow/SKILL.md`](.agents/skills/git-branch-workflow/SKILL.md) và [`.agents/rules/13-git-and-collaboration.md`](.agents/rules/13-git-and-collaboration.md).
 
 ### 6.1. Quy tắc đặt tên nhánh:
 `<type>/<screen-or-module-slug>`
 * Độ dài: Tối đa 30–40 ký tự, `kebab-case`.
-* Hợp lệ: `feat/landing-page`, `feat/parking-lots-list`, `fix/booking-timer-sync`, `chore/setup-playwright`.
+* Hợp lệ: `feat/landing-page`, `feat/parking-lots-list`, `fix/booking-timer-sync`, `docs/governance-update`, `chore/eslint-setup`.
 * Cấm: Các tên vô nghĩa (`test`, `new`, `dev`) hoặc quá dài dòng.
 
-### 6.2. Quy tắc Vàng: "Single Feature Branch Lifecycle"
-* Mỗi màn hình phát triển trên **đúng 1 nhánh duy nhất**.
-* Khi màn hình đó cần chỉnh sửa, bổ sung form, hoặc sửa bug theo phản hồi nghiệm thu: **BẮT BUỘC checkout lại đúng nhánh đó** (`git checkout <branch>`) để commit tiếp.
-* **Tuyệt đối không tạo nhánh rác:** Không tạo `<branch>-fix`, `<branch>-v2`, `<branch>-part2`.
-* Chỉ xóa nhánh sau khi PR đã được merge an toàn vào `main`.
+### 6.2. Tách biệt Docs & Tooling khỏi Feature Branch:
+* **Tuyệt đối KHÔNG** push tài liệu (`docs/`, `README.md`, `AGENTS.md`) hoặc cấu hình dự án (`eslint`, tooling) vào feature branch đang làm code giao diện.
+* Mọi cập nhật docs hoặc tooling phải tạo nhánh riêng (`docs/<topic>`, `chore/<topic>`) hoặc push vào `main`.
 
-### 6.3. Chuẩn commit: Conventional Commits
+### 6.3. Quy tắc Vòng đời nhánh & Ngưỡng "Fix Quá Nhiều":
+* **Chỉnh sửa nhỏ (Minor tweaks):** Tiếp tục checkout nhánh feature (`git checkout feat/<screen>`) để commit bổ sung theo feedback nghiệm thu.
+* **Fix quá nhiều (Major Overhaul):** Khi phát sinh từ **3 lỗi logic trở lên** hoặc thay đổi **> 30% cấu trúc file**, **BẮT BUỘC TẠO HẲN NHÁNH MỚI TỪ MAIN** (ví dụ `fix/<screen>-overhaul`) để giải quyết dứt điểm, tránh sửa chắp vá kéo dài trên feature branch cũ.
+
+### 6.4. Chuẩn commit: Conventional Commits
 `<type>(<scope>): <mô tả ngắn bằng tiếng Anh hoặc tiếng Việt chuẩn mực>`
 
 ---
