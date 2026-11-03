@@ -1,7 +1,7 @@
 export function LandingMetricsBanner() {
   return (
     <section className="bg-white py-16 sm:py-20 border-b border-brand-border">
-      <div className="max-w-[1240px] mx-auto px-6">
+      <div className="max-w-310 mx-auto px-6">
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-12">
           {/* Metric 1 */}
           <div className="flex flex-col border-l-2 border-brand-orange pl-5">

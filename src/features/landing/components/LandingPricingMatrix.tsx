@@ -43,7 +43,7 @@ export function LandingPricingMatrix() {
 
   return (
     <section className="bg-brand-surface py-20 sm:py-28" id="bang-gia">
-      <div className="max-w-[1240px] mx-auto px-6">
+      <div className="max-w-310 mx-auto px-6">
         <div className="flex flex-col lg:flex-row lg:items-end justify-between mb-14 gap-6">
           <div>
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded bg-white border border-brand-border text-brand-orange text-xs font-semibold uppercase tracking-wider mb-3">

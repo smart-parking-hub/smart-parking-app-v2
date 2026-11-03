@@ -42,7 +42,7 @@ export function LandingServicesGrid() {
 
   return (
     <section className="bg-brand-surface py-20 sm:py-28" id="tim-bai">
-      <div className="max-w-[1240px] mx-auto px-6">
+      <div className="max-w-310 mx-auto px-6">
         {/* Section Header */}
         <div className="text-center max-w-2xl mx-auto mb-16">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded bg-white border border-brand-border text-brand-orange text-xs font-semibold uppercase tracking-wider mb-3">

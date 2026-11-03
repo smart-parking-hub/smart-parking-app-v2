@@ -4,7 +4,7 @@ import { Truck, Headset } from 'lucide-react'
 export function LandingNavbar() {
   return (
     <header className="sticky top-0 inset-x-0 z-50 bg-white/95 backdrop-blur-md border-b border-brand-border">
-      <div className="max-w-[1240px] mx-auto h-20 px-6 flex items-center justify-between gap-6">
+      <div className="max-w-310 mx-auto h-20 px-6 flex items-center justify-between gap-6">
         {/* Brand Logo */}
         <Link className="flex items-center gap-2.5 shrink-0 group" to="/">
           <div className="w-10 h-10 rounded-lg bg-brand-navy flex items-center justify-center text-white shadow-sm transition-transform group-hover:scale-105">

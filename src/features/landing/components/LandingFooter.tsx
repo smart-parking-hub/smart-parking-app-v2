@@ -3,7 +3,7 @@ import { Truck } from 'lucide-react'
 export function LandingFooter() {
   return (
     <footer className="w-full bg-brand-navy text-slate-400 py-16 border-t border-slate-800" id="lien-he">
-      <div className="max-w-[1240px] mx-auto px-6">
+      <div className="max-w-310 mx-auto px-6">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10 mb-14">
           {/* Col 1: Brand & Status */}
           <div>

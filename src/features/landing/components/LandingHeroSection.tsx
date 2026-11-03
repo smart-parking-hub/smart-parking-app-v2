@@ -16,10 +16,10 @@ export function LandingHeroSection() {
   return (
     <section className="relative bg-brand-navy overflow-hidden pt-12 pb-24 md:pt-16 md:pb-32">
       {/* Ambient Radial Glows */}
-      <div className="absolute -top-32 right-10 w-[580px] h-[580px] bg-brand-orange/10 rounded-full blur-3xl pointer-events-none"></div>
-      <div className="absolute bottom-0 left-1/4 w-[420px] h-[420px] bg-slate-800/40 rounded-full blur-2xl pointer-events-none"></div>
+      <div className="absolute -top-32 right-10 w-145 h-145 bg-brand-orange/10 rounded-full blur-3xl pointer-events-none"></div>
+      <div className="absolute bottom-0 left-1/4 w-105 h-105 bg-slate-800/40 rounded-full blur-2xl pointer-events-none"></div>
 
-      <div className="max-w-[1240px] mx-auto px-6 relative z-10">
+      <div className="max-w-310 mx-auto px-6 relative z-10">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-8 items-center">
           {/* Left Column: Copy & Actions */}
           <div className="lg:col-span-7 flex flex-col items-start space-y-6">
@@ -81,7 +81,7 @@ export function LandingHeroSection() {
           {/* Right Column: Fretrix Floating Terminal Card */}
           <div className="lg:col-span-5 relative w-full">
             <div className="relative rounded-3xl overflow-hidden bg-brand-navy-light border border-slate-700/80 shadow-2xl p-3">
-              <div className="relative w-full h-[380px] sm:h-[440px] rounded-2xl overflow-hidden">
+              <div className="relative w-full h-95 sm:h-110 rounded-2xl overflow-hidden">
                 <img
                   className="w-full h-full object-cover"
                   alt="Xe container tại bãi đỗ logistics thông minh ban đêm"
@@ -89,7 +89,7 @@ export function LandingHeroSection() {
                   fetchPriority="high"
                   loading="eager"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-brand-navy via-brand-navy/30 to-transparent"></div>
+                <div className="absolute inset-0 bg-linear-to-t from-brand-navy via-brand-navy/30 to-transparent"></div>
 
                 {/* Floating Pill Top Right */}
                 <div className="absolute top-4 right-4 bg-brand-navy/90 backdrop-blur-md border border-slate-700 px-3.5 py-2 rounded-xl flex items-center gap-2">

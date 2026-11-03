@@ -36,7 +36,7 @@ export function LandingTestimonials() {
 
   return (
     <section className="bg-white py-20 sm:py-28">
-      <div className="max-w-[1240px] mx-auto px-6">
+      <div className="max-w-310 mx-auto px-6">
         <div className="flex flex-col md:flex-row md:items-end justify-between mb-16 gap-6">
           <div>
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded bg-slate-100 border border-slate-200 text-brand-orange text-xs font-semibold uppercase tracking-wider mb-3">

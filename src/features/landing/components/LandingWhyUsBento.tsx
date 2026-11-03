@@ -3,7 +3,7 @@ import { Radio, Receipt, ShieldCheck } from 'lucide-react'
 export function LandingWhyUsBento() {
   return (
     <section className="bg-brand-navy py-20 sm:py-28 relative overflow-hidden" id="giai-phap-chu-bai">
-      <div className="max-w-[1240px] mx-auto px-6 relative z-10">
+      <div className="max-w-310 mx-auto px-6 relative z-10">
         {/* Split Heading Header */}
         <div className="flex flex-col lg:flex-row lg:items-end justify-between mb-16 gap-6">
           <div>
