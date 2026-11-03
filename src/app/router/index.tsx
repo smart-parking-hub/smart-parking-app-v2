@@ -3,6 +3,7 @@ import { RootLayout } from '@/layouts/RootLayout'
 import { DriverLayout } from '@/layouts/DriverLayout'
 import { BaselineOverviewPage } from '@/app/pages/BaselineOverviewPage'
 import { DashboardHomePage } from '@/features/dashboard'
+import { SearchParkingPage } from '@/features/parking-search'
 import {
   LandingPage,
   DriverSolutionsPage,
@@ -27,6 +28,14 @@ export const router = createBrowserRouter([
         index: true,
         element: <DashboardHomePage />,
       },
+      {
+        path: 'search',
+        element: <SearchParkingPage />,
+      },
+      {
+        path: 'parking',
+        element: <SearchParkingPage />,
+      },
     ],
   },
   {
@@ -40,6 +49,20 @@ export const router = createBrowserRouter([
       {
         path: 'dashboard',
         element: <DashboardHomePage />,
+      },
+      {
+        path: 'search',
+        element: <SearchParkingPage />,
+      },
+    ],
+  },
+  {
+    path: '/parking',
+    element: <DriverLayout />,
+    children: [
+      {
+        index: true,
+        element: <SearchParkingPage />,
       },
     ],
   },
@@ -97,10 +120,6 @@ export const router = createBrowserRouter([
   },
   {
     path: '/tin-tuc',
-    element: <InsightsPage />,
-  },
-  {
-    path: '/bai-viet',
     element: <InsightsPage />,
   },
   {
