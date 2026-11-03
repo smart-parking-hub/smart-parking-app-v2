@@ -8,7 +8,7 @@ Whenever receiving Stitch HTML/CSS from the user, the agent operates strictly un
 `# TASK: IMPLEMENT ONE STITCH SCREEN INTO EXISTING CRM`
 as codified in `.agents/rules/15-stitch-screen-by-screen.md`.
 
-## 13 Strict Execution Rules (Inviolable)
+## 14 Strict Execution Rules (Inviolable)
 1. Single screen only per task.
 2. Read all HTML/CSS before touching code.
 3. Stitch is the approved visual authority.
@@ -20,8 +20,9 @@ as codified in `.agents/rules/15-stitch-screen-by-screen.md`.
 9. No static HTML / `dangerouslySetInnerHTML` hacks.
 10. No cross-screen regressions or out-of-scope edits.
 11. Hard stop for user approval before moving to next screen.
-12. **Zero-Error & Zero-Warning Gate:** Clean all red errors (TypeScript, build, test, console) and yellow warnings (ESLint, unused vars, React hooks warnings).
+12. **Zero-Error & Zero-Warning Gate:** Clean all red errors (TypeScript, build, test, console) and yellow warnings (ESLint, unused vars, React hooks, and Tailwind canonical classes).
 13. **Component Reusability & Placement Assessment:** Rigorously categorize each component into `shared/components/`, `entities/`, or `features/<feature>/components/`.
+14. **Design Intelligence & Adaptive UI Enforcement:** Apply `.agents/skills/design-intelligence/SKILL.md` (Preserve Intent, Improve Execution, Type A/B/C/D classification, and 0 `suggestCanonicalClasses` differences).
 
 ## 8-Phase Procedure
 

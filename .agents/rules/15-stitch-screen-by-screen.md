@@ -42,6 +42,11 @@
         * `src/entities/`: Dành cho component gắn với khái niệm nghiệp vụ dùng chung xuyên suốt 2+ features (ví dụ: `VehicleCard`, `ParkingLotStatusBadge`, `DriverAvatar`, `PriceTag`).
         * `src/features/<feature>/components/`: Dành cho component chỉ phục vụ ngữ cảnh riêng của màn hình/feature đó (Hero, Bento, Services grid, form đặc thù...).
     * Tuyệt đối không để component bừa bãi ra ngoài root hoặc nhét bừa vào `shared` khi chưa đánh giá; không nhân bản (duplicate) code khi component có tính tái sử dụng cao.
+14. **Thi hành chuẩn Design Intelligence & Thích nghi giao diện (Design Intelligence Enforcement):**
+    * Bắt buộc tuân thủ Skill `.agents/skills/design-intelligence/SKILL.md` theo triết lý *Preserve Intent, Improve Execution*.
+    * Phân loại mọi bất thường thành Type A (Lỗi kỹ thuật $\rightarrow$ Tự sửa), Type B (Chủ ý thiết kế $\rightarrow$ Bảo toàn), Type C (Lỗi UX lớn $\rightarrow$ Báo cáo & Continue Safe), Type D (Chưa rõ $\rightarrow$ Hỏi lại).
+    * Bắt buộc áp dụng thang đo chuẩn **Tailwind CSS v4 Canonical Utilities** (ví dụ: `max-w-310`, `w-145`, `bg-linear-to-*`, `bg-radial-*`), quét sạch mọi cảnh báo `suggestCanonicalClasses`.
+    * Mọi quyết định thay đổi lớn phải được ghi lại thành file Design Decision Record (DDR) tại `.agents/records/design-decisions/`.
 
 ---
 
