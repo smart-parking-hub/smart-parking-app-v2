@@ -4,6 +4,7 @@ import { DriverLayout } from '@/layouts/DriverLayout'
 import { BaselineOverviewPage } from '@/app/pages/BaselineOverviewPage'
 import { DashboardHomePage } from '@/features/dashboard'
 import { SearchParkingPage } from '@/features/parking-search'
+import { ParkingDetailPage } from '@/features/parking-detail'
 import {
   LandingPage,
   DriverSolutionsPage,
@@ -36,6 +37,10 @@ export const router = createBrowserRouter([
         path: 'parking',
         element: <SearchParkingPage />,
       },
+      {
+        path: 'parking/:id',
+        element: <ParkingDetailPage />,
+      },
     ],
   },
   {
@@ -54,6 +59,10 @@ export const router = createBrowserRouter([
         path: 'search',
         element: <SearchParkingPage />,
       },
+      {
+        path: 'parking/:id',
+        element: <ParkingDetailPage />,
+      },
     ],
   },
   {
@@ -63,6 +72,10 @@ export const router = createBrowserRouter([
       {
         index: true,
         element: <SearchParkingPage />,
+      },
+      {
+        path: ':id',
+        element: <ParkingDetailPage />,
       },
     ],
   },
