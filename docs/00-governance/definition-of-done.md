@@ -1,0 +1,11 @@
+# Definition of Done
+- [ ] Acceptance criteria met.
+- [ ] Existing behavior preserved or approved differences recorded.
+- [ ] API contract and permission behavior verified.
+- [ ] Loading/empty/error/disabled/denied states handled as relevant.
+- [ ] Responsive and accessibility checks completed.
+- [ ] Typecheck, lint, relevant tests and production build passed.
+- [ ] E2E/regression evidence exists for critical flows.
+- [ ] No unrelated changes or unresolved blocker.
+- [ ] Documentation and traceability updated.
+- [ ] PR reviewed and accepted by authorized reviewer.
