@@ -74,9 +74,9 @@ export function MerchantHeader({ onToggleMobileMenu }: MerchantHeaderProps) {
         <button
           type="button"
           onClick={() => navigate('/merchant/parking-lots/new')}
-          className="hidden sm:flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-[#341100] text-[#d95f00] hover:bg-black hover:text-white transition-all text-xs font-bold border border-[#d95f00]/40 shadow-xs cursor-pointer"
+          className="hidden sm:flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-[#d95f00] hover:bg-[#b84e00] text-white transition-all text-xs font-bold shadow-xs cursor-pointer"
         >
-          <Plus className="w-4 h-4 text-[#d95f00]" />
+          <Plus className="w-4 h-4 text-white" />
           <span>Đăng Ký Bãi Mới</span>
         </button>
 
@@ -115,3 +115,4 @@ export function MerchantHeader({ onToggleMobileMenu }: MerchantHeaderProps) {
     </header>
   )
 }
+

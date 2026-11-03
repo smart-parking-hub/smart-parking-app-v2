@@ -16,6 +16,7 @@ import { PaymentReturnPage } from '@/features/payment-return'
 import { PaymentCancelPage } from '@/features/payment-cancel'
 import { NotificationsPage } from '@/features/notifications'
 import { MerchantDashboardPage } from '@/features/merchant/dashboard'
+import { MerchantParkingLotsPage } from '@/features/merchant/parking-lots'
 import { MerchantProfilePage } from '@/features/merchant/profile'
 import {
   LandingPage,
@@ -333,7 +334,7 @@ export const router = createBrowserRouter([
       },
       {
         path: 'parking-lots',
-        element: <MerchantDashboardPage />,
+        element: <MerchantParkingLotsPage />,
       },
       {
         path: 'bookings',
@@ -372,3 +373,4 @@ export const router = createBrowserRouter([
     ],
   },
 ])
+
