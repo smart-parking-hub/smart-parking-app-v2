@@ -18,9 +18,9 @@
 | Header & CTA | Eyebrow "ĐỘI XE VẬN TẢI THƯƠNG MẠI", Title H1, nút Xuất danh sách đội xe và nút + Đăng ký phương tiện mới | `VehiclesCommandHeader.tsx` | Verified |
 | Bento Fleet KPI | 4 Thẻ Bento KPI: Tổng số xe (3 xe: 2 đầu kéo, 1 rơ-moóc), Xe mặc định vận hành (51D-894.12), Xác thực ALPR & Đăng kiểm (100%), Tổng tải trọng lưu hành (48.5 Tấn) | `VehiclesKpiBento.tsx` | Verified |
 | Filter & Search Matrix | Ô tìm kiếm đa trường (biển số, nhãn hiệu...), dropdown phân loại (Đầu kéo, Rơ-moóc, Xe tải nặng), dropdown trạng thái, nút reset | `VehicleFilterToolbar.tsx` | Verified |
-| Master Vehicle Table | Bảng 6 cột chi tiết: Phương tiện/Biển số, Cấu hình quy cách, Tải trọng trục (bản thân/kéo theo), Hạn kiểm định & BH, Barie ALPR, Thao tác (chọn mặc định, sửa, xem hồ sơ, xóa) | `VehicleMasterTable.tsx` | Verified |
+| Master Vehicle Table | Bảng 6 cột toàn màn hình (full-width), kiểu chữ to rõ ràng, ngăn ngắt dòng chữ với whitespace-nowrap cho biển số, tải trọng, hạn KĐ, ALPR và thao tác | `VehicleMasterTable.tsx` | Verified |
 | ALPR Gate Sync Banner | Banner cam kết đồng bộ ALPR tại trạm cân & barie với tốc độ mở gate ≤ 0.2 Giây | `AlprGateSyncBanner.tsx` | Verified |
-| Inline Registration Form Panel | Panel 4 cột bên phải: Biển số KKS (auto uppercase), Phân loại kỹ thuật, Tải trọng bản thân & kéo theo, Model & Năm SX, AI OCR dropzone sổ đăng kiểm, Checkbox mặc định, Nút Submit cam | `RegisterVehicleFormPanel.tsx` | Verified |
+| Register Vehicle Modal | Hộp thoại modal khai báo hồ sơ xe mới (mở ra khi ấn nút + Đăng ký phương tiện mới): Biển số KKS, Phân loại kỹ thuật, Tải trọng, Model & Năm SX, AI OCR sổ đăng kiểm, Checkbox mặc định | `RegisterVehicleModal.tsx` | Verified |
 | Edit Vehicle Modal | Hộp thoại cập nhật thông tin xe (SCR-MOD-04) với các trường kỹ thuật, trọng tải và trạng thái vận hành | `EditVehicleModal.tsx` | Verified |
 | View Inspection Dossier Modal | Hộp thoại xem hồ sơ kỹ thuật & kiểm định quốc gia: Số sổ KĐ, Hạn hiệu lực, Tải trọng trục, Số khung VIN, Số máy, BH TNDS bắt buộc, Nút In phiếu kiểm định | `ViewInspectionDossierModal.tsx` | Verified |
 | Delete Vehicle Confirm Modal | Hộp thoại xác nhận hủy liên kết phương tiện (soft delete an toàn, chặn xóa xe mặc định với tooltip giải thích) | `DeleteVehicleConfirmModal.tsx` | Verified |
