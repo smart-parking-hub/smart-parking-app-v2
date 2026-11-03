@@ -9,10 +9,11 @@ import {
   AboutUsPage,
   CareersPage,
   InsightsPage,
+  ContactPage,
 } from '@/features/landing'
 import { App } from './App'
 
-describe('SmartTruckHub - 8 Distinct Landing Screens', () => {
+describe('SmartTruckHub - 9 Distinct Landing Screens', () => {
   describe('Trang Chủ (Home Landing Page - SCR-001)', () => {
     it('renders home hero and all 8 main sections successfully', () => {
       render(<App />)
@@ -860,6 +861,104 @@ describe('SmartTruckHub - 8 Distinct Landing Screens', () => {
       ).toBeInTheDocument()
       expect(screen.getByRole('link', { name: /Tìm Bãi Đỗ Ngay/i })).toBeInTheDocument()
       expect(screen.getByRole('link', { name: /Dành Cho Chủ Bãi/i })).toBeInTheDocument()
+    })
+  })
+
+  describe('Trang Liên Hệ & Điều Phối 24/7 (Contact & Support - SCR-009)', () => {
+    it('renders hero with key metas, 2-column dispatch form with submission feedback, hotline channels, 6 permanent stations, 3 industrial SLAs and bottom CTA', () => {
+      render(
+        <MemoryRouter initialEntries={['/contact']}>
+          <ContactPage />
+        </MemoryRouter>,
+      )
+
+      // 1. Contact Hero Section
+      expect(
+        screen.getByText(/KẾT NỐI TRỰC TIẾP · HỖ TRỢ 24\/7 TOÀN QUỐC/i),
+      ).toBeInTheDocument()
+      expect(
+        screen.getByRole('heading', {
+          name: /Liên Hệ Với Đội Ngũ Chuyên Gia Vận Hành SmartTruck\./i,
+        }),
+      ).toBeInTheDocument()
+      expect(screen.getByText(/Đối soát PayOS & Bảo mật ISO 27001/i)).toBeInTheDocument()
+      expect(screen.getByText(/Cứu hộ barie tự động dưới 3 phút/i)).toBeInTheDocument()
+      expect(screen.getByText(/Kết nối IoT trạm dừng 63 tỉnh thành/i)).toBeInTheDocument()
+
+      // 2. 2-Column Dispatch Channels & Enterprise Inquiry Form
+      expect(screen.getByText(/TƯ VẤN DOANH NGHIỆP & KỸ THUẬT/i)).toBeInTheDocument()
+      expect(
+        screen.getByRole('heading', {
+          name: /Gửi Yêu Cầu Khảo Sát \/ Tích Hợp/i,
+        }),
+      ).toBeInTheDocument()
+
+      // Form fill & submission
+      const nameInput = screen.getByPlaceholderText(/Ví dụ: Trần Quốc Tuấn/i)
+      const phoneInput = screen.getByPlaceholderText(/09xx xxx xxx \(10 số\)/i)
+      const emailInput = screen.getByPlaceholderText(/tuan\.tran@logistics\.vn/i)
+      const detailsInput = screen.getByPlaceholderText(/Mô tả cụ thể: Diện tích mặt bằng bãi/i)
+      const categorySelect = screen.getByRole('combobox')
+
+      fireEvent.change(nameInput, { target: { value: 'Nguyễn Văn Hùng' } })
+      fireEvent.change(phoneInput, { target: { value: '0912345678' } })
+      fireEvent.change(emailInput, { target: { value: 'hung.nguyen@vantaihungthinh.vn' } })
+      fireEvent.change(categorySelect, { target: { value: 'lot-owner' } })
+      fireEvent.change(detailsInput, { target: { value: 'Cần khảo sát lắp đặt 2 làn Barie ALPR tại ICD Cát Lái.' } })
+
+      const submitButton = screen.getByRole('button', {
+        name: /GỬI YÊU CẦU CHO CHÚNG TÔI/i,
+      })
+      fireEvent.submit(submitButton.closest('form')!)
+
+      expect(
+        screen.getByText(/Yêu cầu đã được tiếp nhận thành công!/i),
+      ).toBeInTheDocument()
+      expect(
+        screen.getByText(/Kỹ sư trực ban SmartTruckHub sẽ liên hệ với bạn trong vòng 30 phút/i),
+      ).toBeInTheDocument()
+
+      // Right Column 24/7 Channels
+      expect(screen.getByText(/TRẠM ĐIỀU PHỐI KHẨN CẤP/i)).toBeInTheDocument()
+      expect(
+        screen.getByRole('heading', {
+          name: /Kênh Trực Ban 24\/7/i,
+        }),
+      ).toBeInTheDocument()
+      expect(screen.getAllByText(/1900 6868/i).length).toBeGreaterThan(0)
+      expect(screen.getByText(/api-support@smarttruckhub\.vn/i)).toBeInTheDocument()
+      expect(screen.getByText(/dispatch@smartparkinghub\.vn/i)).toBeInTheDocument()
+      expect(screen.getByText(/Trụ sở chính TP\.HCM:/i)).toBeInTheDocument()
+      expect(screen.getByText(/Trạm đại diện Hải Phòng:/i)).toBeInTheDocument()
+      expect(screen.getByText(/Trạm đại diện Đà Nẵng:/i)).toBeInTheDocument()
+
+      // 3. 6 Permanent Dispatch Stations
+      expect(screen.getByText(/TỌA ĐỘ VẬN HÀNH THỰC ĐỊA/i)).toBeInTheDocument()
+      expect(
+        screen.getByRole('heading', {
+          name: /Trung Tâm Điều Phối & 6 Cụm Cứu Hộ Bãi Đỗ Thường Trực/i,
+        }),
+      ).toBeInTheDocument()
+      expect(screen.getByText(/Trạm Cứu Hộ Bãi Cảng Cát Lái/i)).toBeInTheDocument()
+      expect(screen.getByText(/Trạm Cứu Hộ Cụm Cảng Cái Mép - Thị Vải/i)).toBeInTheDocument()
+      expect(screen.getByText(/Trạm Điều Phối Ga ICD Sóng Thần/i)).toBeInTheDocument()
+      expect(screen.getByText(/Trạm Cứu Hộ KCN Cụm Cảng Đình Vũ/i)).toBeInTheDocument()
+      expect(screen.getByText(/Trạm Tiếp Ứng KCN Tiên Sơn & Quế Võ/i)).toBeInTheDocument()
+      expect(screen.getByText(/Trạm Trung Chuyển Cao Tốc Bến Lức - Long Thành/i)).toBeInTheDocument()
+
+      // 4. SLA Metrics
+      expect(screen.getByText(/Cam Kết Phản Hồi Báo Giá/i)).toBeInTheDocument()
+      expect(screen.getByText(/Xử Lý Lỗi Barie Từ Xa/i)).toBeInTheDocument()
+      expect(screen.getByText(/Uptime Hệ Thống Điều Phối/i)).toBeInTheDocument()
+
+      // 5. Final CTA Banner
+      expect(
+        screen.getByRole('heading', {
+          name: /Sẵn Sàng Tối Ưu Hóa Mặt Bằng Hoặc Kết Nối Đội Xe Toàn Diện\?/i,
+        }),
+      ).toBeInTheDocument()
+      expect(screen.getByRole('link', { name: /ĐĂNG KÝ KHẢO SÁT NGAY/i })).toBeInTheDocument()
+      expect(screen.getByRole('link', { name: /GỌI HOTLINE 1900 6868/i })).toBeInTheDocument()
     })
   })
 })

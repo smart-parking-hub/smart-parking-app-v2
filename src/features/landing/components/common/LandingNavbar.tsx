@@ -22,6 +22,10 @@ export function LandingNavbar() {
     location.pathname.includes('insights') ||
     location.pathname.includes('tin-tuc') ||
     location.pathname.includes('bai-viet')
+  const isContactPage =
+    location.pathname.includes('contact') ||
+    location.pathname.includes('lien-he') ||
+    location.pathname.includes('ho-tro')
   const isHomePage =
     !isDriverPage &&
     !isOwnerPage &&
@@ -29,9 +33,25 @@ export function LandingNavbar() {
     !isApiPage &&
     !isAboutPage &&
     !isCareersPage &&
-    !isInsightsPage
+    !isInsightsPage &&
+    !isContactPage
 
-  const navLinks = isInsightsPage
+  const navLinks = isContactPage
+    ? [
+        { label: 'Trang chủ', href: '/' },
+        { label: 'Giải pháp Tài xế', href: '/driver-solutions' },
+        { label: 'Giải pháp Chủ bãi', href: '/owner-solutions' },
+        { label: 'Bảng giá', href: '/pricing' },
+        { label: 'Kết nối API', href: '/api-docs' },
+        { label: 'Về chúng tôi', href: '/about' },
+        { label: 'Tin tức & Báo cáo', href: '/insights' },
+        {
+          label: 'Liên hệ',
+          href: '/contact',
+          isCurrent: true,
+        },
+      ]
+    : isInsightsPage
     ? [
         { label: 'Trang chủ', href: '/' },
         { label: 'Giải pháp Tài xế', href: '/driver-solutions' },
@@ -44,7 +64,7 @@ export function LandingNavbar() {
           href: '/insights',
           isCurrent: true,
         },
-        { label: 'Liên hệ', href: '#lien-he' },
+        { label: 'Liên hệ', href: '/contact' },
       ]
     : isCareersPage
     ? [
@@ -206,8 +226,10 @@ export function LandingNavbar() {
 
   const closeMobileMenu = () => setMobileMenuOpen(false)
 
-  const ctaLabel = isInsightsPage
-    ? 'Đăng ký bản tin'
+  const ctaLabel = isContactPage
+    ? 'Gửi yêu cầu 24/7'
+    : isInsightsPage
+      ? 'Đăng ký bản tin'
     : isCareersPage
       ? 'Ứng tuyển ngay'
       : isAboutPage
@@ -218,8 +240,10 @@ export function LandingNavbar() {
           ? 'Hợp tác bãi đỗ'
           : 'Tìm bãi đỗ ngay'
 
-  const ctaHref = isInsightsPage
-    ? '#categoryFilterBar'
+  const ctaHref = isContactPage
+    ? '#enterpriseContactForm'
+    : isInsightsPage
+      ? '#categoryFilterBar'
     : isCareersPage
       ? '#vi-tri-tuyen-dung'
       : isAboutPage

@@ -7,6 +7,7 @@ export * from './pages/ApiDocsPage'
 export * from './pages/AboutUsPage'
 export * from './pages/CareersPage'
 export * from './pages/InsightsPage'
+export * from './pages/ContactPage'
 
 // Common Components
 export * from './components/common/LandingNavbar'
@@ -76,3 +77,10 @@ export * from './components/insights/InsightsFeaturedSection'
 export * from './components/insights/InsightsArticlesGridSection'
 export * from './components/insights/InsightsNewsletterSection'
 export * from './components/insights/InsightsCtaBanner'
+
+// Contact Components (Trang Liên Hệ & Điều Phối 24/7 - SCR-009)
+export * from './components/contact/ContactHeroSection'
+export * from './components/contact/ContactFormSection'
+export * from './components/contact/ContactStationsSection'
+export * from './components/contact/ContactSlaSection'
+export * from './components/contact/ContactCtaBanner'
