@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useRef } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import {
   fetchMyVehicles,
   fetchFleetKpiMetrics,
@@ -20,7 +20,7 @@ import { VehiclesKpiBento } from '../components/VehiclesKpiBento'
 import { VehicleFilterToolbar } from '../components/VehicleFilterToolbar'
 import { VehicleMasterTable } from '../components/VehicleMasterTable'
 import { AlprGateSyncBanner } from '../components/AlprGateSyncBanner'
-import { RegisterVehicleFormPanel } from '../components/RegisterVehicleFormPanel'
+import { RegisterVehicleModal } from '../components/RegisterVehicleModal'
 import { EditVehicleModal } from '../components/EditVehicleModal'
 import { ViewInspectionDossierModal } from '../components/ViewInspectionDossierModal'
 import { DeleteVehicleConfirmModal } from '../components/DeleteVehicleConfirmModal'
@@ -38,6 +38,7 @@ export function VehiclesPage() {
   const [statusFilter, setStatusFilter] = useState<'all' | VehicleStatusType>('all')
 
   // Modals & Action State
+  const [isRegisterOpen, setIsRegisterOpen] = useState(false)
   const [editingVehicle, setEditingVehicle] = useState<VehicleItem | null>(null)
   const [dossierVehicle, setDossierVehicle] = useState<VehicleItem | null>(null)
   const [deletingVehicle, setDeletingVehicle] = useState<VehicleItem | null>(null)
@@ -45,8 +46,6 @@ export function VehiclesPage() {
   const [isAdding, setIsAdding] = useState(false)
   const [isSavingEdit, setIsSavingEdit] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
-
-  const registerPanelRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     let isMounted = true
@@ -124,10 +123,6 @@ export function VehiclesPage() {
     setSearch('')
     setTypeFilter('all')
     setStatusFilter('all')
-  }
-
-  const handleScrollToRegister = () => {
-    registerPanelRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
   }
 
   const handleSetDefault = (id: number) => {
@@ -210,7 +205,7 @@ export function VehiclesPage() {
         {/* Command Header */}
         <VehiclesCommandHeader
           onOpenExport={() => setIsExportOpen(true)}
-          onScrollToRegister={handleScrollToRegister}
+          onOpenRegister={() => setIsRegisterOpen(true)}
         />
 
         {/* Bento KPI Section */}
@@ -230,32 +225,29 @@ export function VehiclesPage() {
           trailerCount={computedMetrics.trailerCount}
         />
 
-        {/* Main Grid: 8 Cols Table + 4 Cols Form Panel */}
-        <div className="grid grid-cols-1 xl:grid-cols-12 gap-8 items-start">
-          {/* Left Table Section */}
-          <div className="xl:col-span-8 flex flex-col gap-6">
-            <VehicleMasterTable
-              vehicles={filteredVehicles}
-              onSetDefault={handleSetDefault}
-              onEdit={(v) => setEditingVehicle(v)}
-              onViewDossier={(v) => setDossierVehicle(v)}
-              onDelete={(v) => setDeletingVehicle(v)}
-            />
+        {/* Full-Width Master Table Section */}
+        <div className="w-full flex flex-col gap-6">
+          <VehicleMasterTable
+            vehicles={filteredVehicles}
+            onSetDefault={handleSetDefault}
+            onEdit={(v) => setEditingVehicle(v)}
+            onViewDossier={(v) => setDossierVehicle(v)}
+            onDelete={(v) => setDeletingVehicle(v)}
+            onOpenRegister={() => setIsRegisterOpen(true)}
+          />
 
-            <AlprGateSyncBanner />
-          </div>
-
-          {/* Right Form Panel */}
-          <div ref={registerPanelRef} className="xl:col-span-4 sticky top-6">
-            <RegisterVehicleFormPanel
-              onSubmit={handleAddVehicle}
-              isSubmitting={isAdding}
-            />
-          </div>
+          <AlprGateSyncBanner />
         </div>
       </div>
 
       {/* Modals */}
+      <RegisterVehicleModal
+        isOpen={isRegisterOpen}
+        onClose={() => setIsRegisterOpen(false)}
+        onSubmit={handleAddVehicle}
+        isSubmitting={isAdding}
+      />
+
       <EditVehicleModal
         vehicle={editingVehicle}
         isOpen={!!editingVehicle}

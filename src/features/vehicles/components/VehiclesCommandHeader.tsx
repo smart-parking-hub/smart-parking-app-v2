@@ -2,12 +2,12 @@ import { Truck, Download, PlusCircle } from 'lucide-react'
 
 interface VehiclesCommandHeaderProps {
   onOpenExport: () => void
-  onScrollToRegister: () => void
+  onOpenRegister: () => void
 }
 
 export function VehiclesCommandHeader({
   onOpenExport,
-  onScrollToRegister,
+  onOpenRegister,
 }: VehiclesCommandHeaderProps) {
   return (
     <div className="flex flex-col gap-6 mb-6">
@@ -17,10 +17,10 @@ export function VehiclesCommandHeader({
           <div className="flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-orange-500 animate-pulse" />
             <span className="text-slate-300 uppercase tracking-wider font-semibold">
-              CỔNG KIỂM SOÁT ĐĂNG KIỂM & ALPR GATEWAY:
+              CỔNG KIỂM SOÁT ĐĂNG KIỂM &amp; ALPR GATEWAY:
             </span>
             <span className="text-white font-medium hidden sm:inline">
-              Hệ thống đồng bộ biển số tự động với Cục Đăng Kiểm & Cổng Cảng Cát Lái/Tân Cảng
+              Hệ thống đồng bộ biển số tự động với Cục Đăng Kiểm &amp; Cổng Cảng Cát Lái/Tân Cảng
             </span>
           </div>
 
@@ -53,7 +53,7 @@ export function VehiclesCommandHeader({
           <button
             type="button"
             onClick={onOpenExport}
-            className="h-11 px-5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 font-semibold text-xs md:text-sm flex items-center gap-2 transition-colors border border-slate-200"
+            className="h-11 px-5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 font-semibold text-xs md:text-sm flex items-center gap-2 transition-colors border border-slate-200 cursor-pointer"
           >
             <Download className="w-4 h-4 text-slate-600" />
             <span>XUẤT DANH SÁCH ĐỘI XE</span>
@@ -61,8 +61,8 @@ export function VehiclesCommandHeader({
 
           <button
             type="button"
-            onClick={onScrollToRegister}
-            className="h-11 px-6 rounded-xl bg-orange-600 hover:bg-orange-700 text-white font-semibold text-xs md:text-sm flex items-center gap-2 shadow-sm shadow-orange-600/20 transition-all active:scale-[0.99]"
+            onClick={onOpenRegister}
+            className="h-11 px-6 rounded-xl bg-orange-600 hover:bg-orange-700 text-white font-semibold text-xs md:text-sm flex items-center gap-2 shadow-sm shadow-orange-600/20 transition-all active:scale-[0.99] cursor-pointer"
           >
             <PlusCircle className="w-4 h-4" />
             <span>+ ĐĂNG KÝ PHƯƠNG TIỆN MỚI</span>

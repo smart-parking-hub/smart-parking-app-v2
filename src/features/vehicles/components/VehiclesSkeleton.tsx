@@ -27,11 +27,8 @@ export function VehiclesSkeleton() {
       {/* Toolbar Skeleton */}
       <div className="h-16 bg-white rounded-xl border border-slate-200 p-4" />
 
-      {/* Split Grid Skeleton */}
-      <div className="grid grid-cols-1 xl:grid-cols-12 gap-8">
-        <div className="xl:col-span-8 h-96 bg-white rounded-xl border border-slate-200" />
-        <div className="xl:col-span-4 h-96 bg-white rounded-xl border border-slate-200" />
-      </div>
+      {/* Master Table Skeleton */}
+      <div className="w-full h-96 bg-white rounded-2xl border border-slate-200" />
     </div>
   )
 }

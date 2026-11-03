@@ -91,7 +91,7 @@ describe('SCR-020 VehiclesPage (Quản Lý Phương Tiện Của Tôi)', () => {
     expect(screen.getByText('15C-341.90')).toBeInTheDocument()
   })
 
-  it('adds a new vehicle via the inline registration panel', async () => {
+  it('opens registration modal and adds a new vehicle', async () => {
     const user = userEvent.setup()
     render(
       <MemoryRouter>
@@ -102,6 +102,11 @@ describe('SCR-020 VehiclesPage (Quản Lý Phương Tiện Của Tôi)', () => {
     await waitFor(() => {
       expect(screen.getByText('Quản Lý Phương Tiện Của Tôi')).toBeInTheDocument()
     })
+
+    const openRegisterBtn = screen.getByRole('button', { name: /\+ ĐĂNG KÝ PHƯƠNG TIỆN MỚI/i })
+    await user.click(openRegisterBtn)
+
+    expect(screen.getByText('Khai Báo Hồ Sơ Vận Hành')).toBeInTheDocument()
 
     const plateInput = screen.getByLabelText(/Biển Số Phương Tiện/i)
     await user.type(plateInput, '59C-888.99')
