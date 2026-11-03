@@ -15,3 +15,4 @@
 | `SCR-016` | Parking Details & Reservation (Chi tiết bãi & Đặt chỗ) | `/parking/:id` (`/dashboard/parking/:id`) | `features/parking-detail`| Stitch HTML/CSS (`web_standard`) | **IMPLEMENTED** | Sẵn sàng nghiệm thu |
 | `SCR-017` | Driver Bookings & QR Ticket (Quản lý đặt chỗ & Vé QR) | `/bookings` (`/dashboard/bookings`)       | `features/bookings`      | Stitch HTML/CSS (`web_standard`) | **IMPLEMENTED** | Sẵn sàng nghiệm thu |
 | `SCR-018` | Virtual Queues (Hàng đợi ảo thông minh & Phân bổ slot) | `/queues` (`/dashboard/queues`)           | `features/queues`        | Stitch HTML/CSS (`web_standard`) | **IMPLEMENTED** | Sẵn sàng nghiệm thu |
+| `SCR-019` | Driver Payment History & VAT Invoices (Lịch sử thanh toán & HĐĐT VAT) | `/payments` (`/dashboard/payments`) | `features/payments`      | Stitch HTML/CSS (`web_standard`) | **IMPLEMENTED** | Sẵn sàng nghiệm thu |
