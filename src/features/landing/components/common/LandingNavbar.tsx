@@ -5,39 +5,107 @@ import { Truck, Headset, Menu, X } from 'lucide-react'
 export function LandingNavbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const location = useLocation()
+
   const isDriverPage =
     location.pathname.includes('driver-solutions') || location.pathname.includes('giai-phap-tai-xe')
+  const isOwnerPage =
+    location.pathname.includes('owner-solutions') || location.pathname.includes('giai-phap-chu-bai')
+  const isHomePage = !isDriverPage && !isOwnerPage
 
-  const navLinks = [
-    { label: 'Trang chủ', href: '/' },
-    {
-      label: 'Giải pháp Tài xế',
-      href: '/driver-solutions',
-      isCurrent: isDriverPage,
-    },
-    {
-      label: 'Chủ bãi',
-      href: isDriverPage ? '/#giai-phap-chu-bai' : '#giai-phap-chu-bai',
-    },
-    {
-      label: 'Quy trình',
-      href: isDriverPage ? '#quy-trinh-tai-xe' : '#quy-trinh',
-    },
-    {
-      label: 'Bảng giá',
-      href: isDriverPage ? '#bo-loc-tien-ich' : '#bang-gia',
-    },
-    {
-      label: 'Kết nối API',
-      href: isDriverPage ? '/#api' : '#api',
-    },
-    {
-      label: 'Liên hệ',
-      href: '#lien-he',
-    },
-  ]
+  const navLinks = isOwnerPage
+    ? [
+        { label: 'Trang chủ', href: '/' },
+        {
+          label: 'Giải pháp Chủ bãi',
+          href: '/owner-solutions',
+          isCurrent: true,
+        },
+        {
+          label: 'Giải pháp Tài xế',
+          href: '/driver-solutions',
+          isCurrent: false,
+        },
+        {
+          label: 'Bảng giá & ROI',
+          href: '#roi-calculator',
+        },
+        {
+          label: 'Hạ tầng IoT',
+          href: '#tinh-nang',
+        },
+        {
+          label: 'Quy trình',
+          href: '#quy-trinh',
+        },
+        {
+          label: 'Liên hệ',
+          href: '#onboarding-form',
+        },
+      ]
+    : isDriverPage
+      ? [
+          { label: 'Trang chủ', href: '/' },
+          {
+            label: 'Giải pháp Tài xế',
+            href: '/driver-solutions',
+            isCurrent: true,
+          },
+          {
+            label: 'Chủ bãi',
+            href: '/owner-solutions',
+            isCurrent: false,
+          },
+          {
+            label: 'Quy trình',
+            href: '#quy-trinh-tai-xe',
+          },
+          {
+            label: 'Tiện ích bãi',
+            href: '#bo-loc-tien-ich',
+          },
+          {
+            label: 'Liên hệ',
+            href: '#lien-he',
+          },
+        ]
+      : [
+          {
+            label: 'Trang chủ',
+            href: '/',
+            isCurrent: isHomePage,
+          },
+          {
+            label: 'Giải pháp Tài xế',
+            href: '/driver-solutions',
+            isCurrent: false,
+          },
+          {
+            label: 'Chủ bãi',
+            href: '/owner-solutions',
+            isCurrent: false,
+          },
+          {
+            label: 'Quy trình',
+            href: '#quy-trinh',
+          },
+          {
+            label: 'Bảng giá',
+            href: '#bang-gia',
+          },
+          {
+            label: 'Kết nối API',
+            href: '#api',
+          },
+          {
+            label: 'Liên hệ',
+            href: '#lien-he',
+          },
+        ]
 
   const closeMobileMenu = () => setMobileMenuOpen(false)
+
+  const ctaLabel = isOwnerPage ? 'Hợp tác bãi đỗ' : 'Tìm bãi đỗ ngay'
+  const ctaHref = isOwnerPage ? '#onboarding-form' : isDriverPage ? '#tim-bai-ngay' : '#tim-bai'
 
   return (
     <header className="sticky top-0 inset-x-0 z-50 bg-white/95 backdrop-blur-md border-b border-brand-border">
@@ -110,9 +178,9 @@ export function LandingNavbar() {
           </Link>
           <a
             className="inline-flex items-center justify-center bg-brand-orange hover:bg-brand-orange-hover text-white text-sm font-semibold px-5 py-2.5 rounded-lg shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-orange focus-visible:ring-offset-2"
-            href={isDriverPage ? '#tim-bai-ngay' : '#tim-bai'}
+            href={ctaHref}
           >
-            Tìm bãi đỗ ngay
+            {ctaLabel}
           </a>
 
           {/* Mobile Hamburger Toggle Button */}

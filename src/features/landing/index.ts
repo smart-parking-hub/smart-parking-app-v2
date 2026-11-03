@@ -1,6 +1,7 @@
 // Pages
 export * from './pages/LandingPage'
 export * from './pages/DriverSolutionsPage'
+export * from './pages/OwnerSolutionsPage'
 
 // Common Components
 export * from './components/common/LandingNavbar'
@@ -23,3 +24,13 @@ export * from './components/driver-solutions/DriverWorkflowSection'
 export * from './components/driver-solutions/LandingAmenityFilterSection'
 export * from './components/driver-solutions/DriverTestimonialsSection'
 export * from './components/driver-solutions/DriverConversionCta'
+
+// Owner Solutions Components (Trang Giải Pháp Chủ Bãi - SCR-001C)
+export * from './components/owner-solutions/OwnerHeroSection'
+export * from './components/owner-solutions/OwnerPainPointsSection'
+export * from './components/owner-solutions/OwnerRoiCalculator'
+export * from './components/owner-solutions/OwnerMerchantFeaturesSection'
+export * from './components/owner-solutions/OwnerWorkflowSection'
+export * from './components/owner-solutions/OwnerTestimonialsSection'
+export * from './components/owner-solutions/OwnerFaqSection'
+export * from './components/owner-solutions/OwnerOnboardingFormSection'

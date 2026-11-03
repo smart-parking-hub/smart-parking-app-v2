@@ -1,10 +1,10 @@
 import { fireEvent, render, screen } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { describe, it, expect } from 'vitest'
-import { DriverSolutionsPage } from '@/features/landing'
+import { DriverSolutionsPage, OwnerSolutionsPage } from '@/features/landing'
 import { App } from './App'
 
-describe('SmartTruckHub - 2 Distinct Landing Screens', () => {
+describe('SmartTruckHub - 3 Distinct Landing Screens', () => {
   describe('Trang Chủ (Home Landing Page - SCR-001)', () => {
     it('renders home hero and all 8 main sections successfully', () => {
       render(<App />)
@@ -113,6 +113,113 @@ describe('SmartTruckHub - 2 Distinct Landing Screens', () => {
           name: /Lái Xe An Tâm Hơn Trên Mọi Chặng Đường\. Bắt Đầu Ngay Hôm Nay\./i,
         }),
       ).toBeInTheDocument()
+    })
+  })
+
+  describe('Trang Giải Pháp Chủ Bãi (Owner Solutions Page - SCR-001C)', () => {
+    it('renders owner hero, pain points, interactive ROI calculator, merchant features, workflow, testimonials, FAQ and registration form', () => {
+      render(
+        <MemoryRouter>
+          <OwnerSolutionsPage />
+        </MemoryRouter>,
+      )
+
+      // 1. Owner Hero
+      expect(
+        screen.getByText(/HẠ TẦNG LOGISTICS SỐ HÓA · DÀNH CHO CHỦ MẶT BẰNG & CẢNG ICD/i),
+      ).toBeInTheDocument()
+      expect(
+        screen.getByRole('heading', {
+          name: /Chuyển Đổi Số Bến Bãi\./i,
+        }),
+      ).toBeInTheDocument()
+      expect(screen.getByText(/120\+ Đối tác mặt bằng/i)).toBeInTheDocument()
+      expect(screen.getByText(/Cát Lái Hub Node 04/i)).toBeInTheDocument()
+
+      // 2. 4 Pain Points
+      expect(screen.getByText(/SO SÁNH HIỆU QUẢ VẬN HÀNH THỰC TẾ/i)).toBeInTheDocument()
+      expect(
+        screen.getByRole('heading', {
+          name: /4 Lỗ Hổng Khiến Chủ Bãi Thất Thoát Hàng Trăm Triệu Mỗi Năm\./i,
+        }),
+      ).toBeInTheDocument()
+      expect(screen.getByText(/Thất Thoát Tiền Mặt Bảo Vệ Ca Trực/i)).toBeInTheDocument()
+
+      // 3. Interactive ROI Calculator
+      expect(screen.getByText(/CÔNG CỤ MÔ PHỎNG HIỆU QUẢ ĐẦU TƯ/i)).toBeInTheDocument()
+      expect(
+        screen.getByRole('heading', {
+          name: /Ước Tính Doanh Thu Khai Thác Bãi Của Bạn Mỗi Tháng\./i,
+        }),
+      ).toBeInTheDocument()
+
+      // Check default computed revenue: 150 * 0.75 * 1.25 * 80000 * 30 = 337.500.000 ₫
+      expect(screen.getByText(/337\.500\.000 ₫/i)).toBeInTheDocument()
+
+      // Test interactive slider change
+      const slotsSlider = screen.getByLabelText(/Sức chứa và quy mô bãi container/i)
+      fireEvent.change(slotsSlider, { target: { value: '200' } })
+      // 200 * 0.75 * 1.25 * 80000 * 30 = 450.000.000 ₫
+      expect(screen.getByText(/450\.000\.000 ₫/i)).toBeInTheDocument()
+
+      // 4. 5 Merchant Suite Features
+      expect(screen.getByText(/HỆ THỐNG QUẢN TRỊ MERCHANT PORTAL CHUYÊN SÂU/i)).toBeInTheDocument()
+      expect(
+        screen.getByRole('heading', {
+          name: /5 Công Cụ Quản Trị Trọng Yếu/i,
+        }),
+      ).toBeInTheDocument()
+      expect(screen.getByText(/Cấu Hình Phân Luồng & Sức Chứa 5 Loại Xe/i)).toBeInTheDocument()
+      expect(
+        screen.getByRole('heading', {
+          name: /Ma Trận Biểu Phí Đa Tầng Linh Hoạt/i,
+        }),
+      ).toBeInTheDocument()
+      expect(
+        screen.getByRole('heading', {
+          name: /Trạm Barie Tự Động & Camera ALPR 360°/i,
+        }),
+      ).toBeInTheDocument()
+
+      // 5. 4-Step Workflow
+      expect(screen.getByText(/QUY TRÌNH TRIỂN KHAI THỰC ĐỊA/i)).toBeInTheDocument()
+      expect(screen.getByText(/Đăng Ký Hồ Sơ Mặt Bằng/i)).toBeInTheDocument()
+      expect(screen.getByText(/Khảo Sát Thực Địa & Lắp Barie/i)).toBeInTheDocument()
+
+      // 6. Real Testimonials
+      expect(screen.getByText(/Ý KIẾN ĐỐI TÁC KHAI THÁC THỰC TẾ/i)).toBeInTheDocument()
+      expect(screen.getByText(/Ông Trần Đình Hùng/i)).toBeInTheDocument()
+      expect(screen.getByText(/Bà Lê Thị Kim Oanh/i)).toBeInTheDocument()
+      expect(screen.getByText(/Ông Nguyễn Văn Phúc/i)).toBeInTheDocument()
+
+      // 7. FAQ Accordion
+      expect(screen.getByText(/GIẢI ĐÁP THẮC MẮC ĐỐI TÁC/i)).toBeInTheDocument()
+      expect(
+        screen.getByText(/SmartTruckHub thu phí dịch vụ vận hành bao nhiêu % trên doanh thu\?/i),
+      ).toBeInTheDocument()
+
+      // 8. Onboarding Form & Submission
+      expect(
+        screen.getByRole('heading', {
+          name: /Đăng Ký Khảo Sát & Mở Bãi Hợp Tác/i,
+        }),
+      ).toBeInTheDocument()
+
+      const nameInput = screen.getByPlaceholderText(/Nguyễn Văn A/i)
+      const phoneInput = screen.getByPlaceholderText(/0912 345 678/i)
+      const locationInput = screen.getByPlaceholderText(/Cạnh KCN Sóng Thần/i)
+
+      fireEvent.change(nameInput, { target: { value: 'Lê Hoàng Nam' } })
+      fireEvent.change(phoneInput, { target: { value: '0988776655' } })
+      fireEvent.change(locationInput, { target: { value: 'ICD Mỹ Thủy, TP Thủ Đức' } })
+
+      const submitButton = screen.getByRole('button', {
+        name: /XÁC NHẬN ĐĂNG KÝ KHẢO SÁT MIỄN PHÍ/i,
+      })
+      fireEvent.click(submitButton)
+
+      expect(screen.getByText(/Đăng Ký Thành Công!/i)).toBeInTheDocument()
+      expect(screen.getByText(/0988776655/i)).toBeInTheDocument()
     })
   })
 })
