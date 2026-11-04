@@ -13,7 +13,7 @@ export function ApiDocsPage() {
       <LandingNavbar />
 
       {/* Main Content Sections */}
-      <main className="flex-1 w-full" id="main-content">
+      <main className="landing-content flex-1 w-full" id="main-content">
         <ApiHeroSection />
         <ApiTerminalSection />
         <ApiSolutionsBentoSection />
