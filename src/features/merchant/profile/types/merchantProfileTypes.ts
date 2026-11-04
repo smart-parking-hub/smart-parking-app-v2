@@ -82,3 +82,10 @@ export interface FastWithdrawalResponse {
   estimatedTime: string
   createdAt: string
 }
+
+export interface ProfileFormData {
+  fullName: string
+  email: string
+  emergencyContact?: string
+  address?: string
+}
