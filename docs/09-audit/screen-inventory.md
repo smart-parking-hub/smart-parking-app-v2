@@ -26,3 +26,5 @@
 | `SCR-027` | Merchant Legal & Banking Profile (Hồ sơ pháp lý & Tài khoản nhận tiền chủ bãi) | `/merchant/profile` | `features/merchant/profile` | Stitch HTML/CSS (`web_dashboard`) | **IMPLEMENTED** | Sẵn sàng nghiệm thu |
 | `SCR-028` | Merchant Parking Lots Directory (Danh mục bãi đỗ xe sở hữu) | `/merchant/parking-lots` | `features/merchant/parking-lots` | Stitch HTML/CSS (`web_dashboard`) | **IMPLEMENTED** | Sẵn sàng nghiệm thu |
 | `SCR-029` | Merchant Create Parking Lot Wizard (Đăng ký bãi đỗ xe & depot mới) | `/merchant/parking-lots/new` | `features/merchant/parking-lots` | Stitch HTML/CSS (`web_dashboard`) | **IMPLEMENTED** | Sẵn sàng nghiệm thu |
+| `SCR-030` | Merchant Parking Lot Details & Telemetry (Chi tiết bãi đỗ xe & Hồ sơ kỹ thuật) | `/merchant/parking-lots/:parkingLotId` | `features/merchant/parking-lots` | Stitch HTML/CSS (`web_dashboard`) | **IMPLEMENTED** | Sẵn sàng nghiệm thu |
+| `SCR-031` | Edit Merchant Parking Lot (Chỉnh sửa & Cập nhật hồ sơ bãi đỗ) | `/merchant/parking-lots/:parkingLotId/edit` | `features/merchant/parking-lots` | Stitch HTML/CSS (`web_dashboard`) | **IMPLEMENTED** | Sẵn sàng nghiệm thu |

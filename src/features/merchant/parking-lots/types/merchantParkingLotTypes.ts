@@ -181,6 +181,36 @@ export interface MerchantParkingLotDetailData extends MerchantParkingLotCardData
   operationalProfile: YardOperationalProfile
   galleryImages: YardGalleryImage[]
   ownershipVerified?: boolean
+  reviewReason?: string
 }
+
+export interface EditParkingLotFormData {
+  name: string
+  address: string
+  latitude: number
+  longitude: number
+  hotline?: string
+  clearanceHeight?: string
+  merchantResponse?: string
+}
+
+export interface EditParkingLotDraft {
+  lotId: number
+  name: string
+  address: string
+  latitude: number
+  longitude: number
+  hotline?: string
+  clearanceHeight?: string
+  merchantResponse?: string
+  savedAt: string
+}
+
+export interface AdminReviewPoint {
+  index: number
+  title: string
+  description: string
+}
+
 
 
