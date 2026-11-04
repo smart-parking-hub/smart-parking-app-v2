@@ -1,109 +1,178 @@
 import { useState } from 'react'
+import { useQuery } from '@tanstack/react-query'
 import { MapPin, Navigation, Search, X } from 'lucide-react'
-
-interface SmartLocationBarProps {
+import {
+  searchLocations,
+  type Coordinates,
+  type Place,
+} from '../api/mapProvider'
+interface Props {
   value: string
-  onChange: (val: string) => void
-  onLocateMe: () => void
+  onChange: (value: string) => void
+  onLocateMe: (position: Coordinates) => void
+  onSelectPlace: (place: Place) => void
   totalResults: number
   radiusKm: number
   includeFull: boolean
-  onToggleIncludeFull: (val: boolean) => void
+  onToggleIncludeFull: (value: boolean) => void
 }
-
 export function SmartLocationBar({
   value,
   onChange,
   onLocateMe,
+  onSelectPlace,
   totalResults,
   radiusKm,
   includeFull,
   onToggleIncludeFull,
-}: SmartLocationBarProps) {
+}: Props) {
   const [locating, setLocating] = useState(false)
-
-  const handleLocate = () => {
-    setLocating(true)
-    if ('geolocation' in navigator) {
-      navigator.geolocation.getCurrentPosition(
-        () => {
-          setLocating(false)
-          onLocateMe()
-        },
-        () => {
-          setLocating(false)
-          onLocateMe()
-        },
+  const [locationError, setLocationError] = useState('')
+  const [search, setSearch] = useState('')
+  const [showResults, setShowResults] = useState(false)
+  const places = useQuery({
+    queryKey: ['osm-places', search],
+    queryFn: ({ signal }) => searchLocations(search, signal),
+    enabled: search.trim().length >= 3,
+    staleTime: 300000,
+    retry: false,
+    refetchOnWindowFocus: false,
+  })
+  const locate = () => {
+    if (!navigator.geolocation) {
+      setLocationError(
+        'Trình duyệt chưa hỗ trợ định vị. Hãy tìm địa điểm bằng địa chỉ.',
       )
-    } else {
-      setLocating(false)
-      onLocateMe()
+      return
     }
+    setLocating(true)
+    setLocationError('')
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        setLocating(false)
+        setSearch('')
+        setShowResults(false)
+        onLocateMe({
+          latitude: position.coords.latitude,
+          longitude: position.coords.longitude,
+        })
+      },
+      () => {
+        setLocating(false)
+        setLocationError(
+          'Chưa lấy được vị trí. Cho phép quyền định vị hoặc tìm bằng địa chỉ.',
+        )
+      },
+      { enableHighAccuracy: true, timeout: 12000, maximumAge: 60000 },
+    )
   }
-
   return (
-    <div className="flex flex-col gap-2.5 w-full">
-      {/* Extended Search Input and Locate Button */}
-      <div className="bg-white rounded-2xl p-2.5 shadow-sm flex items-center gap-3 border border-slate-200/80 w-full">
-        <div className="flex items-center flex-1 gap-3 bg-[#eff4ff] px-4 py-3 rounded-xl transition-all focus-within:ring-2 focus-within:ring-[#d95f00]/20 focus-within:bg-[#eaf1ff]">
-          <MapPin className="text-[#d95f00] w-5 h-5 shrink-0" />
+    <div className="relative mb-7 space-y-4">
+      <form
+        className="flex flex-wrap items-center gap-3 rounded-2xl border border-brand-border bg-white p-3 shadow-sm sm:p-4"
+        onSubmit={(event) => {
+          event.preventDefault()
+          if (value.trim().length >= 3) {
+            setSearch(value.trim())
+            setShowResults(true)
+          }
+        }}
+      >
+        <div className="flex min-w-0 flex-1 basis-64 items-center gap-3 rounded-xl bg-brand-surface px-4 py-3.5">
+          <MapPin className="shrink-0 text-brand-orange" size={21} />
           <input
-            type="text"
-            className="bg-transparent text-sm text-[#0d1c2e] font-medium w-full focus:outline-none placeholder:text-slate-400"
+            aria-label="Địa chỉ tìm kiếm"
             placeholder="Nhập địa chỉ cảng, KCN hoặc bến bãi..."
             value={value}
-            onChange={(e) => onChange(e.target.value)}
-            aria-label="Địa chỉ tìm kiếm"
+            onChange={(event) => {
+              onChange(event.target.value)
+              setShowResults(false)
+            }}
+            className="w-full min-w-0 bg-transparent text-base text-brand-navy outline-none placeholder:text-brand-muted"
           />
-          {value ? (
+          {value && (
             <button
-              type="button"
-              onClick={() => onChange('')}
-              className="p-1 text-slate-400 hover:text-slate-600 rounded-full transition-colors cursor-pointer"
               aria-label="Xóa tìm kiếm"
+              type="button"
+              onClick={() => {
+                onChange('')
+                setShowResults(false)
+              }}
             >
-              <X className="w-4 h-4" />
+              <X size={18} />
             </button>
-          ) : (
-            <Search className="w-4 h-4 text-slate-400 shrink-0" />
           )}
         </div>
-
+        <button
+          disabled={places.isFetching || value.trim().length < 3}
+          className="flex min-h-12 items-center gap-2 rounded-xl bg-brand-navy px-5 text-sm font-semibold text-white disabled:opacity-40"
+        >
+          <Search size={17} />
+          {places.isFetching ? 'Đang tìm…' : 'Tìm địa điểm'}
+        </button>
         <button
           type="button"
-          onClick={handleLocate}
           disabled={locating}
-          className="bg-[#233144] hover:bg-black text-white px-5 py-3 rounded-xl flex items-center gap-2 transition-colors whitespace-nowrap text-xs font-bold cursor-pointer disabled:opacity-50 shrink-0 shadow-sm"
+          onClick={locate}
+          className="flex min-h-12 items-center gap-2 rounded-xl border border-brand-border px-5 text-sm font-semibold text-brand-navy disabled:opacity-50"
         >
-          <Navigation className={`w-4 h-4 text-[#d95f00] ${locating ? 'animate-spin' : ''}`} />
-          <span className="uppercase tracking-wider">Vị trí của tôi</span>
+          <Navigation size={17} className="text-brand-orange" />
+          {locating ? 'Đang định vị…' : 'Vị trí của tôi'}
         </button>
-      </div>
-
-      {/* Result Count (Left) & Full Lot Filter Toggle (Right) - Evenly Aligned */}
-      <div className="flex items-center justify-between px-1.5 min-h-[36px]">
-        {/* Left: Result indicator */}
-        <div className="flex items-center gap-2.5">
-          <span className="w-2.5 h-2.5 rounded-full bg-[#d95f00] shrink-0 block" />
-          <p className="text-xs text-[#45464d] font-medium flex items-center gap-1.5">
-            <span>Tìm thấy</span>
-            <strong className="text-[#0d1c2e] font-bold">{totalResults} bãi xe</strong>
-            <span>trong</span>
-            <span className="font-mono font-bold text-[#0d1c2e]">{radiusKm} km</span>
-          </p>
+      </form>
+      {showResults && !places.isFetching && (
+        <div
+          className="rounded-2xl border border-brand-border bg-white p-2 shadow-sm"
+          aria-label="Kết quả tìm địa điểm"
+        >
+          {places.isError ? (
+            <p role="alert" className="p-4 text-sm text-red-700">
+              Không tải được địa điểm. Vui lòng thử lại.
+            </p>
+          ) : !places.data?.length ? (
+            <p className="p-4 text-sm text-brand-muted">
+              Không tìm thấy địa điểm. Hãy thử địa chỉ cụ thể hơn.
+            </p>
+          ) : (
+            places.data.map((place) => (
+              <button
+                type="button"
+                className="flex w-full items-start gap-3 rounded-xl p-4 text-left text-sm leading-6 text-brand-navy hover:bg-brand-surface"
+                key={place.id}
+                onClick={() => {
+                  onSelectPlace(place)
+                  setShowResults(false)
+                }}
+              >
+                <MapPin size={18} className="mt-1 shrink-0 text-brand-orange" />
+                {place.label}
+              </button>
+            ))
+          )}
         </div>
-
-        {/* Right: Toggle Include Full Lots */}
-        <label className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white border border-slate-200 hover:border-slate-300 shadow-2xs transition-colors cursor-pointer select-none">
+      )}
+      {locationError && (
+        <p role="alert" className="text-sm text-red-700">
+          {locationError}
+        </p>
+      )}
+      <div className="flex flex-wrap items-center justify-between gap-4 px-1 text-base text-brand-muted">
+        <p>
+          Tìm thấy{' '}
+          <strong className="font-semibold text-brand-navy">
+            {totalResults} bãi xe
+          </strong>{' '}
+          trong{' '}
+          <span className="font-semibold text-brand-navy">{radiusKm} km</span>
+        </p>
+        <label className="flex items-center gap-3 text-sm font-semibold text-brand-navy">
           <input
             type="checkbox"
             checked={includeFull}
-            onChange={(e) => onToggleIncludeFull(e.target.checked)}
-            className="w-4 h-4 rounded text-[#d95f00] focus:ring-0 cursor-pointer accent-[#d95f00]"
+            onChange={(event) => onToggleIncludeFull(event.target.checked)}
+            className="h-5 w-5 accent-brand-orange"
           />
-          <span className="text-xs text-[#0d1c2e] font-semibold whitespace-nowrap">
-            Hiện bãi đã đầy
-          </span>
+          Hiện bãi đã đầy
         </label>
       </div>
     </div>

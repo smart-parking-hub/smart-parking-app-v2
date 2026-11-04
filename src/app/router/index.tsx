@@ -1,38 +1,200 @@
 import { createBrowserRouter } from 'react-router-dom'
+import { lazy, Suspense } from 'react'
+const DesignPreviewPage = import.meta.env.DEV
+  ? lazy(() => import('@/app/pages/DesignPreviewPage'))
+  : null
 import { RootLayout } from '@/layouts/RootLayout'
-import { DriverLayout } from '@/layouts/DriverLayout'
+import { DriverLayout as DriverShell } from '@/layouts/DriverLayout'
 import { MerchantLayout } from '@/layouts/MerchantLayout'
+import { AdminLayout } from '@/layouts/AdminLayout'
+import { AuthPage, AccessPage, RequireRole } from '@/features/auth'
+import { ContactPage } from '@/features/landing/pages/ContactPage'
+import {
+  MerchantBookingsPage,
+  MerchantBookingDetailPage,
+  MerchantScannerPage,
+  MerchantLotPage,
+  MerchantRevenuePage,
+  MerchantWithdrawalsPage,
+} from '@/features/merchant/operations'
+import { DisputesPage } from '@/features/disputes'
+import {
+  PortalNotificationsPage,
+  AdminProfilePage,
+} from '@/features/portal/AccountPages'
+import {
+  AdminDashboardPage,
+  AdminParkingLotsPage,
+  AdminLotDetailPage,
+  AdminUsersPage,
+  AdminUserDetailPage,
+  AdminTransactionsPage,
+  AdminWithdrawalsPage,
+  AdminAuditLogsPage,
+} from '@/features/admin'
 import { BaselineOverviewPage } from '@/app/pages/BaselineOverviewPage'
 import { DashboardHomePage } from '@/features/dashboard'
 import { SearchParkingPage } from '@/features/parking-search'
 import { ParkingDetailPage } from '@/features/parking-detail'
-import { MyBookingsPage } from '@/features/bookings'
-import { VirtualQueuesPage } from '@/features/queues'
-import { DriverPaymentsPage } from '@/features/payments'
-import { VehiclesPage } from '@/features/vehicles'
-import { ProfilePage } from '@/features/profile'
-import { ChangePasswordPage } from '@/features/change-password'
-import { PaymentReturnPage } from '@/features/payment-return'
-import { PaymentCancelPage } from '@/features/payment-cancel'
-import { NotificationsPage } from '@/features/notifications'
+const MyBookingsPage = lazy(() =>
+  import('@/features/bookings').then((module) => ({
+    default: module.MyBookingsPage,
+  })),
+)
+const VirtualQueuesPage = lazy(() =>
+  import('@/features/queues').then((module) => ({
+    default: module.VirtualQueuesPage,
+  })),
+)
+const DriverPaymentsPage = lazy(() =>
+  import('@/features/payments').then((module) => ({
+    default: module.DriverPaymentsPage,
+  })),
+)
+const VehiclesPage = lazy(() =>
+  import('@/features/vehicles').then((module) => ({
+    default: module.VehiclesPage,
+  })),
+)
+const ProfilePage = lazy(() =>
+  import('@/features/profile').then((module) => ({
+    default: module.ProfilePage,
+  })),
+)
+const ChangePasswordPage = lazy(() =>
+  import('@/features/change-password').then((module) => ({
+    default: module.ChangePasswordPage,
+  })),
+)
+const PaymentReturnPage = lazy(() =>
+  import('@/features/payment-return').then((module) => ({
+    default: module.PaymentReturnPage,
+  })),
+)
+const PaymentCancelPage = lazy(() =>
+  import('@/features/payment-cancel').then((module) => ({
+    default: module.PaymentCancelPage,
+  })),
+)
+const NotificationsPage = lazy(() =>
+  import('@/features/notifications').then((module) => ({
+    default: module.NotificationsPage,
+  })),
+)
 import { MerchantDashboardPage } from '@/features/merchant/dashboard'
 import {
   MerchantParkingLotsPage,
   CreateMerchantParkingLotPage,
 } from '@/features/merchant/parking-lots'
 import { MerchantProfilePage } from '@/features/merchant/profile'
-import {
-  LandingPage,
-  DriverSolutionsPage,
-  OwnerSolutionsPage,
-  PricingPage,
-  ApiDocsPage,
-  AboutUsPage,
-  CareersPage,
-  InsightsPage,
-} from '@/features/landing'
+import { LandingPage } from '@/features/landing/pages/LandingPage'
+const DriverSolutionsPage = lazy(() =>
+  import('@/features/landing/pages/DriverSolutionsPage').then((module) => ({
+    default: module.DriverSolutionsPage,
+  })),
+)
+const OwnerSolutionsPage = lazy(() =>
+  import('@/features/landing/pages/OwnerSolutionsPage').then((module) => ({
+    default: module.OwnerSolutionsPage,
+  })),
+)
+const PricingPage = lazy(() =>
+  import('@/features/landing/pages/PricingPage').then((module) => ({
+    default: module.PricingPage,
+  })),
+)
+const ApiDocsPage = lazy(() =>
+  import('@/features/landing/pages/ApiDocsPage').then((module) => ({
+    default: module.ApiDocsPage,
+  })),
+)
+const AboutUsPage = lazy(() =>
+  import('@/features/landing/pages/AboutUsPage').then((module) => ({
+    default: module.AboutUsPage,
+  })),
+)
+const CareersPage = lazy(() =>
+  import('@/features/landing/pages/CareersPage').then((module) => ({
+    default: module.CareersPage,
+  })),
+)
+const InsightsPage = lazy(() =>
+  import('@/features/landing/pages/InsightsPage').then((module) => ({
+    default: module.InsightsPage,
+  })),
+)
+
+function DriverLayout() {
+  return (
+    <RequireRole role="DRIVER">
+      <DriverShell />
+    </RequireRole>
+  )
+}
 
 export const router = createBrowserRouter([
+  ...(import.meta.env.DEV && DesignPreviewPage
+    ? [
+        {
+          path: '/design-preview/*',
+          element: (
+            <Suspense fallback={<p>Đang tải bản xem trước…</p>}>
+              <DesignPreviewPage />
+            </Suspense>
+          ),
+        },
+      ]
+    : []),
+  { path: '/login', element: <AuthPage key="login" mode="login" /> },
+  { path: '/register', element: <AuthPage key="register" mode="register" /> },
+  {
+    path: '/forgot-password',
+    element: <AuthPage key="forgot" mode="forgot" />,
+  },
+  { path: '/403', element: <AccessPage /> },
+  { path: '/contact', element: <ContactPage /> },
+  { path: '/company/contact', element: <ContactPage /> },
+  { path: '/solutions/drivers', element: <DriverSolutionsPage /> },
+  { path: '/solutions/owners', element: <OwnerSolutionsPage /> },
+  { path: '/solutions/api', element: <ApiDocsPage /> },
+  { path: '/company/about', element: <AboutUsPage /> },
+  { path: '/company/careers', element: <CareersPage /> },
+  { path: '/company/blog', element: <InsightsPage /> },
+  {
+    path: '/disputes',
+    element: (
+      <RequireRole role="DRIVER">
+        <DriverLayout />
+      </RequireRole>
+    ),
+    children: [
+      { index: true, element: <DisputesPage role="driver" /> },
+      { path: ':id', element: <DisputesPage role="driver" detail /> },
+    ],
+  },
+  {
+    path: '/admin',
+    element: (
+      <RequireRole role="ADMIN">
+        <AdminLayout />
+      </RequireRole>
+    ),
+    children: [
+      { index: true, element: <AdminDashboardPage /> },
+      { path: 'dashboard', element: <AdminDashboardPage /> },
+      { path: 'parking-lots', element: <AdminParkingLotsPage /> },
+      { path: 'parking-lots/:id', element: <AdminLotDetailPage /> },
+      { path: 'users', element: <AdminUsersPage /> },
+      { path: 'users/:id', element: <AdminUserDetailPage /> },
+      { path: 'transactions', element: <AdminTransactionsPage /> },
+      { path: 'withdrawals', element: <AdminWithdrawalsPage /> },
+      { path: 'disputes', element: <DisputesPage role="admin" /> },
+      { path: 'disputes/:id', element: <DisputesPage role="admin" detail /> },
+      { path: 'audit-logs', element: <AdminAuditLogsPage /> },
+      { path: 'notifications', element: <PortalNotificationsPage /> },
+      { path: 'profile', element: <AdminProfilePage /> },
+    ],
+  },
   {
     path: '/',
     element: <LandingPage />,
@@ -325,7 +487,11 @@ export const router = createBrowserRouter([
   },
   {
     path: '/merchant',
-    element: <MerchantLayout />,
+    element: (
+      <RequireRole role="MERCHANT">
+        <MerchantLayout />
+      </RequireRole>
+    ),
     children: [
       {
         index: true,
@@ -345,24 +511,43 @@ export const router = createBrowserRouter([
       },
       {
         path: 'bookings',
-        element: <MerchantDashboardPage />,
+        element: <MerchantBookingsPage />,
       },
       {
         path: 'qr-scanner',
-        element: <MerchantDashboardPage />,
+        element: <MerchantScannerPage />,
       },
       {
         path: 'revenue',
-        element: <MerchantDashboardPage />,
+        element: <MerchantRevenuePage />,
       },
       {
         path: 'withdrawals',
-        element: <MerchantDashboardPage />,
+        element: <MerchantWithdrawalsPage />,
       },
       {
         path: 'disputes',
-        element: <MerchantDashboardPage />,
+        element: <DisputesPage role="merchant" />,
       },
+      { path: 'bookings/:id', element: <MerchantBookingDetailPage /> },
+      { path: 'parking-lots/:id', element: <MerchantLotPage /> },
+      {
+        path: 'parking-lots/:id/edit',
+        element: <MerchantLotPage mode="edit" />,
+      },
+      {
+        path: 'parking-lots/:id/slots',
+        element: <MerchantLotPage mode="slots" />,
+      },
+      {
+        path: 'parking-lots/:id/pricing',
+        element: <MerchantLotPage mode="pricing" />,
+      },
+      {
+        path: 'disputes/:id',
+        element: <DisputesPage role="merchant" detail />,
+      },
+      { path: 'notifications', element: <PortalNotificationsPage /> },
       {
         path: 'profile',
         element: <MerchantProfilePage />,
@@ -379,5 +564,5 @@ export const router = createBrowserRouter([
       },
     ],
   },
+  { path: '*', element: <AccessPage notFound /> },
 ])
-

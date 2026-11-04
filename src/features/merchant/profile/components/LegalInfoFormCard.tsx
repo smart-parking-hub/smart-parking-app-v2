@@ -14,11 +14,14 @@ import {
   FileCheck2,
 } from 'lucide-react'
 import type { MerchantProfile, StoredDocument } from '../types/merchantProfileTypes'
+import type { FieldErrors, UseFormRegister } from 'react-hook-form'
+
+type LegalProfileFields = { fullName: string; email: string; emergencyContact?: string; address?: string }
 
 interface LegalInfoFormCardProps {
   profile: MerchantProfile
-  register: any
-  errors: any
+  register: UseFormRegister<LegalProfileFields>
+  errors: FieldErrors<LegalProfileFields>
   onUploadDocument: (businessLicense: string, file: File | null) => Promise<void>
   isUploadingDoc: boolean
   onPreviewDocument: (doc: StoredDocument) => void

@@ -1,265 +1,274 @@
-import { useState } from 'react'
-import {
-  CornerUpRight,
-  Plus,
-  Minus,
-  Layers,
-  Crosshair,
-  Truck,
-  CheckCircle2,
-  Lock,
-  AlertTriangle,
-} from 'lucide-react'
+import { useEffect, useRef, useState } from 'react'
+import { useQuery } from '@tanstack/react-query'
+import L from 'leaflet'
+import 'leaflet/dist/leaflet.css'
+import { Navigation, LocateFixed, MapPin, ArrowUpRight } from 'lucide-react'
 import type { ParkingLotItem } from '../types/parkingSearchTypes'
+import {
+  getDrivingRoute,
+  validCoordinates,
+  type Coordinates,
+} from '../api/mapProvider'
 
-interface InteractiveMapCanvasProps {
+interface Props {
   lots: ParkingLotItem[]
   selectedLot?: ParkingLotItem
+  origin?: Coordinates
   onSelectLot: (lot: ParkingLotItem) => void
   onQuickBook: (lot: ParkingLotItem) => void
 }
-
 export function InteractiveMapCanvas({
   lots,
   selectedLot,
+  origin,
   onSelectLot,
   onQuickBook,
-}: InteractiveMapCanvasProps) {
-  const [zoomLevel, setZoomLevel] = useState(14)
-  const [showHeavyLayer, setShowHeavyLayer] = useState(true)
-
-  const activeLot = selectedLot || lots[0]
-
+}: Props) {
+  const container = useRef<HTMLDivElement>(null)
+  const map = useRef<L.Map | null>(null)
+  const tileLayer = useRef<L.TileLayer | null>(null)
+  const [tilesUnavailable, setTilesUnavailable] = useState(false)
+  const [ready, setReady] = useState(false)
+  const select = useRef(onSelectLot)
+  useEffect(() => {
+    select.current = onSelectLot
+  }, [onSelectLot])
+  useEffect(() => {
+    if (!container.current) return
+    const instance = L.map(container.current, {
+      zoomControl: false,
+      scrollWheelZoom: false,
+    }).setView([10.7769, 106.7009], 12)
+    map.current = instance
+    const tiles = L.tileLayer(
+      import.meta.env.VITE_OSM_TILE_URL ||
+        'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+      {
+        maxZoom: 19,
+        attribution:
+          '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+      },
+    ).addTo(instance)
+    tileLayer.current = tiles
+    let loaded = false
+    const tileTimeout = setTimeout(() => {
+      if (!loaded) setTilesUnavailable(true)
+    }, 12000)
+    tiles.on('tileerror', () => setTilesUnavailable(true))
+    tiles.on('tileload', () => {
+      loaded = true
+      setTilesUnavailable(false)
+    })
+    L.control.zoom({ position: 'topright' }).addTo(instance)
+    L.control.scale({ position: 'bottomleft', imperial: false }).addTo(instance)
+    const resize = new ResizeObserver(() => instance.invalidateSize())
+    resize.observe(container.current)
+    setReady(true)
+    return () => {
+      clearTimeout(tileTimeout)
+      resize.disconnect()
+      instance.remove()
+      map.current = null
+      tileLayer.current = null
+    }
+  }, [])
+  useEffect(() => {
+    const instance = map.current
+    if (!instance || !ready) return
+    const layer = L.layerGroup().addTo(instance)
+    for (const lot of lots.filter(validCoordinates)) {
+      const label = document.createElement('span')
+      label.className = 'parking-pin-label'
+      label.dataset.selected = String(lot.id === selectedLot?.id)
+      label.dataset.full = String(lot.isFull || lot.availableSlots === 0)
+      label.textContent = `${new Intl.NumberFormat('vi-VN').format(lot.hourlyRate / 1000)}K · ${lot.availableSlots} chỗ`
+      L.marker([lot.latitude, lot.longitude], {
+        icon: L.divIcon({
+          html: label,
+          className: 'parking-pin',
+          iconSize: [130, 42],
+          iconAnchor: [65, 42],
+        }),
+        title: lot.name,
+        keyboard: true,
+      })
+        .on('click', () => select.current(lot))
+        .addTo(layer)
+    }
+    if (origin && validCoordinates(origin))
+      L.circleMarker([origin.latitude, origin.longitude], {
+        radius: 9,
+        color: 'white',
+        weight: 3,
+        fillColor: 'var(--color-map-route)',
+        fillOpacity: 1,
+      })
+        .bindTooltip('Điểm xuất phát của bạn')
+        .addTo(layer)
+    return () => {
+      layer.remove()
+    }
+  }, [lots, selectedLot?.id, origin, ready])
+  useEffect(() => {
+    const instance = map.current
+    if (!instance || !ready) return
+    if (selectedLot && validCoordinates(selectedLot))
+      instance.flyTo(
+        [selectedLot.latitude, selectedLot.longitude],
+        Math.max(instance.getZoom(), 13),
+        { duration: 0.45 },
+      )
+    else {
+      const points = lots
+        .filter(validCoordinates)
+        .map((lot) => [lot.latitude, lot.longitude] as [number, number])
+      if (points.length)
+        instance.fitBounds(points, { padding: [70, 70], maxZoom: 14 })
+    }
+  }, [selectedLot?.latitude, selectedLot?.longitude, selectedLot, lots, ready])
+  const route = useQuery({
+    queryKey: [
+      'osm-driving-route',
+      origin?.latitude,
+      origin?.longitude,
+      selectedLot?.latitude,
+      selectedLot?.longitude,
+    ],
+    enabled: Boolean(
+      origin &&
+      selectedLot &&
+      validCoordinates(origin) &&
+      validCoordinates(selectedLot),
+    ),
+    queryFn: ({ signal }) => getDrivingRoute(origin!, selectedLot!, signal),
+    retry: false,
+    staleTime: 120000,
+  })
+  useEffect(() => {
+    const instance = map.current
+    if (!instance || !route.data) return
+    const line = L.polyline(route.data.points, {
+      color: 'var(--color-map-route)',
+      weight: 5,
+      opacity: 0.9,
+    }).addTo(instance)
+    instance.fitBounds(line.getBounds(), {
+      paddingTopLeft: [55, 90],
+      paddingBottomRight: [55, 100],
+    })
+    return () => {
+      line.remove()
+    }
+  }, [route.data, ready])
   return (
-    <div className="flex flex-col gap-3 sticky top-[96px] pt-1">
-      {/* Realistic Container Map Canvas */}
-      <div className="relative w-full h-[680px] bg-[#e4ebf5] rounded-2xl overflow-hidden shadow-sm select-none border border-slate-200">
-        {/* Cartographic Grid/Tile Surface Background */}
-        <div
-          className="absolute inset-0 bg-[#e4ebf5]"
-          style={{
-            backgroundImage:
-              'radial-gradient(#cad7ea 1.5px, transparent 1.5px), linear-gradient(to right, #d9e3f0 1px, transparent 1px), linear-gradient(to bottom, #d9e3f0 1px, transparent 1px)',
-            backgroundSize: '32px 32px, 64px 64px, 64px 64px',
-          }}
-        >
-          {/* Vector Styled Road Arteries Mock */}
-          <svg className="absolute inset-0 w-full h-full pointer-events-none" role="img">
-            {/* Major Highway Long Thanh Dau Giay */}
-            <path
-              d="M-50,220 C220,180 480,260 850,210"
-              fill="none"
-              stroke="#ffffff"
-              strokeLinecap="round"
-              strokeWidth="12"
-            />
-            <path
-              d="M-50,220 C220,180 480,260 850,210"
-              fill="none"
-              stroke="#becfe4"
-              strokeLinecap="round"
-              strokeWidth="8"
-            />
-
-            {/* Nguyen Thi Dinh Connector */}
-            <path
-              d="M340,680 C360,520 370,410 420,310 C460,230 480,180 500,20"
-              fill="none"
-              stroke="#ffffff"
-              strokeWidth="10"
-            />
-            <path
-              d="M340,680 C360,520 370,410 420,310 C460,230 480,180 500,20"
-              fill="none"
-              stroke="#becfe4"
-              strokeWidth="6"
-            />
-
-            {/* Port Entrance Avenue */}
-            <path d="M120,440 L420,310" fill="none" stroke="#ffffff" strokeWidth="8" />
-            <path d="M120,440 L420,310" fill="none" stroke="#cad7ea" strokeWidth="4" />
-
-            {/* Calculated Heavy Truck Nav Path (Active Route to Selected Yard) */}
-            <path
-              d="M220,490 Q290,440 370,390 T540,290"
-              fill="none"
-              stroke="#0f172a"
-              strokeDasharray="10 6"
-              strokeLinecap="round"
-              strokeWidth="6"
-            />
-            <path
-              d="M220,490 Q290,440 370,390 T540,290"
-              fill="none"
-              stroke="#d95f00"
-              strokeLinecap="round"
-              strokeWidth="3"
-            />
-          </svg>
-        </div>
-
-        {/* Top Floating Direction Banner */}
-        <div className="absolute top-4 left-4 right-4 z-20 bg-[#233144]/95 text-white backdrop-blur-md rounded-2xl p-3 shadow-lg flex items-center justify-between gap-3 border border-white/10">
-          <div className="flex items-center gap-3 min-w-0">
-            <div className="w-8 h-8 rounded-xl bg-[#d95f00] flex items-center justify-center shrink-0">
-              <CornerUpRight className="w-4 h-4 text-white" />
-            </div>
-            <div className="truncate">
-              <span className="text-[11px] font-mono text-[#ffdbca] uppercase tracking-wider block font-bold">
-                LỘ TRÌNH TỐI ƯU XE CONTAINER 40FT
-              </span>
-              <p className="text-xs text-[#eaf1ff] truncate font-medium mt-0.5">
-                Hướng QL51 qua Cầu Bà Cua · Tĩnh không 4.8m · Không cấm tải giờ này
+    <section
+      aria-label="Bản đồ bãi đỗ OpenStreetMap"
+      className="parking-map sticky top-[calc(var(--driver-header-height)+24px)] min-w-0 space-y-4"
+    >
+      <div className="overflow-hidden rounded-3xl border border-brand-border bg-white shadow-sm">
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-brand-border px-5 py-4 sm:px-6">
+          <div className="flex items-center gap-3">
+            <MapPin size={19} className="text-brand-orange" />
+            <div>
+              <h2 className="font-sora text-base font-semibold">
+                Bản đồ khu vực
+              </h2>
+              <p className="mt-1 text-sm text-brand-muted">
+                OpenStreetMap · {lots.length} bãi đang hiển thị
               </p>
             </div>
           </div>
-          <div className="shrink-0 flex items-center gap-2">
-            <span className="bg-[#131b2e] px-2.5 py-1 rounded-lg font-mono text-white text-xs font-bold whitespace-nowrap border border-white/10">
-              {activeLot?.distanceKm || 2.4} KM · {activeLot?.etaMinutes || 6}P
-            </span>
-          </div>
-        </div>
-
-        {/* Floating Map Utility Layer Controls */}
-        <div className="absolute top-20 right-4 z-20 flex flex-col gap-1.5 bg-white/95 backdrop-blur-sm rounded-xl p-1 shadow-md border border-slate-200">
           <button
-            type="button"
-            onClick={() => setZoomLevel((z) => Math.min(z + 1, 18))}
-            className="w-9 h-9 rounded-lg flex items-center justify-center text-[#0d1c2e] hover:bg-[#eff4ff] transition-colors cursor-pointer"
-            title="Phóng to"
-            aria-label="Phóng to bản đồ"
+            aria-label="Hiển thị tất cả bãi trên bản đồ"
+            className="flex items-center gap-2 rounded-xl border border-brand-border px-3 py-2 text-sm font-semibold text-brand-navy"
+            onClick={() => {
+              const points = lots
+                .filter(validCoordinates)
+                .map((lot) => [lot.latitude, lot.longitude] as [number, number])
+              if (points.length)
+                map.current?.fitBounds(points, {
+                  padding: [60, 60],
+                  maxZoom: 14,
+                })
+            }}
           >
-            <Plus className="w-4 h-4" />
-          </button>
-          <button
-            type="button"
-            onClick={() => setZoomLevel((z) => Math.max(z - 1, 10))}
-            className="w-9 h-9 rounded-lg flex items-center justify-center text-[#0d1c2e] hover:bg-[#eff4ff] transition-colors cursor-pointer"
-            title="Thu nhỏ"
-            aria-label="Thu nhỏ bản đồ"
-          >
-            <Minus className="w-4 h-4" />
-          </button>
-          <button
-            type="button"
-            onClick={() => setShowHeavyLayer(!showHeavyLayer)}
-            className={`w-9 h-9 rounded-lg flex items-center justify-center transition-colors cursor-pointer ${
-              showHeavyLayer ? 'text-[#d95f00] bg-[#eff4ff]' : 'text-[#0d1c2e] hover:bg-[#eff4ff]'
-            }`}
-            title="Lớp bản đồ tải trọng"
-            aria-label="Lớp bản đồ tải trọng"
-          >
-            <Layers className="w-4 h-4" />
-          </button>
-          <button
-            type="button"
-            className="w-9 h-9 rounded-lg flex items-center justify-center text-[#d95f00] hover:bg-[#eff4ff] transition-colors cursor-pointer"
-            title="Định vị tâm xe"
-            aria-label="Định vị tâm xe"
-          >
-            <Crosshair className="w-4 h-4" />
+            <LocateFixed size={17} />
+            Toàn khu vực
           </button>
         </div>
-
-        {/* Map Marker 1: User's Commercial Vehicle Pin */}
-        <div className="absolute top-[480px] left-[200px] z-30 -translate-x-1/2 -translate-y-1/2 flex flex-col items-center">
-          <div className="bg-[#233144] text-white text-[10px] font-mono font-bold px-2 py-0.5 rounded-md shadow-md whitespace-nowrap mb-1 border border-white/10">
-            XE CỦA BẠN (51D-894.12)
-          </div>
-          <div className="relative flex items-center justify-center">
-            <span className="absolute w-8 h-8 rounded-full bg-[#d95f00]/30 animate-ping" />
-            <div className="w-9 h-9 rounded-full bg-[#131b2e] border-2 border-white flex items-center justify-center shadow-lg">
-              <Truck className="w-5 h-5 text-[#d95f00]" />
-            </div>
-          </div>
-        </div>
-
-        {/* Map Marker 2: Selected Yard 1 (Tân Cảng Phú Hữu) */}
-        <div
-          onClick={() => lots[0] && onSelectLot(lots[0])}
-          className="absolute top-[280px] left-[540px] z-30 -translate-x-1/2 -translate-y-1/2 flex flex-col items-center cursor-pointer group"
-        >
-          <div className="bg-black text-white text-xs font-bold px-3 py-1.5 rounded-xl shadow-xl flex items-center gap-1.5 whitespace-nowrap scale-105 group-hover:scale-110 transition-transform border border-white/20">
-            <CheckCircle2 className="w-3.5 h-3.5 text-[#d95f00]" />
-            <span>40K · 12 Slot trống</span>
-          </div>
-          <div className="w-3.5 h-3.5 bg-black rotate-45 -mt-1.5" />
-          <div className="w-4 h-1 bg-black/30 rounded-full mt-1 blur-[1px]" />
-        </div>
-
-        {/* Map Marker 3: ICD Sóng Thần 2 */}
-        <div
-          onClick={() => lots[1] && onSelectLot(lots[1])}
-          className="absolute top-[160px] left-[390px] z-20 -translate-x-1/2 -translate-y-1/2 flex flex-col items-center cursor-pointer opacity-90 hover:opacity-100 transition-opacity"
-        >
-          <div className="bg-[#233144] text-white text-[11px] font-semibold px-2.5 py-1 rounded-lg shadow-md flex items-center gap-1 whitespace-nowrap border border-white/10">
-            <span className="w-2 h-2 rounded-full bg-[#d95f00]" />
-            <span>35K · 5 Slot</span>
-          </div>
-          <div className="w-2.5 h-2.5 bg-[#233144] rotate-45 -mt-1" />
-        </div>
-
-        {/* Map Marker 4: Depot Cát Lái Gate 2 (Full Lot) */}
-        <div
-          onClick={() => lots[2] && onSelectLot(lots[2])}
-          className="absolute top-[370px] left-[360px] z-20 -translate-x-1/2 -translate-y-1/2 flex flex-col items-center cursor-pointer opacity-90 hover:opacity-100 transition-opacity"
-        >
-          <div className="bg-white text-[#0d1c2e] text-[11px] font-mono font-bold px-2 py-0.5 rounded-lg shadow-md flex items-center gap-1 whitespace-nowrap border border-slate-300">
-            <Lock className="w-3 h-3 text-rose-600" />
-            <span>HẾT CHỖ · Chờ 3 xe</span>
-          </div>
-          <div className="w-2 h-2 bg-white rotate-45 -mt-1 border-r border-b border-slate-300" />
-        </div>
-
-        {/* Map Marker 5: Long Thành Dầu Giây */}
-        <div
-          onClick={() => lots[3] && onSelectLot(lots[3])}
-          className="absolute top-[200px] left-[730px] z-20 -translate-x-1/2 -translate-y-1/2 flex flex-col items-center cursor-pointer opacity-90 hover:opacity-100 transition-opacity"
-        >
-          <div className="bg-[#233144] text-white text-[11px] font-semibold px-2.5 py-1 rounded-lg shadow-md flex items-center gap-1 whitespace-nowrap border border-white/10">
-            <span>30K · 18 Slot</span>
-          </div>
-          <div className="w-2.5 h-2.5 bg-[#233144] rotate-45 -mt-1" />
-        </div>
-
-        {/* Bottom Left Operational Coordinates Legend */}
-        <div className="absolute bottom-4 left-4 z-20 bg-white/90 backdrop-blur-sm rounded-xl px-3 py-1.5 shadow-sm text-xs font-mono text-[#45464d] flex items-center gap-2 border border-slate-200">
-          <span>GPS: 10.7681° N, 106.7942° E</span>
-          <span>·</span>
-          <span>Zoom: {zoomLevel}x</span>
-          <span>·</span>
-          <span>Bản đồ OSM Cảng Biển V2.4</span>
-        </div>
-
-        {/* Bottom Right Route Preview Pill */}
-        {activeLot && (
-          <div className="absolute bottom-4 right-4 z-20 bg-white/95 rounded-xl px-3 py-2 shadow-lg flex items-center gap-3 border border-slate-200">
-            <div className="w-2.5 h-2.5 rounded-full bg-[#d95f00]" />
-            <span className="text-xs font-bold text-[#0d1c2e] max-w-[150px] truncate">
-              {activeLot.name} (Đang chọn)
-            </span>
-            <button
-              type="button"
-              onClick={() => onQuickBook(activeLot)}
-              className="bg-black hover:bg-[#233144] text-white px-3 py-1 rounded-lg text-xs font-bold transition-colors cursor-pointer"
+        <div className="relative isolate">
+          <div
+            ref={container}
+            className="h-[440px] w-full sm:h-[560px] xl:h-[min(65vh,760px)] xl:min-h-[520px]"
+          />
+          {tilesUnavailable && (
+            <div
+              role="status"
+              className="absolute bottom-9 left-4 right-4 z-[500] rounded-xl border border-brand-border bg-white p-4 text-sm text-brand-muted"
             >
-              GIỮ CHỖ
+              <p>
+                Chưa tải được nền bản đồ. Kiểm tra kết nối mạng để tải dữ liệu
+                OpenStreetMap.
+              </p>
+              <button
+                className="mt-3 font-semibold text-brand-navy underline underline-offset-4"
+                onClick={() => tileLayer.current?.redraw()}
+              >
+                Thử tải lại bản đồ
+              </button>
+            </div>
+          )}
+        </div>
+        {selectedLot && (
+          <div className="flex flex-wrap items-center justify-between gap-4 border-t border-brand-border p-5 sm:p-6">
+            <div className="min-w-0 flex-1">
+              <p className="mb-1 text-xs font-semibold tracking-wider text-brand-muted">
+                BÃI ĐANG CHỌN
+              </p>
+              <h3 className="font-sora text-base font-semibold leading-relaxed text-brand-navy">
+                {selectedLot.name}
+              </h3>
+              <p className="mt-1 text-sm text-brand-muted">
+                {selectedLot.availableSlots} chỗ trống ·{' '}
+                {new Intl.NumberFormat('vi-VN').format(selectedLot.hourlyRate)}đ
+                / giờ
+              </p>
+            </div>
+            <button
+              disabled={selectedLot.isFull || selectedLot.availableSlots === 0}
+              className="inline-flex min-h-12 items-center gap-2 rounded-xl bg-brand-navy px-5 text-sm font-semibold text-white disabled:opacity-40"
+              onClick={() => onQuickBook(selectedLot)}
+            >
+              Giữ chỗ
+              <ArrowUpRight size={17} />
             </button>
           </div>
         )}
       </div>
-
-      {/* Quick Dispatch Warning Bar */}
-      <div className="bg-white rounded-2xl p-3.5 flex items-center justify-between shadow-sm border border-slate-200/80">
-        <div className="flex items-center gap-2">
-          <AlertTriangle className="w-5 h-5 text-amber-500 shrink-0" />
-          <span className="text-xs text-[#0d1c2e]">
-            Đoạn Đỗ Xuân Hợp qua Nguyễn Duy Trinh mật độ cao:{' '}
-            <strong className="text-[#d95f00]">Lưu lượng xe 85%</strong>
-          </span>
+      <div className="flex items-start gap-3 rounded-2xl border border-brand-border bg-white px-5 py-4 text-sm leading-6 text-brand-muted">
+        <Navigation size={19} className="mt-1 shrink-0 text-brand-orange" />
+        <div>
+          {route.isFetching ? (
+            <p>Đang tìm tuyến đường…</p>
+          ) : route.data ? (
+            <p className="font-semibold text-brand-navy">
+              {route.data.distanceKm.toFixed(1)} km · Khoảng{' '}
+              {route.data.durationMinutes} phút{' '}
+              <span className="font-normal text-brand-muted">qua OSRM</span>
+            </p>
+          ) : (
+            <p>
+              {route.isError
+                ? 'Chưa tải được tuyến đường. Bạn vẫn có thể xem vị trí bãi.'
+                : 'Chọn vị trí xuất phát hoặc bật định vị để xem tuyến đường.'}
+            </p>
+          )}
+          <p className="mt-1 text-xs">
+            Tuyến tham khảo cho ô tô. Cần kiểm tra biển cấm tải và giới hạn
+            phương tiện thực tế.
+          </p>
         </div>
-        <span className="font-mono text-slate-400 text-xs">Cập nhật 1 phút trước</span>
       </div>
-    </div>
+    </section>
   )
 }

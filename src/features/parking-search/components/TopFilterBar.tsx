@@ -4,7 +4,11 @@ import type {
   VehicleClassification,
   VehicleOption,
 } from '../types/parkingSearchTypes'
-import { Select, type SelectGroup, type SelectOption } from '../../../shared/components/Select'
+import {
+  Select,
+  type SelectGroup,
+  type SelectOption,
+} from '../../../shared/components/Select'
 import { cn } from '../../../shared/utils/cn'
 
 interface TopFilterBarProps {
@@ -20,7 +24,7 @@ const STANDARD_CLASSIFICATIONS: {
 }[] = [
   { type: 'CONTAINER', label: 'Container 40/45FT', badge: 'Standard' },
   { type: 'HEAVY_TRUCK', label: 'Tải nặng (>10T)', badge: '>10T' },
-  { type: 'MEDIUM_TRUCK', label: 'Tải trung (3.5-10T)', badge: '3.5-10T' },
+  { type: 'BUS_COACH', label: 'Xe khách (16–45 chỗ)', badge: 'Bus/Coach' },
   { type: 'LIGHT_TRUCK', label: 'Tải nhỏ (<3.5T)', badge: '<3.5T' },
   { type: 'SEDAN_SUV', label: 'Khách / Sedan', badge: 'Sedan/SUV' },
 ]
@@ -81,9 +85,9 @@ export function TopFilterBar({
   const radiusPercent = Math.round(((filters.radiusKm - 1) / (50 - 1)) * 100)
 
   return (
-    <section className="w-full bg-white shadow-sm rounded-2xl p-4 lg:p-5 mb-5 border border-slate-200/80">
+    <section className="w-full bg-white shadow-sm rounded-2xl p-5 lg:p-7 mb-6 border border-brand-border [&_span]:leading-relaxed [&_button]:min-h-8">
       {/* 3 Even Columns: 1. Phương tiện điều hành -> 2. Sắp xếp theo -> 3. Bán kính quét */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-5 lg:gap-6 items-start">
+      <div className="grid grid-cols-1 md:grid-cols-[1.25fr_1fr_1fr] gap-6 lg:gap-10 items-start">
         {/* 1. Phương tiện điều hành */}
         <div className="flex flex-col w-full">
           <span className="text-xs text-[#45464d] block mb-1.5 font-medium">
@@ -120,7 +124,9 @@ export function TopFilterBar({
         {/* 3. Bán kính quét */}
         <div className="flex flex-col w-full">
           <div className="flex items-center justify-between mb-1">
-            <span className="text-xs text-[#45464d] font-medium">Bán kính quét:</span>
+            <span className="text-xs text-[#45464d] font-medium">
+              Bán kính quét:
+            </span>
             <span className="font-mono text-[#d95f00] font-bold text-xs bg-orange-50 border border-orange-200/60 px-2 py-0.5 rounded-full">
               {filters.radiusKm} km
             </span>
@@ -130,7 +136,9 @@ export function TopFilterBar({
             min="1"
             max="50"
             value={filters.radiusKm}
-            onChange={(e) => onChangeFilters({ radiusKm: Number(e.target.value) })}
+            onChange={(e) =>
+              onChangeFilters({ radiusKm: Number(e.target.value) })
+            }
             className="w-full custom-range-slider"
             style={{
               background: `linear-gradient(to right, #d95f00 0%, #d95f00 ${radiusPercent}%, #e2e8f0 ${radiusPercent}%, #e2e8f0 100%)`,
@@ -145,7 +153,8 @@ export function TopFilterBar({
                 onClick={() => onChangeFilters({ radiusKm: km })}
                 className={cn(
                   'px-1.5 py-0.5 rounded hover:text-[#d95f00] transition-colors cursor-pointer',
-                  filters.radiusKm === km && 'font-bold text-[#d95f00] bg-orange-50',
+                  filters.radiusKm === km &&
+                    'font-bold text-[#d95f00] bg-orange-50',
                 )}
               >
                 {km}km

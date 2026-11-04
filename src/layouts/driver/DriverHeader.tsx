@@ -1,238 +1,204 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import {
   Bell,
+  ChevronDown,
   Menu,
   X,
   User,
   LogOut,
   KeyRound,
-  ShieldCheck,
+  Truck,
 } from 'lucide-react'
 
-interface NavLinkItem {
-  to: string
-  label: string
-  hasBadge?: boolean
-}
-
-const navLinks: NavLinkItem[] = [
-  { to: '/dashboard', label: 'Tổng quan' },
-  { to: '/parking', label: 'Bản đồ tìm bãi' },
-  { to: '/bookings', label: 'Vé & Đặt chỗ' },
-  { to: '/queues', label: 'Hàng đợi ảo' },
-  { to: '/payments', label: 'Lịch sử cước' },
-  { to: '/vehicles', label: 'Đội xe của tôi' },
+const links = [
+  ['/dashboard', 'Tổng quan'],
+  ['/parking', 'Bản đồ tìm bãi'],
+  ['/bookings', 'Vé & Đặt chỗ'],
+  ['/queues', 'Hàng đợi ảo'],
+  ['/payments', 'Lịch sử cước'],
+  ['/vehicles', 'Đội xe của tôi'],
+  ['/disputes', 'Khiếu nại'],
 ]
-
 export function DriverHeader() {
   const location = useLocation()
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
-  const [userDropdownOpen, setUserDropdownOpen] = useState(false)
-
-  // Driver session info with fallback
-  const [driverName, setDriverName] = useState<string>(() => {
-    return localStorage.getItem('smart-truck-parking.driver_name') || 'Văn Tuấn'
+  const [mobileOpen, setMobileOpen] = useState(false)
+  const [accountOpen, setAccountOpen] = useState(false)
+  const [identity] = useState(() => {
+    let phone = ''
+    try {
+      phone =
+        (
+          JSON.parse(
+            localStorage.getItem('smart-truck-parking.auth') || '{}',
+          ) as { phone?: string }
+        ).phone || ''
+    } catch {
+      /* No previous session profile. */
+    }
+    return {
+      name: localStorage.getItem('smart-truck-parking.driver_name') || 'Tài xế',
+      phone,
+    }
   })
-  const [driverPhone] = useState<string>(() => {
-    const raw = localStorage.getItem('smart-truck-parking.auth')
-    if (raw) {
-      try {
-        const parsed = JSON.parse(raw) as { phone?: string }
-        if (parsed.phone) return parsed.phone
-      } catch {
-        // ignore
-      }
-    }
-    return '0909 128 374'
-  })
-
-  useEffect(() => {
-    const storedName = localStorage.getItem('smart-truck-parking.driver_name')
-    if (storedName) {
-      setDriverName(storedName)
-    }
-  }, [])
-
-  const isActive = (path: string) => {
-    if (path === '/dashboard') {
-      return location.pathname === '/dashboard' || location.pathname === '/driver/dashboard'
-    }
-    return location.pathname.startsWith(path)
+  const initials = identity.name
+    .trim()
+    .split(/\s+/)
+    .slice(-2)
+    .map((part) => part[0])
+    .join('')
+    .toUpperCase()
+  const active = (path: string) => {
+    const current = location.pathname
+      .replace(/^\/design-preview/, '')
+      .replace(/^\/(driver|dashboard)\//, '/')
+    if (current === '/search') return path === '/parking'
+    return path === '/dashboard'
+      ? ['/dashboard', '/driver', '/driver/dashboard'].includes(
+          location.pathname,
+        )
+      : current.startsWith(path)
   }
-
-  // Get initials for avatar
-  const getInitials = (name: string) => {
-    if (!name) return 'VT'
-    const parts = name.trim().split(/\s+/)
-    if (parts.length >= 2) {
-      return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase()
-    }
-    return name.slice(0, 2).toUpperCase()
+  const closeMenus = () => {
+    setAccountOpen(false)
+    setMobileOpen(false)
   }
-
-  const handleLogout = () => {
-    localStorage.removeItem('smart-truck-parking.auth')
-    window.location.href = '/'
-  }
-
+  const nav = (mobile = false) =>
+    links.map(([to, label]) => (
+      <Link
+        key={to}
+        to={to}
+        onClick={closeMenus}
+        aria-current={active(to) ? 'page' : undefined}
+        className={`${mobile ? 'w-full px-4 py-3' : 'px-3.5 py-3 2xl:px-4'} inline-flex shrink-0 items-center whitespace-nowrap rounded-xl text-[15px] font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-orange ${active(to) ? 'bg-white text-brand-navy' : 'text-slate-300 hover:bg-white/10 hover:text-white'}`}
+      >
+        {label}
+      </Link>
+    ))
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 bg-[#131b2e] shadow-[0_1px_8px_rgba(0,0,0,0.12)] border-b border-[#233144]">
-      <div className="h-[68px] max-w-[1280px] mx-auto px-4 lg:px-8 flex items-center justify-between gap-4">
-        {/* Brand & Main Navigation */}
-        <div className="flex items-center gap-6">
+    <header
+      className="fixed inset-x-0 top-0 z-50 border-b border-white/10 bg-brand-navy font-inter text-white"
+      onKeyDown={(event) => {
+        if (event.key === 'Escape') closeMenus()
+      }}
+    >
+      <div className="driver-header-inner">
+        <div className="driver-header-top">
           <Link
             to="/dashboard"
-            className="flex items-center gap-2 shrink-0 group focus:outline-none"
+            onClick={closeMenus}
+            className="driver-header-brand flex shrink-0 items-center gap-3"
           >
-            <span className="font-sora text-xl text-white tracking-tight font-bold">
-              SMARTTRUCK<span className="text-[#d95f00]">HUB</span>
+            <span className="hidden h-10 w-10 items-center justify-center rounded-xl border border-brand-orange/30 text-brand-orange sm:flex">
+              <Truck size={22} />
             </span>
-            <span className="bg-[#341100] text-[#d95f00] px-1.5 py-0.5 rounded text-[11px] uppercase tracking-wider font-semibold border border-[#d95f00]/30">
-              DRIVER OPS
+            <span>
+              <span className="block font-sora text-[14px] font-bold tracking-tight sm:text-lg">
+                SMARTTRUCK<span className="text-brand-orange">HUB</span>
+              </span>
+              <span className="mt-1 block text-[9px] font-semibold tracking-wider text-slate-400 sm:text-[10px] sm:tracking-[.2em]">
+                CỔNG THÔNG TIN TÀI XẾ
+              </span>
             </span>
           </Link>
-
-          {/* Desktop Nav Items */}
-          <nav className="hidden xl:flex items-center gap-1">
-            {navLinks.map(({ to, label, hasBadge }) => {
-              const active = isActive(to)
-              return (
-                <Link
-                  key={to}
-                  to={to}
-                  className={`relative px-3 py-2 rounded-lg text-sm transition-colors flex items-center gap-1.5 whitespace-nowrap ${
-                    active
-                      ? 'bg-[#dae2fd] text-[#131b2e] font-semibold'
-                      : 'text-[#7c839b] hover:text-white hover:bg-[#233144]/60 font-medium'
-                  }`}
-                >
-                  <span>{label}</span>
-                  {hasBadge && (
-                    <span className="w-2 h-2 rounded-full bg-[#d95f00] inline-block shrink-0" />
-                  )}
-                </Link>
-              )
-            })}
-          </nav>
-        </div>
-
-        {/* Right Section: Notifications, User Profile & Mobile Toggle */}
-        <div className="flex items-center gap-3">
-          {/* Notifications Link */}
-          <Link
-            to="/notifications"
-            className="relative p-2 rounded text-[#7c839b] hover:text-white hover:bg-[#233144] transition-colors"
-            aria-label="Thông báo"
-          >
-            <Bell className="w-5 h-5" />
-            <span className="absolute top-1 right-1 w-4 h-4 rounded-full bg-[#d95f00] text-white text-[10px] font-bold flex items-center justify-center font-mono">
-              3
-            </span>
-          </Link>
-
-          {/* User Profile Pill & Dropdown (Bỏ chữ TRỰC TUYẾN) */}
-          <div className="relative">
-            <button
-              type="button"
-              onClick={() => setUserDropdownOpen(!userDropdownOpen)}
-              className="flex items-center gap-2.5 p-1.5 pr-3.5 rounded-lg bg-[#233144] hover:bg-[#2d3e56] transition-colors border border-white/5 cursor-pointer text-left focus:outline-none"
+          <div className="driver-header-account flex shrink-0 items-center gap-1.5 sm:gap-5">
+            <Link
+              to="/notifications"
+              aria-label="Thông báo"
+              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-white/10 text-slate-300 hover:bg-white/10"
             >
-              <div className="w-8 h-8 rounded bg-black text-white flex items-center justify-center font-bold text-xs uppercase shadow-inner shrink-0">
-                {getInitials(driverName)}
-              </div>
-              <div className="hidden sm:flex flex-col text-left">
-                <span className="text-xs text-white font-medium leading-none">
-                  {driverName}
-                </span>
-                <span className="font-mono text-[#7c839b] text-[11px] leading-tight mt-1">
-                  {driverPhone}
-                </span>
-              </div>
-            </button>
-
-            {/* User Dropdown Menu */}
-            {userDropdownOpen && (
-              <>
-                <div
-                  className="fixed inset-0 z-40"
-                  onClick={() => setUserDropdownOpen(false)}
-                />
-                <div className="absolute right-0 mt-2 w-56 bg-[#131b2e] border border-[#233144] rounded-xl shadow-2xl py-2 z-50 text-xs">
-                  <div className="px-4 py-2 border-b border-[#233144] text-[#bec6e0]">
-                    <p className="font-semibold text-white">{driverName}</p>
-                    <p className="font-mono text-[11px] text-[#7c839b]">{driverPhone}</p>
-                  </div>
-                  <Link
-                    to="/profile"
-                    onClick={() => setUserDropdownOpen(false)}
-                    className="flex items-center gap-2.5 px-4 py-2 text-[#bec6e0] hover:text-white hover:bg-[#233144] transition-colors"
-                  >
-                    <User className="w-4 h-4 text-[#7c839b]" />
-                    <span>Hồ sơ cá nhân</span>
-                  </Link>
-                  <Link
-                    to="/change-password"
-                    onClick={() => setUserDropdownOpen(false)}
-                    className="flex items-center gap-2.5 px-4 py-2 text-[#bec6e0] hover:text-white hover:bg-[#233144] transition-colors"
-                  >
-                    <KeyRound className="w-4 h-4 text-[#7c839b]" />
-                    <span>Đổi mật khẩu</span>
-                  </Link>
-                  <div className="border-t border-[#233144] my-1" />
-                  <button
-                    type="button"
-                    onClick={handleLogout}
-                    className="w-full flex items-center gap-2.5 px-4 py-2 text-rose-400 hover:text-rose-300 hover:bg-[#233144] transition-colors text-left cursor-pointer"
-                  >
-                    <LogOut className="w-4 h-4" />
-                    <span>Đăng xuất</span>
-                  </button>
-                </div>
-              </>
-            )}
-          </div>
-
-          {/* Mobile menu toggle button */}
-          <button
-            type="button"
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="xl:hidden p-2 rounded text-[#7c839b] hover:text-white hover:bg-[#233144] transition-colors focus:outline-none"
-            aria-label="Toggle menu"
-          >
-            {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-          </button>
-        </div>
-      </div>
-
-      {/* Mobile Navigation Drawer */}
-      {mobileMenuOpen && (
-        <div className="xl:hidden bg-[#131b2e] border-t border-[#233144] px-4 py-3 space-y-1">
-          {navLinks.map(({ to, label, hasBadge }) => {
-            const active = isActive(to)
-            return (
-              <Link
-                key={to}
-                to={to}
-                onClick={() => setMobileMenuOpen(false)}
-                className={`flex items-center justify-between px-3 py-2 rounded-lg text-sm ${
-                  active
-                    ? 'bg-[#dae2fd] text-[#131b2e] font-semibold'
-                    : 'text-[#bec6e0] hover:bg-[#233144] hover:text-white'
-                }`}
+              <Bell size={20} />
+            </Link>
+            <div className="relative">
+              <button
+                onClick={() => setAccountOpen(!accountOpen)}
+                aria-expanded={accountOpen}
+                aria-controls="driver-account-menu"
+                aria-label="Menu tài khoản"
+                className="flex min-h-12 shrink-0 items-center gap-3 rounded-xl px-1 text-left sm:pr-3"
               >
-                <span>{label}</span>
-                {hasBadge && (
-                  <span className="w-2 h-2 rounded-full bg-[#d95f00]" />
-                )}
-              </Link>
-            )
-          })}
-          <div className="pt-2 border-t border-[#233144] mt-2 flex items-center gap-1.5 text-xs text-[#7c839b]">
-            <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0" />
-            <span>Tài khoản lái xe đã xác thực an toàn</span>
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/10 text-sm font-bold">
+                  {initials}
+                </span>
+                <span className="hidden w-36 min-w-0 sm:block">
+                  <span className="block truncate text-[15px] font-semibold leading-6">
+                    {identity.name}
+                  </span>
+                  <span className="block whitespace-nowrap text-sm leading-5 text-slate-400">
+                    {identity.phone || 'Tài khoản tài xế'}
+                  </span>
+                </span>
+                <ChevronDown
+                  size={15}
+                  className="hidden shrink-0 text-slate-400 sm:block"
+                />
+              </button>
+              {accountOpen && (
+                <>
+                  <button
+                    aria-label="Đóng menu tài khoản"
+                    className="fixed inset-0 z-40 cursor-default"
+                    onClick={() => setAccountOpen(false)}
+                  />
+                  <div
+                    id="driver-account-menu"
+                    className="absolute right-0 z-50 mt-3 w-64 rounded-2xl border border-brand-border bg-white p-2 text-brand-navy shadow-xl"
+                  >
+                    <p className="truncate border-b border-brand-border px-3 py-4 font-semibold">
+                      {identity.name}
+                    </p>
+                    <Link
+                      to="/profile"
+                      onClick={closeMenus}
+                      className="flex items-center gap-3 rounded-xl px-3 py-3 text-sm hover:bg-brand-surface"
+                    >
+                      <User size={17} />
+                      Hồ sơ cá nhân
+                    </Link>
+                    <Link
+                      to="/change-password"
+                      onClick={closeMenus}
+                      className="flex items-center gap-3 rounded-xl px-3 py-3 text-sm hover:bg-brand-surface"
+                    >
+                      <KeyRound size={17} />
+                      Đổi mật khẩu
+                    </Link>
+                    <button
+                      onClick={() => {
+                        localStorage.removeItem('access_token')
+                        localStorage.removeItem('smart-truck-parking.auth')
+                        window.location.href = '/login'
+                      }}
+                      className="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-sm text-red-700 hover:bg-red-50"
+                    >
+                      <LogOut size={17} />
+                      Đăng xuất
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
+            <button
+              aria-label="Toggle menu"
+              aria-expanded={mobileOpen}
+              onClick={() => setMobileOpen(!mobileOpen)}
+              className="rounded-lg p-2 lg:hidden"
+            >
+              {mobileOpen ? <X /> : <Menu />}
+            </button>
           </div>
         </div>
+        <nav aria-label="Điều hướng tài xế" className="driver-header-nav">
+          {nav()}
+        </nav>
+      </div>
+      {mobileOpen && (
+        <nav
+          aria-label="Điều hướng di động"
+          className="grid gap-1 border-t border-white/10 px-5 pb-5 pt-3 sm:grid-cols-2 lg:hidden"
+        >
+          {nav(true)}
+        </nav>
       )}
     </header>
   )

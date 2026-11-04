@@ -1,5 +1,7 @@
 # Capability Parity Matrix — 4 Landing Screens: Trang Chủ, Tài Xế, Chủ Bãi & Bảng Giá
 
+> Bổ sung 2026-11-04: xem [FE completion report](./fe-completion-report.md) cho toàn bộ route còn thiếu, đối chiếu contract thực tế và các mục CONFLICT/LIMITATION. Đặc biệt bảng giá backend không khớp bốn trường trong đặc tả Stitch cũ; không đánh dấu Full Match cho phần này.
+
 > Phiên bản thiết kế: Stitch HTML `web_standard`  
 > Module: `src/features/landing`  
 > Subfolders: `components/home/`, `components/driver-solutions/`, `components/owner-solutions/`, `components/pricing/`, `components/common/`  

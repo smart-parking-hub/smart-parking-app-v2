@@ -131,7 +131,7 @@ describe('SCR-014: Driver Dashboard Home (Tổng quan Tài xế)', () => {
     // Header elements (hotline and 'TRỰC TUYẾN' removed per design request)
     const brandElements = screen.getAllByText(/SMARTTRUCK/i)
     expect(brandElements.length).toBeGreaterThanOrEqual(1)
-    expect(screen.getByText(/DRIVER OPS/i)).toBeInTheDocument()
+    expect(screen.getByText(/CỔNG THÔNG TIN TÀI XẾ/i)).toBeInTheDocument()
     expect(screen.queryByText(/TRỰC TUYẾN/i)).not.toBeInTheDocument()
     expect(screen.queryByText(/HOTLINE ĐIỀU PHỐI 24\/7:/i)).not.toBeInTheDocument()
 

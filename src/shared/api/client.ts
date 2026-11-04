@@ -13,6 +13,11 @@ export const apiClient: AxiosInstance = axios.create({
 // Request interceptor: Gắn JWT bearer token nếu có
 apiClient.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
+    // Feature clients use versioned absolute paths. Keep the gateway origin only
+    // when an older environment value already includes /api or /api/v1.
+    if (config.url?.startsWith('/api/v1/')) {
+      config.baseURL = (config.baseURL || '').replace(/\/api(?:\/v1)?\/?$/, '')
+    }
     const token = localStorage.getItem('access_token')
     if (token && config.headers) {
       config.headers.Authorization = `Bearer ${token}`

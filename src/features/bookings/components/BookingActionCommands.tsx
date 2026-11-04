@@ -7,6 +7,7 @@ import {
   XCircle,
 } from 'lucide-react'
 import type { BookingItemDto } from '../types/bookingTypes'
+import { Link } from 'react-router-dom'
 
 interface BookingActionCommandsProps {
   booking: BookingItemDto
@@ -40,6 +41,7 @@ export function BookingActionCommands({
 
   return (
     <div className="flex flex-col gap-3">
+      {isCompleted && <Link to={`/disputes?bookingId=${booking.id}`} className="rounded-xl border border-slate-300 bg-white px-4 py-3 text-center text-sm font-semibold text-slate-800">Gửi khiếu nại về lượt đỗ</Link>}
       {/* Primary CTA Buttons according to lifecycle */}
       {(isParking || isAwaitingFinal) && (
         <button
