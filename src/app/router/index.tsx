@@ -3,39 +3,93 @@ import { lazy, Suspense } from 'react'
 const DesignPreviewPage = import.meta.env.DEV
   ? lazy(() => import('@/app/pages/DesignPreviewPage'))
   : null
-import { RootLayout } from '@/layouts/RootLayout'
-import { DriverLayout as DriverShell } from '@/layouts/DriverLayout'
-import { MerchantLayout } from '@/layouts/MerchantLayout'
-import { AdminLayout } from '@/layouts/AdminLayout'
-import { AuthPage, AccessPage, RequireRole } from '@/features/auth'
-import { ContactPage } from '@/features/landing/pages/ContactPage'
-import {
-  MerchantBookingsPage,
-  MerchantBookingDetailPage,
-  MerchantScannerPage,
-  MerchantLotPage,
-  MerchantRevenuePage,
-  MerchantWithdrawalsPage,
-} from '@/features/merchant/operations'
-import { DisputesPage } from '@/features/disputes'
-import {
-  PortalNotificationsPage,
-  AdminProfilePage,
-} from '@/features/portal/AccountPages'
-import {
-  AdminDashboardPage,
-  AdminParkingLotsPage,
-  AdminLotDetailPage,
-  AdminUsersPage,
-  AdminUserDetailPage,
-  AdminTransactionsPage,
-  AdminWithdrawalsPage,
-  AdminAuditLogsPage,
-} from '@/features/admin'
-import { BaselineOverviewPage } from '@/app/pages/BaselineOverviewPage'
-import { DashboardHomePage } from '@/features/dashboard'
-import { SearchParkingPage } from '@/features/parking-search'
-import { ParkingDetailPage } from '@/features/parking-detail'
+const RootLayout = lazy(() =>
+  import('@/layouts/RootLayout').then((module) => ({ default: module.RootLayout })),
+)
+const DriverShell = lazy(() =>
+  import('@/layouts/DriverLayout').then((module) => ({ default: module.DriverLayout })),
+)
+const MerchantLayout = lazy(() =>
+  import('@/layouts/MerchantLayout').then((module) => ({ default: module.MerchantLayout })),
+)
+const AdminLayout = lazy(() =>
+  import('@/layouts/AdminLayout').then((module) => ({ default: module.AdminLayout })),
+)
+const AuthPage = lazy(() =>
+  import('@/features/auth').then((module) => ({ default: module.AuthPage })),
+)
+const AccessPage = lazy(() =>
+  import('@/features/auth').then((module) => ({ default: module.AccessPage })),
+)
+const RequireRole = lazy(() =>
+  import('@/features/auth').then((module) => ({ default: module.RequireRole })),
+)
+const ContactPage = lazy(() =>
+  import('@/features/landing/pages/ContactPage').then((module) => ({ default: module.ContactPage })),
+)
+const MerchantBookingsPage = lazy(() =>
+  import('@/features/merchant/operations').then((module) => ({ default: module.MerchantBookingsPage })),
+)
+const MerchantBookingDetailPage = lazy(() =>
+  import('@/features/merchant/operations').then((module) => ({ default: module.MerchantBookingDetailPage })),
+)
+const MerchantScannerPage = lazy(() =>
+  import('@/features/merchant/operations').then((module) => ({ default: module.MerchantScannerPage })),
+)
+const MerchantLotPage = lazy(() =>
+  import('@/features/merchant/operations').then((module) => ({ default: module.MerchantLotPage })),
+)
+const MerchantRevenuePage = lazy(() =>
+  import('@/features/merchant/operations').then((module) => ({ default: module.MerchantRevenuePage })),
+)
+const MerchantWithdrawalsPage = lazy(() =>
+  import('@/features/merchant/operations').then((module) => ({ default: module.MerchantWithdrawalsPage })),
+)
+const DisputesPage = lazy(() =>
+  import('@/features/disputes').then((module) => ({ default: module.DisputesPage })),
+)
+const PortalNotificationsPage = lazy(() =>
+  import('@/features/portal/AccountPages').then((module) => ({ default: module.PortalNotificationsPage })),
+)
+const AdminProfilePage = lazy(() =>
+  import('@/features/portal/AccountPages').then((module) => ({ default: module.AdminProfilePage })),
+)
+const AdminDashboardPage = lazy(() =>
+  import('@/features/admin').then((module) => ({ default: module.AdminDashboardPage })),
+)
+const AdminParkingLotsPage = lazy(() =>
+  import('@/features/admin').then((module) => ({ default: module.AdminParkingLotsPage })),
+)
+const AdminLotDetailPage = lazy(() =>
+  import('@/features/admin').then((module) => ({ default: module.AdminLotDetailPage })),
+)
+const AdminUsersPage = lazy(() =>
+  import('@/features/admin').then((module) => ({ default: module.AdminUsersPage })),
+)
+const AdminUserDetailPage = lazy(() =>
+  import('@/features/admin').then((module) => ({ default: module.AdminUserDetailPage })),
+)
+const AdminTransactionsPage = lazy(() =>
+  import('@/features/admin').then((module) => ({ default: module.AdminTransactionsPage })),
+)
+const AdminWithdrawalsPage = lazy(() =>
+  import('@/features/admin').then((module) => ({ default: module.AdminWithdrawalsPage })),
+)
+const AdminAuditLogsPage = lazy(() =>
+  import('@/features/admin').then((module) => ({ default: module.AdminAuditLogsPage })),
+)
+const BaselineOverviewPage = lazy(() =>
+  import('@/app/pages/BaselineOverviewPage').then((module) => ({ default: module.BaselineOverviewPage })),
+)
+const DashboardHomePage = lazy(() =>
+  import('@/features/dashboard').then((module) => ({ default: module.DashboardHomePage })),
+)
+const SearchParkingPage = lazy(() =>
+  import('@/features/parking-search').then((module) => ({ default: module.SearchParkingPage })),
+)
+const ParkingDetailPage = lazy(() =>
+  import('@/features/parking-detail').then((module) => ({ default: module.ParkingDetailPage })),
+)
 const MyBookingsPage = lazy(() =>
   import('@/features/bookings').then((module) => ({
     default: module.MyBookingsPage,
@@ -81,9 +135,15 @@ const NotificationsPage = lazy(() =>
     default: module.NotificationsPage,
   })),
 )
-import { MerchantDashboardPage } from '@/features/merchant/dashboard'
-import { MerchantParkingLotsPage } from '@/features/merchant/parking-lots/pages/MerchantParkingLotsPage'
-import { CreateMerchantParkingLotPage } from '@/features/merchant/parking-lots/pages/CreateMerchantParkingLotPage'
+const MerchantDashboardPage = lazy(() =>
+  import('@/features/merchant/dashboard').then((module) => ({ default: module.MerchantDashboardPage })),
+)
+const MerchantParkingLotsPage = lazy(() =>
+  import('@/features/merchant/parking-lots/pages/MerchantParkingLotsPage').then((module) => ({ default: module.MerchantParkingLotsPage })),
+)
+const CreateMerchantParkingLotPage = lazy(() =>
+  import('@/features/merchant/parking-lots/pages/CreateMerchantParkingLotPage').then((module) => ({ default: module.CreateMerchantParkingLotPage })),
+)
 const MerchantParkingLotDetailPage = lazy(() =>
   import('@/features/merchant/parking-lots/pages/MerchantParkingLotDetailPage').then(
     (module) => ({ default: module.MerchantParkingLotDetailPage }),
@@ -99,8 +159,12 @@ const MerchantSlotsPage = lazy(() =>
     (module) => ({ default: module.MerchantSlotsPage }),
   ),
 )
-import { MerchantProfilePage } from '@/features/merchant/profile'
-import { LandingPage } from '@/features/landing/pages/LandingPage'
+const MerchantProfilePage = lazy(() =>
+  import('@/features/merchant/profile').then((module) => ({ default: module.MerchantProfilePage })),
+)
+const LandingPage = lazy(() =>
+  import('@/features/landing/pages/LandingPage').then((module) => ({ default: module.LandingPage })),
+)
 const DriverSolutionsPage = lazy(() =>
   import('@/features/landing/pages/DriverSolutionsPage').then((module) => ({
     default: module.DriverSolutionsPage,

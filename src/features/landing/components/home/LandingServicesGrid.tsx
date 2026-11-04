@@ -9,7 +9,7 @@ export function LandingServicesGrid() {
       desc: 'Vị trí chiến lược bán kính 3km quanh Cát Lái, Cái Mép và Đình Vũ. Hỗ trợ cắm điện lạnh reefer container 380V.',
       specs: ['Chiều dài xe: Đầu kéo 40ft - 53ft', 'Biểu phí: Từ 35.000đ/giờ'],
       slots: 'Xem chỗ trống (14)',
-      img: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAqcVMFv7ug-vgteSCPY3VqQ5p75QegHJXegeKT4hYMHeQ7MvxFBpocxpwbsnuDXH-kFKDIzOEd8yCy_zOqZoZt7XL17K0y8hwcDtl67uDfOSixAEg1T4tODyzhXua9aQLuRukOKjRu3gKFoyZACf_wXmp_vaXhQ4Lb3UXOQvSV72f6N4Fp665ADd_HNHw8Iy4B-MWZDav9uGItNmbgXquOpyO7etd5OUA9IwzN3UN6',
+      img: '/images/landing/service-1.webp',
     },
     {
       id: 'heavy',
@@ -18,7 +18,7 @@ export function LandingServicesGrid() {
       desc: 'Mặt bằng gia cố bê tông mác cao chịu tải 100 tấn, tích hợp trạm cân điện tử tự động kết nối dữ liệu hành trình.',
       specs: ['Tải trọng sàn: Không giới hạn', 'Trạm cân: Cân điện tử 80T - 120T'],
       slots: 'Xem chỗ trống (8)',
-      img: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAJNQpkZ5OX4EPwOGaI4VUThiwvZPBp-1GssdgO0KSBkvPo7-6349BfgkkMDRfpF2a20h_DfYpO4wJX2drr_NhtVpdAgkUp43F2v8QpqcTVq-RfKKXuZh-TZXXIlMhR6ZCI525GPz9yZ2DLK0r2sWPhhVcDbR-s33TpJ37iQLG7XWiJxH0bbH37jJxrRsFcCDYOqoltwI-DQVbunEv8WzoomOZrY9xRJ64AjPSk7VIy',
+      img: '/images/landing/service-2.webp',
     },
     {
       id: 'highway',
@@ -27,7 +27,7 @@ export function LandingServicesGrid() {
       desc: 'Chuỗi trạm dừng tiện ích cao cấp dọc tuyến QL1A và Cao tốc Bắc Nam. Phòng tắm nóng lạnh, giường nghỉ và suất ăn nóng 24/7.',
       specs: ['Tiện ích: Phòng nghỉ máy lạnh, Căng-tin', 'An ninh: Bảo vệ vòng ngoài 2 lớp'],
       slots: 'Xem chỗ trống (26)',
-      img: 'https://lh3.googleusercontent.com/aida-public/AB6AXuB3cuM34PML3AnXJ0N_o346tXniSAQ-jjOEuxbZ0gbIKPs8LK9SygkgpLy0CujwyOYHmFP5J3jXvgEFZvC3XkJl_z1IHFfM2IWdx8BfwFb8TeuTQFjtjlWhkbbbZtiv48bGyO8yIjmrBGYeJ-96FwIEwl1BsKWyTrrKdIuHxh7U_iJE6C5zJMXwh364hQXk7TKZXkz4lGXseIBg8QPErJMye0PBEMvWtAdSyDS7YqIu',
+      img: '/images/landing/service-3.webp',
     },
     {
       id: 'ai-gate',
@@ -36,7 +36,7 @@ export function LandingServicesGrid() {
       desc: 'Giải pháp xếp hàng ảo (Virtual Queue) tránh tắc nghẽn giờ cấm tải đô thị. Barie thông minh mở tự động trong 0.2 giây.',
       specs: ['Nhận diện ALPR: Chính xác 99.8%', 'Quét mã: Mã QR động trên điện thoại'],
       slots: 'Khám phá giải pháp',
-      img: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAvrAE_tYeBrSLHoQr7DQ9691NR8Lj7jCj1IibbQi8_XB6q0YVU-NrtIrHg64Jrk9g-mLiFyBewfNJqMMvhN6LP11FSdRrZ7E9LaW11Kstu6FU_ybR1BlDWZgdrn3q6VjapDWcSrPEmHZdg1vg3IIj8cO2XWeEAtxRBEHIY9rWqRf4PkULlxGITZ6K-RLs1kmkZ8DMOR_gn_B2KdCP6e9-aExiFxyNnldmbM4L-rNRB',
+      img: '/images/landing/service-4.webp',
     },
   ]
 
@@ -67,6 +67,9 @@ export function LandingServicesGrid() {
               <div>
                 <div className="h-48 w-full overflow-hidden relative">
                   <img
+                  width={960}
+                  height={640}
+                  decoding="async"
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                     alt={item.title}
                     src={item.img}
