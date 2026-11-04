@@ -13,12 +13,20 @@ import {
   CheckCircle2,
   FileCheck2,
 } from 'lucide-react'
+import type { UseFormRegister, FieldErrors } from 'react-hook-form'
 import type { MerchantProfile, StoredDocument } from '../types/merchantProfileTypes'
+
+interface ProfileFormFields {
+  fullName: string
+  email: string
+  emergencyContact: string
+  address: string
+}
 
 interface LegalInfoFormCardProps {
   profile: MerchantProfile
-  register: any
-  errors: any
+  register: UseFormRegister<ProfileFormFields>
+  errors: FieldErrors<ProfileFormFields>
   onUploadDocument: (businessLicense: string, file: File | null) => Promise<void>
   isUploadingDoc: boolean
   onPreviewDocument: (doc: StoredDocument) => void
