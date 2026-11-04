@@ -33,7 +33,7 @@ import {
   AdminAuditLogsPage,
 } from '@/features/admin'
 import { BaselineOverviewPage } from '@/app/pages/BaselineOverviewPage'
-import { DashboardHomePage } from '@/features/dashboard'
+import { DriverDashboardPage as DashboardHomePage } from '@/features/driver'
 import { SearchParkingPage } from '@/features/parking-search'
 import { ParkingDetailPage } from '@/features/parking-detail'
 const MyBookingsPage = lazy(() =>
