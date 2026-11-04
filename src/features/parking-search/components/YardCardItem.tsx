@@ -30,10 +30,21 @@ export function YardCardItem({
 
   return (
     <article
-      className={`shrink-0 rounded-2xl border bg-white p-5 sm:p-6 transition-all duration-200 ${
+      onClick={() => onSelect(lot)}
+      role="button"
+      tabIndex={0}
+      aria-pressed={isSelected}
+      aria-label={`Chọn bãi xe ${lot.name}`}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault()
+          onSelect(lot)
+        }
+      }}
+      className={`group shrink-0 rounded-2xl border p-5 sm:p-6 transition-all duration-200 cursor-pointer select-none ${
         isSelected
-          ? 'border-[#d95f00] ring-2 ring-[#d95f00]/20 shadow-md'
-          : 'border-slate-200/90 hover:border-slate-300 hover:shadow-sm'
+          ? 'border-[#d95f00] ring-2 ring-[#d95f00]/30 shadow-md bg-orange-50/15'
+          : 'border-slate-200/90 bg-white hover:border-[#d95f00]/60 hover:shadow-md hover:bg-slate-50/40'
       }`}
     >
       {/* Top Badges */}
@@ -62,20 +73,29 @@ export function YardCardItem({
 
       {/* Yard Title */}
       <h3>
-        <button
-          type="button"
-          onClick={() => onSelect(lot)}
-          aria-pressed={isSelected}
-          className="text-left font-sora text-base sm:text-lg font-bold leading-snug tracking-tight text-slate-900 hover:text-[#d95f00] transition-colors cursor-pointer"
+        <span
+          className={`font-sora text-base sm:text-lg font-bold leading-snug tracking-tight transition-colors ${
+            isSelected
+              ? 'text-[#d95f00]'
+              : 'text-slate-900 group-hover:text-[#d95f00]'
+          }`}
         >
           {lot.name}
-        </button>
+        </span>
       </h3>
 
-      <p className="mt-2 flex items-start gap-2 text-xs sm:text-sm text-slate-600 leading-relaxed">
-        <MapPin size={16} className="mt-0.5 shrink-0 text-[#d95f00]" />
-        <span>{lot.address}</span>
-      </p>
+      {/* Address */}
+      <div className="mt-2 flex items-start gap-2 text-xs sm:text-sm text-slate-600 leading-relaxed">
+        <MapPin
+          size={16}
+          className={`mt-0.5 shrink-0 transition-colors ${
+            isSelected ? 'text-[#d95f00]' : 'text-slate-400 group-hover:text-[#d95f00]'
+          }`}
+        />
+        <span className={isSelected ? 'text-slate-900 font-medium' : ''}>
+          {lot.address}
+        </span>
+      </div>
 
       {/* Distance & Best Match Chips */}
       {(lot.distanceKm > 0 || lot.isBestMatch) && (
@@ -146,11 +166,14 @@ export function YardCardItem({
       <div className="grid grid-cols-2 gap-2.5 pt-1">
         <button
           type="button"
-          onClick={() =>
-            lot.isFull || lot.availableSlots === 0
-              ? onQueue?.(lot)
-              : onQuickBook(lot)
-          }
+          onClick={(e) => {
+            e.stopPropagation()
+            if (lot.isFull || lot.availableSlots === 0) {
+              onQueue?.(lot)
+            } else {
+              onQuickBook(lot)
+            }
+          }}
           className={`inline-flex h-11 items-center justify-center gap-1.5 rounded-xl px-3 text-xs sm:text-sm font-bold transition-all shadow-xs active:scale-[0.99] cursor-pointer ${
             lot.isFull || lot.availableSlots === 0
               ? 'bg-[#131b2e] hover:bg-[#233144] text-white'
@@ -163,6 +186,7 @@ export function YardCardItem({
           <ArrowUpRight size={16} />
         </button>
         <Link
+          onClick={(e) => e.stopPropagation()}
           className="inline-flex h-11 items-center justify-center rounded-xl border border-slate-200 bg-white hover:bg-slate-50 px-3 text-xs sm:text-sm font-semibold text-slate-800 transition-colors shadow-2xs"
           to={`/parking/${lot.id}`}
         >
