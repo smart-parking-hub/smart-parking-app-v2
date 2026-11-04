@@ -7,7 +7,7 @@ export function LandingNavbar() {
   const location = useLocation()
 
   const isDriverPage =
-    location.pathname.includes('driver-solutions') || location.pathname.includes('giai-phap-tai-xe')
+    location.pathname.includes('driver-solutions') || location.pathname.includes('giai-phap-tai-xe') || location.pathname.includes('solutions/drivers')
   const isOwnerPage =
     location.pathname.includes('owner-solutions') || location.pathname.includes('giai-phap-chu-bai')
   const isPricingPage =

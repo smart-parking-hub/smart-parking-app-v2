@@ -22,10 +22,15 @@
 | 7. Bảo Chứng Khách Hàng (3 Review Đông Đô, Cường Phát, Lê Minh Hùng) | [`HomeTestimonials.tsx`](file:///d:/Documents/JAVA%20WEB%20SERVICE/SmartParkingHub/smart-parking-app-v2/src/features/landing/components/home/HomeTestimonials.tsx) | Public | **Preserved (Full Match)** |
 | 8. Final Conversion Banner ("Sẵn Sàng Số Hóa Điểm Đỗ Xe Tải") | [`HomeConversionCta.tsx`](file:///d:/Documents/JAVA%20WEB%20SERVICE/SmartParkingHub/smart-parking-app-v2/src/features/landing/components/home/HomeConversionCta.tsx) | Public | **Preserved (Full Match)** |
 | 4-Column Footer & Pháp Lý | [`LandingFooter.tsx`](file:///d:/Documents/JAVA%20WEB%20SERVICE/SmartParkingHub/smart-parking-app-v2/src/features/landing/components/common/LandingFooter.tsx) | Public | **Preserved (Full Match)** |
+| *(SCR-002 New)* Driver Lead Capture Modal (Zod + React Hook Form, 5 trạng thái) | [`DriverLeadModal.tsx`](file:///C:/D/rekkei/thuctap/smart-parking-app-v2/src/features/landing/components/driver-solutions/DriverLeadModal.tsx) | Public | **New (Form Validation + 5 States)** |
+| *(SCR-002 New)* Live Depot Preview Card (entity layer) | [`ParkingLotLivePreviewCard.tsx`](file:///C:/D/rekkei/thuctap/smart-parking-app-v2/src/entities/parking-lot/components/ParkingLotLivePreviewCard.tsx) | Static/Mock | **New (Entity Display Card)** |
+| *(SCR-002 New)* TanStack Query Hook (caching + Loading/Empty/Error/Success states) | [`useDriverDepotsQuery.ts`](file:///C:/D/rekkei/thuctap/smart-parking-app-v2/src/features/landing/hooks/useDriverDepotsQuery.ts) | Static Data | **New (useQuery + Client Caching)** |
+| *(SCR-002 New)* Shared UI Primitives (Badge, Skeleton, Button, Alert, EmptyState, Modal) | `src/shared/components/Badge.tsx`, `Skeleton.tsx`, `Button.tsx`, `Alert.tsx`, `EmptyState.tsx`, `Modal.tsx` | — | **New (Generic Shared Primitives)** |
+| *(SCR-002 New)* Landing Layout Wrapper (`/solutions/drivers` canonical route) | [`LandingLayout.tsx`](file:///C:/D/rekkei/thuctap/smart-parking-app-v2/src/layouts/LandingLayout.tsx) | — | **New (Route Layout Wrapper)** |
 
 ---
 
-## 2. Màn Hình SCR-001B: Trang Giải Pháp Tài Xế (Driver Solutions Page — Route `/driver-solutions`)
+## 2. Màn Hình SCR-002 / SCR-001B: Trang Giải Pháp Tài Xế (Driver Solutions Page — Route `/solutions/drivers` · `/driver-solutions` · `/giai-phap-tai-xe`)
 
 | Khối Giao Diện Stitch | Thành Phần React 19 (`smart-parking-app-v2`) | API / Quyền hạn | Trạng thái Parity |
 |---|---|---|---|
@@ -37,6 +42,11 @@
 | 5. Tiếng Nói Từ Cộng Đồng Bác Tài (3 Review Bác tài Bắc - Nam, Container lạnh, Hàng nặng) | [`DriverTestimonialsSection.tsx`](file:///d:/Documents/JAVA%20WEB%20SERVICE/SmartParkingHub/smart-parking-app-v2/src/features/landing/components/driver-solutions/DriverTestimonialsSection.tsx) | Public | **Preserved (Full Match)** |
 | 6. Final Driver CTA Banner ("Lái Xe An Tâm Hơn Trên Mọi Chặng Đường. Bắt Đầu Ngay Hôm Nay.") | [`DriverConversionCta.tsx`](file:///d:/Documents/JAVA%20WEB%20SERVICE/SmartParkingHub/smart-parking-app-v2/src/features/landing/components/driver-solutions/DriverConversionCta.tsx) | Public | **Preserved (Full Match)** |
 | 4-Column Footer & Pháp Lý | [`LandingFooter.tsx`](file:///d:/Documents/JAVA%20WEB%20SERVICE/SmartParkingHub/smart-parking-app-v2/src/features/landing/components/common/LandingFooter.tsx) | Public | **Preserved (Full Match)** |
+| *(SCR-002 New)* Driver Lead Capture Modal (Zod + React Hook Form, 5 trạng thái) | [`DriverLeadModal.tsx`](file:///C:/D/rekkei/thuctap/smart-parking-app-v2/src/features/landing/components/driver-solutions/DriverLeadModal.tsx) | Public | **New (Form Validation + 5 States)** |
+| *(SCR-002 New)* Live Depot Preview Card (entity layer) | [`ParkingLotLivePreviewCard.tsx`](file:///C:/D/rekkei/thuctap/smart-parking-app-v2/src/entities/parking-lot/components/ParkingLotLivePreviewCard.tsx) | Static/Mock | **New (Entity Display Card)** |
+| *(SCR-002 New)* TanStack Query Hook (caching + Loading/Empty/Error/Success states) | [`useDriverDepotsQuery.ts`](file:///C:/D/rekkei/thuctap/smart-parking-app-v2/src/features/landing/hooks/useDriverDepotsQuery.ts) | Static Data | **New (useQuery + Client Caching)** |
+| *(SCR-002 New)* Shared UI Primitives (Badge, Skeleton, Button, Alert, EmptyState, Modal) | `src/shared/components/Badge.tsx`, `Skeleton.tsx`, `Button.tsx`, `Alert.tsx`, `EmptyState.tsx`, `Modal.tsx` | — | **New (Generic Shared Primitives)** |
+| *(SCR-002 New)* Landing Layout Wrapper (`/solutions/drivers` canonical route) | [`LandingLayout.tsx`](file:///C:/D/rekkei/thuctap/smart-parking-app-v2/src/layouts/LandingLayout.tsx) | — | **New (Route Layout Wrapper)** |
 
 ---
 
@@ -54,6 +64,11 @@
 | 7. Câu Hỏi Thường Gặp Của Chủ Mặt Bằng (5 FAQ Accordion chiết khấu 5%, offline-first, quyết toán T+1, tài trợ thiết bị, đất nện/đá dăm) | [`OwnerFaqSection.tsx`](file:///d:/Documents/JAVA%20WEB%20SERVICE/SmartParkingHub/smart-parking-app-v2/src/features/landing/components/owner-solutions/OwnerFaqSection.tsx) | Public | **Preserved (Accessible)** |
 | 8. Đăng Ký Khảo Sát & Mở Bãi Hợp Tác (Form thông tin mặt bằng, diện tích, hiện trạng + phản hồi tức thì) | [`OwnerOnboardingFormSection.tsx`](file:///d:/Documents/JAVA%20WEB%20SERVICE/SmartParkingHub/smart-parking-app-v2/src/features/landing/components/owner-solutions/OwnerOnboardingFormSection.tsx) | Public | **Preserved (Interactive)** |
 | 4-Column Footer & Pháp Lý | [`LandingFooter.tsx`](file:///d:/Documents/JAVA%20WEB%20SERVICE/SmartParkingHub/smart-parking-app-v2/src/features/landing/components/common/LandingFooter.tsx) | Public | **Preserved (Full Match)** |
+| *(SCR-002 New)* Driver Lead Capture Modal (Zod + React Hook Form, 5 trạng thái) | [`DriverLeadModal.tsx`](file:///C:/D/rekkei/thuctap/smart-parking-app-v2/src/features/landing/components/driver-solutions/DriverLeadModal.tsx) | Public | **New (Form Validation + 5 States)** |
+| *(SCR-002 New)* Live Depot Preview Card (entity layer) | [`ParkingLotLivePreviewCard.tsx`](file:///C:/D/rekkei/thuctap/smart-parking-app-v2/src/entities/parking-lot/components/ParkingLotLivePreviewCard.tsx) | Static/Mock | **New (Entity Display Card)** |
+| *(SCR-002 New)* TanStack Query Hook (caching + Loading/Empty/Error/Success states) | [`useDriverDepotsQuery.ts`](file:///C:/D/rekkei/thuctap/smart-parking-app-v2/src/features/landing/hooks/useDriverDepotsQuery.ts) | Static Data | **New (useQuery + Client Caching)** |
+| *(SCR-002 New)* Shared UI Primitives (Badge, Skeleton, Button, Alert, EmptyState, Modal) | `src/shared/components/Badge.tsx`, `Skeleton.tsx`, `Button.tsx`, `Alert.tsx`, `EmptyState.tsx`, `Modal.tsx` | — | **New (Generic Shared Primitives)** |
+| *(SCR-002 New)* Landing Layout Wrapper (`/solutions/drivers` canonical route) | [`LandingLayout.tsx`](file:///C:/D/rekkei/thuctap/smart-parking-app-v2/src/layouts/LandingLayout.tsx) | — | **New (Route Layout Wrapper)** |
 
 ---
 
@@ -68,6 +83,11 @@
 | 4. Hỗ Trợ & Giải Đáp Biểu Phí (5 FAQ Accordion phí tài xế, hoàn cọc 100%, công nợ VAT, phần cứng 0đ, rút tiền 24/7) | [`PricingFaqSection.tsx`](file:///d:/Documents/JAVA%20WEB%20SERVICE/SmartParkingHub/smart-parking-app-v2/src/features/landing/components/pricing/PricingFaqSection.tsx) | Public | **Preserved (Accessible)** |
 | 5. Bottom CTA Banner ("Sẵn Sàng Tối Ưu Chi Phí Dừng Đỗ & Quản Lý Đội Xe?") | [`PricingCtaBanner.tsx`](file:///d:/Documents/JAVA%20WEB%20SERVICE/SmartParkingHub/smart-parking-app-v2/src/features/landing/components/pricing/PricingCtaBanner.tsx) | Public | **Preserved (Full Match)** |
 | 4-Column Footer & Pháp Lý | [`LandingFooter.tsx`](file:///d:/Documents/JAVA%20WEB%20SERVICE/SmartParkingHub/smart-parking-app-v2/src/features/landing/components/common/LandingFooter.tsx) | Public | **Preserved (Full Match)** |
+| *(SCR-002 New)* Driver Lead Capture Modal (Zod + React Hook Form, 5 trạng thái) | [`DriverLeadModal.tsx`](file:///C:/D/rekkei/thuctap/smart-parking-app-v2/src/features/landing/components/driver-solutions/DriverLeadModal.tsx) | Public | **New (Form Validation + 5 States)** |
+| *(SCR-002 New)* Live Depot Preview Card (entity layer) | [`ParkingLotLivePreviewCard.tsx`](file:///C:/D/rekkei/thuctap/smart-parking-app-v2/src/entities/parking-lot/components/ParkingLotLivePreviewCard.tsx) | Static/Mock | **New (Entity Display Card)** |
+| *(SCR-002 New)* TanStack Query Hook (caching + Loading/Empty/Error/Success states) | [`useDriverDepotsQuery.ts`](file:///C:/D/rekkei/thuctap/smart-parking-app-v2/src/features/landing/hooks/useDriverDepotsQuery.ts) | Static Data | **New (useQuery + Client Caching)** |
+| *(SCR-002 New)* Shared UI Primitives (Badge, Skeleton, Button, Alert, EmptyState, Modal) | `src/shared/components/Badge.tsx`, `Skeleton.tsx`, `Button.tsx`, `Alert.tsx`, `EmptyState.tsx`, `Modal.tsx` | — | **New (Generic Shared Primitives)** |
+| *(SCR-002 New)* Landing Layout Wrapper (`/solutions/drivers` canonical route) | [`LandingLayout.tsx`](file:///C:/D/rekkei/thuctap/smart-parking-app-v2/src/layouts/LandingLayout.tsx) | — | **New (Route Layout Wrapper)** |
 
 
 ---

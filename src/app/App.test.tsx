@@ -1,6 +1,7 @@
 import { fireEvent, render, screen, within } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { describe, it, expect, vi } from 'vitest'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import {
   DriverSolutionsPage,
   OwnerSolutionsPage,
@@ -64,10 +65,13 @@ describe('SmartTruckHub - 9 Distinct Landing Screens', () => {
 
   describe('Trang Giải Pháp Tài Xế (Driver Solutions Page - SCR-001B)', () => {
     it('renders driver-specific hero, pain points, workflow and interactive amenity filter', () => {
+      const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
       render(
-        <MemoryRouter initialEntries={['/driver-solutions']}>
-          <DriverSolutionsPage />
-        </MemoryRouter>,
+        <QueryClientProvider client={queryClient}>
+          <MemoryRouter initialEntries={['/driver-solutions']}>
+            <DriverSolutionsPage />
+          </MemoryRouter>
+        </QueryClientProvider>,
       )
 
       // 1. Driver Hero
