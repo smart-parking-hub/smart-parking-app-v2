@@ -22,6 +22,7 @@ import {
   MerchantParkingLotDetailPage,
   EditMerchantParkingLotPage,
 } from '@/features/merchant/parking-lots'
+import { MerchantSlotsPage } from '@/features/merchant/slots'
 import { MerchantProfilePage } from '@/features/merchant/profile'
 import {
   LandingPage,
@@ -353,6 +354,10 @@ export const router = createBrowserRouter([
       {
         path: 'parking-lots/:parkingLotId/edit',
         element: <EditMerchantParkingLotPage />,
+      },
+      {
+        path: 'parking-lots/:parkingLotId/slots',
+        element: <MerchantSlotsPage />,
       },
       {
         path: 'bookings',
