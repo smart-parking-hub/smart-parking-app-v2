@@ -111,3 +111,76 @@ export type CreateParkingLotDraft = {
   updatedAt?: string
 }
 
+export interface DetailedParkingLotSlot {
+  id: number
+  vehicleType: string
+  typeNameVi: string
+  totalCapacity: number
+  availableCapacity: number
+  occupancyPercent: number
+  dimensionNote: string
+  statusNotice: string
+  isQueueActivated?: boolean
+  tagColor?: 'orange' | 'dark' | 'blue' | 'gray'
+}
+
+export interface DetailedPricingMatrix {
+  baseHourlyRate: number
+  baseHourlyNote: string
+  peakSurgePercent: number
+  peakWindowNote: string
+  overnightRate: number
+  overnightWindowNote: string
+  depositRate: number
+  depositPolicyNote: string
+  legalNotice: string
+}
+
+export interface ActiveVehicleTelemetry {
+  id: number
+  licensePlate: string
+  slotCode: string
+  durationFormatted: string
+  isOvertime: boolean
+  overtimeNotice?: string
+  serviceName: string
+  statusLabel: string
+  statusTone: 'valid' | 'overtime' | 'operation'
+}
+
+export interface YardOperationalProfile {
+  managerName: string
+  managerPhone: string
+  managerOtpVerified: boolean
+  uhfRadioChannel: string
+  uhfNote: string
+  techHotline: string
+  techSlaNotice: string
+  gpsCoordinates: { lat: number; lng: number }
+  gpsFormatted: string
+  heightClearance: string
+  maxAxleWeightTons: number
+  mapSnapshotUrl: string
+  distanceToPort: string
+}
+
+export interface YardGalleryImage {
+  id: number
+  url: string
+  title: string
+  subtitle: string
+  isCover: boolean
+}
+
+export interface MerchantParkingLotDetailData extends MerchantParkingLotCardData {
+  alprLatencySec: number
+  alprCloudSyncStatus: string
+  slotsDetailed: DetailedParkingLotSlot[]
+  pricingMatrix: DetailedPricingMatrix
+  activeVehicles: ActiveVehicleTelemetry[]
+  operationalProfile: YardOperationalProfile
+  galleryImages: YardGalleryImage[]
+  ownershipVerified?: boolean
+}
+
+

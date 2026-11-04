@@ -19,6 +19,7 @@ import { MerchantDashboardPage } from '@/features/merchant/dashboard'
 import {
   MerchantParkingLotsPage,
   CreateMerchantParkingLotPage,
+  MerchantParkingLotDetailPage,
 } from '@/features/merchant/parking-lots'
 import { MerchantProfilePage } from '@/features/merchant/profile'
 import {
@@ -342,6 +343,10 @@ export const router = createBrowserRouter([
       {
         path: 'parking-lots/new',
         element: <CreateMerchantParkingLotPage />,
+      },
+      {
+        path: 'parking-lots/:parkingLotId',
+        element: <MerchantParkingLotDetailPage />,
       },
       {
         path: 'bookings',
