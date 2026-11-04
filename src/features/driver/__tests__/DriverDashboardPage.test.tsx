@@ -5,7 +5,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { apiClient } from '@/shared/api/client'
 import { DriverDashboardPage } from '../pages/DriverDashboardPage'
 import { DriverLayout } from '@/layouts/DriverLayout'
-import { fallbackDashboardData } from '../api/driverApi'
+import * as driverApi from '../api/driverApi'
 
 vi.mock('@/shared/api/client', () => ({
   apiClient: {
@@ -48,8 +48,8 @@ describe('SCR-014: Driver Dashboard Home (Tổng quan Tài xế)', () => {
         return Promise.resolve({
           data: {
             content: [
-              fallbackDashboardData.activeBooking!,
-              ...fallbackDashboardData.recentBookings,
+              driverApi.fallbackDashboardData.activeBooking!,
+              ...driverApi.fallbackDashboardData.recentBookings,
             ],
             totalElements: 48,
             totalPages: 3,
@@ -179,8 +179,23 @@ describe('SCR-014: Driver Dashboard Home (Tổng quan Tài xế)', () => {
     expect(screen.getByText(/Tìm Bãi Đỗ Xe & Bảng Giá \(SCR-015\)/i)).toBeInTheDocument()
   })
 
-  it('renders Error State when API returns an error and allows retrying', async () => {
-    vi.mocked(apiClient.get).mockRejectedValueOnce(new Error('Network error'))
+  it('falls back gracefully to Stitch showcase data when backend API is offline', async () => {
+    vi.mocked(apiClient.get).mockRejectedValue(new Error('Network error / connection refused'))
+
+    renderWithProviders(<DriverDashboardPage />)
+
+    await waitFor(() => {
+      expect(screen.getByText(/Xin Chào, Bác Tài Trần Quốc Tuấn/i)).toBeInTheDocument()
+    })
+
+    expect(screen.getByText(/03 Đầu Kéo/i)).toBeInTheDocument()
+    expect(screen.getByText(/48 Lượt/i)).toBeInTheDocument()
+  })
+
+  it('renders Error State and allows retrying when fetchDriverDashboardData throws', async () => {
+    vi.spyOn(driverApi, 'fetchDriverDashboardData').mockRejectedValueOnce(
+      new Error('ERR_DISPATCH_TIMEOUT'),
+    )
 
     renderWithProviders(<DriverDashboardPage />)
 

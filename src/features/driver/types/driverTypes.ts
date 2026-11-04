@@ -63,3 +63,4 @@ export interface DashboardSummaryData {
 export interface QuickSearchFormData {
   query: string
 }
+

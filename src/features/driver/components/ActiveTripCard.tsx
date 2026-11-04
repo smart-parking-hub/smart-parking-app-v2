@@ -199,3 +199,4 @@ export function ActiveTripCard({ booking, onOpenQr }: ActiveTripCardProps) {
     </section>
   )
 }
+

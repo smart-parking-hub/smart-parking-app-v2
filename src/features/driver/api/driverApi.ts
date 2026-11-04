@@ -88,61 +88,66 @@ export const fallbackDashboardData: DashboardSummaryData = {
 }
 
 export async function fetchDriverDashboardData(): Promise<DashboardSummaryData> {
-  const [vehiclesRes, bookingsRes] = await Promise.all([
-    apiClient.get<PageResponse<VehicleDto>>('/v1/vehicles', {
-      params: { page: 0, size: 10 },
-    }),
-    apiClient.get<PageResponse<BookingDto>>('/v1/bookings', {
-      params: { page: 0, size: 20 },
-    }),
-  ])
+  try {
+    const [vehiclesRes, bookingsRes] = await Promise.all([
+      apiClient.get<PageResponse<VehicleDto>>('/v1/vehicles', {
+        params: { page: 0, size: 10 },
+      }),
+      apiClient.get<PageResponse<BookingDto>>('/v1/bookings', {
+        params: { page: 0, size: 20 },
+      }),
+    ])
 
-  const vehicleTotal = vehiclesRes.data?.totalElements ?? 0
-  const bookingTotal = bookingsRes.data?.totalElements ?? 0
-  const rawBookings = bookingsRes.data?.content ?? []
+    const vehicleTotal = vehiclesRes.data?.totalElements ?? 0
+    const bookingTotal = bookingsRes.data?.totalElements ?? 0
+    const rawBookings = bookingsRes.data?.content ?? []
 
-  // If user has zero vehicles and zero bookings, trigger real empty state
-  if (vehicleTotal === 0 && bookingTotal === 0 && rawBookings.length === 0) {
-    const savedName = localStorage.getItem('smart-truck-parking.driver_name') || 'Tài xế'
-    return {
-      driverName: savedName,
-      driverPhone: '',
-      vehicleTotal: 0,
-      bookingTotal: 0,
-      activeCount: 0,
-      queueCount: 0,
-      activeBooking: undefined,
-      recentBookings: [],
-      isEmptyState: true,
+    // If user has zero vehicles and zero bookings, trigger real empty state
+    if (vehicleTotal === 0 && bookingTotal === 0 && rawBookings.length === 0) {
+      const savedName = localStorage.getItem('smart-truck-parking.driver_name') || 'Tài xế'
+      return {
+        driverName: savedName,
+        driverPhone: '',
+        vehicleTotal: 0,
+        bookingTotal: 0,
+        activeCount: 0,
+        queueCount: 0,
+        activeBooking: undefined,
+        recentBookings: [],
+        isEmptyState: true,
+      }
     }
-  }
 
-  // Filter active bookings
-  const activeBookings = rawBookings.filter((b) => ACTIVE_STATUSES.includes(b.status))
-  const activeCount = activeBookings.length
+    // Filter active bookings
+    const activeBookings = rawBookings.filter((b) => ACTIVE_STATUSES.includes(b.status))
+    const activeCount = activeBookings.length
 
-  // Priority active booking or newest booking
-  const activeBooking =
-    activeBookings[0] ||
-    [...rawBookings].sort(
-      (a, b) =>
-        new Date(b.expectedCheckInTime).getTime() - new Date(a.expectedCheckInTime).getTime(),
-    )[0]
+    // Priority active booking or newest booking
+    const activeBooking =
+      activeBookings[0] ||
+      [...rawBookings].sort(
+        (a, b) =>
+          new Date(b.expectedCheckInTime).getTime() - new Date(a.expectedCheckInTime).getTime(),
+      )[0]
 
-  // Completed or recent bookings (take top 3)
-  const recentBookings = rawBookings
-    .filter((b) => b.id !== activeBooking?.id)
-    .slice(0, 3)
+    // Completed or recent bookings (take top 3)
+    const recentBookings = rawBookings
+      .filter((b) => b.id !== activeBooking?.id)
+      .slice(0, 3)
 
-  return {
-    driverName: activeBooking?.driverName || localStorage.getItem('smart-truck-parking.driver_name') || fallbackDashboardData.driverName,
-    driverPhone: activeBooking?.driverPhone || fallbackDashboardData.driverPhone,
-    vehicleTotal,
-    bookingTotal,
-    activeCount,
-    queueCount: 0,
-    activeBooking,
-    recentBookings,
-    isEmptyState: false,
+    return {
+      driverName: activeBooking?.driverName || localStorage.getItem('smart-truck-parking.driver_name') || fallbackDashboardData.driverName,
+      driverPhone: activeBooking?.driverPhone || fallbackDashboardData.driverPhone,
+      vehicleTotal,
+      bookingTotal,
+      activeCount,
+      queueCount: 0,
+      activeBooking,
+      recentBookings,
+      isEmptyState: false,
+    }
+  } catch {
+    // Graceful fallback to Stitch showcase data when backend microservice is offline or unreachable
+    return fallbackDashboardData
   }
 }

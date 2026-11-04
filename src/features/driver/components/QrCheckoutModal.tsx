@@ -152,3 +152,4 @@ export function QrCheckoutModal({
     </div>
   )
 }
+
