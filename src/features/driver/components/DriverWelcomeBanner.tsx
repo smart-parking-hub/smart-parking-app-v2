@@ -63,7 +63,7 @@ export function DriverWelcomeBanner({
             className="w-full inline-flex items-center justify-center gap-2 h-[48px] px-5 rounded-xl bg-slate-900/80 hover:bg-slate-800/90 text-[#eaf1ff] font-semibold text-sm transition-colors border border-white/20 backdrop-blur-xs text-center"
           >
             <ListPlus className="w-4 h-4" />
-            <span>XẾP HÀNG ẢO</span>
+            <span>ĐỢI SLOT</span>
           </Link>
         </div>
       </div>

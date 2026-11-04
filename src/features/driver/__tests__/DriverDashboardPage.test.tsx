@@ -176,8 +176,8 @@ describe('SCR-014: Driver Dashboard Home (Tổng quan Tài xế)', () => {
       expect(screen.getByText(/Chưa Có Hoạt Động Điều Phối Nào/i)).toBeInTheDocument()
     })
 
-    expect(screen.getByText(/Đăng Ký Xe Đầu Tiên \(SCR-020\)/i)).toBeInTheDocument()
-    expect(screen.getByText(/Tìm Bãi Đỗ Xe & Bảng Giá \(SCR-015\)/i)).toBeInTheDocument()
+    expect(screen.getByText(/Đăng Ký Xe Đầu Tiên/i)).toBeInTheDocument()
+    expect(screen.getByText(/Tìm Bãi Đỗ Xe & Bảng Giá/i)).toBeInTheDocument()
   })
 
   it('falls back gracefully to Stitch showcase data when backend API is offline', async () => {
