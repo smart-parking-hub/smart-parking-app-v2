@@ -1,8 +1,40 @@
 import { useState } from 'react'
-import { Check, MapPin, Scale, Shield, ShowerHead, Wrench, Zap } from 'lucide-react'
+import { Scale, Shield, ShowerHead, Wrench, Zap, RefreshCw, AlertCircle } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
+import { ParkingLotLivePreviewCard } from '@/entities/parking-lot/components/ParkingLotLivePreviewCard'
+import { useDriverDepotsQuery, DEFAULT_DEPOT_TELEMETRY } from '../../hooks/useDriverDepotsQuery'
+import { Skeleton } from '@/shared/components/Skeleton'
+import { Alert } from '@/shared/components/Alert'
+import { EmptyState } from '@/shared/components/EmptyState'
+import { Button } from '@/shared/components/Button'
 
-export function LandingAmenityFilterSection() {
+export interface LandingAmenityFilterSectionProps {
+  onReserveClick?: () => void
+  simulateLoading?: boolean
+  simulateEmpty?: boolean
+  simulateError?: boolean
+}
+
+export function LandingAmenityFilterSection({
+  onReserveClick,
+  simulateLoading,
+  simulateEmpty,
+  simulateError,
+}: LandingAmenityFilterSectionProps = {}) {
   const [activeAmenityId, setActiveAmenityId] = useState('scale')
+  const navigate = useNavigate()
+
+  const {
+    data: depots,
+    isLoading,
+    isError,
+    error,
+    refetch,
+  } = useDriverDepotsQuery({
+    simulateLoading,
+    simulateEmpty,
+    simulateError,
+  })
 
   const amenities = [
     {
@@ -32,38 +64,15 @@ export function LandingAmenityFilterSection() {
     },
   ]
 
-  const facilities = [
-    {
-      title: 'Trạm cân 120T',
-      subtitle: 'Kiểm định đo lường QCVN',
-      amenityId: 'scale',
-    },
-    {
-      title: '12 Trụ Cắm Reefer 380V',
-      subtitle: 'Dành riêng container lạnh',
-      amenityId: 'reefer',
-    },
-    {
-      title: 'Khu Nhà Tắm Nóng Lạnh',
-      subtitle: 'Dọn dẹp liên tục mỗi giờ',
-      amenityId: 'shower',
-    },
-    {
-      title: 'Bảo Vệ Vũ Trang 24/7',
-      subtitle: 'Kiểm soát vé vào - ra nghiêm ngặt',
-      amenityId: 'security',
-    },
-    {
-      title: 'Đội Cứu Hộ Lốp Cơ Động',
-      subtitle: 'Vá ép, thay lốp lưu động 24h',
-      amenityId: 'rescue',
-    },
-    {
-      title: 'Quán Cơm Bác Tài',
-      subtitle: 'Bình dân, sạch sẽ, phục vụ thâu đêm',
-      amenityId: 'food',
-    },
-  ]
+  const depot = depots?.[0] || DEFAULT_DEPOT_TELEMETRY
+
+  const handleReserve = () => {
+    if (onReserveClick) {
+      onReserveClick()
+    } else {
+      navigate('/parking')
+    }
+  }
 
   return (
     <section className="w-full bg-[#060D1A] py-24 px-6 text-white" id="bo-loc-tien-ich">
@@ -103,75 +112,73 @@ export function LandingAmenityFilterSection() {
           })}
         </div>
 
-        {/* Live Inspection Card */}
-        <div className="bg-[#0F172A] border border-[#1E3A5F] rounded-lg p-6 lg:p-8 max-w-4xl mx-auto shadow-2xl">
-          <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6 pb-6 border-b border-[#1E3A5F]">
-            <div>
-              <div className="flex items-center gap-2 mb-2">
-                <span className="px-2.5 py-0.5 rounded bg-[#060D1A] border border-[#1E3A5F] text-[11px] font-inter font-semibold text-[#F97316] uppercase">
-                  XÁC THỰC BỞI SMARTTRUCKHUB
-                </span>
-                <span className="text-xs text-slate-400 font-inter">Cập nhật 3 phút trước</span>
+        {/* Dynamic UI States: Loading / Error / Empty / Normal */}
+        {isLoading ? (
+          <div className="bg-[#0F172A] border border-[#1E3A5F] rounded-lg p-6 lg:p-8 max-w-4xl mx-auto shadow-2xl space-y-6">
+            <div className="flex justify-between items-center pb-6 border-b border-[#1E3A5F]">
+              <div className="space-y-3">
+                <Skeleton className="h-5 w-44 bg-[#1E293B]" />
+                <Skeleton className="h-8 w-72 bg-[#1E293B]" />
+                <Skeleton className="h-4 w-96 bg-[#1E293B]" />
               </div>
-              <h3 className="font-sora text-xl sm:text-2xl font-bold text-white">
-                Bãi Depot ICD Cát Lái - Gate 2
-              </h3>
-              <p className="text-xs sm:text-sm text-slate-300 font-inter mt-1 flex items-center gap-2">
-                <MapPin className="h-4 w-4 text-[#F97316] shrink-0" aria-hidden="true" />
-                <span>Đường Vành Đai 2, Phường Cát Lái, TP. Thủ Đức · Cách Cổng Cảng Cát Lái 1.8km</span>
-              </p>
+              <Skeleton className="h-14 w-32 bg-[#1E293B]" />
             </div>
-            <div className="flex flex-col sm:items-end">
-              <div className="text-xs text-slate-400 font-inter uppercase">Giá niêm yết theo khối giờ</div>
-              <div className="font-sora text-2xl font-bold text-[#F97316]">
-                50.000 đ <span className="text-xs font-normal text-slate-300 font-inter">/ block 4 giờ</span>
-              </div>
-              <span className="text-[11px] text-slate-400 font-inter">Đã bao gồm VAT &amp; Phí bảo vệ</span>
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 py-6 border-b border-[#1E3A5F]">
+              {[1, 2, 3, 4, 5, 6].map((i) => (
+                <Skeleton key={i} className="h-12 w-full bg-[#1E293B]" />
+              ))}
+            </div>
+            <div className="flex justify-between items-center pt-4">
+              <Skeleton className="h-6 w-56 bg-[#1E293B]" />
+              <Skeleton className="h-10 w-48 bg-[#1E293B]" />
             </div>
           </div>
-
-          {/* Facility Checklist Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 py-6 border-b border-[#1E3A5F]">
-            {facilities.map((fac) => {
-              const isHighlighted = activeAmenityId === fac.amenityId
-              return (
-                <div
-                  key={fac.title}
-                  className={`flex items-center gap-3 p-2 rounded transition-colors ${
-                    isHighlighted ? 'bg-[#1E293B]/70 ring-1 ring-[#F97316]' : ''
-                  }`}
+        ) : isError ? (
+          <div className="max-w-4xl mx-auto">
+            <Alert
+              variant="error"
+              title="Không thể tải dữ liệu bãi đỗ thực địa"
+              className="bg-[#1E1B2E] border-rose-900 text-rose-200"
+              action={
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => refetch()}
+                  className="text-rose-200 border-rose-700 hover:bg-rose-900/40"
                 >
-                  <div className="w-8 h-8 rounded bg-[#060D1A] border border-[#1E3A5F] flex items-center justify-center text-[#F97316] shrink-0">
-                    <Check className="h-[18px] w-[18px]" aria-hidden="true" />
-                  </div>
-                  <div className="text-xs font-inter text-slate-200">
-                    <span className="font-semibold block text-white">{fac.title}</span>
-                    {fac.subtitle}
-                  </div>
-                </div>
-              )
-            })}
-          </div>
-
-          {/* Footer Action of Card */}
-          <div className="pt-6 flex flex-col sm:flex-row items-center justify-between gap-4">
-            <div className="flex items-center gap-3 text-xs font-inter text-slate-300">
-              <span className="flex h-3 w-3 relative">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#F97316] opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-3 w-3 bg-[#F97316]"></span>
-              </span>
-              <span>
-                Còn trống <strong className="text-white">8 ô đỗ container 40ft</strong> trong 45 phút tới
-              </span>
-            </div>
-            <button
-              type="button"
-              className="w-full sm:w-auto bg-[#F97316] hover:bg-[#EA580C] text-white font-inter font-semibold text-xs sm:text-sm px-6 py-3 rounded transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+                  <RefreshCw className="h-3.5 w-3.5 mr-1" aria-hidden="true" />
+                  Thử lại
+                </Button>
+              }
             >
-              ĐẶT GIỮ CHỖ NGAY TẠI BÃI NÀY
-            </button>
+              {error instanceof Error ? error.message : 'Lỗi kết nối telemetry trạm đỗ container.'}
+            </Alert>
           </div>
-        </div>
+        ) : depots && depots.length === 0 ? (
+          <div className="max-w-4xl mx-auto bg-[#0F172A] border border-[#1E3A5F] rounded-lg p-8">
+            <EmptyState
+              icon={AlertCircle}
+              title="Chưa có bãi đỗ nào khớp với tiện ích đã chọn"
+              description="Hiện tại các bãi đỗ có tiện ích này đang kín chỗ. Bác tài vui lòng chọn tiện ích khác hoặc chuyển sang chế độ bản đồ tìm kiếm."
+              className="bg-transparent border-0 text-white"
+              action={
+                <Button
+                  variant="primary"
+                  size="md"
+                  onClick={() => setActiveAmenityId('scale')}
+                >
+                  Đặt Lại Bộ Lọc Mặc Định
+                </Button>
+              }
+            />
+          </div>
+        ) : (
+          <ParkingLotLivePreviewCard
+            telemetry={depot}
+            activeAmenityId={activeAmenityId}
+            onReserveClick={handleReserve}
+          />
+        )}
       </div>
     </section>
   )

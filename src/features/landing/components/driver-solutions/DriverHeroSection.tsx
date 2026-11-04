@@ -1,6 +1,11 @@
 import { ArrowRight, ChevronRight, Radio, Scale, Smartphone, Star, Truck } from 'lucide-react'
+import { Link } from 'react-router-dom'
 
-export function DriverHeroSection() {
+export interface DriverHeroSectionProps {
+  onOpenLeadModal?: () => void
+}
+
+export function DriverHeroSection({ onOpenLeadModal }: DriverHeroSectionProps = {}) {
   const heroImage =
     'https://lh3.googleusercontent.com/aida-public/AB6AXuAdYXM3b3nMajbShu6J7fGL8GbD3MnP2lxAnGRszRicvkBL-9DGEB3gaiP5EaH3L7RlpsHS-p1zKrvNfh5HL8-F446b6DJ6m0v9_RmtTaKIjsBNT_aCrTiOt94MFAB3aZiEdIjPk7verEs3lvLS6fCf8hv3ZiH9Wrq0MaEA1tOVlbZN7mb7YnUQyHtyNojQ2b149A-xHjBkeK5BFLnJNkrsGqADyYYdfkgagQCGChVI'
 
@@ -14,7 +19,7 @@ export function DriverHeroSection() {
   ]
 
   return (
-    <section className="w-full bg-[#060D1A] text-white pt-12 pb-20 px-6">
+    <section className="w-full bg-[#060D1A] text-white pt-12 pb-20 px-6" id="driver-hero">
       <div className="max-w-[1240px] mx-auto">
         {/* Breadcrumb / Eyebrow pill */}
         <div className="flex items-center gap-3 mb-6">
@@ -38,22 +43,33 @@ export function DriverHeroSection() {
               Chấm dứt việc chạy lòng vòng tìm chỗ đỗ sau giờ cấm tải hoặc chờ giờ vào cảng. Đặt trước ô đỗ container, kiểm tra tiện ích trạm dừng và quét mã QR mở barie tự động chỉ trong 30 giây.
             </p>
 
-            {/* Dual CTAs */}
+            {/* Dual CTAs (Linked to SCR-015 Parking Search & Lead Registration) */}
             <div className="flex flex-wrap items-center gap-4 mb-8 w-full sm:w-auto">
-              <a
+              <Link
+                to="/parking"
                 className="inline-flex items-center justify-center gap-2 bg-[#F97316] hover:bg-[#EA580C] text-white font-inter font-semibold text-sm px-7 py-3.5 rounded transition-all shadow-md group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#F97316]"
-                href="#tim-bai-ngay"
               >
                 <span>TÌM BÃI ĐỖ GẦN NHẤT</span>
                 <ArrowRight className="h-[18px] w-[18px] transition-transform group-hover:translate-x-1" aria-hidden="true" />
-              </a>
-              <a
-                className="inline-flex items-center justify-center gap-2 bg-[#0F172A] hover:bg-[#1E293B] text-slate-200 border border-[#1E3A5F] font-inter font-semibold text-sm px-6 py-3.5 rounded transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400"
-                href="#tai-app"
-              >
-                <Smartphone className="h-[18px] w-[18px]" aria-hidden="true" />
-                <span>TẢI ỨNG DỤNG BÁC TÀI</span>
-              </a>
+              </Link>
+              {onOpenLeadModal ? (
+                <button
+                  type="button"
+                  onClick={onOpenLeadModal}
+                  className="inline-flex items-center justify-center gap-2 bg-[#0F172A] hover:bg-[#1E293B] text-slate-200 border border-[#1E3A5F] font-inter font-semibold text-sm px-6 py-3.5 rounded transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 cursor-pointer"
+                >
+                  <Smartphone className="h-[18px] w-[18px]" aria-hidden="true" />
+                  <span>TẢI ỨNG DỤNG BÁC TÀI</span>
+                </button>
+              ) : (
+                <a
+                  className="inline-flex items-center justify-center gap-2 bg-[#0F172A] hover:bg-[#1E293B] text-slate-200 border border-[#1E3A5F] font-inter font-semibold text-sm px-6 py-3.5 rounded transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400"
+                  href="#tai-app"
+                >
+                  <Smartphone className="h-[18px] w-[18px]" aria-hidden="true" />
+                  <span>TẢI ỨNG DỤNG BÁC TÀI</span>
+                </a>
+              )}
             </div>
 
             {/* Rating & Driver Count */}
@@ -125,10 +141,24 @@ export function DriverHeroSection() {
               {/* Quick Action in Card */}
               <div className="mt-4 pt-3 border-t border-[#1E3A5F] flex items-center justify-between text-xs font-inter">
                 <span className="text-slate-400">Cổng vào: Xa lộ Hà Nội rẽ Nguyễn Thị Định</span>
-                <a className="text-[#F97316] hover:text-[#EA580C] font-semibold flex items-center gap-1 focus-visible:outline-none focus-visible:underline" href="#dat-cho">
-                  <span>Khóa chỗ ngay</span>
-                  <ChevronRight className="h-3.5 w-3.5" aria-hidden="true" />
-                </a>
+                {onOpenLeadModal ? (
+                  <button
+                    type="button"
+                    onClick={onOpenLeadModal}
+                    className="text-[#F97316] hover:text-[#EA580C] font-semibold flex items-center gap-1 focus-visible:outline-none focus-visible:underline cursor-pointer"
+                  >
+                    <span>Khóa chỗ ngay</span>
+                    <ChevronRight className="h-3.5 w-3.5" aria-hidden="true" />
+                  </button>
+                ) : (
+                  <Link
+                    to="/parking"
+                    className="text-[#F97316] hover:text-[#EA580C] font-semibold flex items-center gap-1 focus-visible:outline-none focus-visible:underline"
+                  >
+                    <span>Khóa chỗ ngay</span>
+                    <ChevronRight className="h-3.5 w-3.5" aria-hidden="true" />
+                  </Link>
+                )}
               </div>
             </div>
           </div>

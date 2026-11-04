@@ -507,6 +507,10 @@ export const router = createBrowserRouter([
     ],
   },
   {
+    path: '/solutions/drivers',
+    element: <DriverSolutionsPage withLayout={true} />,
+  },
+  {
     path: '/driver-solutions',
     element: <DriverSolutionsPage />,
   },
