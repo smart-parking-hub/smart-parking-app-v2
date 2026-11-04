@@ -15,6 +15,7 @@ const MerchantLayout = lazy(() =>
 const AdminLayout = lazy(() =>
   import('@/layouts/AdminLayout').then((module) => ({ default: module.AdminLayout })),
 )
+const LoginPage = lazy(() => import('@/features/auth/pages/LoginPage').then((module) => ({ default: module.LoginPage })))
 const AuthPage = lazy(() =>
   import('@/features/auth').then((module) => ({ default: module.AuthPage })),
 )
@@ -222,7 +223,7 @@ export const router = createBrowserRouter([
         },
       ]
     : []),
-  { path: '/login', element: <AuthPage key="login" mode="login" /> },
+  { path: '/login', element: <LoginPage /> },
   { path: '/register', element: <AuthPage key="register" mode="register" /> },
   {
     path: '/forgot-password',
@@ -505,10 +506,6 @@ export const router = createBrowserRouter([
         element: <ParkingDetailPage />,
       },
     ],
-  },
-  {
-    path: '/solutions/drivers',
-    element: <DriverSolutionsPage withLayout={true} />,
   },
   {
     path: '/driver-solutions',

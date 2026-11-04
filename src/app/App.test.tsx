@@ -18,9 +18,10 @@ describe('SmartTruckHub - 9 Distinct Landing Screens', () => {
   describe('Trang Chủ (Home Landing Page - SCR-001)', () => {
     it('renders home hero and all 8 main sections successfully', async () => {
       render(<App />)
+      await screen.findByRole('heading', { name: /Sự Kết Tinh Giữa Công Nghệ Và Bãi Đỗ Xe Tải/i })
 
       // 1. Brand Logo
-      expect((await screen.findAllByText(/SMART/i)).length).toBeGreaterThan(0)
+      expect(screen.getAllByText(/SMART/i).length).toBeGreaterThan(0)
       expect(screen.getAllByText(/TRUCK/i).length).toBeGreaterThan(0)
 
       // 2. Home Hero Headline

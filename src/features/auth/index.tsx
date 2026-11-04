@@ -1,7 +1,8 @@
-import { useEffect, useState, type ReactNode } from 'react'
-import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom'
+import { LoginPage } from './pages/LoginPage'
+import { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
-import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { useMutation } from '@tanstack/react-query'
 import { ArrowUpRight, Check, ShieldCheck, Truck } from 'lucide-react'
 import { errorMessage, sendData } from '@/shared/api/resources'
 import {
@@ -11,52 +12,12 @@ import {
   Notice,
   secondary,
 } from '@/shared/components/Workspace'
-export type Role = 'DRIVER' | 'MERCHANT' | 'ADMIN'
-export const roleHome = (role: Role) =>
-  role === 'ADMIN'
-    ? '/admin/dashboard'
-    : role === 'MERCHANT'
-      ? '/merchant/dashboard'
-      : '/dashboard'
-export function sessionRole(): Role | null {
-  const token = localStorage.getItem('access_token')
-  if (!token) return null
-  try {
-    const encoded = token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')
-    const payload = JSON.parse(atob(encoded)) as {
-      role?: string
-      roles?: string[]
-      exp?: number
-    }
-    if (!payload.exp || payload.exp * 1000 <= Date.now()) return null
-    const role = (payload.role || payload.roles?.[0] || '').replace(
-      /^ROLE_/,
-      '',
-    )
-    return role === 'ADMIN' || role === 'MERCHANT' || role === 'DRIVER'
-      ? role
-      : null
-  } catch {
-    return null
-  }
-}
-export function RequireRole({
-  role,
-  children,
-}: {
-  role: Role
-  children: ReactNode
-}) {
-  const location = useLocation()
-  const actual = sessionRole()
-  if (!actual)
-    return (
-      <Navigate
-        replace
-        to={`/login?next=${encodeURIComponent(location.pathname + location.search)}`}
-      />
-    )
-  return actual === role ? <>{children}</> : <Navigate replace to="/403" />
+export { roleHome, sessionRole, clearSession } from './model/session'
+export type { Role } from './model/session'
+export { RequireRole } from './components/RequireRole'
+export { LoginPage } from './pages/LoginPage'
+export function AuthPage({ mode }: { mode: 'login' | 'register' | 'forgot' }) {
+  return mode === 'login' ? <LoginPage /> : <LegacyAuthPage mode={mode} />
 }
 interface AuthFields {
   phone: string
@@ -68,10 +29,7 @@ interface AuthFields {
   newPassword: string
   role: 'DRIVER' | 'MERCHANT'
 }
-export function AuthPage({ mode }: { mode: 'login' | 'register' | 'forgot' }) {
-  const navigate = useNavigate()
-  const location = useLocation()
-  const cache = useQueryClient()
+function LegacyAuthPage({ mode }: { mode: 'login' | 'register' | 'forgot' }) {
   const form = useForm<AuthFields>({ defaultValues: { role: 'DRIVER' } })
   const [sent, setSent] = useState(false)
   const [countdown, setCountdown] = useState(0)
@@ -104,23 +62,6 @@ export function AuthPage({ mode }: { mode: 'login' | 'register' | 'forgot' }) {
   })
   const submit = useMutation({
     mutationFn: async (data: AuthFields) => {
-      if (mode === 'login') {
-        const result = await sendData<{ token: string; role: Role }>(
-          'post',
-          '/api/v1/auth/login',
-          { phone: data.phone, password: data.password },
-        )
-        localStorage.setItem('access_token', result.token)
-        cache.clear()
-        const next = new URLSearchParams(location.search).get('next')
-        navigate(
-          next?.startsWith('/') && !next.startsWith('//')
-            ? next
-            : roleHome(result.role),
-          { replace: true },
-        )
-        return
-      }
       if (mode === 'register')
         await sendData('post', '/api/v1/auth/register', {
           phone: data.phone,
@@ -148,6 +89,8 @@ export function AuthPage({ mode }: { mode: 'login' | 'register' | 'forgot' }) {
     <Field label={label}>
       <input
         className={control}
+        disabled={submit.isPending}
+        aria-invalid={Boolean(form.formState.errors[name])}
         type={type}
         autoComplete={
           name === 'password'
@@ -164,7 +107,7 @@ export function AuthPage({ mode }: { mode: 'login' | 'register' | 'forgot' }) {
                     ? 'email'
                     : 'off'
         }
-        {...form.register(name, { required: true, ...options })}
+        {...form.register(name, { required: true, ...options, ...(name === 'phone' ? { setValueAs: (value: string) => value.replace(/\s/g, '') } : {}) })}
       />
       {form.formState.errors[name] && (
         <span role="alert" className="text-xs text-red-700">
@@ -272,7 +215,9 @@ export function AuthPage({ mode }: { mode: 'login' | 'register' | 'forgot' }) {
               )}
               {otp.isError && <Notice error>{errorMessage(otp.error)}</Notice>}
               {submit.isError && (
-                <Notice error>{errorMessage(submit.error)}</Notice>
+                <Notice error>
+                  {errorMessage(submit.error)}
+                </Notice>
               )}
               <button
                 disabled={submit.isPending}

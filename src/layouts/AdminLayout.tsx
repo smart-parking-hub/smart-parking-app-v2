@@ -1,3 +1,4 @@
+import { clearSession } from '@/features/auth'
 import { useState } from 'react'
 import { NavLink, Outlet, useNavigate } from 'react-router-dom'
 import { useQueryClient } from '@tanstack/react-query'
@@ -34,7 +35,7 @@ export function AdminLayout() {
         <button
           className={button}
           onClick={() => {
-            localStorage.removeItem('access_token')
+            clearSession()
             localStorage.removeItem('smart-truck-parking.auth')
             cache.clear()
             navigate('/login')
