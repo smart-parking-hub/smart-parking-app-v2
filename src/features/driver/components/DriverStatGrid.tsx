@@ -90,37 +90,37 @@ export function DriverStatGrid({
         </Link>
 
         {/* Card 3: HIGHLIGHTED HERO (Active Spot) */}
-        <div className="relative overflow-hidden flex flex-col justify-between p-6 bg-[#131b2e] text-white rounded-2xl shadow-lg border border-[#233144]">
-          <div className="absolute top-0 right-0 w-24 h-24 bg-[#d95f00]/15 rounded-full blur-2xl" />
-          <div className="flex items-center justify-between mb-2 relative z-10">
-            <div className="flex items-center gap-2">
-              <span className="w-2.5 h-2.5 rounded-full bg-[#d95f00] animate-pulse" />
-              <span className="text-xs uppercase text-[#ffdbca] tracking-wider font-semibold">
-                ĐANG SỬ DỤNG
-              </span>
-            </div>
-            <Clock className="w-5 h-5 text-[#d95f00]" />
+        <div className="group flex flex-col justify-between p-6 bg-white rounded-2xl border border-orange-200/90 shadow-sm hover:shadow-md transition-all">
+          <div className="flex items-center justify-between mb-4">
+            <span className="w-10 h-10 rounded-xl bg-orange-50 flex items-center justify-center text-[#d95f00]">
+              <Clock className="w-5 h-5 text-[#d95f00]" />
+            </span>
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-orange-50 text-[#b85000] text-xs font-semibold border border-orange-200/50">
+              <span className="w-2 h-2 rounded-full bg-[#d95f00] animate-pulse" />
+              ĐANG SỬ DỤNG
+            </span>
           </div>
-          <div className="relative z-10 my-1">
-            <span className="block font-sora text-xl lg:text-2xl font-bold text-white tracking-tight">
+          <div>
+            <span className="block font-sora text-2xl lg:text-3xl font-bold text-[#0d1c2e] tracking-tight">
               {formattedActive} Chuyến Đang Đỗ
             </span>
-            <p className="text-xs text-[#bec6e0] mt-1">
-              {yardName} · Slot{' '}
-              <span className="font-mono font-bold text-[#ffb690]">{berthDisplay}</span>
+            <p className="text-xs text-slate-600 mt-1 font-medium">
+              {yardName} · Slot <span className="font-mono font-bold text-[#d95f00]">{berthDisplay}</span>
             </p>
-            <p className="font-mono text-[#7c839b] text-[11px] mt-0.5">
+            <p className="font-mono text-slate-400 text-[11px] mt-0.5">
               Thời hạn ra bãi trước 22:00
             </p>
           </div>
-          <button
-            type="button"
-            onClick={onOpenQr}
-            className="relative z-10 mt-3 w-full py-2.5 px-3 rounded-xl bg-[#d95f00] hover:bg-[#b85000] text-white font-semibold text-xs flex items-center justify-center gap-1.5 transition-colors shadow-md cursor-pointer"
-          >
-            <span>MỞ VÉ QR CHECK-OUT</span>
-            <QrCode className="w-4 h-4" />
-          </button>
+          <div className="mt-5 pt-3 border-t border-slate-100">
+            <button
+              type="button"
+              onClick={onOpenQr}
+              className="w-full py-2.5 px-3 rounded-xl bg-[#d95f00] hover:bg-[#b85000] text-white font-semibold text-xs flex items-center justify-center gap-1.5 transition-colors shadow-sm cursor-pointer active:scale-[0.99]"
+            >
+              <QrCode className="w-4 h-4" />
+              <span>MỞ VÉ QR CHECK-OUT</span>
+            </button>
+          </div>
         </div>
 
         {/* Card 4: Virtual Queue (SCR-018) */}
@@ -140,10 +140,10 @@ export function DriverStatGrid({
             <span className="block font-sora text-2xl lg:text-3xl font-bold text-[#0d1c2e] tracking-tight group-hover:text-[#d95f00] transition-colors">
               {formattedQueue} Suất Chờ
             </span>
-            <p className="text-xs text-[#45464d] mt-1">Sẵn sàng nhận chỗ ưu tiên các bãi cảng</p>
+            <p className="text-xs text-[#45464d] mt-1">Hàng đợi điều phối tự động cảng biển</p>
           </div>
           <div className="mt-5 pt-3 border-t border-slate-100 flex items-center justify-between text-xs font-semibold text-[#455f87]">
-            <span>Đăng ký hàng đợi</span>
+            <span>Hàng đợi của tôi</span>
             <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
           </div>
         </Link>
@@ -151,4 +151,3 @@ export function DriverStatGrid({
     </section>
   )
 }
-

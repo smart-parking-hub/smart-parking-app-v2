@@ -3,15 +3,14 @@ import { ArrowRight, ListPlus, Activity } from 'lucide-react'
 
 interface DriverWelcomeBannerProps {
   driverName: string
-  driverPhone: string
+  driverPhone?: string
 }
 
 export function DriverWelcomeBanner({
   driverName,
-  driverPhone,
 }: DriverWelcomeBannerProps) {
   return (
-    <section className="relative w-full bg-[#131b2e] text-white rounded-2xl overflow-hidden shadow-xl mb-6 p-6 lg:p-9 border border-[#233144]">
+    <section className="relative w-full bg-[#131b2e] text-white rounded-2xl overflow-hidden shadow-xl mb-6 p-6 lg:p-8 border border-[#233144]">
       {/* Background gradients */}
       <div className="absolute inset-0 bg-gradient-to-r from-[#131b2e] via-[#233144] to-[#131b2e] opacity-95" />
       <div className="absolute -right-16 -bottom-16 w-80 h-80 rounded-full bg-[#d95f00]/10 blur-3xl pointer-events-none" />
@@ -32,12 +31,8 @@ export function DriverWelcomeBanner({
 
           {/* Heading */}
           <h1 className="font-sora text-2xl lg:text-3xl text-white tracking-tight font-bold mb-2">
-            Xin Chào, Bác Tài {driverName}{' '}
-            {driverPhone ? (
-              <span className="font-mono text-base lg:text-lg text-[#bec6e0] font-normal">
-                ({driverPhone})
-              </span>
-            ) : null}
+            <span className="block text-white/90">Xin Chào,</span>
+            <span className="block mt-1">Bác Tài {driverName}</span>
           </h1>
 
           <p className="text-sm lg:text-base text-[#bec6e0] leading-relaxed">
@@ -46,18 +41,18 @@ export function DriverWelcomeBanner({
           </p>
         </div>
 
-        {/* CTA Actions */}
-        <div className="flex flex-wrap sm:flex-nowrap items-center gap-3 shrink-0">
+        {/* CTA Actions: Vertically stacked and equal size */}
+        <div className="flex flex-col gap-3 shrink-0 w-full sm:w-[240px]">
           <Link
             to="/parking"
-            className="inline-flex items-center justify-center gap-2 h-[52px] px-6 rounded-xl bg-[#d95f00] hover:bg-[#b85000] text-white font-semibold text-sm transition-all active:scale-[0.99] shadow-lg shadow-[#d95f00]/25 cursor-pointer"
+            className="w-full inline-flex items-center justify-center gap-2 h-[48px] px-5 rounded-xl bg-[#d95f00] hover:bg-[#b85000] text-white font-semibold text-sm transition-all active:scale-[0.99] shadow-lg shadow-[#d95f00]/25 cursor-pointer text-center"
           >
             <span>TÌM BÃI ĐỖ GẦN NHẤT</span>
             <ArrowRight className="w-4 h-4" />
           </Link>
           <Link
             to="/queues"
-            className="inline-flex items-center justify-center gap-2 h-[52px] px-6 rounded-xl bg-[#233144] hover:bg-[#2d3e56] text-[#eaf1ff] font-semibold text-sm transition-colors border border-white/10"
+            className="w-full inline-flex items-center justify-center gap-2 h-[48px] px-5 rounded-xl bg-[#233144] hover:bg-[#2d3e56] text-[#eaf1ff] font-semibold text-sm transition-colors border border-white/10 text-center"
           >
             <ListPlus className="w-4 h-4" />
             <span>XẾP HÀNG ẢO</span>
@@ -67,4 +62,3 @@ export function DriverWelcomeBanner({
     </section>
   )
 }
-

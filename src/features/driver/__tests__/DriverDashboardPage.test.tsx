@@ -67,7 +67,8 @@ describe('SCR-014: Driver Dashboard Home (Tổng quan Tài xế)', () => {
 
     // 1. Welcome banner greeting
     await waitFor(() => {
-      expect(screen.getByText(/Xin Chào, Bác Tài/i)).toBeInTheDocument()
+      expect(screen.getByText(/Xin Chào,/i)).toBeInTheDocument()
+      expect(screen.getByText(/Bác Tài/i)).toBeInTheDocument()
     })
     expect(
       screen.getByText(/HẠ TẦNG ĐIỀU PHỐI ĐIỂM ĐỖ THÔNG MINH/i),
@@ -185,7 +186,8 @@ describe('SCR-014: Driver Dashboard Home (Tổng quan Tài xế)', () => {
     renderWithProviders(<DriverDashboardPage />)
 
     await waitFor(() => {
-      expect(screen.getByText(/Xin Chào, Bác Tài Trần Quốc Tuấn/i)).toBeInTheDocument()
+      expect(screen.getByText(/Xin Chào,/i)).toBeInTheDocument()
+      expect(screen.getByText(/Bác Tài Trần Quốc Tuấn/i)).toBeInTheDocument()
     })
 
     expect(screen.getByText(/03 Đầu Kéo/i)).toBeInTheDocument()
