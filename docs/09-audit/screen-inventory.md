@@ -1,5 +1,7 @@
 # Screen Inventory — Smart Parking CRM Hub v2
 
+> Cập nhật 2026-11-04: 29 màn hình SCR còn thiếu (SCR-009–013 và SCR-030–053), 2 màn hình khiếu nại Driver, AI Copilot và trang 404 đã được bổ sung. Danh mục route, trạng thái tích hợp và giới hạn xác minh: [FE completion report](./fe-completion-report.md). Trạng thái mới là UI_IMPLEMENTED / API_WIRED / LIVE_BACKEND_ACCEPTANCE_PENDING; chưa thay thế nghiệm thu backend production.
+
 | Screen ID | Tên Màn Hình                                        | Route                                     | Module                   | Nguồn Giao Diện                  | Trạng Thái      | Review Gate         |
 | --------- | --------------------------------------------------- | ----------------------------------------- | ------------------------ | -------------------------------- | --------------- | ------------------- |
 | `SCR-001` | Public Landing Page (Trang Chủ SmartTruckHub)       | `/`                                       | `features/landing`       | Stitch HTML/CSS (`web_standard`) | **IMPLEMENTED** | Đã nghiệm thu       |

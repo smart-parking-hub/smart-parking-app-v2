@@ -16,8 +16,6 @@ import {
 import type { UseFormRegister, FieldErrors } from 'react-hook-form'
 import type { MerchantProfile, StoredDocument, ProfileFormData } from '../types/merchantProfileTypes'
 
-
-
 interface LegalInfoFormCardProps {
   profile: MerchantProfile
   register: UseFormRegister<ProfileFormData>

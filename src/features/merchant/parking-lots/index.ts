@@ -4,4 +4,3 @@ export { MerchantParkingLotDetailPage } from './pages/MerchantParkingLotDetailPa
 export { EditMerchantParkingLotPage } from './pages/EditMerchantParkingLotPage'
 export * from './types/merchantParkingLotTypes'
 export * from './api/merchantParkingLotApi'
-

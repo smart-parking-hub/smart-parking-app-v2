@@ -1,5 +1,7 @@
 # Smart Parking Hub — Modern CRM Frontend v2
 
+> Cập nhật giao diện 2026-11-04: bổ sung 29 màn hình còn thiếu, khiếu nại Driver và AI Copilot. Xem [báo cáo triển khai và giới hạn xác minh](docs/09-audit/fe-completion-report.md). Khi chạy development, mở `/design-preview/merchant/qr-scanner` và dùng dropdown để xem toàn bộ giao diện bổ sung với dữ liệu minh họa, chỉ đọc.
+
 > **Phiên bản:** `v0.1.0`  
 > **Tech Stack:** React 19 • TypeScript (Strict) • Vite • Tailwind CSS v4 • TanStack Query v5 • Redux Toolkit  
 > **Trạng thái:** **Parallel Migration** (Phát triển song song & độc lập với `smart-parking-app` cho đến khi nghiệm thu từng phân hệ)  

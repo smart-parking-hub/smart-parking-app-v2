@@ -102,63 +102,63 @@ export const fallbackParkingLots: ParkingLotItem[] = [
   },
 ]
 
-export async function fetchParkingLots(filters: SearchFilterState): Promise<ParkingLotItem[]> {
-  try {
-    const response = await apiClient.get('/v1/parking-lots/search', {
-      params: {
-        vehicleType: filters.vehicleType,
-        radiusKm: filters.radiusKm,
-        keyword: filters.keyword || undefined,
-        sortBy: filters.sortBy,
-        showFullLots: filters.includeFull,
-      },
-    })
-
-    const rawData = response.data?.content || response.data?.data?.content || []
-    if (Array.isArray(rawData) && rawData.length > 0) {
-      return rawData.map((item: ParkingLotItem) => ({
-        id: item.id,
-        name: item.name,
-        address: item.address,
-        distanceKm: item.distanceKm || 2.5,
-        etaMinutes: item.etaMinutes || 8,
-        availableSlots: item.availableSlots || 10,
-        totalSlots: item.totalSlots || 50,
-        slotTypeLabel: item.slotTypeLabel || `Còn ${item.availableSlots || 10} chỗ`,
-        hourlyRate: item.hourlyRate || 40000,
-        depositAmount: item.depositAmount || 100000,
-        isBestMatch: item.isBestMatch,
-        maxVehicleLength: item.maxVehicleLength,
-        isFull: item.isFull,
-        queueActive: item.queueActive,
-        queueWaitingCount: item.queueWaitingCount,
-        queueEtaMinutes: item.queueEtaMinutes,
-        amenities: item.amenities || ['Camera AI', 'Bảo vệ 24/7'],
-        latitude: item.latitude || 10.7681,
-        longitude: item.longitude || 106.7942,
-        ratingAverage: item.ratingAverage || 4.7,
-      }))
-    }
-    return filterMockData(filters)
-  } catch {
-    return filterMockData(filters)
+export async function fetchParkingLots(
+  filters: SearchFilterState,
+): Promise<ParkingLotItem[]> {
+  type SearchLotDto = Partial<ParkingLotItem> & {
+    id: number
+    name: string
+    address: string
+    availableCapacity?: number
+    basePricePerHour?: number
+    averageRating?: number
   }
-}
-
-function filterMockData(filters: SearchFilterState): ParkingLotItem[] {
-  return fallbackParkingLots.filter((lot) => {
-    if (!filters.includeFull && lot.isFull) {
-      return false
-    }
-    if (filters.radiusKm && lot.distanceKm > filters.radiusKm) {
-      return false
-    }
-    if (filters.keyword.trim()) {
-      const q = filters.keyword.toLowerCase()
-      const match =
-        lot.name.toLowerCase().includes(q) || lot.address.toLowerCase().includes(q)
-      if (!match) return false
-    }
-    return true
+  const response = await apiClient.get<{
+    data?: { content: SearchLotDto[] }
+    content?: SearchLotDto[]
+  }>('/api/v1/parking-lots/search', {
+    params: {
+      vehicleType: filters.vehicleType,
+      radiusKm: filters.radiusKm,
+      latitude: filters.latitude,
+      longitude: filters.longitude,
+      includeFull: filters.includeFull,
+      size: 100,
+      sort: filters.sortBy === 'rating' ? 'ratingAverage,desc' : 'id,asc',
+    },
   })
+  const rawData = response.data.data?.content ?? response.data.content ?? []
+  const mapped = rawData.map((item): ParkingLotItem => ({
+    id: item.id,
+    name: item.name,
+    address: item.address,
+    distanceKm: item.distanceKm ?? 0,
+    etaMinutes: item.etaMinutes ?? 0,
+    availableSlots: item.availableCapacity ?? item.availableSlots ?? 0,
+    totalSlots: item.totalSlots ?? 0,
+    slotTypeLabel:
+      item.slotTypeLabel ??
+      `Còn ${item.availableCapacity ?? item.availableSlots ?? 0} chỗ`,
+    hourlyRate: item.basePricePerHour ?? item.hourlyRate ?? 0,
+    depositAmount: item.depositAmount ?? 0,
+    isBestMatch: item.isBestMatch,
+    maxVehicleLength: item.maxVehicleLength,
+    isFull: (item.availableCapacity ?? item.availableSlots ?? 0) === 0,
+    queueActive: item.queueActive,
+    queueWaitingCount: item.queueWaitingCount,
+    queueEtaMinutes: item.queueEtaMinutes,
+    amenities: item.amenities ?? [],
+    latitude: item.latitude ?? NaN,
+    longitude: item.longitude ?? NaN,
+    ratingAverage: item.averageRating ?? item.ratingAverage ?? 0,
+  }))
+  return mapped
+    .filter((lot) => filters.includeFull || !lot.isFull)
+    .sort((a, b) =>
+      filters.sortBy === 'price'
+        ? a.hourlyRate - b.hourlyRate
+        : filters.sortBy === 'rating'
+          ? b.ratingAverage - a.ratingAverage
+          : a.distanceKm - b.distanceKm,
+    )
 }

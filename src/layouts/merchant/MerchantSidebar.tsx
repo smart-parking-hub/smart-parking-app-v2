@@ -36,6 +36,7 @@ const NAV_ITEMS: NavItem[] = [
   { to: '/merchant/withdrawals', label: 'Ví & Rút tiền', icon: Wallet },
   { to: '/merchant/disputes', label: 'Xử lý khiếu nại', icon: Headset },
   { to: '/merchant/profile', label: 'Hồ sơ bến bãi', icon: Building2 },
+  { to: '/merchant/notifications', label: 'Thông báo', icon: Headset },
 ]
 
 export function MerchantSidebar({ mobileOpen = false, onCloseMobile }: MerchantSidebarProps) {

@@ -1,9 +1,5 @@
 export type VehicleClassification =
-  | 'CONTAINER'
-  | 'HEAVY_TRUCK'
-  | 'MEDIUM_TRUCK'
-  | 'LIGHT_TRUCK'
-  | 'SEDAN_SUV'
+  'CONTAINER' | 'HEAVY_TRUCK' | 'BUS_COACH' | 'LIGHT_TRUCK' | 'SEDAN_SUV'
 
 export interface VehicleOption {
   id: string
@@ -36,6 +32,8 @@ export interface ParkingLotItem {
 }
 
 export interface SearchFilterState {
+  latitude?: number
+  longitude?: number
   selectedVehicleId: string
   vehicleType: VehicleClassification
   radiusKm: number

@@ -546,6 +546,3 @@ export async function updateMerchantParkingLot(
     reviewReason: undefined,
   }
 }
-
-
-

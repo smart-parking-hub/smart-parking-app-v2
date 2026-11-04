@@ -11,8 +11,16 @@ vi.mock('@/shared/api/client', () => ({
     get: vi.fn(),
   },
 }))
+vi.mock('../components/InteractiveMapCanvas', () => ({
+  InteractiveMapCanvas: () => (
+    <section aria-label="Bản đồ bãi đỗ OpenStreetMap" />
+  ),
+}))
 
-function renderWithProviders(ui: React.ReactElement, initialEntries = ['/parking']) {
+function renderWithProviders(
+  ui: React.ReactElement,
+  initialEntries = ['/parking'],
+) {
   const queryClient = new QueryClient({
     defaultOptions: {
       queries: {
@@ -47,9 +55,11 @@ describe('SCR-015: Interactive Parking Search & Map (Bản đồ tìm kiếm bã
 
     // 1. Vehicle selector & classifications
     expect(screen.getByText(/Phương tiện điều hành/i)).toBeInTheDocument()
-    expect(screen.getAllByText(/Container 40\/45FT/i).length).toBeGreaterThanOrEqual(1)
+    expect(
+      screen.getAllByText(/Container 40\/45FT/i).length,
+    ).toBeGreaterThanOrEqual(1)
     expect(screen.getByText(/Tải nặng \(>10T\)/i)).toBeInTheDocument()
-    expect(screen.getByText(/Tải trung \(3.5-10T\)/i)).toBeInTheDocument()
+    expect(screen.getByText(/Xe khách \(16–45 chỗ\)/i)).toBeInTheDocument()
     expect(screen.getByText(/Tải nhỏ \(<3.5T\)/i)).toBeInTheDocument()
     expect(screen.getByText(/Khách \/ Sedan/i)).toBeInTheDocument()
 
@@ -59,29 +69,36 @@ describe('SCR-015: Interactive Parking Search & Map (Bản đồ tìm kiếm bã
     expect(screen.getByText(/Sắp xếp theo/i)).toBeInTheDocument()
   })
 
-  it('renders location bar, yard list, map canvas with direction banner and traffic alert', async () => {
+  it('renders location search, actual lot values and the interactive map region', async () => {
     renderWithProviders(<SearchParkingPage />)
 
     await waitFor(() => {
       expect(
-        screen.getAllByText(/Trạm Dừng & Bãi Container Tân Cảng - Phú Hữu/i).length,
+        screen.getAllByText(/Trạm Dừng & Bãi Container Tân Cảng - Phú Hữu/i)
+          .length,
       ).toBeGreaterThanOrEqual(1)
     })
 
     // Search bar & count
-    expect(screen.getByPlaceholderText(/Nhập địa chỉ cảng, KCN hoặc bến bãi.../i)).toBeInTheDocument()
+    expect(
+      screen.getByPlaceholderText(/Nhập địa chỉ cảng, KCN hoặc bến bãi.../i),
+    ).toBeInTheDocument()
     expect(screen.getByText(/Vị trí của tôi/i)).toBeInTheDocument()
 
     // Yard cards
-    expect(screen.getByText(/BEST MATCH · TỐI ƯU TẢI TRỌNG/i)).toBeInTheDocument()
-    expect(screen.getByText(/Bãi Đỗ Xe Vận Tải ICD Sóng Thần 2/i)).toBeInTheDocument()
-    expect(screen.getByText(/Depot Container Cát Lái Gate 2/i)).toBeInTheDocument()
+    expect(screen.getByText(/Gợi ý phù hợp/i)).toBeInTheDocument()
+    expect(
+      screen.getByText(/Bãi Đỗ Xe Vận Tải ICD Sóng Thần 2/i),
+    ).toBeInTheDocument()
+    expect(
+      screen.getByText(/Depot Container Cát Lái Gate 2/i),
+    ).toBeInTheDocument()
 
     // Map canvas
-    expect(screen.getByText(/LỘ TRÌNH TỐI ƯU XE CONTAINER 40FT/i)).toBeInTheDocument()
-    expect(screen.getByText(/XE CỦA BẠN \(51D-894.12\)/i)).toBeInTheDocument()
-    expect(screen.getByText(/Bản đồ OSM Cảng Biển V2.4/i)).toBeInTheDocument()
-    expect(screen.getByText(/Đoạn Đỗ Xuân Hợp qua Nguyễn Duy Trinh mật độ cao:/i)).toBeInTheDocument()
+    expect(
+      screen.getByRole('region', { name: 'Bản đồ bãi đỗ OpenStreetMap' }),
+    ).toBeInTheDocument()
+    expect(screen.queryByText(/Lưu lượng xe 85%/i)).not.toBeInTheDocument()
   })
 
   it('interactively opens and confirms Quick Booking Drawer for 10-minute hold', async () => {
@@ -96,11 +113,17 @@ describe('SCR-015: Interactive Parking Search & Map (Bản đồ tìm kiếm bã
     fireEvent.click(quickBookBtn)
 
     // Drawer should open with details
-    expect(screen.getByText(/Đặt giữ chỗ khẩn cấp \(10 Phút\)/i)).toBeInTheDocument()
-    expect(screen.getByText(/Bãi sẽ khóa slot vật lý ngay sau khi bạn xác nhận/i)).toBeInTheDocument()
+    expect(
+      screen.getByText(/Đặt giữ chỗ khẩn cấp \(10 Phút\)/i),
+    ).toBeInTheDocument()
+    expect(
+      screen.getByText(/Bãi sẽ khóa slot vật lý ngay sau khi bạn xác nhận/i),
+    ).toBeInTheDocument()
     expect(screen.getByText(/Thời gian giữ chỗ: 10 phút./i)).toBeInTheDocument()
     expect(
-      screen.getByDisplayValue(/51D-894.12 · Rơ-moóc 40FT \(Tài xế: Trần Quốc Tuấn\)/i),
+      screen.getByDisplayValue(
+        /51D-894.12 · Rơ-moóc 40FT \(Tài xế: Trần Quốc Tuấn\)/i,
+      ),
     ).toBeInTheDocument()
 
     // Confirm booking

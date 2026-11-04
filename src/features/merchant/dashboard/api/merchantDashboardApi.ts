@@ -1,5 +1,6 @@
 import { apiClient } from '@/shared/api/client'
 import type { MerchantDashboardData } from '../types/merchantDashboardTypes'
+import type { Booking } from '@/entities/operations'
 
 export const fallbackMerchantDashboardData: MerchantDashboardData = {
   kpis: {
@@ -218,7 +219,7 @@ export async function fetchMerchantDashboardData(): Promise<MerchantDashboardDat
     if (bookRes.status === 'fulfilled' && bookRes.value?.data?.content) {
       const content = bookRes.value.data.content
       if (Array.isArray(content) && content.length > 0) {
-        data.recentCheckins = content.map((item: { id?: number | string; vehicleLicensePlate?: string; vehicleType?: string; slotId?: number | string; parkingLotName?: string; startTime?: string; depositAmount?: number; status?: string }, idx: number) => ({
+        data.recentCheckins = (content as (Booking & { slotId?: number; startTime?: string; depositAmount?: number })[]).map((item, idx: number) => ({
           id: item.id || idx + 1,
           licensePlate: item.vehicleLicensePlate || '51D-894.12',
           vehicleType: item.vehicleType || 'Xe Container 40FT',

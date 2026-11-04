@@ -211,6 +211,3 @@ export interface AdminReviewPoint {
   title: string
   description: string
 }
-
-
-
