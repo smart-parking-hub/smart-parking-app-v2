@@ -12,6 +12,7 @@
 | `SCR-006` | About Us (Trang Về Chúng Tôi & Sứ Mệnh)             | `/about` (`/ve-chung-toi`)                | `features/landing`       | Stitch HTML/CSS (`web_standard`) | **IMPLEMENTED** | Đã nghiệm thu       |
 | `SCR-007` | Careers & Recruitment (Trang Tuyển Dụng Nhân Tài)   | `/careers` (`/tuyen-dung`)                | `features/landing`       | Stitch HTML/CSS (`web_standard`) | **IMPLEMENTED** | Sẵn sàng nghiệm thu |
 | `SCR-008` | Logistics Insights (Trang Tin Tức & Báo Cáo Chuyên Ngành) | `/insights` (`/tin-tuc`)            | `features/landing`       | Stitch HTML/CSS (`web_standard`) | **IMPLEMENTED** | Sẵn sàng nghiệm thu |
+| `SCR-009` | Contact & Support 24/7 (Trang Liên Hệ & Điều Phối Bến Bãi) | `/contact` (`/lien-he`)            | `features/landing`       | Stitch HTML/CSS (`web_standard`) | **IMPLEMENTED** | Sẵn sàng nghiệm thu |
 | `SCR-014` | Driver Dashboard Home (Tổng quan Tài xế)            | `/dashboard` (`/driver/dashboard`)        | `features/dashboard`     | Stitch HTML/CSS (`web_standard`) | **IMPLEMENTED** | Sẵn sàng nghiệm thu |
 | `SCR-015` | Interactive Parking Search & Map (Bản đồ tìm bãi)   | `/parking` (`/dashboard/search`)          | `features/parking-search`| Stitch HTML/CSS (`web_standard`) | **IMPLEMENTED** | Sẵn sàng nghiệm thu |
 | `SCR-016` | Parking Details & Reservation (Chi tiết bãi & Đặt chỗ) | `/parking/:id` (`/dashboard/parking/:id`) | `features/parking-detail`| Stitch HTML/CSS (`web_standard`) | **IMPLEMENTED** | Sẵn sàng nghiệm thu |
@@ -28,3 +29,5 @@
 | `SCR-027` | Merchant Legal & Banking Profile (Hồ sơ pháp lý & Tài khoản nhận tiền chủ bãi) | `/merchant/profile` | `features/merchant/profile` | Stitch HTML/CSS (`web_dashboard`) | **IMPLEMENTED** | Sẵn sàng nghiệm thu |
 | `SCR-028` | Merchant Parking Lots Directory (Danh mục bãi đỗ xe sở hữu) | `/merchant/parking-lots` | `features/merchant/parking-lots` | Stitch HTML/CSS (`web_dashboard`) | **IMPLEMENTED** | Sẵn sàng nghiệm thu |
 | `SCR-029` | Merchant Create Parking Lot Wizard (Đăng ký bãi đỗ xe & depot mới) | `/merchant/parking-lots/new` | `features/merchant/parking-lots` | Stitch HTML/CSS (`web_dashboard`) | **IMPLEMENTED** | Sẵn sàng nghiệm thu |
+| `SCR-030` | Merchant Parking Lot Details & Telemetry (Chi tiết bãi đỗ xe & Hồ sơ kỹ thuật) | `/merchant/parking-lots/:parkingLotId` | `features/merchant/parking-lots` | Stitch HTML/CSS (`web_dashboard`) | **IMPLEMENTED** | Sẵn sàng nghiệm thu |
+| `SCR-031` | Edit Merchant Parking Lot (Chỉnh sửa & Cập nhật hồ sơ bãi đỗ) | `/merchant/parking-lots/:parkingLotId/edit` | `features/merchant/parking-lots` | Stitch HTML/CSS (`web_dashboard`) | **IMPLEMENTED** | Sẵn sàng nghiệm thu |

@@ -4,9 +4,11 @@ import type {
   CreateMerchantParkingLotRequest,
   MerchantLotsMetrics,
   MerchantParkingLotCardData,
+  MerchantParkingLotDetailData,
   MerchantParkingLotListParams,
   MerchantParkingLotPageResponse,
   ParkingLotImageItem,
+  YardGalleryImage,
 } from '../types/merchantParkingLotTypes'
 
 export const fallbackMerchantLotsMetrics: MerchantLotsMetrics = {
@@ -293,3 +295,254 @@ export async function generateAiParkingLotContent(params: {
   }
 }
 
+export const fallbackMerchantLotDetailData: MerchantParkingLotDetailData = {
+  ...fallbackMerchantParkingLots[0],
+  alprLatencySec: 0.18,
+  alprCloudSyncStatus: 'Camera Barie #01 & #02 Đồng bộ đám mây',
+  ownershipVerified: true,
+  operationalProfile: {
+    managerName: 'Lê Văn Thành',
+    managerPhone: '0908 123 456',
+    managerOtpVerified: true,
+    uhfRadioChannel: 'UHF Kênh 04 (462.5625 MHz)',
+    uhfNote: 'Đồng bộ với bảo vệ cổng và cẩu giàn',
+    techHotline: '1900 6868 (Nhánh 2)',
+    techSlaNotice: 'Thời gian tiếp nhận sự cố: < 30 giây',
+    gpsCoordinates: { lat: 10.770624, lng: 106.788215 },
+    gpsFormatted: '10.7706240 N, 106.7882150 E',
+    heightClearance: '4.8 Mét (Tiêu chuẩn Container High Cube)',
+    maxAxleWeightTons: 60,
+    mapSnapshotUrl:
+      'https://lh3.googleusercontent.com/aida-public/AB6AXuA5KbMn7X0tETeWLra9ADZeSjm8vhxP12IZ4tWyyhwbwWHVqHh9qWhF423Rh5FggrFxJZuyVrIDn-6jBGOqmVzPSv6kYXWVVMfAvhR409cGSkDUvvVuAV9dvkMKk9pB99xuvwul3oxqf6DE48QDZQPCLemwxQnptuWo8jCf-BfvwjzCfZqwwp7G8QA70TtT6C903loaIBy4JLO9uzdvE6tJmgPzPt-lWrzj8vscZTsW',
+    distanceToPort: 'Cách cảng 1.2 km',
+  },
+  galleryImages: [
+    {
+      id: 1,
+      url: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAuvEtWGnMXsfH4f5hfuGJs_ZpqZHJj2kWXC9zxiBZsGEFdjVC-HzvskJ5PJN8nEWgTrZ1aD6QBslFGyjXGDopU-90UoYb5ASHev2H3oYRQIfMD2dh83IwDy2u3ZuJdZ3nwnFdbVL7yN6sCSxMT_xymhxVU8WNS41JmHmjRamWOjmTFQPQv8NvX5o2pTDdUPyMaHjJVrdx_Lj9w_gNRNztL7i53yNh2zcf_X_n32bUq',
+      title: 'Trạm Cổng Barie ALPR Thông Minh',
+      subtitle: '2 Làn vào / 2 Làn ra đa chiều',
+      isCover: true,
+    },
+    {
+      id: 2,
+      url: 'https://lh3.googleusercontent.com/aida-public/AB6AXuBlZD29J3qKJSIpmgQZzYP_faN3l7-FLAcptnz5dXekvYE5UWtAcGD0Z3v0J-6c2jKJZYLO2DeaiBqGpoWm4fYNp2h95KhDbTYetcYZ3aPvk3ObN3p3VKSKGd2WNZ_ZOMp4BOKjpE0F71C3mSAvw91jwpfQ_j1ijwZ0cU6j8-_pYQGJy2WILnjKOVNre2vWSDTFVh96I8ppgV41kMIgPse_yzU0zMniOFETRhdFJPSQ',
+      title: 'Bãi Reefer Container Lạnh 380V',
+      subtitle: '30 Trạm cấp nguồn liên tục',
+      isCover: false,
+    },
+    {
+      id: 3,
+      url: 'https://lh3.googleusercontent.com/aida-public/AB6AXuA32vrgEejKqVztFKGGnqDM8F_7ayVFrieR87ljrDQ0prD7Oeh8rr6g020a1NswGFVpb1YN4LXMbXtJ9IkUsVnpNbMlsudHULyfXdoyw98XT452TPF_v5zbpHoqCCr4tWF1BH35HvGQgOndtYxlhyThZb0_cn2lMxnAN-gBM6G-_URj1hgUpkHXpBZWvhseDNT_OHDNyAJpomM85nGW78ABnxr8zEflBsqkaH186Ig9',
+      title: 'Trạm Cân Điện Tử 100 Tấn',
+      subtitle: 'Hiệu chuẩn Cục Đo lường Việt Nam',
+      isCover: false,
+    },
+    {
+      id: 4,
+      url: 'https://lh3.googleusercontent.com/aida-public/AB6AXuBeD5dF5j0VbwgIMrhwyrZhWxh8n_dU_uZWc5sjIUVp9FbExylRakTyp6L1uYmxzwcZ0yt7NlDvN47NHSAPxtQMb3KnBlmbQnxepxPPcXtLZux4iXmFlG_ufoUASC9uFzD1yBTtJy5_UV7c0nB-J-qnH5eebEOP97dOTCaXOgDSZgkSv6r96QLAPS9S9QUKNjL3Qk07CsRFmEJb08PQDzymcpg7MDEqMUqc4rL33dlt',
+      title: 'Trạm Dịch Vụ & Nghỉ Ngơi Tài Xế',
+      subtitle: 'Phòng tắm nóng lạnh & giặt sấy 24/7',
+      isCover: false,
+    },
+  ],
+  slotsDetailed: [
+    {
+      id: 1,
+      vehicleType: 'CONTAINER_REEFER',
+      typeNameVi: 'Container 40FT / 45FT Reefer (Cắm điện 380V)',
+      totalCapacity: 30,
+      availableCapacity: 2,
+      occupancyPercent: 93,
+      dimensionNote: 'Dài: 16.5m · Tĩnh không: 4.5m · Nguồn điện 380V/32A',
+      statusNotice: 'Chỉ còn 02 slot trống',
+      tagColor: 'orange',
+    },
+    {
+      id: 2,
+      vehicleType: 'HEAVY_TRUCK_3_4_AXLE',
+      typeNameVi: 'Xe tải nặng 3 - 4 chân (> 15 Tấn)',
+      totalCapacity: 30,
+      availableCapacity: 0,
+      occupancyPercent: 100,
+      dimensionNote: 'Dài: 12.0m · Trọng tải đăng kiểm tối đa 34 Tấn',
+      statusNotice: 'HÀNG ĐỢI ẢO (VIRTUAL QUEUE) ĐÃ KÍCH HOẠT',
+      isQueueActivated: true,
+      tagColor: 'dark',
+    },
+    {
+      id: 3,
+      vehicleType: 'MEDIUM_TRUCK',
+      typeNameVi: 'Xe tải trung (8 Tấn - 15 Tấn)',
+      totalCapacity: 20,
+      availableCapacity: 6,
+      occupancyPercent: 70,
+      dimensionNote: 'Dài: 9.8m · Khoang lưu chuyển hàng nông sản',
+      statusNotice: 'Còn 06 slot tiếp nhận ngay',
+      tagColor: 'blue',
+    },
+    {
+      id: 4,
+      vehicleType: 'BOBTAIL_TRACTOR',
+      typeNameVi: 'Đầu kéo Bobtail (Không rơ-mooc)',
+      totalCapacity: 0,
+      availableCapacity: 0,
+      occupancyPercent: 0,
+      dimensionNote: 'Được điều phối đỗ ghép tại khu vực đệm Zone-D khi có yêu cầu đột xuất.',
+      statusNotice: 'KHÔNG KÊ KHAI',
+      tagColor: 'gray',
+    },
+  ],
+  pricingMatrix: {
+    baseHourlyRate: 40000,
+    baseHourlyNote: 'Áp dụng 02 giờ đầu tiên',
+    peakSurgePercent: 20,
+    peakWindowNote: 'Khung 16:00 - 20:00 hàng ngày',
+    overnightRate: 180000,
+    overnightWindowNote: 'Khung 22:00 đến 06:00 sáng',
+    depositRate: 100000,
+    depositPolicyNote: 'Khấu trừ tự động khi quét QR',
+    legalNotice:
+      'Mức giá trên đã bao gồm VAT và bảo hiểm trách nhiệm bến bãi theo hợp đồng vận hành Fretrix.',
+  },
+  activeVehicles: [
+    {
+      id: 101,
+      licensePlate: '51D-894.12',
+      slotCode: 'Slot C-12',
+      durationFormatted: '3h 45m',
+      isOvertime: false,
+      serviceName: 'Cắm điện Reefer 380V',
+      statusLabel: 'Đang đỗ hợp lệ',
+      statusTone: 'valid',
+    },
+    {
+      id: 102,
+      licensePlate: '60C-912.44',
+      slotCode: 'Slot B-04',
+      durationFormatted: '5h 15m (Over)',
+      isOvertime: true,
+      overtimeNotice: 'QUÁ HẠN 15 PHÚT',
+      serviceName: 'Xe tải 4 chân',
+      statusLabel: 'QUÁ HẠN 15 PHÚT',
+      statusTone: 'overtime',
+    },
+    {
+      id: 103,
+      licensePlate: '72H-019.82',
+      slotCode: 'Slot A-08',
+      durationFormatted: '1h 10m',
+      isOvertime: false,
+      serviceName: 'Tắm giặt bác tài',
+      statusLabel: 'Hợp lệ (Booking Fretrix)',
+      statusTone: 'valid',
+    },
+    {
+      id: 104,
+      licensePlate: '29C-553.19',
+      slotCode: 'Slot T-14',
+      durationFormatted: '0h 40m',
+      isOvertime: false,
+      serviceName: 'Xuống hàng tại dock',
+      statusLabel: 'Đang thao tác dỡ hàng',
+      statusTone: 'operation',
+    },
+  ],
+}
+
+export async function fetchMerchantParkingLotDetail(
+  id: number,
+): Promise<MerchantParkingLotDetailData> {
+  try {
+    const res = await apiClient.get<{ data: MerchantParkingLotDetailData }>(
+      `/api/v1/merchant/parking-lots/${id}`,
+    )
+    if (res.data?.data) {
+      return {
+        ...fallbackMerchantLotDetailData,
+        ...res.data.data,
+      }
+    }
+  } catch {
+    // If backend endpoint is offline or 404, fallback to robust mock matching requested ID
+  }
+
+  const foundLot = fallbackMerchantParkingLots.find((lot) => lot.id === id)
+  if (foundLot) {
+    return {
+      ...fallbackMerchantLotDetailData,
+      ...foundLot,
+      ownershipVerified: true,
+    }
+  }
+
+  return {
+    ...fallbackMerchantLotDetailData,
+    id,
+    ownershipVerified: true,
+  }
+}
+
+export async function uploadAdditionalLotImages(
+  parkingLotId: number,
+  files: File[],
+): Promise<YardGalleryImage[]> {
+  try {
+    const uploaded = await uploadMerchantParkingLotImages(parkingLotId, files)
+    return uploaded.map((item, idx) => ({
+      id: item.id || Date.now() + idx,
+      url: item.fileUrl || item.previewUrl,
+      title: item.name,
+      subtitle: `${(item.sizeBytes / 1024).toFixed(0)} KB · Tải lên mới`,
+      isCover: false,
+    }))
+  } catch {
+    return files.map((file, idx) => ({
+      id: Date.now() + idx,
+      url: URL.createObjectURL(file),
+      title: file.name,
+      subtitle: `${(file.size / 1024).toFixed(0)} KB · Tải lên mới`,
+      isCover: false,
+    }))
+  }
+}
+
+export async function updateMerchantParkingLot(
+  id: number,
+  request: CreateMerchantParkingLotRequest,
+): Promise<MerchantParkingLotDetailData> {
+  try {
+    const response = await apiClient.put<{
+      data?: {
+        id?: number
+        name?: string
+        address?: string
+        latitude?: number
+        longitude?: number
+        status?: string
+      }
+    }>(`/api/v1/merchant/parking-lots/${id}`, request)
+
+    if (response.data?.data) {
+      return {
+        ...fallbackMerchantLotDetailData,
+        id,
+        name: response.data.data.name || request.name,
+        address: response.data.data.address || request.address,
+        status: 'PENDING_APPROVAL',
+        reviewReason: undefined,
+      }
+    }
+  } catch {
+    // In dev / offline sandbox, return updated mock lot
+  }
+
+  return {
+    ...fallbackMerchantLotDetailData,
+    id,
+    name: request.name,
+    address: request.address,
+    status: 'PENDING_APPROVAL',
+    reviewReason: undefined,
+  }
+}

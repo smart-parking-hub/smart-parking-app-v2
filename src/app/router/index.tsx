@@ -82,10 +82,23 @@ const NotificationsPage = lazy(() =>
   })),
 )
 import { MerchantDashboardPage } from '@/features/merchant/dashboard'
-import {
-  MerchantParkingLotsPage,
-  CreateMerchantParkingLotPage,
-} from '@/features/merchant/parking-lots'
+import { MerchantParkingLotsPage } from '@/features/merchant/parking-lots/pages/MerchantParkingLotsPage'
+import { CreateMerchantParkingLotPage } from '@/features/merchant/parking-lots/pages/CreateMerchantParkingLotPage'
+const MerchantParkingLotDetailPage = lazy(() =>
+  import('@/features/merchant/parking-lots/pages/MerchantParkingLotDetailPage').then(
+    (module) => ({ default: module.MerchantParkingLotDetailPage }),
+  ),
+)
+const EditMerchantParkingLotPage = lazy(() =>
+  import('@/features/merchant/parking-lots/pages/EditMerchantParkingLotPage').then(
+    (module) => ({ default: module.EditMerchantParkingLotPage }),
+  ),
+)
+const MerchantSlotsPage = lazy(() =>
+  import('@/features/merchant/slots/pages/MerchantSlotsPage').then(
+    (module) => ({ default: module.MerchantSlotsPage }),
+  ),
+)
 import { MerchantProfilePage } from '@/features/merchant/profile'
 import { LandingPage } from '@/features/landing/pages/LandingPage'
 const DriverSolutionsPage = lazy(() =>
@@ -510,6 +523,18 @@ export const router = createBrowserRouter([
         element: <CreateMerchantParkingLotPage />,
       },
       {
+        path: 'parking-lots/:parkingLotId',
+        element: <MerchantParkingLotDetailPage />,
+      },
+      {
+        path: 'parking-lots/:parkingLotId/edit',
+        element: <EditMerchantParkingLotPage />,
+      },
+      {
+        path: 'parking-lots/:parkingLotId/slots',
+        element: <MerchantSlotsPage />,
+      },
+      {
         path: 'bookings',
         element: <MerchantBookingsPage />,
       },
@@ -530,15 +555,6 @@ export const router = createBrowserRouter([
         element: <DisputesPage role="merchant" />,
       },
       { path: 'bookings/:id', element: <MerchantBookingDetailPage /> },
-      { path: 'parking-lots/:id', element: <MerchantLotPage /> },
-      {
-        path: 'parking-lots/:id/edit',
-        element: <MerchantLotPage mode="edit" />,
-      },
-      {
-        path: 'parking-lots/:id/slots',
-        element: <MerchantLotPage mode="slots" />,
-      },
       {
         path: 'parking-lots/:id/pricing',
         element: <MerchantLotPage mode="pricing" />,
@@ -553,6 +569,14 @@ export const router = createBrowserRouter([
         element: <MerchantProfilePage />,
       },
     ],
+  },
+  {
+    path: '/lien-he',
+    element: <ContactPage />,
+  },
+  {
+    path: '/ho-tro',
+    element: <ContactPage />,
   },
   {
     path: '/crm',

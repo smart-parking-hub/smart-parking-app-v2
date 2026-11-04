@@ -93,6 +93,11 @@ export function LandingFooter() {
             <h4 className="font-sora font-bold text-sm text-white uppercase tracking-wider mb-4">Pháp Lý &amp; Hỗ Trợ</h4>
             <ul className="space-y-2.5 text-xs mb-5">
               <li>
+                <a className="hover:text-white transition-colors" href="/contact">
+                  Trung tâm điều phối &amp; Hỗ trợ 24/7
+                </a>
+              </li>
+              <li>
                 <a className="hover:text-white transition-colors" href="/insights">
                   Bản tin &amp; Báo cáo logistics
                 </a>
