@@ -1,7 +1,11 @@
 import { Link } from 'react-router-dom'
 import { Truck, PlusCircle, Search, PhoneCall } from 'lucide-react'
 
-export function DashboardEmptyState() {
+interface DashboardEmptyStateProps {
+  driverName?: string
+}
+
+export function DashboardEmptyState({ driverName }: DashboardEmptyStateProps) {
   return (
     <div className="w-full bg-white rounded-2xl border border-slate-200/80 p-8 lg:p-12 text-center shadow-sm mb-6">
       <div className="max-w-xl mx-auto flex flex-col items-center">
@@ -16,7 +20,7 @@ export function DashboardEmptyState() {
         </div>
 
         <h3 className="font-sora text-xl lg:text-2xl font-bold text-[#0d1c2e] mb-2">
-          Chưa Có Hoạt Động Điều Phối Nào
+          {driverName ? `Bác Tài ${driverName} Chưa Có Hoạt Động Điều Phối Nào` : 'Chưa Có Hoạt Động Điều Phối Nào'}
         </h3>
         <p className="text-sm text-[#45464d] max-w-lg mb-8 leading-relaxed">
           Hệ thống sẵn sàng hỗ trợ bạn theo dõi vị trí bãi đỗ, quản lý số đăng kiểm rơ-moóc, kiểm tra tĩnh không cầu vượt và xuất hóa đơn điện tử tự động.
