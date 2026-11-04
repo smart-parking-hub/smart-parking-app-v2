@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@import "./fonts.css";
 
 @theme {
   --color-brand-navy: #060D1A;
@@ -6,6 +7,12 @@
   --color-brand-surface: #EEF2F7;
   --color-brand-orange: #F97316;
   --color-brand-orange-hover: #EA580C;
+  --color-brand-orange-ink: #B94308;
+  --color-api-border: #1E3A5F;
+  --color-api-panel: #1E293B;
+  --color-api-muted: #D7DFE9;
+  --color-api-body: #475569;
+  --color-api-hover: #334155;
   --color-brand-border: #E2E8F0;
   --color-brand-muted: #64748B;
   --color-brand-dark: #0F172A;
@@ -14,7 +21,26 @@
   --font-inter: 'Source Sans 3', sans-serif;
 }
 
+@media (prefers-reduced-motion: reduce) {
+  html, body { scroll-behavior: auto; }
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
 :root { --driver-header-height: 80px; --color-map-route: #ea580c; --color-map-water: #e5edf0; }
+
+/* Below-the-fold landing sections remain searchable and keyboard-accessible.
+   Reserve roughly a section's content height until the browser learns its size. */
+.landing-content > section:not(:first-child) {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 900px;
+}
+@media (min-width: 1024px) {
+  .landing-content > section:not(:first-child) { contain-intrinsic-size: auto 650px; }
+}
 @media (min-width: 1024px) and (max-width: 1535px) { :root { --driver-header-height: 140px; } }
 @media (min-width: 1536px) { :root { --driver-header-height: 92px; } }
 .driver-header-inner { width: min(100%, 1800px); margin-inline: auto; padding-inline: clamp(20px, 3vw, 56px); }

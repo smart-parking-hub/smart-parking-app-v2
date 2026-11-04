@@ -15,7 +15,7 @@ export function LandingPage() {
       {/* 1. Sticky Top Navbar */}
       <LandingNavbar />
 
-      <main className="w-full">
+      <main className="landing-content w-full">
         {/* Section 1: Hero Section (Dark Navy #060D1A) */}
         <HomeHeroSection />
 

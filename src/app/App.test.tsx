@@ -15,11 +15,11 @@ import { App } from './App'
 
 describe('SmartTruckHub - 9 Distinct Landing Screens', () => {
   describe('Trang Chủ (Home Landing Page - SCR-001)', () => {
-    it('renders home hero and all 8 main sections successfully', () => {
+    it('renders home hero and all 8 main sections successfully', async () => {
       render(<App />)
 
       // 1. Brand Logo
-      expect(screen.getAllByText(/SMART/i).length).toBeGreaterThan(0)
+      expect((await screen.findAllByText(/SMART/i)).length).toBeGreaterThan(0)
       expect(screen.getAllByText(/TRUCK/i).length).toBeGreaterThan(0)
 
       // 2. Home Hero Headline
@@ -309,7 +309,7 @@ describe('SmartTruckHub - 9 Distinct Landing Screens', () => {
   })
 
   describe('Trang Kết Nối API & Webhooks (API & Developer Docs - SCR-001E)', () => {
-    it('renders API hero, interactive terminal with tabs switching & copy payload, 4 bento integration modules, 3 onboarding steps and CTA banner', () => {
+    it('renders API hero, interactive terminal with tabs switching & copy payload, 4 bento integration modules, 3 onboarding steps and CTA banner', async () => {
       // Mock navigator.clipboard
       const writeTextMock = vi.fn().mockResolvedValue(undefined)
       Object.assign(navigator, {
@@ -379,7 +379,7 @@ describe('SmartTruckHub - 9 Distinct Landing Screens', () => {
       })
       fireEvent.click(copyButton)
       expect(writeTextMock).toHaveBeenCalled()
-      expect(screen.getByText(/Đã sao chép/i)).toBeInTheDocument()
+      expect(await screen.findByText(/Đã sao chép/i)).toBeInTheDocument()
 
       // 3. 4 Enterprise Integration Modules (Bento)
       expect(screen.getByText(/GIẢI PHÁP CHUYÊN NGÀNH LOGISTICS 4.0/i)).toBeInTheDocument()

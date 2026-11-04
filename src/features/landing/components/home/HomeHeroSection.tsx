@@ -2,7 +2,7 @@ import { ArrowRight, SlidersHorizontal, Star, StarHalf } from 'lucide-react'
 
 export function HomeHeroSection() {
   const heroImage =
-    'https://lh3.googleusercontent.com/aida-public/AB6AXuA4ig97Cnuonq7Ww5GfB1GaBLig34jDUJzG2pLI21FDH47vqUk8ecTZwu6yfDDsu1ZZqkJrYKLysKr6BIEIbSE8CUsPu5RiYj9_S5kYW-leMZGAFNKkw_GEklWj-EmFSQZ96Udu32sEa1KUSlsupNA1ngpRuCcFEzkHahc-ECwx2D_NIbw_1YOMHUKPqQHWHHLDPIj1mBAgfbLvW66ZaAnF9RoxHpc8bKgC621qKWo0'
+    '/images/landing/terminal-1.webp'
 
   const partners = [
     'TÂN CẢNG SÀI GÒN',
@@ -83,6 +83,9 @@ export function HomeHeroSection() {
             <div className="relative rounded-3xl overflow-hidden bg-brand-navy-light border border-slate-700/80 shadow-2xl p-3">
               <div className="relative w-full h-[380px] sm:h-[440px] rounded-2xl overflow-hidden">
                 <img
+                  width={960}
+                  height={640}
+                  decoding="async"
                   className="w-full h-full object-cover"
                   alt="A heavy duty prime mover truck container parked at a high-tech illuminated logistics terminal at night"
                   src={heroImage}
