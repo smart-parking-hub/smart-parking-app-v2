@@ -30,6 +30,7 @@ export * from './components/driver-solutions/DriverWorkflowSection'
 export * from './components/driver-solutions/LandingAmenityFilterSection'
 export * from './components/driver-solutions/DriverTestimonialsSection'
 export * from './components/driver-solutions/DriverConversionCta'
+export * from './components/driver-solutions/DriverLeadModal'
 
 // Owner Solutions Components (Trang Giải Pháp Chủ Bãi - SCR-001C)
 export * from './components/owner-solutions/OwnerHeroSection'
