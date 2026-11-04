@@ -131,7 +131,7 @@ export function MerchantProfilePage() {
       })
       queryClient.setQueryData(['merchant-profile-summary'], updated)
       showToast('Đã lưu cập nhật hồ sơ doanh nghiệp thành công!', 'check')
-    } catch (err) {
+    } catch {
       showToast('Có lỗi xảy ra khi lưu hồ sơ. Vui lòng thử lại!', 'error')
     } finally {
       setIsSaving(false)
@@ -182,7 +182,7 @@ export function MerchantProfilePage() {
       })
       queryClient.setQueryData(['merchant-profile-summary'], updatedProfile)
       showToast('Đã cập nhật giấy tờ pháp lý thành công!', 'check')
-    } catch (err) {
+    } catch {
       showToast('Tải lên tệp thất bại, vui lòng kiểm tra lại định dạng tệp.', 'error')
     } finally {
       setIsUploadingDoc(false)
@@ -203,7 +203,7 @@ export function MerchantProfilePage() {
       setIsWithdrawModalOpen(false)
       const formatted = new Intl.NumberFormat('vi-VN').format(amount)
       showToast(`Lệnh rút ${formatted} ₫ đang được Napas247 xử lý tới MB Bank.`, 'payments')
-    } catch (err) {
+    } catch {
       showToast('Không thể tạo yêu cầu rút tiền lúc này.', 'error')
     } finally {
       setIsWithdrawing(false)
