@@ -1,5 +1,4 @@
-import { LandingNavbar } from '../components/common/LandingNavbar'
-import { LandingFooter } from '../components/common/LandingFooter'
+import { LandingLayout } from '@/layouts/LandingLayout'
 import { AboutHeroSection } from '../components/about-us/AboutHeroSection'
 import { AboutNarrativeSection } from '../components/about-us/AboutNarrativeSection'
 import { AboutCorePrinciplesSection } from '../components/about-us/AboutCorePrinciplesSection'
@@ -9,22 +8,15 @@ import { AboutCtaBanner } from '../components/about-us/AboutCtaBanner'
 
 export function AboutUsPage() {
   return (
-    <div className="min-h-screen bg-white text-slate-800 flex flex-col font-inter selection:bg-[#F97316] selection:text-white">
-      {/* Top Sticky Navbar */}
-      <LandingNavbar />
-
-      {/* Main Content Sections */}
-      <main className="flex-1 w-full" id="main-content">
+    <LandingLayout>
+      <div className="bg-white text-slate-800">
         <AboutHeroSection />
         <AboutNarrativeSection />
         <AboutCorePrinciplesSection />
         <AboutRoadmapSection />
         <AboutLeadershipSection />
         <AboutCtaBanner />
-      </main>
-
-      {/* Footer */}
-      <LandingFooter />
-    </div>
+      </div>
+    </LandingLayout>
   )
 }

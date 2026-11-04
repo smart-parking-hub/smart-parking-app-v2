@@ -90,10 +90,10 @@ export function LandingNavbar() {
         { label: 'Kết nối API', href: '/api-docs' },
         {
           label: 'Về chúng tôi',
-          href: '/about',
+          href: '/company/about',
           isCurrent: true,
         },
-        { label: 'Liên hệ', href: '#lien-he' },
+        { label: 'Liên hệ', href: '/company/contact' },
       ]
     : isApiPage
     ? [
