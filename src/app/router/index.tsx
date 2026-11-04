@@ -32,6 +32,7 @@ import {
   AboutUsPage,
   CareersPage,
   InsightsPage,
+  ContactPage,
 } from '@/features/landing'
 
 export const router = createBrowserRouter([
@@ -378,6 +379,18 @@ export const router = createBrowserRouter([
         element: <MerchantProfilePage />,
       },
     ],
+  },
+  {
+    path: '/contact',
+    element: <ContactPage />,
+  },
+  {
+    path: '/lien-he',
+    element: <ContactPage />,
+  },
+  {
+    path: '/ho-tro',
+    element: <ContactPage />,
   },
   {
     path: '/crm',
