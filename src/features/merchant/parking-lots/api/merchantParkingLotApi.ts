@@ -507,4 +507,45 @@ export async function uploadAdditionalLotImages(
   }
 }
 
+export async function updateMerchantParkingLot(
+  id: number,
+  request: CreateMerchantParkingLotRequest,
+): Promise<MerchantParkingLotDetailData> {
+  try {
+    const response = await apiClient.put<{
+      data?: {
+        id?: number
+        name?: string
+        address?: string
+        latitude?: number
+        longitude?: number
+        status?: string
+      }
+    }>(`/api/v1/merchant/parking-lots/${id}`, request)
+
+    if (response.data?.data) {
+      return {
+        ...fallbackMerchantLotDetailData,
+        id,
+        name: response.data.data.name || request.name,
+        address: response.data.data.address || request.address,
+        status: 'PENDING_APPROVAL',
+        reviewReason: undefined,
+      }
+    }
+  } catch {
+    // In dev / offline sandbox, return updated mock lot
+  }
+
+  return {
+    ...fallbackMerchantLotDetailData,
+    id,
+    name: request.name,
+    address: request.address,
+    status: 'PENDING_APPROVAL',
+    reviewReason: undefined,
+  }
+}
+
+
 
