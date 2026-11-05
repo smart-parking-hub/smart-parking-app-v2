@@ -77,7 +77,7 @@ export function OwnerHeroSection({ onOpenLeadModal }: OwnerHeroSectionProps = {}
                 to="/merchant/parking-lots"
                 className="text-brand-orange hover:underline font-semibold"
               >
-                Vào Cổng Bãi Đỗ (SCR-028) &rarr;
+                Vào Cổng Bãi Đỗ &rarr;
               </Link>
             </div>
 

@@ -72,9 +72,9 @@ describe('SCR-032: MerchantSlotsPage (Cấu hình sức chứa bãi đỗ theo l
     expect(screen.getByText(/Bãi Đỗ Xe & Trạm Container Tân Cảng/i)).toBeInTheDocument()
 
     // 3 Quick navigations
-    expect(screen.getByText(/Về Chi Tiết Bãi \(SCR-030\)/i)).toBeInTheDocument()
-    expect(screen.getByText(/Mở Quét Barie \(SCR-036\)/i)).toBeInTheDocument()
-    expect(screen.getByText(/Bảng Giá \(SCR-033\)/i)).toBeInTheDocument()
+    expect(screen.getByText(/Về Chi Tiết Bãi/i)).toBeInTheDocument()
+    expect(screen.getByText(/Trạm Quét QR Barie/i)).toBeInTheDocument()
+    expect(screen.getByText(/Biểu Phí Niêm Yết/i)).toBeInTheDocument()
 
     // Invariant protection banner
     expect(

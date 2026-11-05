@@ -343,7 +343,7 @@ export function MerchantParkingLotCardItem({
                   className="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-[#0d1c2e] text-xs font-semibold rounded-xl flex items-center gap-1.5 transition-colors cursor-pointer"
                 >
                   <Sliders className="w-4 h-4 text-slate-600" />
-                  <span>Cấu Hình Slot (SCR-032)</span>
+                  <span>Cấu Hình Sức Chứa Slot</span>
                 </button>
 
                 <button
@@ -352,7 +352,7 @@ export function MerchantParkingLotCardItem({
                   className="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-[#0d1c2e] text-xs font-semibold rounded-xl flex items-center gap-1.5 transition-colors cursor-pointer"
                 >
                   <DollarSign className="w-4 h-4 text-slate-600" />
-                  <span>Bảng Giá (SCR-033)</span>
+                  <span>Biểu Phí Niêm Yết</span>
                 </button>
 
                 <button
@@ -361,7 +361,7 @@ export function MerchantParkingLotCardItem({
                   className="px-4 py-2 bg-[#d95f00] hover:bg-[#b84e00] text-white text-xs font-bold rounded-xl flex items-center gap-1.5 transition-all shadow-xs cursor-pointer"
                 >
                   <QrCode className="w-4 h-4" />
-                  <span>Mở Quét QR Barie (SCR-036)</span>
+                  <span>Trạm Quét QR Barie</span>
                 </button>
               </>
             ) : (
@@ -381,7 +381,7 @@ export function MerchantParkingLotCardItem({
                   className="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-[#0d1c2e] text-xs font-semibold rounded-xl flex items-center gap-1.5 transition-colors cursor-pointer"
                 >
                   <FileEdit className="w-4 h-4 text-slate-600" />
-                  <span>Chỉnh Sửa Hồ Sơ (SCR-031)</span>
+                  <span>Chỉnh Sửa Hồ Sơ Bãi</span>
                 </button>
 
                 <button

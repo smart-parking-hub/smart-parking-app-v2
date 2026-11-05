@@ -23,7 +23,7 @@ export function MerchantSlotVirtualQueueCard({
 
         <p className="text-xs text-slate-600 leading-relaxed mt-1">
           Hệ thống Fretrix tự động kích hoạt chức năng{' '}
-          <strong className="text-slate-800">Hàng Đợi Ảo (Virtual Queue SCR-018)</strong> cho loại
+          <strong className="text-slate-800">Hàng Đợi Ảo (Virtual Queue)</strong> cho loại
           xe tương ứng khi Available Capacity chạm mốc 0. Tài xế được cấp Ticket điện tử giữ chỗ
           trong 15 phút tại trạm đệm trước cổng.
         </p>
