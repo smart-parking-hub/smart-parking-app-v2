@@ -35,9 +35,6 @@ export function InsightsNewsletterSection() {
               <form className="flex flex-col gap-3" noValidate onSubmit={handleSubmit(() => setIsSubscribed(true))}>
                 <div className="flex flex-col sm:flex-row gap-2">
                   <input
-                    id="insights-newsletter-email"
-                    name="email"
-                    aria-label="Nhập email doanh nghiệp nhận bản tin"
                     type="email"
                     aria-label="Email nhận bản tin"
                     aria-invalid={Boolean(errors.email)}
