@@ -112,12 +112,12 @@ export function DriverLeadModal({
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-3">
             <Link
-              to="/parking"
+              to="/search"
               onClick={handleClose}
-              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-[#F97316] hover:bg-[#EA580C] text-white font-inter font-semibold text-sm px-6 py-2.5 rounded-lg shadow-sm"
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-brand-orange hover:bg-brand-orange-hover text-[#060D1A] font-sora font-bold text-sm px-6 py-2.5 rounded-xl transition-all"
             >
               <MapPin className="h-4 w-4" aria-hidden="true" />
-              <span>Xem Bãi Trên Bản Đồ (SCR-015)</span>
+              <span>Xem Bãi Trên Bản Đồ</span>
             </Link>
             <Button
               type="button"

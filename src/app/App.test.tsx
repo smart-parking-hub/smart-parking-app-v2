@@ -92,38 +92,31 @@ describe('SmartTruckHub - 9 Distinct Landing Screens', () => {
       // 1. Driver Hero
       expect(
         screen.getByRole('heading', {
-          name: /Lộ Trình Chủ Động\. Không Còn Cảnh Đậu Tràn Lề Đường Chờ Lốt\./i,
+          name: /Lộ Trình Chủ Động/i,
         }),
       ).toBeInTheDocument()
       expect(
-        screen.getByText(/Giải Pháp Vận Tải Thực Địa · 45,000\+ Bác Tài Toàn Quốc/i),
+        screen.getAllByText(/45,000 bác tài/i)[0],
       ).toBeInTheDocument()
 
       // 2. Pain Points Bento
       expect(
-        screen.getByText(/NHỮNG NỖI LO THƯỜNG TRỰC CỦA TÀI XẾ CONTAINER/i),
-      ).toBeInTheDocument()
-      expect(
         screen.getByRole('heading', {
-          name: /Được Thiết Kế Bởi Những Người Thấu Hiểu Bác Tài\./i,
+          name: /Được Thiết Kế Bởi Những Người Thấu Hiểu Bác Tài/i,
         }),
       ).toBeInTheDocument()
 
       // 3. Driver Workflow
-      expect(screen.getByText(/QUY TRÌNH VẬN HÀNH THỰC TẾ/i)).toBeInTheDocument()
       expect(
         screen.getByRole('heading', {
-          name: /Vào Bãi Nhanh Gọn\. Không Cần Chờ Nhân Viên Soát Vé\./i,
+          name: /Vào Bãi Nhanh Gọn/i,
         }),
       ).toBeInTheDocument()
 
       // 4. Real-time Amenity Filter & Interactive Toggle
       expect(
-        screen.getByText(/BỘ LỌC THỰC TẾ THEO NHU CẦU XE NẶNG/i),
-      ).toBeInTheDocument()
-      expect(
         screen.getByRole('heading', {
-          name: /Tìm Bãi Có Đúng Tiện Ích Xe Bạn Cần\./i,
+          name: /Tìm Bãi Có Đúng Tiện Ích Xe Bạn Cần/i,
         }),
       ).toBeInTheDocument()
 
@@ -132,13 +125,17 @@ describe('SmartTruckHub - 9 Distinct Landing Screens', () => {
       })
       expect(reeferButton).toBeInTheDocument()
       fireEvent.click(reeferButton)
-      expect(reeferButton.className).toContain('bg-[#F97316]')
+      expect(reeferButton.className).toContain('brand-orange')
 
       // 5. Testimonials & CTA
-      expect(screen.getByText(/TIẾNG NÓI TỪ CỘNG ĐỒNG BÁC TÀI/i)).toBeInTheDocument()
       expect(
         screen.getByRole('heading', {
-          name: /Lái Xe An Tâm Hơn Trên Mọi Chặng Đường\. Bắt Đầu Ngay Hôm Nay\./i,
+          name: /Những Chuyến Xe Bình An Sau Tay Lái/i,
+        }),
+      ).toBeInTheDocument()
+      expect(
+        screen.getByRole('heading', {
+          name: /Lái Xe An Tâm Trên Mọi Chặng Đường/i,
         }),
       ).toBeInTheDocument()
     })

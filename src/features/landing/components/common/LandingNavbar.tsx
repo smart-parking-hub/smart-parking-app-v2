@@ -259,7 +259,7 @@ export function LandingNavbar() {
               ? '/driver-solutions'
               : '#tim-bai'
 
-  const isDarkNav = isHomePage
+  const isDarkNav = isHomePage || isDriverPage
 
   return (
     <header
