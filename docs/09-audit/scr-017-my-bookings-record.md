@@ -1,14 +1,16 @@
 # Screen Implementation Record: SCR-017 Driver Bookings & QR Ticket
 
 - Screen: `SCR-017 Driver Bookings & QR Ticket (Quản lý danh sách đặt chỗ & Vé đỗ xe điện tử QR)`
-- Route: `/bookings`, `/dashboard/bookings`
-- Owning feature: `features/bookings`
+- Screen Code: `SCR-017 (SP-S2-FE-017)`
+- Story Points: `5 STP (Sprint 02, P0 - Critical)`
+- Route: `/bookings` (Aliases: `/dashboard/bookings`, `/driver/bookings`)
+- Owning feature: `features/bookings` & `features/driver` (Kiến trúc 4 lớp)
 - Stitch source supplied: Yes (`SmartTruckHub Driver Ops - Driver Bookings & QR Ticket` HTML/CSS)
 - Source complete: Yes
 - Target viewports: Desktop (1280px+), Tablet (768px-1024px), Mobile (375px-767px)
 - Roles (verified only): `ROLE_DRIVER`
-- Layout: `DriverLayout` (Đã chuẩn hóa: không hotline điều phối, không badge "TRỰC TUYẾN" trên header)
-- Git branch: `feat/scr-17-my-bookings`
+- Layout: `DriverLayout` (Kế thừa header điều hướng, footer và AI Copilot, RBAC Guard `RequireRole role="DRIVER"`)
+- Git branch: `feat/scr-017-driver-bookings`
 - Status: **READY_FOR_REVIEW**
 
 ## Visual specification
@@ -21,15 +23,18 @@
 | Operational Stepper | 4-step bento stepper (Khóa slot 10p -> Cọc PayOS & QR -> Đang đỗ thực tế -> Tất toán xuất bãi) | `BookingBentoStepper.tsx` | Verified |
 | Central QR Terminal | Mã QR vector SVG 180x180 kèm logo STH, token code STH-9081, ghi nhận biển số ALPR, chỉ định làn barie | `BookingQrTerminalPanel.tsx` | Verified |
 | Tariff Audit Table | Bảng kê đối soát chi tiết: giá cơ bản, thời gian đỗ, phụ phí Reefer 380V, khấu trừ cọc 100k, tổng tiền thanh toán | `TariffAuditTable.tsx` | Verified |
-| Terminal Commands | CTA PayOS VietQR, trả tiền mặt tại cổng, chỉ đường Maps tới cổng, gọi trực ban bãi 24/7 | `BookingActionCommands.tsx` | Verified |
-| Cancel & Review Modals | Modal hủy đặt chỗ kiểm tra hoàn cọc trước 60p (SCR-MOD-03), Modal đánh giá 1-5 sao (SCR-MOD-02) | `CancelBookingModal.tsx`, `ReviewBookingModal.tsx` | Verified |
+| Terminal Commands | CTA PayOS VietQR, trả tiền mặt tại cổng, chỉ đường Maps tới cổng, gọi trực ban bãi 24/7, link ví SCR-019 | `BookingActionCommands.tsx` | Verified |
+| Cancel Modal | Modal hủy đặt chỗ kiểm tra hoàn cọc trước 60p (SCR-MOD-03) với Zod validation | `CancelBookingModal.tsx` | Verified |
+| Review Modal | Modal đánh giá 1-5 sao chất lượng bãi đỗ xe (SCR-MOD-02) với Zod validation | `ReviewBookingModal.tsx` | Verified |
 | PayOS Checkout Modal | Hộp thoại thanh toán cọc & quyết toán cuối PayOS VietQR kèm loading và xác nhận giao dịch | `PayOsCheckoutModal.tsx` | Verified |
 | QR Image Export | Xuất mã QR SVG sang file PNG tải về máy không dùng thư viện ngoài | `qrExportUtil.ts` | Verified |
+| UI States | Loading Skeleton (`BookingsSkeleton`), Empty State (`BookingsEmptyState`), Error Alert (`BookingsErrorState`), Success Toast | `components/` | Verified |
+| State & Schema | Zod form validation `bookingSchemas.ts`, Zustand reactive UI state store `bookingStore.ts` | `schemas/`, `store/` | Verified |
 
 ## Verification
 - [x] Typecheck: `npm run typecheck` (`tsc --noEmit`) -> 0 Errors
 - [x] Lint: `npm run lint` (`eslint .`) -> 0 Errors, 0 Warnings
-- [x] Unit/component tests: `npm run test` (`vitest run`) -> 33/33 Tests Passed (100% across all 5 test suites)
+- [x] Unit/component tests: `npm run test` (`vitest run src/features/bookings`) -> 25/25 Tests Passed (100% across 2 suites)
 - [x] Build: `npm run build` (`tsc -b && vite build`) -> Built successfully
 - [x] Layout integrity: Kế thừa `DriverLayout` chuẩn mực, đồng bộ header/footer
-- [x] Git branch: Cô lập hoàn toàn trên nhánh độc lập `feat/scr-17-my-bookings`
+- [x] Git branch: Cô lập hoàn toàn trên nhánh độc lập `feat/scr-017-driver-bookings`
