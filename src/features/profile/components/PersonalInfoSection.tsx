@@ -107,9 +107,9 @@ export function PersonalInfoSection({
 
         {/* GPLX FC */}
         <div className="flex flex-col gap-1.5">
-          <label className="text-xs font-bold font-mono text-slate-700 uppercase">
+          <span className="text-xs font-bold font-mono text-slate-700 uppercase">
             Giấy phép lái xe Hạng FC
-          </label>
+          </span>
           <div className="h-11 px-3.5 bg-slate-100 border border-slate-200 rounded-xl flex items-center justify-between">
             <div className="flex items-center gap-2">
               <span className="bg-slate-900 text-white text-[11px] font-mono font-bold px-1.5 py-0.5 rounded">

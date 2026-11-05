@@ -39,6 +39,9 @@ export function InsightsNewsletterSection() {
               <form className="flex flex-col gap-3" onSubmit={handleSubmit}>
                 <div className="flex flex-col sm:flex-row gap-2">
                   <input
+                    id="insights-newsletter-email"
+                    name="email"
+                    aria-label="Nhập email doanh nghiệp nhận bản tin"
                     type="email"
                     required
                     placeholder="Nhập email doanh nghiệp của bạn..."
