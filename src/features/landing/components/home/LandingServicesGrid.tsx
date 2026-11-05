@@ -42,17 +42,13 @@ export function LandingServicesGrid() {
 
   return (
     <section className="bg-brand-surface py-20 sm:py-28" id="tim-bai">
-      <div className="max-w-310 mx-auto px-6">
+      <div className="max-w-[1240px] mx-auto px-6">
         {/* Section Header */}
         <div className="text-center max-w-2xl mx-auto mb-16">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded bg-white border border-brand-border text-brand-orange text-xs font-semibold uppercase tracking-wider mb-3">
-            DANH MỤC DỊCH VỤ CHUYÊN DỤNG
-          </div>
-          <h2 className="font-sora font-extrabold text-3xl sm:text-4xl text-brand-navy tracking-tight">
-            Mọi Phương Thức. Mọi Tuyến Đường. <br />
-            <span className="text-brand-orange">Một Nền Tảng Hợp Nhất.</span>
+          <h2 className="font-sora font-extrabold text-3xl sm:text-4xl lg:text-5xl text-brand-navy tracking-tight">
+            Dịch Vụ Lưu Bãi Chuyên Dụng
           </h2>
-          <p className="font-inter text-sm sm:text-base text-slate-600 mt-4 leading-relaxed">
+          <p className="font-inter text-base sm:text-lg text-slate-700 mt-4 leading-relaxed">
             Cho dù bạn điều hành đoàn xe container 45ft, xe đầu kéo quá khổ hay xe tải thùng 15 tấn, SmartTruckHub luôn cung cấp vị trí đỗ an toàn và dịch vụ kỹ thuật tiêu chuẩn.
           </p>
         </div>
@@ -62,40 +58,40 @@ export function LandingServicesGrid() {
           {services.map((item) => (
             <div
               key={item.id}
-              className="group bg-white rounded-2xl overflow-hidden border border-brand-border hover:border-brand-orange transition-all duration-300 hover:shadow-xl flex flex-col justify-between"
+              className="group bg-white rounded-2xl overflow-hidden transition-all duration-300 flex flex-col justify-between"
             >
               <div>
                 <div className="h-48 w-full overflow-hidden relative">
                   <img
-                  width={960}
-                  height={640}
-                  decoding="async"
+                    width={960}
+                    height={640}
+                    decoding="async"
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                     alt={item.title}
                     src={item.img}
-                    loading="lazy"
+                    loading="eager"
                   />
-                  <span className="absolute top-3 left-3 bg-brand-navy/90 text-white text-[11px] font-semibold px-2.5 py-1 rounded">
+                  <span className="absolute top-3 left-3 bg-[#060D1A]/90 text-white text-sm font-semibold px-2.5 py-1 rounded-md">
                     {item.tag}
                   </span>
                 </div>
                 <div className="p-6">
-                  <h3 className="font-sora font-bold text-lg text-brand-navy mb-2 group-hover:text-brand-orange transition-colors">
+                  <h3 className="font-sora font-bold text-xl text-brand-navy mb-2.5 group-hover:text-[#9A3412] transition-colors">
                     {item.title}
                   </h3>
-                  <p className="font-inter text-xs text-slate-600 leading-relaxed mb-4">
+                  <p className="font-inter text-sm sm:text-base text-slate-600 leading-relaxed mb-4">
                     {item.desc}
                   </p>
-                  <div className="font-inter text-xs text-slate-500 space-y-1">
+                  <div className="font-inter text-sm text-slate-700 space-y-1.5">
                     {item.specs.map((spec) => (
                       <div key={spec}>• {spec}</div>
                     ))}
                   </div>
                 </div>
               </div>
-              <div className="px-6 pb-6 pt-2 border-t border-slate-100 flex items-center justify-between">
-                <span className="font-inter text-xs font-semibold text-brand-orange">{item.slots}</span>
-                <ArrowRight className="h-4.5 w-4.5 text-brand-orange group-hover:translate-x-1 transition-transform" aria-hidden="true" />
+              <div className="px-6 pb-6 pt-3 flex items-center justify-between">
+                <span className="font-inter text-sm font-bold text-[#9A3412] group-hover:text-brand-orange transition-colors">{item.slots}</span>
+                <ArrowRight className="h-5 w-5 text-[#9A3412] group-hover:translate-x-1 group-hover:text-brand-orange transition-all" aria-hidden="true" />
               </div>
             </div>
           ))}
@@ -104,11 +100,11 @@ export function LandingServicesGrid() {
         {/* Action Button Centered */}
         <div className="text-center mt-12">
           <a
-            className="inline-flex items-center gap-2 bg-brand-orange hover:bg-brand-orange-hover text-white font-sora font-semibold text-sm px-8 py-3.5 rounded-xl shadow-md transition-all"
+            className="inline-flex items-center gap-2 bg-brand-orange hover:bg-brand-orange-hover text-[#060D1A] font-sora font-bold text-base px-8 py-4 rounded-xl transition-all hover:scale-[1.02] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-orange"
             href="#bang-gia"
           >
             <span>XEM TẤT CẢ 320+ ĐIỂM BÃI ĐỖ XE</span>
-            <ChevronRight className="h-4.5 w-4.5" aria-hidden="true" />
+            <ChevronRight className="h-5 w-5" aria-hidden="true" />
           </a>
         </div>
       </div>

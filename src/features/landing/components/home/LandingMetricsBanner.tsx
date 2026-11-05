@@ -27,21 +27,21 @@ export function LandingMetricsBanner() {
   ]
 
   return (
-    <section className="bg-white py-14 sm:py-20 border-b border-brand-border">
-      <div className="max-w-310 mx-auto px-6">
+    <section className="bg-white py-16 sm:py-24">
+      <div className="max-w-[1240px] mx-auto px-6">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-12">
           {metrics.map((metric) => (
             <div
               key={metric.label}
-              className={`flex flex-col border-l-2 pl-5 ${metric.isAccent ? 'border-brand-orange' : 'border-slate-300'}`}
+              className="flex flex-col"
             >
               <div className="font-sora font-extrabold text-4xl sm:text-5xl text-brand-navy tracking-tight">
                 {metric.value}
               </div>
-              <div className="font-inter text-xs sm:text-sm font-semibold text-slate-700 mt-2">
+              <div className="font-inter text-base sm:text-lg font-bold text-slate-900 mt-2">
                 {metric.label}
               </div>
-              <div className="font-inter text-xs text-slate-400 mt-1 leading-relaxed">
+              <div className="font-inter text-sm sm:text-base text-slate-600 mt-1.5 leading-relaxed">
                 {metric.desc}
               </div>
             </div>
