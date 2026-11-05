@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { X, AlertTriangle, Loader2 } from 'lucide-react'
 import type { BookingItemDto } from '../types/bookingTypes'
+import { cancelBookingSchema } from '../schemas/bookingSchemas'
 
 interface CancelBookingModalProps {
   isOpen: boolean
@@ -24,16 +25,41 @@ export function CancelBookingModal({
   onConfirmCancel,
 }: CancelBookingModalProps) {
   const [selectedReason, setSelectedReason] = useState(CANCEL_REASONS[0])
+  const [customReason, setCustomReason] = useState('')
   const [bankAccount, setBankAccount] = useState('')
+  const [validationErrors, setValidationErrors] = useState<Record<string, string>>({})
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   if (!isOpen || !booking) return null
 
+  const effectiveReason =
+    selectedReason === 'Lý do cá nhân khác' && customReason.trim()
+      ? customReason.trim()
+      : selectedReason
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    setValidationErrors({})
+
+    const validation = cancelBookingSchema.safeParse({
+      reason: effectiveReason,
+      bankAccount: bankAccount.trim(),
+      preferredResolution: 'REFUND_WALLET',
+    })
+
+    if (!validation.success) {
+      const fieldErrors: Record<string, string> = {}
+      for (const issue of validation.error.issues) {
+        const fieldName = String(issue.path[0] ?? 'form')
+        fieldErrors[fieldName] = issue.message
+      }
+      setValidationErrors(fieldErrors)
+      return
+    }
+
     setIsSubmitting(true)
     try {
-      await onConfirmCancel(selectedReason, bankAccount)
+      await onConfirmCancel(effectiveReason, bankAccount.trim() || undefined)
       onClose()
     } finally {
       setIsSubmitting(false)
@@ -42,6 +68,9 @@ export function CancelBookingModal({
 
   return (
     <div
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="cancel-modal-title"
       className="fixed inset-0 z-50 bg-slate-900/80 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in duration-200"
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose()
@@ -51,6 +80,7 @@ export function CancelBookingModal({
         <button
           type="button"
           onClick={onClose}
+          aria-label="Đóng hộp thoại"
           className="absolute top-4 right-4 text-slate-400 hover:text-slate-700 p-1 rounded-lg hover:bg-slate-100 transition-colors cursor-pointer"
         >
           <X className="w-5 h-5" />
@@ -62,9 +92,9 @@ export function CancelBookingModal({
           </div>
           <div>
             <span className="text-xs font-mono uppercase text-red-600 font-bold">
-              XÁC NHẬN HỦY VÉ
+              XÁC NHẬN HỦY VÉ (SCR-MOD-03)
             </span>
-            <h3 className="text-base font-bold text-slate-900">
+            <h3 id="cancel-modal-title" className="text-base font-bold text-slate-900">
               Hủy Đặt Chỗ #{booking.bookingCode}
             </h3>
           </div>
@@ -79,8 +109,11 @@ export function CancelBookingModal({
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-3 text-xs">
           <div className="flex flex-col gap-1.5">
-            <label className="font-semibold text-slate-700">Lý do hủy đặt chỗ:</label>
+            <label htmlFor="cancel-reason-select" className="font-semibold text-slate-700">
+              Lý do hủy đặt chỗ:
+            </label>
             <select
+              id="cancel-reason-select"
               value={selectedReason}
               onChange={(e) => setSelectedReason(e.target.value)}
               className="w-full h-10 px-3 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-900 focus:outline-none focus:border-[#d95f00]"
@@ -93,17 +126,44 @@ export function CancelBookingModal({
             </select>
           </div>
 
+          {selectedReason === 'Lý do cá nhân khác' && (
+            <div className="flex flex-col gap-1.5">
+              <label htmlFor="custom-reason-input" className="font-semibold text-slate-700">
+                Nhập lý do chi tiết:
+              </label>
+              <textarea
+                id="custom-reason-input"
+                rows={2}
+                placeholder="Vui lòng nêu rõ lý do hủy của bạn..."
+                value={customReason}
+                onChange={(e) => setCustomReason(e.target.value)}
+                className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-900 focus:outline-none focus:border-[#d95f00]"
+              />
+              {validationErrors.reason && (
+                <span className="text-[11px] text-red-600 font-medium">
+                  {validationErrors.reason}
+                </span>
+              )}
+            </div>
+          )}
+
           <div className="flex flex-col gap-1.5">
-            <label className="font-semibold text-slate-700">
+            <label htmlFor="bank-account-input" className="font-semibold text-slate-700">
               Số tài khoản hoàn tiền (nếu không dùng ví SmartTruck Pay):
             </label>
             <input
+              id="bank-account-input"
               type="text"
               placeholder="VD: 1903... Techcombank - NGUYEN VAN TUAN"
               value={bankAccount}
               onChange={(e) => setBankAccount(e.target.value)}
               className="w-full h-10 px-3 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-900 focus:outline-none focus:border-[#d95f00]"
             />
+            {validationErrors.bankAccount && (
+              <span className="text-[11px] text-red-600 font-medium">
+                {validationErrors.bankAccount}
+              </span>
+            )}
           </div>
 
           <div className="flex items-center gap-2 pt-2">

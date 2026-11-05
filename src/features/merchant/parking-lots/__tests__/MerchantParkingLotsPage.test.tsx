@@ -134,9 +134,9 @@ describe('SCR-028: MerchantParkingLotsPage (Danh mục bãi đỗ xe sở hữu)
     expect(screen.getByText(/82\.500\.000 ₫/i)).toBeInTheDocument()
     expect(screen.getByText(/Cảnh Báo: Sắp Đầy/i)).toBeInTheDocument()
     expect(screen.getByText(/Trạm Sạc Lạnh 380V/i)).toBeInTheDocument()
-    expect(screen.getAllByText('Cấu Hình Slot (SCR-032)').length).toBe(2)
-    expect(screen.getAllByText('Bảng Giá (SCR-033)').length).toBe(2)
-    expect(screen.getAllByText('Mở Quét QR Barie (SCR-036)').length).toBe(2)
+    expect(screen.getAllByText('Cấu Hình Sức Chứa Slot').length).toBe(2)
+    expect(screen.getAllByText('Biểu Phí Niêm Yết').length).toBe(2)
+    expect(screen.getAllByText('Trạm Quét QR Barie').length).toBe(2)
 
     // Card 3: Pending yard with compliance milestones
     expect(screen.getByText(/VN-SGN-TPH2-03/i)).toBeInTheDocument()
@@ -145,7 +145,7 @@ describe('SCR-028: MerchantParkingLotsPage (Danh mục bãi đỗ xe sở hữu)
     expect(screen.getByText('1. Pháp Lý Doanh Nghiệp')).toBeInTheDocument()
     expect(screen.getByText('2. Giấy Phép PCCC Bãi')).toBeInTheDocument()
     expect(screen.getByText('3. Thử Nghiệm Barie ALPR')).toBeInTheDocument()
-    expect(screen.getByText('Chỉnh Sửa Hồ Sơ (SCR-031)')).toBeInTheDocument()
+    expect(screen.getByText('Chỉnh Sửa Hồ Sơ Bãi')).toBeInTheDocument()
     expect(screen.getByText('Liên Hệ Admin Thẩm Định')).toBeInTheDocument()
   })
 
@@ -170,7 +170,7 @@ describe('SCR-028: MerchantParkingLotsPage (Danh mục bãi đỗ xe sở hữu)
     const gridSwitchBtn = screen.getByRole('button', { name: /Chế độ xem dạng lưới/i })
     await user.click(gridSwitchBtn)
 
-    expect(screen.getAllByText('Cấu Hình Slot (SCR-032)').length).toBe(2)
+    expect(screen.getAllByText('Cấu Hình Sức Chứa Slot').length).toBe(2)
   })
 
   it('filters parking lots by search keyword and resets on empty search', async () => {

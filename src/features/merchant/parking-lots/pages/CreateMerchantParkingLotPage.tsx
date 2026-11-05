@@ -294,7 +294,6 @@ export function CreateMerchantParkingLotPage() {
                 <span className="w-1.5 h-1.5 rounded-full bg-[#d95f00]" />
                 QUY TRÌNH THẨM ĐỊNH MẶT BẰNG &amp; MỞ BẾN BÃI MỚI · MOD-04
               </span>
-              <span className="text-slate-500 text-xs font-mono">| FORM-REF: SCR-029-EXP</span>
             </div>
 
             <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-4 mt-1">

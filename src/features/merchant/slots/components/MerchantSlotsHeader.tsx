@@ -21,8 +21,6 @@ export function MerchantSlotsHeader({ lotInfo }: MerchantSlotsHeaderProps) {
           <div className="flex items-center gap-2 text-slate-500 font-mono text-xs">
             <span className="w-2 h-2 rounded-full bg-[#d95f00] animate-pulse" />
             <span>QUẢN LÝ MẶT BẰNG &amp; PHÂN BỔ TẢI TRỌNG · MOD-04</span>
-            <span className="text-slate-300">/</span>
-            <span className="text-slate-900 font-semibold">SCR-032</span>
           </div>
 
           <h1 className="font-sora text-2xl lg:text-3xl text-slate-900 font-bold mt-1 tracking-tight">
@@ -51,7 +49,7 @@ export function MerchantSlotsHeader({ lotInfo }: MerchantSlotsHeaderProps) {
             className="px-3.5 py-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-800 transition-colors text-xs font-semibold flex items-center gap-1.5 shadow-xs"
           >
             <ArrowLeft className="w-3.5 h-3.5" />
-            <span>Về Chi Tiết Bãi (SCR-030)</span>
+            <span>Về Chi Tiết Bãi</span>
           </Link>
 
           <Link
@@ -59,14 +57,14 @@ export function MerchantSlotsHeader({ lotInfo }: MerchantSlotsHeaderProps) {
             className="px-3.5 py-2 rounded-lg bg-white border border-slate-200 hover:bg-slate-50 text-slate-800 transition-colors text-xs font-semibold flex items-center gap-1.5 shadow-xs"
           >
             <QrCode className="w-3.5 h-3.5 text-slate-600" />
-            <span>Mở Quét Barie (SCR-036)</span>
+            <span>Trạm Quét QR Barie</span>
           </Link>
 
           <Link
             to={`/merchant/parking-lots/${lotInfo.id}#pricing`}
             className="px-3.5 py-2 rounded-lg bg-[#341100] hover:bg-black text-[#ffdbca] transition-colors text-xs font-semibold flex items-center gap-1.5 shadow-xs"
           >
-            <span>Bảng Giá (SCR-033)</span>
+            <span>Biểu Phí Niêm Yết</span>
             <ArrowRight className="w-3.5 h-3.5" />
           </Link>
         </div>

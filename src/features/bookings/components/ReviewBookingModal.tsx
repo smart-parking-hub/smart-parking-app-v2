@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { X, Star, Loader2 } from 'lucide-react'
 import type { BookingItemDto } from '../types/bookingTypes'
+import { reviewBookingSchema } from '../schemas/bookingSchemas'
 
 interface ReviewBookingModalProps {
   isOpen: boolean
@@ -18,15 +19,29 @@ export function ReviewBookingModal({
   const [rating, setRating] = useState(5)
   const [hoverRating, setHoverRating] = useState<number | null>(null)
   const [comment, setComment] = useState('')
+  const [validationError, setValidationError] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   if (!isOpen || !booking) return null
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    setValidationError(null)
+
+    const validation = reviewBookingSchema.safeParse({
+      bookingId: booking.id,
+      rating,
+      comment: comment.trim(),
+    })
+
+    if (!validation.success) {
+      setValidationError(validation.error.issues[0]?.message ?? 'Dữ liệu đánh giá không hợp lệ')
+      return
+    }
+
     setIsSubmitting(true)
     try {
-      await onSubmitReview(rating, comment)
+      await onSubmitReview(rating, comment.trim())
       onClose()
     } finally {
       setIsSubmitting(false)
@@ -35,6 +50,9 @@ export function ReviewBookingModal({
 
   return (
     <div
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="review-modal-title"
       className="fixed inset-0 z-50 bg-slate-900/80 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in duration-200"
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose()
@@ -44,6 +62,7 @@ export function ReviewBookingModal({
         <button
           type="button"
           onClick={onClose}
+          aria-label="Đóng hộp thoại"
           className="absolute top-4 right-4 text-slate-400 hover:text-slate-700 p-1 rounded-lg hover:bg-slate-100 transition-colors cursor-pointer"
         >
           <X className="w-5 h-5" />
@@ -55,9 +74,9 @@ export function ReviewBookingModal({
           </div>
           <div>
             <span className="text-xs font-mono uppercase text-[#d95f00] font-bold">
-              ĐÁNH GIÁ CHUYẾN ĐI
+              ĐÁNH GIÁ CHUYẾN ĐI (SCR-MOD-02)
             </span>
-            <h3 className="text-base font-bold text-slate-900">
+            <h3 id="review-modal-title" className="text-base font-bold text-slate-900">
               {booking.parkingLotName}
             </h3>
           </div>
@@ -77,6 +96,7 @@ export function ReviewBookingModal({
                     onClick={() => setRating(star)}
                     onMouseEnter={() => setHoverRating(star)}
                     onMouseLeave={() => setHoverRating(null)}
+                    aria-label={`Đánh giá ${star} sao`}
                     className="p-1 cursor-pointer transition-transform hover:scale-110"
                   >
                     <Star
@@ -104,16 +124,22 @@ export function ReviewBookingModal({
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <label className="font-semibold text-slate-700">
+            <label htmlFor="review-comment-input" className="font-semibold text-slate-700">
               Nhận xét chi tiết (Camera ALPR, an ninh bình dầu, phòng tắm, quán cơm...):
             </label>
             <textarea
+              id="review-comment-input"
               rows={4}
               value={comment}
               onChange={(e) => setComment(e.target.value)}
               placeholder="Chia sẻ trải nghiệm thực tế để hỗ trợ cộng đồng bác tài container..."
               className="w-full p-3 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-900 focus:outline-none focus:border-[#d95f00]"
             />
+            {validationError && (
+              <span className="text-[11px] text-red-600 font-medium">
+                {validationError}
+              </span>
+            )}
           </div>
 
           <div className="flex items-center gap-2 pt-2">

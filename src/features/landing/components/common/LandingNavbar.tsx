@@ -20,6 +20,7 @@ export function LandingNavbar() {
   const isCareersPage =
     location.pathname.includes('careers') || location.pathname.includes('tuyen-dung')
   const isInsightsPage =
+    location.pathname === '/company/blog' ||
     location.pathname.includes('insights') ||
     location.pathname.includes('tin-tuc') ||
     location.pathname.includes('bai-viet')
@@ -45,7 +46,7 @@ export function LandingNavbar() {
         { label: 'Bảng giá', href: '/pricing' },
         { label: 'Kết nối API', href: '/api-docs' },
         { label: 'Về chúng tôi', href: '/about' },
-        { label: 'Tin tức & Báo cáo', href: '/insights' },
+        { label: 'Tin tức & Báo cáo', href: '/company/blog' },
         {
           label: 'Liên hệ',
           href: '/contact',
@@ -62,7 +63,7 @@ export function LandingNavbar() {
         { label: 'Về chúng tôi', href: '/about' },
         {
           label: 'Tin tức & Báo cáo',
-          href: '/insights',
+          href: '/company/blog',
           isCurrent: true,
         },
         { label: 'Liên hệ', href: '/contact' },
@@ -225,6 +226,10 @@ export function LandingNavbar() {
             },
           ]
 
+  if (!navLinks.some((item) => item.href === '/company/blog')) {
+    navLinks.push({ label: 'Tin tức & Báo cáo', href: '/company/blog', isCurrent: false })
+  }
+
   const closeMobileMenu = () => setMobileMenuOpen(false)
 
   const ctaLabel = isContactPage
@@ -244,7 +249,7 @@ export function LandingNavbar() {
   const ctaHref = isContactPage
     ? '#enterpriseContactForm'
     : isInsightsPage
-      ? '#categoryFilterBar'
+      ? '#ban-tin'
     : isCareersPage
       ? '#vi-tri-tuyen-dung'
       : isAboutPage
@@ -351,6 +356,17 @@ export function LandingNavbar() {
             )}
           </button>
         </div>
+      </div>
+
+      <div className="xl:hidden border-t border-brand-border bg-white px-4 py-2">
+        <Link
+          to="/company/blog"
+          onClick={closeMobileMenu}
+          aria-current={isInsightsPage ? 'page' : undefined}
+          className="inline-flex items-center gap-2 rounded-lg px-2 py-1 text-sm font-semibold text-brand-orange-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-orange"
+        >
+          Tin tức & Báo cáo <span aria-hidden="true">→</span>
+        </Link>
       </div>
 
       {/* Mobile Navigation Drawer / Dropdown */}

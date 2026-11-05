@@ -41,7 +41,7 @@ export function MerchantLotStatusBanners({
               </h4>
               <p className="mt-0.5 text-blue-800">
                 {lot.complianceNotice ||
-                  'Sau khi Admin phê duyệt tiêu chuẩn PCCC và toạ độ thực địa, các tính năng Cấu hình Slot (SCR-032) và Bảng giá (SCR-033) sẽ tự động mở khóa để bãi bắt đầu đón tiếp xe tải.'}
+                  'Sau khi Admin phê duyệt tiêu chuẩn PCCC và toạ độ thực địa, các tính năng Cấu hình Sức chứa Slot và Biểu phí niêm yết sẽ tự động mở khóa để bãi bắt đầu đón tiếp xe tải.'}
               </p>
             </div>
           </div>
@@ -74,7 +74,7 @@ export function MerchantLotStatusBanners({
             onClick={() => navigate(`/merchant/parking-lots/${lot.id}/edit`)}
             className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-purple-600 text-white hover:bg-purple-700 transition-colors text-xs font-semibold shrink-0 cursor-pointer"
           >
-            <span>Bổ sung hồ sơ ngay (SCR-031)</span>
+            <span>Bổ sung hồ sơ ngay</span>
             <ArrowRight className="w-3.5 h-3.5" />
           </button>
         </div>
