@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, within } from '@testing-library/react'
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { describe, it, expect, vi } from 'vitest'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
@@ -18,9 +18,10 @@ describe('SmartTruckHub - 9 Distinct Landing Screens', () => {
   describe('Trang Chủ (Home Landing Page - SCR-001)', () => {
     it('renders home hero and all 8 main sections successfully', async () => {
       render(<App />)
+      await screen.findByRole('heading', { name: /Sự Kết Tinh Giữa Công Nghệ Và Bãi Đỗ Xe Tải/i })
 
       // 1. Brand Logo
-      expect((await screen.findAllByText(/SMART/i)).length).toBeGreaterThan(0)
+      expect(screen.getAllByText(/SMART/i).length).toBeGreaterThan(0)
       expect(screen.getAllByText(/TRUCK/i).length).toBeGreaterThan(0)
 
       // 2. Home Hero Headline
@@ -130,11 +131,14 @@ describe('SmartTruckHub - 9 Distinct Landing Screens', () => {
   })
 
   describe('Trang Giải Pháp Chủ Bãi (Owner Solutions Page - SCR-001C)', () => {
-    it('renders owner hero, pain points, interactive ROI calculator, merchant features, workflow, testimonials, FAQ and registration form', () => {
+    it('renders owner hero, pain points, interactive ROI calculator, merchant features, workflow, testimonials, FAQ and registration form', async () => {
+      const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
       render(
-        <MemoryRouter initialEntries={['/owner-solutions']}>
-          <OwnerSolutionsPage />
-        </MemoryRouter>,
+        <QueryClientProvider client={queryClient}>
+          <MemoryRouter initialEntries={['/owner-solutions']}>
+            <OwnerSolutionsPage />
+          </MemoryRouter>
+        </QueryClientProvider>,
       )
 
       // 1. Owner Hero
@@ -217,7 +221,7 @@ describe('SmartTruckHub - 9 Distinct Landing Screens', () => {
         }),
       ).toBeInTheDocument()
 
-      const nameInput = screen.getByPlaceholderText(/Nguyễn Văn A/i)
+      const nameInput = screen.getByPlaceholderText(/Nguyễn Văn Hưng/i)
       const phoneInput = screen.getByPlaceholderText(/0912 345 678/i)
       const locationInput = screen.getByPlaceholderText(/Cạnh KCN Sóng Thần/i)
 
@@ -230,8 +234,9 @@ describe('SmartTruckHub - 9 Distinct Landing Screens', () => {
       })
       fireEvent.click(submitButton)
 
-      expect(screen.getByText(/Đăng Ký Thành Công!/i)).toBeInTheDocument()
-      expect(screen.getByText(/0988776655/i)).toBeInTheDocument()
+      await waitFor(() => {
+        expect(screen.getByText(/Đã Tiếp Nhận Thông Tin Thành Công!/i)).toBeInTheDocument()
+      })
     })
   })
 

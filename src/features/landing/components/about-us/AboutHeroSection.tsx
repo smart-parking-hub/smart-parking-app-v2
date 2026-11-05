@@ -29,7 +29,7 @@ export function AboutHeroSection() {
       <div className="max-w-[1240px] w-full flex flex-col items-start">
         {/* Eyebrow Pill */}
         <div className="inline-flex items-center gap-2.5 px-3.5 py-1.5 rounded bg-slate-900 border border-slate-700 mb-8">
-          <span className="w-2 h-2 rounded-full bg-[#F97316] animate-pulse" />
+          <span className="w-2 h-2 rounded-full bg-[#F97316] motion-safe:animate-pulse" />
           <span className="font-mono text-xs text-slate-200 uppercase tracking-wider font-semibold">
             SỨ MỆNH SỐ HÓA HẠ TẦNG LOGISTICS · KHỞI TẠO NĂM 2024
           </span>
@@ -50,21 +50,21 @@ export function AboutHeroSection() {
         <div className="flex flex-wrap items-center gap-4 mb-20">
           <a
             className="inline-flex items-center justify-center h-[52px] px-8 bg-[#F97316] hover:bg-[#EA580C] text-white font-semibold text-sm sm:text-base rounded transition-colors shadow-sm gap-2"
-            href="#gia-nhap"
+            href="/company/contact"
           >
             GIA NHẬP MẠNG LƯỚI BÃI ĐỖ
             <ArrowRight className="w-4 h-4" aria-hidden="true" />
           </a>
           <a
             className="inline-flex items-center justify-center h-[52px] px-8 bg-slate-800 hover:bg-slate-700 text-white font-semibold text-sm sm:text-base rounded border border-slate-700 transition-colors"
-            href="#bao-cao"
+            href="#bao-cao" aria-label="Xem báo cáo tác động: số liệu mạng lưới"
           >
             XEM BÁO CÁO TÁC ĐỘNG
           </a>
         </div>
 
         {/* 4 Stats Grid */}
-        <div className="w-full grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 pt-12 border-t border-slate-800">
+        <div id="bao-cao" tabIndex={-1} className="scroll-mt-28 w-full grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 pt-12 border-t border-slate-800">
           {stats.map((s, idx) => (
             <div
               key={idx}

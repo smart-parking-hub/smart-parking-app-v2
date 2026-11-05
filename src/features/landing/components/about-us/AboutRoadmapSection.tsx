@@ -89,9 +89,9 @@ export function AboutRoadmapSection() {
                   </span>
                 </div>
               )}
-              <h4 className="font-sora font-semibold text-base text-[#060D1A] mb-2">
+              <h3 className="font-sora font-semibold text-base text-[#060D1A] mb-2">
                 {item.title}
-              </h4>
+              </h3>
               <p className="text-sm text-slate-600 leading-relaxed font-normal">
                 {item.description}
               </p>

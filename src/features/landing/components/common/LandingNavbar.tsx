@@ -10,7 +10,7 @@ export function LandingNavbar() {
   const isDriverPage =
     location.pathname.includes('driver-solutions') || location.pathname.includes('giai-phap-tai-xe') || location.pathname.includes('solutions/drivers')
   const isOwnerPage =
-    location.pathname.includes('owner-solutions') || location.pathname.includes('giai-phap-chu-bai')
+    location.pathname.includes('owner-solutions') || location.pathname.includes('giai-phap-chu-bai') || location.pathname.includes('solutions/owners')
   const isPricingPage =
     location.pathname.includes('pricing') || location.pathname.includes('bang-gia')
   const isApiPage =
@@ -91,10 +91,10 @@ export function LandingNavbar() {
         { label: 'Kết nối API', href: '/api-docs' },
         {
           label: 'Về chúng tôi',
-          href: '/about',
+          href: '/company/about',
           isCurrent: true,
         },
-        { label: 'Liên hệ', href: '#lien-he' },
+        { label: 'Liên hệ', href: '/company/contact' },
       ]
     : isApiPage
     ? [

@@ -1,0 +1,937 @@
+
+> smart-parking-app-v2@0.1.0 test
+> vitest run --reporter=dot
+
+
+ RUN  v3.2.7 D:/DuAnOjt/smart-parking-app-v2
+
+stderr | src/features/payment-cancel/__tests__/PaymentCancelPage.test.tsx > SCR-024: PaymentCancelPage (Thông Báo Hủy Thanh Toán & Bảo Lưu Slot Berth C-114) > renders session track header with PAYOS-CAN-99124 and TTL hold badge
+Error: AggregateError
+    at Object.dispatchError (D:\DuAnOjt\smart-parking-app-v2\node_modules\jsdom\lib\jsdom\living\xhr\xhr-utils.js:62:19)
+    at Request.<anonymous> (D:\DuAnOjt\smart-parking-app-v2\node_modules\jsdom\lib\jsdom\living\xhr\XMLHttpRequest-impl.js:655:18)
+    at Request.emit (node:events:521:24)
+    at ClientRequest.<anonymous> (D:\DuAnOjt\smart-parking-app-v2\node_modules\jsdom\lib\jsdom\living\helpers\http-request.js:127:14)
+    at ClientRequest.emit (node:events:509:28)
+    at emitErrorEvent (node:_http_client:109:11)
+    at Socket.socketErrorListener (node:_http_client:593:5)
+    at Socket.emit (node:events:509:28)
+    at emitErrorNT (node:internal/streams/destroy:170:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:129:3) undefined
+
+stderr | src/features/payment-return/__tests__/PaymentReturnPage.test.tsx > SCR-023: PaymentReturnPage (Xác Nhận & Đồng Bộ Kết Quả Thanh Toán PayOS) > renders full success verification hub with telemetry strip, hero, manifest, and QR pass
+Error: AggregateError
+    at Object.dispatchError (D:\DuAnOjt\smart-parking-app-v2\node_modules\jsdom\lib\jsdom\living\xhr\xhr-utils.js:62:19)
+    at Request.<anonymous> (D:\DuAnOjt\smart-parking-app-v2\node_modules\jsdom\lib\jsdom\living\xhr\XMLHttpRequest-impl.js:655:18)
+    at Request.emit (node:events:521:24)
+    at ClientRequest.<anonymous> (D:\DuAnOjt\smart-parking-app-v2\node_modules\jsdom\lib\jsdom\living\helpers\http-request.js:127:14)
+    at ClientRequest.emit (node:events:509:28)
+    at emitErrorEvent (node:_http_client:109:11)
+    at Socket.socketErrorListener (node:_http_client:593:5)
+    at Socket.emit (node:events:509:28)
+    at emitErrorNT (node:internal/streams/destroy:170:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:129:3) undefined
+
+stderr | src/features/change-password/__tests__/ChangePasswordPage.test.tsx > SCR-022 ChangePasswordPage (Đổi mật khẩu bảo mật tài xế) > renders command header, Fretrix badge, breadcrumb, and 95-day warning badge
+Error: AggregateError
+    at Object.dispatchError (D:\DuAnOjt\smart-parking-app-v2\node_modules\jsdom\lib\jsdom\living\xhr\xhr-utils.js:62:19)
+    at Request.<anonymous> (D:\DuAnOjt\smart-parking-app-v2\node_modules\jsdom\lib\jsdom\living\xhr\XMLHttpRequest-impl.js:655:18)
+    at Request.emit (node:events:521:24)
+    at ClientRequest.<anonymous> (D:\DuAnOjt\smart-parking-app-v2\node_modules\jsdom\lib\jsdom\living\helpers\http-request.js:127:14)
+    at ClientRequest.emit (node:events:509:28)
+    at emitErrorEvent (node:_http_client:109:11)
+    at Socket.socketErrorListener (node:_http_client:593:5)
+    at Socket.emit (node:events:509:28)
+    at emitErrorNT (node:internal/streams/destroy:170:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:129:3) undefined
+
+stderr | src/features/notifications/__tests__/NotificationsPage.test.tsx > SCR-025: NotificationsPage (Trung Tâm Thông Báo Driver Ops) > renders command hero, real-time ticker strip, status filter bar, and category chips
+Error: AggregateError
+    at Object.dispatchError (D:\DuAnOjt\smart-parking-app-v2\node_modules\jsdom\lib\jsdom\living\xhr\xhr-utils.js:62:19)
+    at Request.<anonymous> (D:\DuAnOjt\smart-parking-app-v2\node_modules\jsdom\lib\jsdom\living\xhr\XMLHttpRequest-impl.js:655:18)
+    at Request.emit (node:events:521:24)
+    at ClientRequest.<anonymous> (D:\DuAnOjt\smart-parking-app-v2\node_modules\jsdom\lib\jsdom\living\helpers\http-request.js:127:14)
+    at ClientRequest.emit (node:events:509:28)
+    at emitErrorEvent (node:_http_client:109:11)
+    at Socket.socketErrorListener (node:_http_client:593:5)
+    at Socket.emit (node:events:509:28)
+    at emitErrorNT (node:internal/streams/destroy:170:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:129:3) undefined
+
+stderr | src/features/payment-cancel/__tests__/PaymentCancelPage.test.tsx > SCR-024: PaymentCancelPage (Thông Báo Hủy Thanh Toán & Bảo Lưu Slot Berth C-114) > renders main cancel notice card with credit card off icon and uncharged bank notice
+Error: AggregateError
+    at Object.dispatchError (D:\DuAnOjt\smart-parking-app-v2\node_modules\jsdom\lib\jsdom\living\xhr\xhr-utils.js:62:19)
+    at Request.<anonymous> (D:\DuAnOjt\smart-parking-app-v2\node_modules\jsdom\lib\jsdom\living\xhr\XMLHttpRequest-impl.js:655:18)
+    at Request.emit (node:events:521:24)
+    at ClientRequest.<anonymous> (D:\DuAnOjt\smart-parking-app-v2\node_modules\jsdom\lib\jsdom\living\helpers\http-request.js:127:14)
+    at ClientRequest.emit (node:events:509:28)
+    at emitErrorEvent (node:_http_client:109:11)
+    at Socket.socketErrorListener (node:_http_client:593:5)
+    at Socket.emit (node:events:509:28)
+    at emitErrorNT (node:internal/streams/destroy:170:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:129:3) undefined
+
+stderr | src/features/payment-return/__tests__/PaymentReturnPage.test.tsx > SCR-023: PaymentReturnPage (Xác Nhận & Đồng Bộ Kết Quả Thanh Toán PayOS) > renders spot logistics manifest with Berth C-114, reefer 3-phase, vehicle plates, and guaranteed deposit
+Error: AggregateError
+    at Object.dispatchError (D:\DuAnOjt\smart-parking-app-v2\node_modules\jsdom\lib\jsdom\living\xhr\xhr-utils.js:62:19)
+    at Request.<anonymous> (D:\DuAnOjt\smart-parking-app-v2\node_modules\jsdom\lib\jsdom\living\xhr\XMLHttpRequest-impl.js:655:18)
+    at Request.emit (node:events:521:24)
+    at ClientRequest.<anonymous> (D:\DuAnOjt\smart-parking-app-v2\node_modules\jsdom\lib\jsdom\living\helpers\http-request.js:127:14)
+    at ClientRequest.emit (node:events:509:28)
+    at emitErrorEvent (node:_http_client:109:11)
+    at Socket.socketErrorListener (node:_http_client:593:5)
+    at Socket.emit (node:events:509:28)
+    at emitErrorNT (node:internal/streams/destroy:170:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:129:3) undefined
+
+stderr | src/features/profile/__tests__/ProfilePage.test.tsx > SCR-021 ProfilePage (Hồ Sơ Bác Tài & Thông Tin Trực Ban) > renders command header, breadcrumb, and live station status badge
+Error: AggregateError
+    at Object.dispatchError (D:\DuAnOjt\smart-parking-app-v2\node_modules\jsdom\lib\jsdom\living\xhr\xhr-utils.js:62:19)
+    at Request.<anonymous> (D:\DuAnOjt\smart-parking-app-v2\node_modules\jsdom\lib\jsdom\living\xhr\XMLHttpRequest-impl.js:655:18)
+    at Request.emit (node:events:521:24)
+    at ClientRequest.<anonymous> (D:\DuAnOjt\smart-parking-app-v2\node_modules\jsdom\lib\jsdom\living\helpers\http-request.js:127:14)
+    at ClientRequest.emit (node:events:509:28)
+    at emitErrorEvent (node:_http_client:109:11)
+    at Socket.socketErrorListener (node:_http_client:593:5)
+    at Socket.emit (node:events:509:28)
+    at emitErrorNT (node:internal/streams/destroy:170:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:129:3) undefined
+
+stderr | src/features/change-password/__tests__/ChangePasswordPage.test.tsx > SCR-022 ChangePasswordPage (Đổi mật khẩu bảo mật tài xế) > renders synchronized account operations sidebar, 3 Fretrix rules, 2 active devices, and hotline
+Error: AggregateError
+    at Object.dispatchError (D:\DuAnOjt\smart-parking-app-v2\node_modules\jsdom\lib\jsdom\living\xhr\xhr-utils.js:62:19)
+    at Request.<anonymous> (D:\DuAnOjt\smart-parking-app-v2\node_modules\jsdom\lib\jsdom\living\xhr\XMLHttpRequest-impl.js:655:18)
+    at Request.emit (node:events:521:24)
+    at ClientRequest.<anonymous> (D:\DuAnOjt\smart-parking-app-v2\node_modules\jsdom\lib\jsdom\living\helpers\http-request.js:127:14)
+    at ClientRequest.emit (node:events:509:28)
+    at emitErrorEvent (node:_http_client:109:11)
+    at Socket.socketErrorListener (node:_http_client:593:5)
+    at Socket.emit (node:events:509:28)
+    at emitErrorNT (node:internal/streams/destroy:170:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:129:3) undefined
+
+stderr | src/features/payment-cancel/__tests__/PaymentCancelPage.test.tsx > SCR-024: PaymentCancelPage (Thông Báo Hủy Thanh Toán & Bảo Lưu Slot Berth C-114) > renders countdown hold alert box with live timer and progress bar
+Error: AggregateError
+    at Object.dispatchError (D:\DuAnOjt\smart-parking-app-v2\node_modules\jsdom\lib\jsdom\living\xhr\xhr-utils.js:62:19)
+    at Request.<anonymous> (D:\DuAnOjt\smart-parking-app-v2\node_modules\jsdom\lib\jsdom\living\xhr\XMLHttpRequest-impl.js:655:18)
+    at Request.emit (node:events:521:24)
+    at ClientRequest.<anonymous> (D:\DuAnOjt\smart-parking-app-v2\node_modules\jsdom\lib\jsdom\living\helpers\http-request.js:127:14)
+    at ClientRequest.emit (node:events:509:28)
+    at emitErrorEvent (node:_http_client:109:11)
+    at Socket.socketErrorListener (node:_http_client:593:5)
+    at Socket.emit (node:events:509:28)
+    at emitErrorNT (node:internal/streams/destroy:170:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:129:3) undefined
+
+stderr | src/features/payment-return/__tests__/PaymentReturnPage.test.tsx > SCR-023: PaymentReturnPage (Xác Nhận & Đồng Bộ Kết Quả Thanh Toán PayOS) > renders 3-step gate arrival SOP protocol with correct guidelines
+Error: AggregateError
+    at Object.dispatchError (D:\DuAnOjt\smart-parking-app-v2\node_modules\jsdom\lib\jsdom\living\xhr\xhr-utils.js:62:19)
+    at Request.<anonymous> (D:\DuAnOjt\smart-parking-app-v2\node_modules\jsdom\lib\jsdom\living\xhr\XMLHttpRequest-impl.js:655:18)
+    at Request.emit (node:events:521:24)
+    at ClientRequest.<anonymous> (D:\DuAnOjt\smart-parking-app-v2\node_modules\jsdom\lib\jsdom\living\helpers\http-request.js:127:14)
+    at ClientRequest.emit (node:events:509:28)
+    at emitErrorEvent (node:_http_client:109:11)
+    at Socket.socketErrorListener (node:_http_client:593:5)
+    at Socket.emit (node:events:509:28)
+    at emitErrorNT (node:internal/streams/destroy:170:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:129:3) undefined
+
+stderr | src/features/vehicles/__tests__/VehiclesPage.test.tsx > SCR-020 VehiclesPage (Quản Lý Phương Tiện Của Tôi) > renders command header, ALPR ticker strip, and 4 Bento KPI cards
+Error: AggregateError
+    at Object.dispatchError (D:\DuAnOjt\smart-parking-app-v2\node_modules\jsdom\lib\jsdom\living\xhr\xhr-utils.js:62:19)
+    at Request.<anonymous> (D:\DuAnOjt\smart-parking-app-v2\node_modules\jsdom\lib\jsdom\living\xhr\XMLHttpRequest-impl.js:655:18)
+    at Request.emit (node:events:521:24)
+    at ClientRequest.<anonymous> (D:\DuAnOjt\smart-parking-app-v2\node_modules\jsdom\lib\jsdom\living\helpers\http-request.js:127:14)
+    at ClientRequest.emit (node:events:509:28)
+    at emitErrorEvent (node:_http_client:109:11)
+    at Socket.socketErrorListener (node:_http_client:593:5)
+    at Socket.emit (node:events:509:28)
+    at emitErrorNT (node:internal/streams/destroy:170:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:129:3) undefined
+
+stderr | src/features/change-password/__tests__/ChangePasswordPage.test.tsx > SCR-022 ChangePasswordPage (Đổi mật khẩu bảo mật tài xế) > opens NotificationSettingsModal when clicking Thiết lập thông báo hệ thống
+Error: AggregateError
+    at Object.dispatchError (D:\DuAnOjt\smart-parking-app-v2\node_modules\jsdom\lib\jsdom\living\xhr\xhr-utils.js:62:19)
+    at Request.<anonymous> (D:\DuAnOjt\smart-parking-app-v2\node_modules\jsdom\lib\jsdom\living\xhr\XMLHttpRequest-impl.js:655:18)
+    at Request.emit (node:events:521:24)
+    at ClientRequest.<anonymous> (D:\DuAnOjt\smart-parking-app-v2\node_modules\jsdom\lib\jsdom\living\helpers\http-request.js:127:14)
+    at ClientRequest.emit (node:events:509:28)
+    at emitErrorEvent (node:_http_client:109:11)
+    at Socket.socketErrorListener (node:_http_client:593:5)
+    at Socket.emit (node:events:509:28)
+    at emitErrorNT (node:internal/streams/destroy:170:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:129:3) undefined
+
+stderr | src/features/profile/__tests__/ProfilePage.test.tsx > SCR-021 ProfilePage (Hồ Sơ Bác Tài & Thông Tin Trực Ban) > renders driver identity card, rating, and 4 Bento KPI metrics
+Error: AggregateError
+    at Object.dispatchError (D:\DuAnOjt\smart-parking-app-v2\node_modules\jsdom\lib\jsdom\living\xhr\xhr-utils.js:62:19)
+    at Request.<anonymous> (D:\DuAnOjt\smart-parking-app-v2\node_modules\jsdom\lib\jsdom\living\xhr\XMLHttpRequest-impl.js:655:18)
+    at Request.emit (node:events:521:24)
+    at ClientRequest.<anonymous> (D:\DuAnOjt\smart-parking-app-v2\node_modules\jsdom\lib\jsdom\living\helpers\http-request.js:127:14)
+    at ClientRequest.emit (node:events:509:28)
+    at emitErrorEvent (node:_http_client:109:11)
+    at Socket.socketErrorListener (node:_http_client:593:5)
+    at Socket.emit (node:events:509:28)
+    at emitErrorNT (node:internal/streams/destroy:170:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:129:3) undefined
+
+stderr | src/features/payment-cancel/__tests__/PaymentCancelPage.test.tsx > SCR-024: PaymentCancelPage (Thông Báo Hủy Thanh Toán & Bảo Lưu Slot Berth C-114) > renders pending ticket specifications with booking code BK-2026-9104 and deposit 100.000 ₫
+Error: AggregateError
+    at Object.dispatchError (D:\DuAnOjt\smart-parking-app-v2\node_modules\jsdom\lib\jsdom\living\xhr\xhr-utils.js:62:19)
+    at Request.<anonymous> (D:\DuAnOjt\smart-parking-app-v2\node_modules\jsdom\lib\jsdom\living\xhr\XMLHttpRequest-impl.js:655:18)
+    at Request.emit (node:events:521:24)
+    at ClientRequest.<anonymous> (D:\DuAnOjt\smart-parking-app-v2\node_modules\jsdom\lib\jsdom\living\helpers\http-request.js:127:14)
+    at ClientRequest.emit (node:events:509:28)
+    at emitErrorEvent (node:_http_client:109:11)
+    at Socket.socketErrorListener (node:_http_client:593:5)
+    at Socket.emit (node:events:509:28)
+    at emitErrorNT (node:internal/streams/destroy:170:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:129:3) undefined
+
+stderr | src/features/payment-return/__tests__/PaymentReturnPage.test.tsx > SCR-023: PaymentReturnPage (Xác Nhận & Đồng Bộ Kết Quả Thanh Toán PayOS) > simulates offline QR ticket download and provides visual feedback
+Error: AggregateError
+    at Object.dispatchError (D:\DuAnOjt\smart-parking-app-v2\node_modules\jsdom\lib\jsdom\living\xhr\xhr-utils.js:62:19)
+    at Request.<anonymous> (D:\DuAnOjt\smart-parking-app-v2\node_modules\jsdom\lib\jsdom\living\xhr\XMLHttpRequest-impl.js:655:18)
+    at Request.emit (node:events:521:24)
+    at ClientRequest.<anonymous> (D:\DuAnOjt\smart-parking-app-v2\node_modules\jsdom\lib\jsdom\living\helpers\http-request.js:127:14)
+    at ClientRequest.emit (node:events:509:28)
+    at emitErrorEvent (node:_http_client:109:11)
+    at Socket.socketErrorListener (node:_http_client:593:5)
+    at Socket.emit (node:events:509:28)
+    at emitErrorNT (node:internal/streams/destroy:170:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:129:3) undefined
+
+stderr | src/features/merchant/parking-lots/__tests__/MerchantParkingLotDetailPage.test.tsx > SCR-030: MerchantParkingLotDetailPage (Chi tiết hồ sơ kỹ thuật bãi đỗ xe) > renders all key sections when parking lot is APPROVED
+Error: AggregateError
+    at Object.dispatchError (D:\DuAnOjt\smart-parking-app-v2\node_modules\jsdom\lib\jsdom\living\xhr\xhr-utils.js:62:19)
+    at Request.<anonymous> (D:\DuAnOjt\smart-parking-app-v2\node_modules\jsdom\lib\jsdom\living\xhr\XMLHttpRequest-impl.js:655:18)
+    at Request.emit (node:events:521:24)
+    at ClientRequest.<anonymous> (D:\DuAnOjt\smart-parking-app-v2\node_modules\jsdom\lib\jsdom\living\helpers\http-request.js:127:14)
+    at ClientRequest.emit (node:events:509:28)
+    at emitErrorEvent (node:_http_client:109:11)
+    at Socket.socketErrorListener (node:_http_client:593:5)
+    at Socket.emit (node:events:509:28)
+    at emitErrorNT (node:internal/streams/destroy:170:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:129:3) undefined
+
+stderr | src/features/payment-return/__tests__/PaymentReturnPage.test.tsx > SCR-023: PaymentReturnPage (Xác Nhận & Đồng Bộ Kết Quả Thanh Toán PayOS) > simulates PDF receipt generation and download
+Error: AggregateError
+    at Object.dispatchError (D:\DuAnOjt\smart-parking-app-v2\node_modules\jsdom\lib\jsdom\living\xhr\xhr-utils.js:62:19)
+    at Request.<anonymous> (D:\DuAnOjt\smart-parking-app-v2\node_modules\jsdom\lib\jsdom\living\xhr\XMLHttpRequest-impl.js:655:18)
+    at Request.emit (node:events:521:24)
+    at ClientRequest.<anonymous> (D:\DuAnOjt\smart-parking-app-v2\node_modules\jsdom\lib\jsdom\living\helpers\http-request.js:127:14)
+    at ClientRequest.emit (node:events:509:28)
+    at emitErrorEvent (node:_http_client:109:11)
+    at Socket.socketErrorListener (node:_http_client:593:5)
+    at Socket.emit (node:events:509:28)
+    at emitErrorNT (node:internal/streams/destroy:170:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:129:3) undefined
+
+stderr | src/features/change-password/__tests__/ChangePasswordPage.test.tsx > SCR-022 ChangePasswordPage (Đổi mật khẩu bảo mật tài xế) > toggles password visibility on all 3 input fields
+Error: AggregateError
+    at Object.dispatchError (D:\DuAnOjt\smart-parking-app-v2\node_modules\jsdom\lib\jsdom\living\xhr\xhr-utils.js:62:19)
+    at Request.<anonymous> (D:\DuAnOjt\smart-parking-app-v2\node_modules\jsdom\lib\jsdom\living\xhr\XMLHttpRequest-impl.js:655:18)
+    at Request.emit (node:events:521:24)
+    at ClientRequest.<anonymous> (D:\DuAnOjt\smart-parking-app-v2\node_modules\jsdom\lib\jsdom\living\helpers\http-request.js:127:14)
+    at ClientRequest.emit (node:events:509:28)
+    at emitErrorEvent (node:_http_client:109:11)
+    at Socket.socketErrorListener (node:_http_client:593:5)
+    at Socket.emit (node:events:509:28)
+    at emitErrorNT (node:internal/streams/destroy:170:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:129:3) undefined
+
+stderr | src/features/payment-cancel/__tests__/PaymentCancelPage.test.tsx > SCR-024: PaymentCancelPage (Thông Báo Hủy Thanh Toán & Bảo Lưu Slot Berth C-114) > renders terminal berth blueprint matrix with C-114 highlighted
+Error: AggregateError
+    at Object.dispatchError (D:\DuAnOjt\smart-parking-app-v2\node_modules\jsdom\lib\jsdom\living\xhr\xhr-utils.js:62:19)
+    at Request.<anonymous> (D:\DuAnOjt\smart-parking-app-v2\node_modules\jsdom\lib\jsdom\living\xhr\XMLHttpRequest-impl.js:655:18)
+    at Request.emit (node:events:521:24)
+    at ClientRequest.<anonymous> (D:\DuAnOjt\smart-parking-app-v2\node_modules\jsdom\lib\jsdom\living\helpers\http-request.js:127:14)
+    at ClientRequest.emit (node:events:509:28)
+    at emitErrorEvent (node:_http_client:109:11)
+    at Socket.socketErrorListener (node:_http_client:593:5)
+    at Socket.emit (node:events:509:28)
+    at emitErrorNT (node:internal/streams/destroy:170:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:129:3) undefined
+
+stderr | src/features/profile/__tests__/ProfilePage.test.tsx > SCR-021 ProfilePage (Hồ Sơ Bác Tài & Thông Tin Trực Ban) > renders sidebar navigation links and modal triggers
+Error: AggregateError
+    at Object.dispatchError (D:\DuAnOjt\smart-parking-app-v2\node_modules\jsdom\lib\jsdom\living\xhr\xhr-utils.js:62:19)
+    at Request.<anonymous> (D:\DuAnOjt\smart-parking-app-v2\node_modules\jsdom\lib\jsdom\living\xhr\XMLHttpRequest-impl.js:655:18)
+    at Request.emit (node:events:521:24)
+    at ClientRequest.<anonymous> (D:\DuAnOjt\smart-parking-app-v2\node_modules\jsdom\lib\jsdom\living\helpers\http-request.js:127:14)
+    at ClientRequest.emit (node:events:509:28)
+    at emitErrorEvent (node:_http_client:109:11)
+    at Socket.socketErrorListener (node:_http_client:593:5)
+    at Socket.emit (node:events:509:28)
+    at emitErrorNT (node:internal/streams/destroy:170:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:129:3) undefined
+
+stderr | src/features/vehicles/__tests__/VehiclesPage.test.tsx > SCR-020 VehiclesPage (Quản Lý Phương Tiện Của Tôi) > filters vehicles by search keyword
+Error: AggregateError
+    at Object.dispatchError (D:\DuAnOjt\smart-parking-app-v2\node_modules\jsdom\lib\jsdom\living\xhr\xhr-utils.js:62:19)
+    at Request.<anonymous> (D:\DuAnOjt\smart-parking-app-v2\node_modules\jsdom\lib\jsdom\living\xhr\XMLHttpRequest-impl.js:655:18)
+    at Request.emit (node:events:521:24)
+    at ClientRequest.<anonymous> (D:\DuAnOjt\smart-parking-app-v2\node_modules\jsdom\lib\jsdom\living\helpers\http-request.js:127:14)
+    at ClientRequest.emit (node:events:509:28)
+    at emitErrorEvent (node:_http_client:109:11)
+    at Socket.socketErrorListener (node:_http_client:593:5)
+    at Socket.emit (node:events:509:28)
+    at emitErrorNT (node:internal/streams/destroy:170:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:129:3) undefined
+
+stderr | src/features/notifications/__tests__/NotificationsPage.test.tsx > SCR-025: NotificationsPage (Trung Tâm Thông Báo Driver Ops) > filters notifications by status (unread and urgent)
+Error: AggregateError
+    at Object.dispatchError (D:\DuAnOjt\smart-parking-app-v2\node_modules\jsdom\lib\jsdom\living\xhr\xhr-utils.js:62:19)
+    at Request.<anonymous> (D:\DuAnOjt\smart-parking-app-v2\node_modules\jsdom\lib\jsdom\living\xhr\XMLHttpRequest-impl.js:655:18)
+    at Request.emit (node:events:521:24)
+    at ClientRequest.<anonymous> (D:\DuAnOjt\smart-parking-app-v2\node_modules\jsdom\lib\jsdom\living\helpers\http-request.js:127:14)
+    at ClientRequest.emit (node:events:509:28)
+    at emitErrorEvent (node:_http_client:109:11)
+    at Socket.socketErrorListener (node:_http_client:593:5)
+    at Socket.emit (node:events:509:28)
+    at emitErrorNT (node:internal/streams/destroy:170:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:129:3) undefined
+
+stderr | src/features/payment-cancel/__tests__/PaymentCancelPage.test.tsx > SCR-024: PaymentCancelPage (Thông Báo Hủy Thanh Toán & Bảo Lưu Slot Berth C-114) > triggers repay action when clicking primary VietQR button
+Error: AggregateError
+    at Object.dispatchError (D:\DuAnOjt\smart-parking-app-v2\node_modules\jsdom\lib\jsdom\living\xhr\xhr-utils.js:62:19)
+    at Request.<anonymous> (D:\DuAnOjt\smart-parking-app-v2\node_modules\jsdom\lib\jsdom\living\xhr\XMLHttpRequest-impl.js:655:18)
+    at Request.emit (node:events:521:24)
+    at ClientRequest.<anonymous> (D:\DuAnOjt\smart-parking-app-v2\node_modules\jsdom\lib\jsdom\living\helpers\http-request.js:127:14)
+    at ClientRequest.emit (node:events:509:28)
+    at emitErrorEvent (node:_http_client:109:11)
+    at Socket.socketErrorListener (node:_http_client:593:5)
+    at Socket.emit (node:events:509:28)
+    at emitErrorNT (node:internal/streams/destroy:170:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:129:3) undefined
+
+stderr | src/features/payment-return/__tests__/PaymentReturnPage.test.tsx > SCR-023: PaymentReturnPage (Xác Nhận & Đồng Bộ Kết Quả Thanh Toán PayOS) > renders pending state and allows driver to confirm demo deposit to unlock QR pass
+Error: AggregateError
+    at Object.dispatchError (D:\DuAnOjt\smart-parking-app-v2\node_modules\jsdom\lib\jsdom\living\xhr\xhr-utils.js:62:19)
+    at Request.<anonymous> (D:\DuAnOjt\smart-parking-app-v2\node_modules\jsdom\lib\jsdom\living\xhr\XMLHttpRequest-impl.js:655:18)
+    at Request.emit (node:events:521:24)
+    at ClientRequest.<anonymous> (D:\DuAnOjt\smart-parking-app-v2\node_modules\jsdom\lib\jsdom\living\helpers\http-request.js:127:14)
+    at ClientRequest.emit (node:events:509:28)
+    at emitErrorEvent (node:_http_client:109:11)
+    at Socket.socketErrorListener (node:_http_client:593:5)
+    at Socket.emit (node:events:509:28)
+    at emitErrorNT (node:internal/streams/destroy:170:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:129:3) undefined
+
+stderr | src/features/change-password/__tests__/ChangePasswordPage.test.tsx > SCR-022 ChangePasswordPage (Đổi mật khẩu bảo mật tài xế) > dynamically calculates password strength and updates 4 criteria items
+Error: AggregateError
+    at Object.dispatchError (D:\DuAnOjt\smart-parking-app-v2\node_modules\jsdom\lib\jsdom\living\xhr\xhr-utils.js:62:19)
+    at Request.<anonymous> (D:\DuAnOjt\smart-parking-app-v2\node_modules\jsdom\lib\jsdom\living\xhr\XMLHttpRequest-impl.js:655:18)
+    at Request.emit (node:events:521:24)
+    at ClientRequest.<anonymous> (D:\DuAnOjt\smart-parking-app-v2\node_modules\jsdom\lib\jsdom\living\helpers\http-request.js:127:14)
+    at ClientRequest.emit (node:events:509:28)
+    at emitErrorEvent (node:_http_client:109:11)
+    at Socket.socketErrorListener (node:_http_client:593:5)
+    at Socket.emit (node:events:509:28)
+    at emitErrorNT (node:internal/streams/destroy:170:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:129:3) undefined
+
+stderr | src/features/profile/__tests__/ProfilePage.test.tsx > SCR-021 ProfilePage (Hồ Sơ Bác Tài & Thông Tin Trực Ban) > toggles CCCD masking between masked and full unmasked format
+Error: AggregateError
+    at Object.dispatchError (D:\DuAnOjt\smart-parking-app-v2\node_modules\jsdom\lib\jsdom\living\xhr\xhr-utils.js:62:19)
+    at Request.<anonymous> (D:\DuAnOjt\smart-parking-app-v2\node_modules\jsdom\lib\jsdom\living\xhr\XMLHttpRequest-impl.js:655:18)
+    at Request.emit (node:events:521:24)
+    at ClientRequest.<anonymous> (D:\DuAnOjt\smart-parking-app-v2\node_modules\jsdom\lib\jsdom\living\helpers\http-request.js:127:14)
+    at ClientRequest.emit (node:events:509:28)
+    at emitErrorEvent (node:_http_client:109:11)
+    at Socket.socketErrorListener (node:_http_client:593:5)
+    at Socket.emit (node:events:509:28)
+    at emitErrorNT (node:internal/streams/destroy:170:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:129:3) undefined
+
+stderr | src/features/payment-return/__tests__/PaymentReturnPage.test.tsx > SCR-023: PaymentReturnPage (Xác Nhận & Đồng Bộ Kết Quả Thanh Toán PayOS) > renders hotline support strip with 1900 6868
+Error: AggregateError
+    at Object.dispatchError (D:\DuAnOjt\smart-parking-app-v2\node_modules\jsdom\lib\jsdom\living\xhr\xhr-utils.js:62:19)
+    at Request.<anonymous> (D:\DuAnOjt\smart-parking-app-v2\node_modules\jsdom\lib\jsdom\living\xhr\XMLHttpRequest-impl.js:655:18)
+    at Request.emit (node:events:521:24)
+    at ClientRequest.<anonymous> (D:\DuAnOjt\smart-parking-app-v2\node_modules\jsdom\lib\jsdom\living\helpers\http-request.js:127:14)
+    at ClientRequest.emit (node:events:509:28)
+    at emitErrorEvent (node:_http_client:109:11)
+    at Socket.socketErrorListener (node:_http_client:593:5)
+    at Socket.emit (node:events:509:28)
+    at emitErrorNT (node:internal/streams/destroy:170:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:129:3) undefined
+
+stderr | src/features/change-password/__tests__/ChangePasswordPage.test.tsx > SCR-022 ChangePasswordPage (Đổi mật khẩu bảo mật tài xế) > provides realtime match feedback between new password and confirmation
+Error: AggregateError
+    at Object.dispatchError (D:\DuAnOjt\smart-parking-app-v2\node_modules\jsdom\lib\jsdom\living\xhr\xhr-utils.js:62:19)
+    at Request.<anonymous> (D:\DuAnOjt\smart-parking-app-v2\node_modules\jsdom\lib\jsdom\living\xhr\XMLHttpRequest-impl.js:655:18)
+    at Request.emit (node:events:521:24)
+    at ClientRequest.<anonymous> (D:\DuAnOjt\smart-parking-app-v2\node_modules\jsdom\lib\jsdom\living\helpers\http-request.js:127:14)
+    at ClientRequest.emit (node:events:509:28)
+    at emitErrorEvent (node:_http_client:109:11)
+    at Socket.socketErrorListener (node:_http_client:593:5)
+    at Socket.emit (node:events:509:28)
+    at emitErrorNT (node:internal/streams/destroy:170:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:129:3) undefined
+
+stderr | src/features/change-password/__tests__/ChangePasswordPage.test.tsx > SCR-022 ChangePasswordPage (Đổi mật khẩu bảo mật tài xế) > validates required fields before submitting form
+Error: AggregateError
+    at Object.dispatchError (D:\DuAnOjt\smart-parking-app-v2\node_modules\jsdom\lib\jsdom\living\xhr\xhr-utils.js:62:19)
+    at Request.<anonymous> (D:\DuAnOjt\smart-parking-app-v2\node_modules\jsdom\lib\jsdom\living\xhr\XMLHttpRequest-impl.js:655:18)
+    at Request.emit (node:events:521:24)
+    at ClientRequest.<anonymous> (D:\DuAnOjt\smart-parking-app-v2\node_modules\jsdom\lib\jsdom\living\helpers\http-request.js:127:14)
+    at ClientRequest.emit (node:events:509:28)
+    at emitErrorEvent (node:_http_client:109:11)
+    at Socket.socketErrorListener (node:_http_client:593:5)
+    at Socket.emit (node:events:509:28)
+    at emitErrorNT (node:internal/streams/destroy:170:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:129:3) undefined
+
+stderr | src/features/payment-cancel/__tests__/PaymentCancelPage.test.tsx > SCR-024: PaymentCancelPage (Thông Báo Hủy Thanh Toán & Bảo Lưu Slot Berth C-114) > confirms demo deposit sandbox mode and navigates to bookings
+Error: AggregateError
+    at Object.dispatchError (D:\DuAnOjt\smart-parking-app-v2\node_modules\jsdom\lib\jsdom\living\xhr\xhr-utils.js:62:19)
+    at Request.<anonymous> (D:\DuAnOjt\smart-parking-app-v2\node_modules\jsdom\lib\jsdom\living\xhr\XMLHttpRequest-impl.js:655:18)
+    at Request.emit (node:events:521:24)
+    at ClientRequest.<anonymous> (D:\DuAnOjt\smart-parking-app-v2\node_modules\jsdom\lib\jsdom\living\helpers\http-request.js:127:14)
+    at ClientRequest.emit (node:events:509:28)
+    at emitErrorEvent (node:_http_client:109:11)
+    at Socket.socketErrorListener (node:_http_client:593:5)
+    at Socket.emit (node:events:509:28)
+    at emitErrorNT (node:internal/streams/destroy:170:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:129:3) undefined
+
+stderr | src/features/notifications/__tests__/NotificationsPage.test.tsx > SCR-025: NotificationsPage (Trung Tâm Thông Báo Driver Ops) > filters notifications by category chips
+Error: AggregateError
+    at Object.dispatchError (D:\DuAnOjt\smart-parking-app-v2\node_modules\jsdom\lib\jsdom\living\xhr\xhr-utils.js:62:19)
+    at Request.<anonymous> (D:\DuAnOjt\smart-parking-app-v2\node_modules\jsdom\lib\jsdom\living\xhr\XMLHttpRequest-impl.js:655:18)
+    at Request.emit (node:events:521:24)
+    at ClientRequest.<anonymous> (D:\DuAnOjt\smart-parking-app-v2\node_modules\jsdom\lib\jsdom\living\helpers\http-request.js:127:14)
+    at ClientRequest.emit (node:events:509:28)
+    at emitErrorEvent (node:_http_client:109:11)
+    at Socket.socketErrorListener (node:_http_client:593:5)
+    at Socket.emit (node:events:509:28)
+    at emitErrorNT (node:internal/streams/destroy:170:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:129:3) undefined
+
+stderr | src/features/profile/__tests__/ProfilePage.test.tsx > SCR-021 ProfilePage (Hồ Sơ Bác Tài & Thông Tin Trực Ban) > edits address and saves profile with success toast notification
+Error: AggregateError
+    at Object.dispatchError (D:\DuAnOjt\smart-parking-app-v2\node_modules\jsdom\lib\jsdom\living\xhr\xhr-utils.js:62:19)
+    at Request.<anonymous> (D:\DuAnOjt\smart-parking-app-v2\node_modules\jsdom\lib\jsdom\living\xhr\XMLHttpRequest-impl.js:655:18)
+    at Request.emit (node:events:521:24)
+    at ClientRequest.<anonymous> (D:\DuAnOjt\smart-parking-app-v2\node_modules\jsdom\lib\jsdom\living\helpers\http-request.js:127:14)
+    at ClientRequest.emit (node:events:509:28)
+    at emitErrorEvent (node:_http_client:109:11)
+    at Socket.socketErrorListener (node:_http_client:593:5)
+    at Socket.emit (node:events:509:28)
+    at emitErrorNT (node:internal/streams/destroy:170:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:129:3) undefined
+
+stderr | src/features/vehicles/__tests__/VehiclesPage.test.tsx > SCR-020 VehiclesPage (Quản Lý Phương Tiện Của Tôi) > filters vehicles by class dropdown and resets filters
+Error: AggregateError
+    at Object.dispatchError (D:\DuAnOjt\smart-parking-app-v2\node_modules\jsdom\lib\jsdom\living\xhr\xhr-utils.js:62:19)
+    at Request.<anonymous> (D:\DuAnOjt\smart-parking-app-v2\node_modules\jsdom\lib\jsdom\living\xhr\XMLHttpRequest-impl.js:655:18)
+    at Request.emit (node:events:521:24)
+    at ClientRequest.<anonymous> (D:\DuAnOjt\smart-parking-app-v2\node_modules\jsdom\lib\jsdom\living\helpers\http-request.js:127:14)
+    at ClientRequest.emit (node:events:509:28)
+    at emitErrorEvent (node:_http_client:109:11)
+    at Socket.socketErrorListener (node:_http_client:593:5)
+    at Socket.emit (node:events:509:28)
+    at emitErrorNT (node:internal/streams/destroy:170:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:129:3) undefined
+
+stderr | src/features/profile/__tests__/ProfilePage.test.tsx > SCR-021 ProfilePage (Hồ Sơ Bác Tài & Thông Tin Trực Ban) > resets modified form values back to profile defaults when clicking reset
+Error: AggregateError
+    at Object.dispatchError (D:\DuAnOjt\smart-parking-app-v2\node_modules\jsdom\lib\jsdom\living\xhr\xhr-utils.js:62:19)
+    at Request.<anonymous> (D:\DuAnOjt\smart-parking-app-v2\node_modules\jsdom\lib\jsdom\living\xhr\XMLHttpRequest-impl.js:655:18)
+    at Request.emit (node:events:521:24)
+    at ClientRequest.<anonymous> (D:\DuAnOjt\smart-parking-app-v2\node_modules\jsdom\lib\jsdom\living\helpers\http-request.js:127:14)
+    at ClientRequest.emit (node:events:509:28)
+    at emitErrorEvent (node:_http_client:109:11)
+    at Socket.socketErrorListener (node:_http_client:593:5)
+    at Socket.emit (node:events:509:28)
+    at emitErrorNT (node:internal/streams/destroy:170:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:129:3) undefined
+
+stderr | src/features/payment-cancel/__tests__/PaymentCancelPage.test.tsx > SCR-024: PaymentCancelPage (Thông Báo Hủy Thanh Toán & Bảo Lưu Slot Berth C-114) > releases slot early and cancels booking when clicking release button
+Error: AggregateError
+    at Object.dispatchError (D:\DuAnOjt\smart-parking-app-v2\node_modules\jsdom\lib\jsdom\living\xhr\xhr-utils.js:62:19)
+    at Request.<anonymous> (D:\DuAnOjt\smart-parking-app-v2\node_modules\jsdom\lib\jsdom\living\xhr\XMLHttpRequest-impl.js:655:18)
+    at Request.emit (node:events:521:24)
+    at ClientRequest.<anonymous> (D:\DuAnOjt\smart-parking-app-v2\node_modules\jsdom\lib\jsdom\living\helpers\http-request.js:127:14)
+    at ClientRequest.emit (node:events:509:28)
+    at emitErrorEvent (node:_http_client:109:11)
+    at Socket.socketErrorListener (node:_http_client:593:5)
+    at Socket.emit (node:events:509:28)
+    at emitErrorNT (node:internal/streams/destroy:170:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:129:3) undefined
+
+stderr | src/features/change-password/__tests__/ChangePasswordPage.test.tsx > SCR-022 ChangePasswordPage (Đổi mật khẩu bảo mật tài xế) > submits valid password change, calls API, displays success banner and resets form
+Error: AggregateError
+    at Object.dispatchError (D:\DuAnOjt\smart-parking-app-v2\node_modules\jsdom\lib\jsdom\living\xhr\xhr-utils.js:62:19)
+    at Request.<anonymous> (D:\DuAnOjt\smart-parking-app-v2\node_modules\jsdom\lib\jsdom\living\xhr\XMLHttpRequest-impl.js:655:18)
+    at Request.emit (node:events:521:24)
+    at ClientRequest.<anonymous> (D:\DuAnOjt\smart-parking-app-v2\node_modules\jsdom\lib\jsdom\living\helpers\http-request.js:127:14)
+    at ClientRequest.emit (node:events:509:28)
+    at emitErrorEvent (node:_http_client:109:11)
+    at Socket.socketErrorListener (node:_http_client:593:5)
+    at Socket.emit (node:events:509:28)
+    at emitErrorNT (node:internal/streams/destroy:170:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:129:3) undefined
+
+stderr | src/features/merchant/parking-lots/__tests__/MerchantParkingLotDetailPage.test.tsx > SCR-030: MerchantParkingLotDetailPage (Chi tiết hồ sơ kỹ thuật bãi đỗ xe) > supports lightbox opening and closing on image click
+Error: AggregateError
+    at Object.dispatchError (D:\DuAnOjt\smart-parking-app-v2\node_modules\jsdom\lib\jsdom\living\xhr\xhr-utils.js:62:19)
+    at Request.<anonymous> (D:\DuAnOjt\smart-parking-app-v2\node_modules\jsdom\lib\jsdom\living\xhr\XMLHttpRequest-impl.js:655:18)
+    at Request.emit (node:events:521:24)
+    at ClientRequest.<anonymous> (D:\DuAnOjt\smart-parking-app-v2\node_modules\jsdom\lib\jsdom\living\helpers\http-request.js:127:14)
+    at ClientRequest.emit (node:events:509:28)
+    at emitErrorEvent (node:_http_client:109:11)
+    at Socket.socketErrorListener (node:_http_client:593:5)
+    at Socket.emit (node:events:509:28)
+    at emitErrorNT (node:internal/streams/destroy:170:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:129:3) undefined
+
+stderr | src/features/profile/__tests__/ProfilePage.test.tsx > SCR-021 ProfilePage (Hồ Sơ Bác Tài & Thông Tin Trực Ban) > links to /change-password when clicking Đổi mật khẩu bảo mật in sidebar nav
+Error: AggregateError
+    at Object.dispatchError (D:\DuAnOjt\smart-parking-app-v2\node_modules\jsdom\lib\jsdom\living\xhr\xhr-utils.js:62:19)
+    at Request.<anonymous> (D:\DuAnOjt\smart-parking-app-v2\node_modules\jsdom\lib\jsdom\living\xhr\XMLHttpRequest-impl.js:655:18)
+    at Request.emit (node:events:521:24)
+    at ClientRequest.<anonymous> (D:\DuAnOjt\smart-parking-app-v2\node_modules\jsdom\lib\jsdom\living\helpers\http-request.js:127:14)
+    at ClientRequest.emit (node:events:509:28)
+    at emitErrorEvent (node:_http_client:109:11)
+    at Socket.socketErrorListener (node:_http_client:593:5)
+    at Socket.emit (node:events:509:28)
+    at emitErrorNT (node:internal/streams/destroy:170:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:129:3) undefined
+
+stderr | src/features/payment-cancel/__tests__/PaymentCancelPage.test.tsx > SCR-024: PaymentCancelPage (Thông Báo Hủy Thanh Toán & Bảo Lưu Slot Berth C-114) > renders 24/7 hotline support card with 1900 6868 Ext 2 and bank apps guide
+Error: AggregateError
+    at Object.dispatchError (D:\DuAnOjt\smart-parking-app-v2\node_modules\jsdom\lib\jsdom\living\xhr\xhr-utils.js:62:19)
+    at Request.<anonymous> (D:\DuAnOjt\smart-parking-app-v2\node_modules\jsdom\lib\jsdom\living\xhr\XMLHttpRequest-impl.js:655:18)
+    at Request.emit (node:events:521:24)
+    at ClientRequest.<anonymous> (D:\DuAnOjt\smart-parking-app-v2\node_modules\jsdom\lib\jsdom\living\helpers\http-request.js:127:14)
+    at ClientRequest.emit (node:events:509:28)
+    at emitErrorEvent (node:_http_client:109:11)
+    at Socket.socketErrorListener (node:_http_client:593:5)
+    at Socket.emit (node:events:509:28)
+    at emitErrorNT (node:internal/streams/destroy:170:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:129:3) undefined
+
+stderr | src/features/profile/__tests__/ProfilePage.test.tsx > SCR-021 ProfilePage (Hồ Sơ Bác Tài & Thông Tin Trực Ban) > opens NotificationSettingsModal from sidebar and toggles preferences
+Error: AggregateError
+    at Object.dispatchError (D:\DuAnOjt\smart-parking-app-v2\node_modules\jsdom\lib\jsdom\living\xhr\xhr-utils.js:62:19)
+    at Request.<anonymous> (D:\DuAnOjt\smart-parking-app-v2\node_modules\jsdom\lib\jsdom\living\xhr\XMLHttpRequest-impl.js:655:18)
+    at Request.emit (node:events:521:24)
+    at ClientRequest.<anonymous> (D:\DuAnOjt\smart-parking-app-v2\node_modules\jsdom\lib\jsdom\living\helpers\http-request.js:127:14)
+    at ClientRequest.emit (node:events:509:28)
+    at emitErrorEvent (node:_http_client:109:11)
+    at Socket.socketErrorListener (node:_http_client:593:5)
+    at Socket.emit (node:events:509:28)
+    at emitErrorNT (node:internal/streams/destroy:170:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:129:3) undefined
+
+stderr | src/features/change-password/__tests__/ChangePasswordPage.test.tsx > SCR-022 ChangePasswordPage (Đổi mật khẩu bảo mật tài xế) > displays backend error message when current password is wrong
+Error: AggregateError
+    at Object.dispatchError (D:\DuAnOjt\smart-parking-app-v2\node_modules\jsdom\lib\jsdom\living\xhr\xhr-utils.js:62:19)
+    at Request.<anonymous> (D:\DuAnOjt\smart-parking-app-v2\node_modules\jsdom\lib\jsdom\living\xhr\XMLHttpRequest-impl.js:655:18)
+    at Request.emit (node:events:521:24)
+    at ClientRequest.<anonymous> (D:\DuAnOjt\smart-parking-app-v2\node_modules\jsdom\lib\jsdom\living\helpers\http-request.js:127:14)
+    at ClientRequest.emit (node:events:509:28)
+    at emitErrorEvent (node:_http_client:109:11)
+    at Socket.socketErrorListener (node:_http_client:593:5)
+    at Socket.emit (node:events:509:28)
+    at emitErrorNT (node:internal/streams/destroy:170:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:129:3) undefined
+
+stderr | src/features/payment-cancel/__tests__/PaymentCancelPage.test.tsx > SCR-024: PaymentCancelPage (Thông Báo Hủy Thanh Toán & Bảo Lưu Slot Berth C-114) > renders 24/7 hotline support card with 1900 6868 Ext 2 and bank apps guide
+Error: Not implemented: navigation (except hash changes)
+    at module.exports (D:\DuAnOjt\smart-parking-app-v2\node_modules\jsdom\lib\jsdom\browser\not-implemented.js:9:17)
+    at navigateFetch (D:\DuAnOjt\smart-parking-app-v2\node_modules\jsdom\lib\jsdom\living\window\navigation.js:77:3)
+    at exports.navigate (D:\DuAnOjt\smart-parking-app-v2\node_modules\jsdom\lib\jsdom\living\window\navigation.js:55:3)
+    at LocationImpl._locationObjectNavigate (D:\DuAnOjt\smart-parking-app-v2\node_modules\jsdom\lib\jsdom\living\window\Location-impl.js:30:5)
+    at LocationImpl._locationObjectSetterNavigate (D:\DuAnOjt\smart-parking-app-v2\node_modules\jsdom\lib\jsdom\living\window\Location-impl.js:24:17)
+    at LocationImpl.set href [as href] (D:\DuAnOjt\smart-parking-app-v2\node_modules\jsdom\lib\jsdom\living\window\Location-impl.js:46:10)
+    at Location.set href [as href] (D:\DuAnOjt\smart-parking-app-v2\node_modules\jsdom\lib\jsdom\living\generated\Location.js:125:37)
+    at Timeout._onTimeout (D:\DuAnOjt\smart-parking-app-v2\src\features\payment-cancel\pages\PaymentCancelPage.tsx:96:29)
+    at listOnTimeout (node:internal/timers:605:17)
+    at processTimers (node:internal/timers:541:7) undefined
+
+stderr | src/features/notifications/__tests__/NotificationsPage.test.tsx > SCR-025: NotificationsPage (Trung Tâm Thông Báo Driver Ops) > marks an unread notification as read on click
+Error: AggregateError
+    at Object.dispatchError (D:\DuAnOjt\smart-parking-app-v2\node_modules\jsdom\lib\jsdom\living\xhr\xhr-utils.js:62:19)
+    at Request.<anonymous> (D:\DuAnOjt\smart-parking-app-v2\node_modules\jsdom\lib\jsdom\living\xhr\XMLHttpRequest-impl.js:655:18)
+    at Request.emit (node:events:521:24)
+    at ClientRequest.<anonymous> (D:\DuAnOjt\smart-parking-app-v2\node_modules\jsdom\lib\jsdom\living\helpers\http-request.js:127:14)
+    at ClientRequest.emit (node:events:509:28)
+    at emitErrorEvent (node:_http_client:109:11)
+    at Socket.socketErrorListener (node:_http_client:593:5)
+    at Socket.emit (node:events:509:28)
+    at emitErrorNT (node:internal/streams/destroy:170:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:129:3) undefined
+
+stderr | src/features/change-password/__tests__/ChangePasswordPage.test.tsx > SCR-022 ChangePasswordPage (Đổi mật khẩu bảo mật tài xế) > opens SMS recovery modal when clicking "Quên mật khẩu hiện tại?" or "Khôi phục qua SMS OTP"
+Error: AggregateError
+    at Object.dispatchError (D:\DuAnOjt\smart-parking-app-v2\node_modules\jsdom\lib\jsdom\living\xhr\xhr-utils.js:62:19)
+    at Request.<anonymous> (D:\DuAnOjt\smart-parking-app-v2\node_modules\jsdom\lib\jsdom\living\xhr\XMLHttpRequest-impl.js:655:18)
+    at Request.emit (node:events:521:24)
+    at ClientRequest.<anonymous> (D:\DuAnOjt\smart-parking-app-v2\node_modules\jsdom\lib\jsdom\living\helpers\http-request.js:127:14)
+    at ClientRequest.emit (node:events:509:28)
+    at emitErrorEvent (node:_http_client:109:11)
+    at Socket.socketErrorListener (node:_http_client:593:5)
+    at Socket.emit (node:events:509:28)
+    at emitErrorNT (node:internal/streams/destroy:170:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:129:3) undefined
+
+stderr | src/features/vehicles/__tests__/VehiclesPage.test.tsx > SCR-020 VehiclesPage (Quản Lý Phương Tiện Của Tôi) > opens registration modal and adds a new vehicle
+Error: AggregateError
+    at Object.dispatchError (D:\DuAnOjt\smart-parking-app-v2\node_modules\jsdom\lib\jsdom\living\xhr\xhr-utils.js:62:19)
+    at Request.<anonymous> (D:\DuAnOjt\smart-parking-app-v2\node_modules\jsdom\lib\jsdom\living\xhr\XMLHttpRequest-impl.js:655:18)
+    at Request.emit (node:events:521:24)
+    at ClientRequest.<anonymous> (D:\DuAnOjt\smart-parking-app-v2\node_modules\jsdom\lib\jsdom\living\helpers\http-request.js:127:14)
+    at ClientRequest.emit (node:events:509:28)
+    at emitErrorEvent (node:_http_client:109:11)
+    at Socket.socketErrorListener (node:_http_client:593:5)
+    at Socket.emit (node:events:509:28)
+    at emitErrorNT (node:internal/streams/destroy:170:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:129:3) undefined
+
+stderr | src/features/notifications/__tests__/NotificationsPage.test.tsx > SCR-025: NotificationsPage (Trung Tâm Thông Báo Driver Ops) > marks an unread notification as read on click
+Error: AggregateError
+    at Object.dispatchError (D:\DuAnOjt\smart-parking-app-v2\node_modules\jsdom\lib\jsdom\living\xhr\xhr-utils.js:62:19)
+    at Request.<anonymous> (D:\DuAnOjt\smart-parking-app-v2\node_modules\jsdom\lib\jsdom\living\xhr\XMLHttpRequest-impl.js:655:18)
+    at Request.emit (node:events:521:24)
+    at ClientRequest.<anonymous> (D:\DuAnOjt\smart-parking-app-v2\node_modules\jsdom\lib\jsdom\living\helpers\http-request.js:127:14)
+    at ClientRequest.emit (node:events:509:28)
+    at emitErrorEvent (node:_http_client:109:11)
+    at Socket.socketErrorListener (node:_http_client:593:5)
+    at Socket.emit (node:events:509:28)
+    at emitErrorNT (node:internal/streams/destroy:170:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:129:3) undefined
+
+stderr | src/features/profile/__tests__/ProfilePage.test.tsx > SCR-021 ProfilePage (Hồ Sơ Bác Tài & Thông Tin Trực Ban) > opens AvatarUploadModal by clicking avatar edit button
+Error: AggregateError
+    at Object.dispatchError (D:\DuAnOjt\smart-parking-app-v2\node_modules\jsdom\lib\jsdom\living\xhr\xhr-utils.js:62:19)
+    at Request.<anonymous> (D:\DuAnOjt\smart-parking-app-v2\node_modules\jsdom\lib\jsdom\living\xhr\XMLHttpRequest-impl.js:655:18)
+    at Request.emit (node:events:521:24)
+    at ClientRequest.<anonymous> (D:\DuAnOjt\smart-parking-app-v2\node_modules\jsdom\lib\jsdom\living\helpers\http-request.js:127:14)
+    at ClientRequest.emit (node:events:509:28)
+    at emitErrorEvent (node:_http_client:109:11)
+    at Socket.socketErrorListener (node:_http_client:593:5)
+    at Socket.emit (node:events:509:28)
+    at emitErrorNT (node:internal/streams/destroy:170:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:129:3) undefined
+
+stderr | src/features/notifications/__tests__/NotificationsPage.test.tsx > SCR-025: NotificationsPage (Trung Tâm Thông Báo Driver Ops) > marks all notifications as read via header button
+Error: AggregateError
+    at Object.dispatchError (D:\DuAnOjt\smart-parking-app-v2\node_modules\jsdom\lib\jsdom\living\xhr\xhr-utils.js:62:19)
+    at Request.<anonymous> (D:\DuAnOjt\smart-parking-app-v2\node_modules\jsdom\lib\jsdom\living\xhr\XMLHttpRequest-impl.js:655:18)
+    at Request.emit (node:events:521:24)
+    at ClientRequest.<anonymous> (D:\DuAnOjt\smart-parking-app-v2\node_modules\jsdom\lib\jsdom\living\helpers\http-request.js:127:14)
+    at ClientRequest.emit (node:events:509:28)
+    at emitErrorEvent (node:_http_client:109:11)
+    at Socket.socketErrorListener (node:_http_client:593:5)
+    at Socket.emit (node:events:509:28)
+    at emitErrorNT (node:internal/streams/destroy:170:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:129:3) undefined
+
+stderr | src/features/merchant/parking-lots/__tests__/MerchantParkingLotDetailPage.test.tsx > SCR-030: MerchantParkingLotDetailPage (Chi tiết hồ sơ kỹ thuật bãi đỗ xe) > handles image upload properly and shows feedback toast
+Error: AggregateError
+    at Object.dispatchError (D:\DuAnOjt\smart-parking-app-v2\node_modules\jsdom\lib\jsdom\living\xhr\xhr-utils.js:62:19)
+    at Request.<anonymous> (D:\DuAnOjt\smart-parking-app-v2\node_modules\jsdom\lib\jsdom\living\xhr\XMLHttpRequest-impl.js:655:18)
+    at Request.emit (node:events:521:24)
+    at ClientRequest.<anonymous> (D:\DuAnOjt\smart-parking-app-v2\node_modules\jsdom\lib\jsdom\living\helpers\http-request.js:127:14)
+    at ClientRequest.emit (node:events:509:28)
+    at emitErrorEvent (node:_http_client:109:11)
+    at Socket.socketErrorListener (node:_http_client:593:5)
+    at Socket.emit (node:events:509:28)
+    at emitErrorNT (node:internal/streams/destroy:170:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:129:3) undefined
+
+stderr | src/features/notifications/__tests__/NotificationsPage.test.tsx > SCR-025: NotificationsPage (Trung Tâm Thông Báo Driver Ops) > marks all notifications as read via header button
+Error: AggregateError
+    at Object.dispatchError (D:\DuAnOjt\smart-parking-app-v2\node_modules\jsdom\lib\jsdom\living\xhr\xhr-utils.js:62:19)
+    at Request.<anonymous> (D:\DuAnOjt\smart-parking-app-v2\node_modules\jsdom\lib\jsdom\living\xhr\XMLHttpRequest-impl.js:655:18)
+    at Request.emit (node:events:521:24)
+    at ClientRequest.<anonymous> (D:\DuAnOjt\smart-parking-app-v2\node_modules\jsdom\lib\jsdom\living\helpers\http-request.js:127:14)
+    at ClientRequest.emit (node:events:509:28)
+    at emitErrorEvent (node:_http_client:109:11)
+    at Socket.socketErrorListener (node:_http_client:593:5)
+    at Socket.emit (node:events:509:28)
+    at emitErrorNT (node:internal/streams/destroy:170:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:129:3) undefined
+
+stderr | src/features/change-password/__tests__/ChangePasswordPage.test.tsx > SCR-022 ChangePasswordPage (Đổi mật khẩu bảo mật tài xế) > opens SMS recovery modal when clicking "Quên mật khẩu hiện tại?" or "Khôi phục qua SMS OTP"
+Error: AggregateError
+    at Object.dispatchError (D:\DuAnOjt\smart-parking-app-v2\node_modules\jsdom\lib\jsdom\living\xhr\xhr-utils.js:62:19)
+    at Request.<anonymous> (D:\DuAnOjt\smart-parking-app-v2\node_modules\jsdom\lib\jsdom\living\xhr\XMLHttpRequest-impl.js:655:18)
+    at Request.emit (node:events:521:24)
+    at ClientRequest.<anonymous> (D:\DuAnOjt\smart-parking-app-v2\node_modules\jsdom\lib\jsdom\living\helpers\http-request.js:127:14)
+    at ClientRequest.emit (node:events:509:28)
+    at emitErrorEvent (node:_http_client:109:11)
+    at Socket.socketErrorListener (node:_http_client:593:5)
+    at Socket.emit (node:events:509:28)
+    at emitErrorNT (node:internal/streams/destroy:170:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:129:3) undefined
+
+stderr | src/features/change-password/__tests__/ChangePasswordPage.test.tsx > SCR-022 ChangePasswordPage (Đổi mật khẩu bảo mật tài xế) > renders TerminalQrSyncBanner with auto-sync indicator
+Error: AggregateError
+    at Object.dispatchError (D:\DuAnOjt\smart-parking-app-v2\node_modules\jsdom\lib\jsdom\living\xhr\xhr-utils.js:62:19)
+    at Request.<anonymous> (D:\DuAnOjt\smart-parking-app-v2\node_modules\jsdom\lib\jsdom\living\xhr\XMLHttpRequest-impl.js:655:18)
+    at Request.emit (node:events:521:24)
+    at ClientRequest.<anonymous> (D:\DuAnOjt\smart-parking-app-v2\node_modules\jsdom\lib\jsdom\living\helpers\http-request.js:127:14)
+    at ClientRequest.emit (node:events:509:28)
+    at emitErrorEvent (node:_http_client:109:11)
+    at Socket.socketErrorListener (node:_http_client:593:5)
+    at Socket.emit (node:events:509:28)
+    at emitErrorNT (node:internal/streams/destroy:170:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:129:3) undefined
+
+stderr | src/features/notifications/__tests__/NotificationsPage.test.tsx > SCR-025: NotificationsPage (Trung Tâm Thông Báo Driver Ops) > handles Web Push 24/7 activation button
+Error: AggregateError
+    at Object.dispatchError (D:\DuAnOjt\smart-parking-app-v2\node_modules\jsdom\lib\jsdom\living\xhr\xhr-utils.js:62:19)
+    at Request.<anonymous> (D:\DuAnOjt\smart-parking-app-v2\node_modules\jsdom\lib\jsdom\living\xhr\XMLHttpRequest-impl.js:655:18)
+    at Request.emit (node:events:521:24)
+    at ClientRequest.<anonymous> (D:\DuAnOjt\smart-parking-app-v2\node_modules\jsdom\lib\jsdom\living\helpers\http-request.js:127:14)
+    at ClientRequest.emit (node:events:509:28)
+    at emitErrorEvent (node:_http_client:109:11)
+    at Socket.socketErrorListener (node:_http_client:593:5)
+    at Socket.emit (node:events:509:28)
+    at emitErrorNT (node:internal/streams/destroy:170:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:129:3) undefined
+
+stderr | src/features/notifications/__tests__/NotificationsPage.test.tsx > SCR-025: NotificationsPage (Trung Tâm Thông Báo Driver Ops) > toggles notification channels in the sidebar
+Error: AggregateError
+    at Object.dispatchError (D:\DuAnOjt\smart-parking-app-v2\node_modules\jsdom\lib\jsdom\living\xhr\xhr-utils.js:62:19)
+    at Request.<anonymous> (D:\DuAnOjt\smart-parking-app-v2\node_modules\jsdom\lib\jsdom\living\xhr\XMLHttpRequest-impl.js:655:18)
+    at Request.emit (node:events:521:24)
+    at ClientRequest.<anonymous> (D:\DuAnOjt\smart-parking-app-v2\node_modules\jsdom\lib\jsdom\living\helpers\http-request.js:127:14)
+    at ClientRequest.emit (node:events:509:28)
+    at emitErrorEvent (node:_http_client:109:11)
+    at Socket.socketErrorListener (node:_http_client:593:5)
+    at Socket.emit (node:events:509:28)
+    at emitErrorNT (node:internal/streams/destroy:170:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:129:3) undefined
+
+stderr | src/features/notifications/__tests__/NotificationsPage.test.tsx > SCR-025: NotificationsPage (Trung Tâm Thông Báo Driver Ops) > navigates to virtual queues when claiming slot
+Error: AggregateError
+    at Object.dispatchError (D:\DuAnOjt\smart-parking-app-v2\node_modules\jsdom\lib\jsdom\living\xhr\xhr-utils.js:62:19)
+    at Request.<anonymous> (D:\DuAnOjt\smart-parking-app-v2\node_modules\jsdom\lib\jsdom\living\xhr\XMLHttpRequest-impl.js:655:18)
+    at Request.emit (node:events:521:24)
+    at ClientRequest.<anonymous> (D:\DuAnOjt\smart-parking-app-v2\node_modules\jsdom\lib\jsdom\living\helpers\http-request.js:127:14)
+    at ClientRequest.emit (node:events:509:28)
+    at emitErrorEvent (node:_http_client:109:11)
+    at Socket.socketErrorListener (node:_http_client:593:5)
+    at Socket.emit (node:events:509:28)
+    at emitErrorNT (node:internal/streams/destroy:170:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:129:3) undefined
+
+stderr | src/features/notifications/__tests__/NotificationsPage.test.tsx > SCR-025: NotificationsPage (Trung Tâm Thông Báo Driver Ops) > navigates to virtual queues when claiming slot
+Error: AggregateError
+    at Object.dispatchError (D:\DuAnOjt\smart-parking-app-v2\node_modules\jsdom\lib\jsdom\living\xhr\xhr-utils.js:62:19)
+    at Request.<anonymous> (D:\DuAnOjt\smart-parking-app-v2\node_modules\jsdom\lib\jsdom\living\xhr\XMLHttpRequest-impl.js:655:18)
+    at Request.emit (node:events:521:24)
+    at ClientRequest.<anonymous> (D:\DuAnOjt\smart-parking-app-v2\node_modules\jsdom\lib\jsdom\living\helpers\http-request.js:127:14)
+    at ClientRequest.emit (node:events:509:28)
+    at emitErrorEvent (node:_http_client:109:11)
+    at Socket.socketErrorListener (node:_http_client:593:5)
+    at Socket.emit (node:events:509:28)
+    at emitErrorNT (node:internal/streams/destroy:170:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:129:3) undefined
+
+stderr | src/features/notifications/__tests__/NotificationsPage.test.tsx > SCR-025: NotificationsPage (Trung Tâm Thông Báo Driver Ops) > simulates downloading VAT invoice PDF
+Error: AggregateError
+    at Object.dispatchError (D:\DuAnOjt\smart-parking-app-v2\node_modules\jsdom\lib\jsdom\living\xhr\xhr-utils.js:62:19)
+    at Request.<anonymous> (D:\DuAnOjt\smart-parking-app-v2\node_modules\jsdom\lib\jsdom\living\xhr\XMLHttpRequest-impl.js:655:18)
+    at Request.emit (node:events:521:24)
+    at ClientRequest.<anonymous> (D:\DuAnOjt\smart-parking-app-v2\node_modules\jsdom\lib\jsdom\living\helpers\http-request.js:127:14)
+    at ClientRequest.emit (node:events:509:28)
+    at emitErrorEvent (node:_http_client:109:11)
+    at Socket.socketErrorListener (node:_http_client:593:5)
+    at Socket.emit (node:events:509:28)
+    at emitErrorNT (node:internal/streams/destroy:170:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:129:3) undefined
+
+stderr | src/features/notifications/__tests__/NotificationsPage.test.tsx > SCR-025: NotificationsPage (Trung Tâm Thông Báo Driver Ops) > handles pagination between pages
+Error: AggregateError
+    at Object.dispatchError (D:\DuAnOjt\smart-parking-app-v2\node_modules\jsdom\lib\jsdom\living\xhr\xhr-utils.js:62:19)
+    at Request.<anonymous> (D:\DuAnOjt\smart-parking-app-v2\node_modules\jsdom\lib\jsdom\living\xhr\XMLHttpRequest-impl.js:655:18)
+    at Request.emit (node:events:521:24)
+    at ClientRequest.<anonymous> (D:\DuAnOjt\smart-parking-app-v2\node_modules\jsdom\lib\jsdom\living\helpers\http-request.js:127:14)
+    at ClientRequest.emit (node:events:509:28)
+    at emitErrorEvent (node:_http_client:109:11)
+    at Socket.socketErrorListener (node:_http_client:593:5)
+    at Socket.emit (node:events:509:28)
+    at emitErrorNT (node:internal/streams/destroy:170:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:129:3) undefined
+
+stderr | src/features/notifications/__tests__/NotificationsPage.test.tsx > SCR-025: NotificationsPage (Trung Tâm Thông Báo Driver Ops) > handles pagination between pages
+Error: AggregateError
+    at Object.dispatchError (D:\DuAnOjt\smart-parking-app-v2\node_modules\jsdom\lib\jsdom\living\xhr\xhr-utils.js:62:19)
+    at Request.<anonymous> (D:\DuAnOjt\smart-parking-app-v2\node_modules\jsdom\lib\jsdom\living\xhr\XMLHttpRequest-impl.js:655:18)
+    at Request.emit (node:events:521:24)
+    at ClientRequest.<anonymous> (D:\DuAnOjt\smart-parking-app-v2\node_modules\jsdom\lib\jsdom\living\helpers\http-request.js:127:14)
+    at ClientRequest.emit (node:events:509:28)
+    at emitErrorEvent (node:_http_client:109:11)
+    at Socket.socketErrorListener (node:_http_client:593:5)
+    at Socket.emit (node:events:509:28)
+    at emitErrorNT (node:internal/streams/destroy:170:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:129:3) undefined
+
+stderr | src/features/notifications/__tests__/NotificationsPage.test.tsx > SCR-025: NotificationsPage (Trung Tâm Thông Báo Driver Ops) > shows empty state and allows resetting filters
+Error: AggregateError
+    at Object.dispatchError (D:\DuAnOjt\smart-parking-app-v2\node_modules\jsdom\lib\jsdom\living\xhr\xhr-utils.js:62:19)
+    at Request.<anonymous> (D:\DuAnOjt\smart-parking-app-v2\node_modules\jsdom\lib\jsdom\living\xhr\XMLHttpRequest-impl.js:655:18)
+    at Request.emit (node:events:521:24)
+    at ClientRequest.<anonymous> (D:\DuAnOjt\smart-parking-app-v2\node_modules\jsdom\lib\jsdom\living\helpers\http-request.js:127:14)
+    at ClientRequest.emit (node:events:509:28)
+    at emitErrorEvent (node:_http_client:109:11)
+    at Socket.socketErrorListener (node:_http_client:593:5)
+    at Socket.emit (node:events:509:28)
+    at emitErrorNT (node:internal/streams/destroy:170:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:129:3) undefined
+
+stderr | src/features/notifications/__tests__/NotificationsPage.test.tsx > SCR-025: NotificationsPage (Trung Tâm Thông Báo Driver Ops) > shows empty state and allows resetting filters
+Error: AggregateError
+    at Object.dispatchError (D:\DuAnOjt\smart-parking-app-v2\node_modules\jsdom\lib\jsdom\living\xhr\xhr-utils.js:62:19)
+    at Request.<anonymous> (D:\DuAnOjt\smart-parking-app-v2\node_modules\jsdom\lib\jsdom\living\xhr\XMLHttpRequest-impl.js:655:18)
+    at Request.emit (node:events:521:24)
+    at ClientRequest.<anonymous> (D:\DuAnOjt\smart-parking-app-v2\node_modules\jsdom\lib\jsdom\living\helpers\http-request.js:127:14)
+    at ClientRequest.emit (node:events:509:28)
+    at emitErrorEvent (node:_http_client:109:11)
+    at Socket.socketErrorListener (node:_http_client:593:5)
+    at Socket.emit (node:events:509:28)
+    at emitErrorNT (node:internal/streams/destroy:170:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:129:3) undefined
+
+stderr | src/features/vehicles/__tests__/VehiclesPage.test.tsx > SCR-020 VehiclesPage (Quản Lý Phương Tiện Của Tôi) > opens registration modal and adds a new vehicle
+Error: AggregateError
+    at Object.dispatchError (D:\DuAnOjt\smart-parking-app-v2\node_modules\jsdom\lib\jsdom\living\xhr\xhr-utils.js:62:19)
+    at Request.<anonymous> (D:\DuAnOjt\smart-parking-app-v2\node_modules\jsdom\lib\jsdom\living\xhr\XMLHttpRequest-impl.js:655:18)
+    at Request.emit (node:events:521:24)
+    at ClientRequest.<anonymous> (D:\DuAnOjt\smart-parking-app-v2\node_modules\jsdom\lib\jsdom\living\helpers\http-request.js:127:14)
+    at ClientRequest.emit (node:events:509:28)
+    at emitErrorEvent (node:_http_client:109:11)
+    at Socket.socketErrorListener (node:_http_client:593:5)
+    at Socket.emit (node:events:509:28)
+    at emitErrorNT (node:internal/streams/destroy:170:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:129:3) undefined
+
+stderr | src/features/vehicles/__tests__/VehiclesPage.test.tsx > SCR-020 VehiclesPage (Quản Lý Phương Tiện Của Tôi) > allows changing the default operational vehicle
+Error: AggregateError
+    at Object.dispatchError (D:\DuAnOjt\smart-parking-app-v2\node_modules\jsdom\lib\jsdom\living\xhr\xhr-utils.js:62:19)
+    at Request.<anonymous> (D:\DuAnOjt\smart-parking-app-v2\node_modules\jsdom\lib\jsdom\living\xhr\XMLHttpRequest-impl.js:655:18)
+    at Request.emit (node:events:521:24)
+    at ClientRequest.<anonymous> (D:\DuAnOjt\smart-parking-app-v2\node_modules\jsdom\lib\jsdom\living\helpers\http-request.js:127:14)
+    at ClientRequest.emit (node:events:509:28)
+    at emitErrorEvent (node:_http_client:109:11)
+    at Socket.socketErrorListener (node:_http_client:593:5)
+    at Socket.emit (node:events:509:28)
+    at emitErrorNT (node:internal/streams/destroy:170:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:129:3) undefined
+
+stderr | src/features/notifications/__tests__/NotificationsPage.test.tsx > SCR-025: NotificationsPage (Trung Tâm Thông Báo Driver Ops) > renders ProfileSidebarNav with active notifications tab and valid navigation links
+Error: AggregateError
+    at Object.dispatchError (D:\DuAnOjt\smart-parking-app-v2\node_modules\jsdom\lib\jsdom\living\xhr\xhr-utils.js:62:19)
+    at Request.<anonymous> (D:\DuAnOjt\smart-parking-app-v2\node_modules\jsdom\lib\jsdom\living\xhr\XMLHttpRequest-impl.js:655:18)
+    at Request.emit (node:events:521:24)
+    at ClientRequest.<anonymous> (D:\DuAnOjt\smart-parking-app-v2\node_modules\jsdom\lib\jsdom\living\helpers\http-request.js:127:14)
+    at ClientRequest.emit (node:events:509:28)
+    at emitErrorEvent (node:_http_client:109:11)
+    at Socket.socketErrorListener (node:_http_client:593:5)
+    at Socket.emit (node:events:509:28)
+    at emitErrorNT (node:internal/streams/destroy:170:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:129:3) undefined
+
+stderr | src/features/vehicles/__tests__/VehiclesPage.test.tsx > SCR-020 VehiclesPage (Quản Lý Phương Tiện Của Tôi) > blocks deleting the default vehicle and allows deleting non-default vehicle
+Error: AggregateError
+    at Object.dispatchError (D:\DuAnOjt\smart-parking-app-v2\node_modules\jsdom\lib\jsdom\living\xhr\xhr-utils.js:62:19)
+    at Request.<anonymous> (D:\DuAnOjt\smart-parking-app-v2\node_modules\jsdom\lib\jsdom\living\xhr\XMLHttpRequest-impl.js:655:18)
+    at Request.emit (node:events:521:24)
+    at ClientRequest.<anonymous> (D:\DuAnOjt\smart-parking-app-v2\node_modules\jsdom\lib\jsdom\living\helpers\http-request.js:127:14)
+    at ClientRequest.emit (node:events:509:28)
+    at emitErrorEvent (node:_http_client:109:11)
+    at Socket.socketErrorListener (node:_http_client:593:5)
+    at Socket.emit (node:events:509:28)
+    at emitErrorNT (node:internal/streams/destroy:170:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:129:3) undefined
+
+stderr | src/features/vehicles/__tests__/VehiclesPage.test.tsx > SCR-020 VehiclesPage (Quản Lý Phương Tiện Của Tôi) > blocks deleting the default vehicle and allows deleting non-default vehicle
+Error: AggregateError
+    at Object.dispatchError (D:\DuAnOjt\smart-parking-app-v2\node_modules\jsdom\lib\jsdom\living\xhr\xhr-utils.js:62:19)
+    at Request.<anonymous> (D:\DuAnOjt\smart-parking-app-v2\node_modules\jsdom\lib\jsdom\living\xhr\XMLHttpRequest-impl.js:655:18)
+    at Request.emit (node:events:521:24)
+    at ClientRequest.<anonymous> (D:\DuAnOjt\smart-parking-app-v2\node_modules\jsdom\lib\jsdom\living\helpers\http-request.js:127:14)
+    at ClientRequest.emit (node:events:509:28)
+    at emitErrorEvent (node:_http_client:109:11)
+    at Socket.socketErrorListener (node:_http_client:593:5)
+    at Socket.emit (node:events:509:28)
+    at emitErrorNT (node:internal/streams/destroy:170:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:129:3) undefined
+
+stderr | src/features/vehicles/__tests__/VehiclesPage.test.tsx > SCR-020 VehiclesPage (Quản Lý Phương Tiện Của Tôi) > opens and saves vehicle edits via EditVehicleModal
+Error: AggregateError
+    at Object.dispatchError (D:\DuAnOjt\smart-parking-app-v2\node_modules\jsdom\lib\jsdom\living\xhr\xhr-utils.js:62:19)
+    at Request.<anonymous> (D:\DuAnOjt\smart-parking-app-v2\node_modules\jsdom\lib\jsdom\living\xhr\XMLHttpRequest-impl.js:655:18)
+    at Request.emit (node:events:521:24)
+    at ClientRequest.<anonymous> (D:\DuAnOjt\smart-parking-app-v2\node_modules\jsdom\lib\jsdom\living\helpers\http-request.js:127:14)
+    at ClientRequest.emit (node:events:509:28)
+    at emitErrorEvent (node:_http_client:109:11)
+    at Socket.socketErrorListener (node:_http_client:593:5)
+    at Socket.emit (node:events:509:28)
+    at emitErrorNT (node:internal/streams/destroy:170:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:129:3) undefined
+
+stderr | src/features/vehicles/__tests__/VehiclesPage.test.tsx > SCR-020 VehiclesPage (Quản Lý Phương Tiện Của Tôi) > opens and saves vehicle edits via EditVehicleModal
+Error: AggregateError
+    at Object.dispatchError (D:\DuAnOjt\smart-parking-app-v2\node_modules\jsdom\lib\jsdom\living\xhr\xhr-utils.js:62:19)
+    at Request.<anonymous> (D:\DuAnOjt\smart-parking-app-v2\node_modules\jsdom\lib\jsdom\living\xhr\XMLHttpRequest-impl.js:655:18)
+    at Request.emit (node:events:521:24)
+    at ClientRequest.<anonymous> (D:\DuAnOjt\smart-parking-app-v2\node_modules\jsdom\lib\jsdom\living\helpers\http-request.js:127:14)
+    at ClientRequest.emit (node:events:509:28)
+    at emitErrorEvent (node:_http_client:109:11)
+    at Socket.socketErrorListener (node:_http_client:593:5)
+    at Socket.emit (node:events:509:28)
+    at emitErrorNT (node:internal/streams/destroy:170:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:129:3) undefined
+
+stderr | src/features/vehicles/__tests__/VehiclesPage.test.tsx > SCR-020 VehiclesPage (Quản Lý Phương Tiện Của Tôi) > opens and closes inspection dossier modal
+Error: AggregateError
+    at Object.dispatchError (D:\DuAnOjt\smart-parking-app-v2\node_modules\jsdom\lib\jsdom\living\xhr\xhr-utils.js:62:19)
+    at Request.<anonymous> (D:\DuAnOjt\smart-parking-app-v2\node_modules\jsdom\lib\jsdom\living\xhr\XMLHttpRequest-impl.js:655:18)
+    at Request.emit (node:events:521:24)
+    at ClientRequest.<anonymous> (D:\DuAnOjt\smart-parking-app-v2\node_modules\jsdom\lib\jsdom\living\helpers\http-request.js:127:14)
+    at ClientRequest.emit (node:events:509:28)
+    at emitErrorEvent (node:_http_client:109:11)
+    at Socket.socketErrorListener (node:_http_client:593:5)
+    at Socket.emit (node:events:509:28)
+    at emitErrorNT (node:internal/streams/destroy:170:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:129:3) undefined
+
+stderr | src/features/vehicles/__tests__/VehiclesPage.test.tsx > SCR-020 VehiclesPage (Quản Lý Phương Tiện Của Tôi) > opens export fleet modal and simulates file download
+Error: AggregateError
+    at Object.dispatchError (D:\DuAnOjt\smart-parking-app-v2\node_modules\jsdom\lib\jsdom\living\xhr\xhr-utils.js:62:19)
+    at Request.<anonymous> (D:\DuAnOjt\smart-parking-app-v2\node_modules\jsdom\lib\jsdom\living\xhr\XMLHttpRequest-impl.js:655:18)
+    at Request.emit (node:events:521:24)
+    at ClientRequest.<anonymous> (D:\DuAnOjt\smart-parking-app-v2\node_modules\jsdom\lib\jsdom\living\helpers\http-request.js:127:14)
+    at ClientRequest.emit (node:events:509:28)
+    at emitErrorEvent (node:_http_client:109:11)
+    at Socket.socketErrorListener (node:_http_client:593:5)
+    at Socket.emit (node:events:509:28)
+    at emitErrorNT (node:internal/streams/destroy:170:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:129:3) undefined
+
+stderr | src/features/vehicles/__tests__/VehiclesPage.test.tsx > SCR-020 VehiclesPage (Quản Lý Phương Tiện Của Tôi) > renders operational account sidebar and opens notification settings modal
+Error: AggregateError
+    at Object.dispatchError (D:\DuAnOjt\smart-parking-app-v2\node_modules\jsdom\lib\jsdom\living\xhr\xhr-utils.js:62:19)
+    at Request.<anonymous> (D:\DuAnOjt\smart-parking-app-v2\node_modules\jsdom\lib\jsdom\living\xhr\XMLHttpRequest-impl.js:655:18)
+    at Request.emit (node:events:521:24)
+    at ClientRequest.<anonymous> (D:\DuAnOjt\smart-parking-app-v2\node_modules\jsdom\lib\jsdom\living\helpers\http-request.js:127:14)
+    at ClientRequest.emit (node:events:509:28)
+    at emitErrorEvent (node:_http_client:109:11)
+    at Socket.socketErrorListener (node:_http_client:593:5)
+    at Socket.emit (node:events:509:28)
+    at emitErrorNT (node:internal/streams/destroy:170:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:129:3) undefined
+
+·························································································································································································································
+
+ Test Files  30 passed (30)
+      Tests  217 passed (217)
+   Start at  01:46:51
+   Duration  15.97s (transform 17.71s, setup 23.48s, collect 58.82s, tests 70.54s, environment 74.13s, prepare 10.46s)
+
