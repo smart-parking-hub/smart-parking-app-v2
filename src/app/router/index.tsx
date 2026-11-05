@@ -83,7 +83,7 @@ const BaselineOverviewPage = lazy(() =>
   import('@/app/pages/BaselineOverviewPage').then((module) => ({ default: module.BaselineOverviewPage })),
 )
 const DashboardHomePage = lazy(() =>
-  import('@/features/dashboard').then((module) => ({ default: module.DashboardHomePage })),
+  import('@/features/driver').then((module) => ({ default: module.DriverDashboardPage })),
 )
 const SearchParkingPage = lazy(() =>
   import('@/features/parking-search').then((module) => ({ default: module.SearchParkingPage })),
@@ -514,6 +514,10 @@ export const router = createBrowserRouter([
   {
     path: '/giai-phap-tai-xe',
     element: <DriverSolutionsPage />,
+  },
+  {
+    path: '/solutions/owners',
+    element: <OwnerSolutionsPage withLayout={true} />,
   },
   {
     path: '/owner-solutions',

@@ -17,6 +17,7 @@ interface Props {
   onSelectLot: (lot: ParkingLotItem) => void
   onQuickBook: (lot: ParkingLotItem) => void
 }
+
 export function InteractiveMapCanvas({
   lots,
   selectedLot,
@@ -30,9 +31,11 @@ export function InteractiveMapCanvas({
   const [tilesUnavailable, setTilesUnavailable] = useState(false)
   const [ready, setReady] = useState(false)
   const select = useRef(onSelectLot)
+
   useEffect(() => {
     select.current = onSelectLot
   }, [onSelectLot])
+
   useEffect(() => {
     if (!container.current) return
     const instance = L.map(container.current, {
@@ -40,6 +43,7 @@ export function InteractiveMapCanvas({
       scrollWheelZoom: false,
     }).setView([10.7769, 106.7009], 12)
     map.current = instance
+
     const tiles = L.tileLayer(
       import.meta.env.VITE_OSM_TILE_URL ||
         'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
@@ -50,20 +54,26 @@ export function InteractiveMapCanvas({
       },
     ).addTo(instance)
     tileLayer.current = tiles
+
     let loaded = false
     const tileTimeout = setTimeout(() => {
       if (!loaded) setTilesUnavailable(true)
     }, 12000)
+
     tiles.on('tileerror', () => setTilesUnavailable(true))
     tiles.on('tileload', () => {
       loaded = true
       setTilesUnavailable(false)
     })
+
+    // Position zoom controls cleanly with high z-index
     L.control.zoom({ position: 'topright' }).addTo(instance)
     L.control.scale({ position: 'bottomleft', imperial: false }).addTo(instance)
+
     const resize = new ResizeObserver(() => instance.invalidateSize())
     resize.observe(container.current)
     setReady(true)
+
     return () => {
       clearTimeout(tileTimeout)
       resize.disconnect()
@@ -72,17 +82,22 @@ export function InteractiveMapCanvas({
       tileLayer.current = null
     }
   }, [])
+
   useEffect(() => {
     const instance = map.current
     if (!instance || !ready) return
     const layer = L.layerGroup().addTo(instance)
+    let selectedMarker: L.Marker | null = null
+
     for (const lot of lots.filter(validCoordinates)) {
+      const isSelected = lot.id === selectedLot?.id
       const label = document.createElement('span')
       label.className = 'parking-pin-label'
-      label.dataset.selected = String(lot.id === selectedLot?.id)
+      label.dataset.selected = String(isSelected)
       label.dataset.full = String(lot.isFull || lot.availableSlots === 0)
       label.textContent = `${new Intl.NumberFormat('vi-VN').format(lot.hourlyRate / 1000)}K · ${lot.availableSlots} chỗ`
-      L.marker([lot.latitude, lot.longitude], {
+
+      const marker = L.marker([lot.latitude, lot.longitude], {
         icon: L.divIcon({
           html: label,
           className: 'parking-pin',
@@ -91,11 +106,36 @@ export function InteractiveMapCanvas({
         }),
         title: lot.name,
         keyboard: true,
+        zIndexOffset: isSelected ? 1000 : 100,
       })
+        .bindPopup(
+          `<div style="font-family: inherit; min-width: 200px; padding: 2px;">
+            <div style="font-weight: 700; font-size: 13px; color: #0d1c2e; margin-bottom: 3px;">${lot.name}</div>
+            <div style="font-size: 11px; color: #64748b; margin-bottom: 6px; line-height: 1.4;">${lot.address}</div>
+            <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #e2e8f0; padding-top: 5px; font-size: 11px;">
+              <span style="color: ${lot.availableSlots > 0 ? '#10b981' : '#f43f5e'}; font-weight: 700;">
+                ${lot.availableSlots > 0 ? `Còn ${lot.availableSlots} chỗ` : 'Hết chỗ'}
+              </span>
+              <span style="font-weight: 700; color: #0d1c2e; font-family: monospace;">
+                ${new Intl.NumberFormat('vi-VN').format(lot.hourlyRate)} đ/h
+              </span>
+            </div>
+          </div>`,
+          { offset: [0, -32], closeButton: true }
+        )
         .on('click', () => select.current(lot))
         .addTo(layer)
+
+      if (isSelected) {
+        selectedMarker = marker
+      }
     }
-    if (origin && validCoordinates(origin))
+
+    if (selectedMarker) {
+      selectedMarker.openPopup()
+    }
+
+    if (origin && validCoordinates(origin)) {
       L.circleMarker([origin.latitude, origin.longitude], {
         radius: 9,
         color: 'white',
@@ -105,27 +145,31 @@ export function InteractiveMapCanvas({
       })
         .bindTooltip('Điểm xuất phát của bạn')
         .addTo(layer)
+    }
+
     return () => {
       layer.remove()
     }
   }, [lots, selectedLot?.id, origin, ready])
+
   useEffect(() => {
     const instance = map.current
     if (!instance || !ready) return
-    if (selectedLot && validCoordinates(selectedLot))
+    if (selectedLot && validCoordinates(selectedLot)) {
       instance.flyTo(
         [selectedLot.latitude, selectedLot.longitude],
-        Math.max(instance.getZoom(), 13),
-        { duration: 0.45 },
+        Math.max(instance.getZoom(), 15),
+        { duration: 0.5 },
       )
-    else {
+    } else {
       const points = lots
         .filter(validCoordinates)
         .map((lot) => [lot.latitude, lot.longitude] as [number, number])
       if (points.length)
         instance.fitBounds(points, { padding: [70, 70], maxZoom: 14 })
     }
-  }, [selectedLot?.latitude, selectedLot?.longitude, selectedLot, lots, ready])
+  }, [selectedLot, lots, ready])
+
   const route = useQuery({
     queryKey: [
       'osm-driving-route',
@@ -144,6 +188,7 @@ export function InteractiveMapCanvas({
     retry: false,
     staleTime: 120000,
   })
+
   useEffect(() => {
     const instance = map.current
     if (!instance || !route.data) return
@@ -160,6 +205,7 @@ export function InteractiveMapCanvas({
       line.remove()
     }
   }, [route.data, ready])
+
   return (
     <section
       aria-label="Bản đồ bãi đỗ OpenStreetMap"
@@ -179,8 +225,9 @@ export function InteractiveMapCanvas({
             </div>
           </div>
           <button
+            type="button"
             aria-label="Hiển thị tất cả bãi trên bản đồ"
-            className="flex items-center gap-2 rounded-xl border border-brand-border px-3 py-2 text-sm font-semibold text-brand-navy"
+            className="flex items-center gap-2 rounded-xl border border-brand-border px-3 py-2 text-sm font-semibold text-brand-navy hover:bg-slate-50 transition-colors cursor-pointer"
             onClick={() => {
               const points = lots
                 .filter(validCoordinates)
@@ -211,7 +258,8 @@ export function InteractiveMapCanvas({
                 OpenStreetMap.
               </p>
               <button
-                className="mt-3 font-semibold text-brand-navy underline underline-offset-4"
+                type="button"
+                className="mt-3 font-semibold text-brand-navy underline underline-offset-4 cursor-pointer"
                 onClick={() => tileLayer.current?.redraw()}
               >
                 Thử tải lại bản đồ
@@ -220,23 +268,31 @@ export function InteractiveMapCanvas({
           )}
         </div>
         {selectedLot && (
-          <div className="flex flex-wrap items-center justify-between gap-4 border-t border-brand-border p-5 sm:p-6">
+          <div className="flex flex-wrap items-center justify-between gap-4 border-t border-brand-border p-5 sm:p-6 bg-slate-50/50">
             <div className="min-w-0 flex-1">
-              <p className="mb-1 text-xs font-semibold tracking-wider text-brand-muted">
+              <p className="mb-1 text-xs font-semibold tracking-wider text-[#d95f00]">
                 BÃI ĐANG CHỌN
               </p>
               <h3 className="font-sora text-base font-semibold leading-relaxed text-brand-navy">
                 {selectedLot.name}
               </h3>
-              <p className="mt-1 text-sm text-brand-muted">
-                {selectedLot.availableSlots} chỗ trống ·{' '}
-                {new Intl.NumberFormat('vi-VN').format(selectedLot.hourlyRate)}đ
-                / giờ
+              <p className="mt-0.5 text-xs text-slate-500 mb-1">
+                {selectedLot.address}
+              </p>
+              <p className="text-xs font-medium text-brand-muted">
+                <span className="font-semibold text-emerald-700">
+                  {selectedLot.availableSlots} chỗ trống
+                </span>{' '}
+                ·{' '}
+                <span className="font-mono font-bold text-slate-900">
+                  {new Intl.NumberFormat('vi-VN').format(selectedLot.hourlyRate)} đ/h
+                </span>
               </p>
             </div>
             <button
+              type="button"
               disabled={selectedLot.isFull || selectedLot.availableSlots === 0}
-              className="inline-flex min-h-12 items-center gap-2 rounded-xl bg-brand-navy px-5 text-sm font-semibold text-white disabled:opacity-40"
+              className="inline-flex min-h-12 items-center gap-2 rounded-xl bg-[#d95f00] hover:bg-[#b85000] px-5 text-sm font-semibold text-white disabled:opacity-40 transition-colors shadow-sm cursor-pointer"
               onClick={() => onQuickBook(selectedLot)}
             >
               Giữ chỗ

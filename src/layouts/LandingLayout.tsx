@@ -11,7 +11,7 @@ export function LandingLayout({ children }: LandingLayoutProps = {}) {
   return (
     <div className="min-h-screen bg-white font-inter text-slate-800 antialiased selection:bg-brand-orange selection:text-white flex flex-col">
       <LandingNavbar />
-      <main className="w-full flex-1">
+      <main className="w-full flex-1" id="main-content">
         {children ?? <Outlet />}
       </main>
       <LandingFooter />
