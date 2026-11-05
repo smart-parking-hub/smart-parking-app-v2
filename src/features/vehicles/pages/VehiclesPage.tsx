@@ -25,7 +25,6 @@ import { EditVehicleModal } from '../components/EditVehicleModal'
 import { ViewInspectionDossierModal } from '../components/ViewInspectionDossierModal'
 import { DeleteVehicleConfirmModal } from '../components/DeleteVehicleConfirmModal'
 import { ExportFleetModal } from '../components/ExportFleetModal'
-import { FleetOperationsSidebarCard } from '../components/FleetOperationsSidebarCard'
 import { VehiclesSkeleton } from '../components/VehiclesSkeleton'
 import { ProfileSidebarNav } from '../../profile/components/ProfileSidebarNav'
 import { NotificationSettingsModal } from '../../profile/components/NotificationSettingsModal'
@@ -213,19 +212,19 @@ export function VehiclesPage() {
         />
 
         {/* Master 2-Column Grid (4 Cols Sidebar + 8 Cols Operations) */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+        <div className="grid grid-cols-1 lg:grid-cols-[260px_minmax(0,1fr)] gap-6 items-start">
           {/* Left Column (4 cols): Cấu hình tài khoản vận hành Navigation & Fleet Operations Card */}
-          <aside className="lg:col-span-4 flex flex-col gap-5">
+          <aside className="lg:sticky lg:top-[calc(var(--driver-header-height)+24px)]">
             <ProfileSidebarNav
+              compact
               activeTab="vehicles"
               onOpenNotificationSettings={() => setIsNotificationSettingsOpen(true)}
             />
 
-            <FleetOperationsSidebarCard />
           </aside>
 
           {/* Right Column (8 cols): Fleet Bento KPI, Filters & Table */}
-          <div className="lg:col-span-8 flex flex-col gap-6">
+          <div className="min-w-0 flex flex-col gap-6">
             {/* Bento KPI Section */}
             <VehiclesKpiBento metrics={computedMetrics} />
 

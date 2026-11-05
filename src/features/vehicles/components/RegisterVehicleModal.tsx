@@ -153,6 +153,7 @@ export function RegisterVehicleModal({
             </label>
             <input
               id="modal-reg-plate"
+              name="licensePlate"
               type="text"
               required
               value={licensePlate}
@@ -172,6 +173,7 @@ export function RegisterVehicleModal({
             </label>
             <select
               id="modal-reg-class"
+              name="vehicleClass"
               value={vehicleClass}
               onChange={(e) => setVehicleClass(e.target.value as VehicleClassType)}
               className="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm font-medium text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500"
@@ -192,6 +194,7 @@ export function RegisterVehicleModal({
               </label>
               <input
                 id="modal-reg-curb"
+                name="curbWeightTon"
                 type="number"
                 step="0.1"
                 min="0"
@@ -207,6 +210,7 @@ export function RegisterVehicleModal({
               </label>
               <input
                 id="modal-reg-towing"
+                name="towingWeightTon"
                 type="number"
                 step="0.1"
                 min="0"
@@ -226,6 +230,7 @@ export function RegisterVehicleModal({
               </label>
               <input
                 id="modal-reg-brand"
+                name="brandModel"
                 type="text"
                 value={brandModel}
                 onChange={(e) => setBrandModel(e.target.value)}
@@ -239,6 +244,7 @@ export function RegisterVehicleModal({
               </label>
               <input
                 id="modal-reg-year"
+                name="manufactureYear"
                 type="number"
                 min="1990"
                 max="2030"
@@ -261,6 +267,7 @@ export function RegisterVehicleModal({
             >
               <input
                 id="modal-reg-doc"
+                name="registrationDoc"
                 type="file"
                 accept=".pdf,.png,.jpg,.jpeg"
                 onChange={handleFileUpload}
@@ -286,8 +293,10 @@ export function RegisterVehicleModal({
           </div>
 
           {/* 6. Default Vehicle Checkbox */}
-          <label className="flex items-start gap-3 cursor-pointer pt-1">
+          <label htmlFor="modal-reg-default" className="flex items-start gap-3 cursor-pointer pt-1">
             <input
+              id="modal-reg-default"
+              name="isDefault"
               type="checkbox"
               checked={isDefault}
               onChange={(e) => setIsDefault(e.target.checked)}

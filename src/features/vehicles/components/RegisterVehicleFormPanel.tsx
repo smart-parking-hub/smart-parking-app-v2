@@ -132,6 +132,7 @@ export function RegisterVehicleFormPanel({
           </label>
           <input
             id="reg-plate"
+            name="licensePlate"
             type="text"
             required
             value={licensePlate}
@@ -151,6 +152,7 @@ export function RegisterVehicleFormPanel({
           </label>
           <select
             id="reg-class"
+            name="vehicleClass"
             value={vehicleClass}
             onChange={(e) => setVehicleClass(e.target.value as VehicleClassType)}
             className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs md:text-sm font-medium text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500"
@@ -171,6 +173,7 @@ export function RegisterVehicleFormPanel({
             </label>
             <input
               id="reg-curb"
+              name="curbWeightTon"
               type="number"
               step="0.1"
               min="0"
@@ -186,6 +189,7 @@ export function RegisterVehicleFormPanel({
             </label>
             <input
               id="reg-towing"
+              name="towingWeightTon"
               type="number"
               step="0.1"
               min="0"
@@ -205,6 +209,7 @@ export function RegisterVehicleFormPanel({
             </label>
             <input
               id="reg-brand"
+              name="brandModel"
               type="text"
               value={brandModel}
               onChange={(e) => setBrandModel(e.target.value)}
@@ -218,6 +223,7 @@ export function RegisterVehicleFormPanel({
             </label>
             <input
               id="reg-year"
+              name="manufactureYear"
               type="number"
               min="1990"
               max="2030"
@@ -240,6 +246,7 @@ export function RegisterVehicleFormPanel({
           >
             <input
               id="reg-doc"
+              name="registrationDoc"
               type="file"
               accept=".pdf,.png,.jpg,.jpeg"
               onChange={handleFileUpload}
@@ -265,8 +272,10 @@ export function RegisterVehicleFormPanel({
         </div>
 
         {/* 6. Default Vehicle Checkbox */}
-        <label className="flex items-start gap-2.5 cursor-pointer pt-1">
+        <label htmlFor="reg-default-checkbox" className="flex items-start gap-2.5 cursor-pointer pt-1">
           <input
+            id="reg-default-checkbox"
+            name="isDefault"
             type="checkbox"
             checked={isDefault}
             onChange={(e) => setIsDefault(e.target.checked)}

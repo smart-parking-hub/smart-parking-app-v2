@@ -104,6 +104,7 @@ export function EditVehicleModal({
               </label>
               <input
                 id="edit-plate"
+                name="licensePlate"
                 type="text"
                 required
                 value={licensePlate}
@@ -117,6 +118,7 @@ export function EditVehicleModal({
               </label>
               <select
                 id="edit-class"
+                name="vehicleClass"
                 value={vehicleClass}
                 onChange={(e) => setVehicleClass(e.target.value as VehicleClassType)}
                 className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs md:text-sm text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500"
@@ -136,6 +138,7 @@ export function EditVehicleModal({
             </label>
             <input
               id="edit-brand"
+              name="brandModel"
               type="text"
               value={brandModel}
               onChange={(e) => setBrandModel(e.target.value)}
@@ -150,6 +153,7 @@ export function EditVehicleModal({
               </label>
               <input
                 id="edit-curb"
+                name="curbWeightTon"
                 type="number"
                 step="0.1"
                 value={curbWeightTon}
@@ -163,6 +167,7 @@ export function EditVehicleModal({
               </label>
               <input
                 id="edit-towing"
+                name="towingWeightTon"
                 type="number"
                 step="0.1"
                 value={towingWeightTon}
@@ -178,6 +183,7 @@ export function EditVehicleModal({
             </label>
             <select
               id="edit-status"
+              name="status"
               value={status}
               onChange={(e) => setStatus(e.target.value as VehicleStatusType)}
               className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs md:text-sm text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500"

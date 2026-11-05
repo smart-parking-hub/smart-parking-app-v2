@@ -55,11 +55,11 @@ export function DriverConversionCta({ onOpenLeadModal }: DriverConversionCtaProp
           {/* Outbound Link to Parking Search */}
           <div className="mb-10">
             <Link
-              to="/search"
+              to="/parking"
               className="inline-flex items-center gap-2 text-sm font-inter text-slate-300 hover:text-brand-orange transition-colors underline underline-offset-4"
             >
               <MapPin className="h-4 w-4 text-brand-orange" aria-hidden="true" />
-              <span>Hoặc tra cứu trực tiếp 320+ bãi đỗ trên Bản đồ tương tác</span>
+              <span>Hoặc tra cứu trực tiếp 320+ bãi đỗ trên Bản Đồ Bãi Đỗ Tương Tác</span>
             </Link>
           </div>
 
