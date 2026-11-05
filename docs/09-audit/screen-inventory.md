@@ -6,7 +6,7 @@
 | --------- | --------------------------------------------------- | ----------------------------------------- | ------------------------ | -------------------------------- | --------------- | ------------------- |
 | `SCR-001` | Public Landing Page (Trang Chủ SmartTruckHub)       | `/`                                       | `features/landing`       | Stitch HTML/CSS (`web_standard`) | **IMPLEMENTED** | Đã nghiệm thu       |
 | `SCR-002` | Driver Solutions Page (Trang Giải Pháp Tài Xế)      | `/solutions/drivers` · `/driver-solutions` · `/giai-phap-tai-xe` | `features/landing`       | Stitch HTML/CSS (`web_standard`) | **IMPLEMENTED** | Đã nghiệm thu       |
-| `SCR-003` | Owner Solutions Page (Trang Giải Pháp Chủ Bãi)      | `/owner-solutions` (`/giai-phap-chu-bai`) | `features/landing`       | Stitch HTML/CSS (`web_standard`) | **IMPLEMENTED** | Đã nghiệm thu       |
+| `SCR-003` | Owner Solutions Page (Trang Giải Pháp Chủ Bãi)      | `/solutions/owners` · `/owner-solutions` · `/giai-phap-chu-bai` | `features/landing`       | Stitch HTML/CSS (`web_standard`) | **IMPLEMENTED** | Đã nghiệm thu       |
 | `SCR-004` | Pricing Page (Trang Bảng Giá Niêm Yết)              | `/pricing` (`/bang-gia`)                  | `features/landing`       | Stitch HTML/CSS (`web_standard`) | **IMPLEMENTED** | Đã nghiệm thu       |
 | `SCR-005` | API & Developer Docs (Trang Kết Nối API & Webhooks) | `/api-docs` (`/ket-noi-api`)              | `features/landing`       | Stitch HTML/CSS (`web_standard`) | **IMPLEMENTED** | Đã nghiệm thu       |
 | `SCR-006` | About Us (Trang Về Chúng Tôi & Sứ Mệnh)             | `/about` (`/ve-chung-toi`)                | `features/landing`       | Stitch HTML/CSS (`web_standard`) | **IMPLEMENTED** | Đã nghiệm thu       |
@@ -33,3 +33,8 @@
 | `SCR-031` | Edit Merchant Parking Lot (Chỉnh sửa & Cập nhật hồ sơ bãi đỗ) | `/merchant/parking-lots/:parkingLotId/edit` | `features/merchant/parking-lots` | Stitch HTML/CSS (`web_dashboard`) | **IMPLEMENTED** | Sẵn sàng nghiệm thu |
 
 SCR-010 (2026-11-05): /login dùng LoginPage + AuthLayout riêng; Redux session sync, guest guard, role redirect, toast; 217 unit/component tests và 7 E2E PASS. Live backend acceptance pending. Xem [báo cáo](./scr-010-login-record.md).
+
+
+## SCR-021 profile simplification — 2026-11-05
+
+User-approved API-only redesign. Personal profile, one emergency contact and password operations preserved using verified users/me endpoints; unsupported demo fields removed. Readonly login phone matches backend behavior. See [current SCR-021 record](scr-021-driver-profile-record.md) for parity, tests and limitations.

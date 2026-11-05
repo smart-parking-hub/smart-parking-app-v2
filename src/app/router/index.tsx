@@ -232,8 +232,6 @@ export const router = createBrowserRouter([
   { path: '/403', element: <AccessPage /> },
   { path: '/contact', element: <ContactPage /> },
   { path: '/company/contact', element: <ContactPage /> },
-  { path: '/solutions/drivers', element: <DriverSolutionsPage /> },
-  { path: '/solutions/owners', element: <OwnerSolutionsPage /> },
   { path: '/solutions/api', element: <ApiDocsPage /> },
   { path: '/company/about', element: <AboutUsPage /> },
   { path: '/company/careers', element: <CareersPage /> },
@@ -514,6 +512,10 @@ export const router = createBrowserRouter([
   {
     path: '/giai-phap-tai-xe',
     element: <DriverSolutionsPage />,
+  },
+  {
+    path: '/solutions/owners',
+    element: <OwnerSolutionsPage withLayout={true} />,
   },
   {
     path: '/owner-solutions',

@@ -63,7 +63,7 @@ export function DriverConversionCta({ onOpenLeadModal }: DriverConversionCtaProp
               className="inline-flex items-center gap-2 text-xs font-inter text-slate-300 hover:text-[#F97316] transition-colors underline underline-offset-4"
             >
               <MapPin className="h-3.5 w-3.5 text-[#F97316]" aria-hidden="true" />
-              <span>Hoặc tra cứu trực tiếp 320+ bãi đỗ trên Bản đồ tương tác (SCR-015)</span>
+              <span>Hoặc tra cứu trực tiếp 320+ bãi đỗ trên Bản Đồ Bãi Đỗ Tương Tác</span>
             </Link>
           </div>
 

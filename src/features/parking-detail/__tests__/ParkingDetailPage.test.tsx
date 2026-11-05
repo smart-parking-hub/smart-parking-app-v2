@@ -31,23 +31,46 @@ function renderWithProviders(ui: React.ReactElement, initialEntries = ['/parking
         <Routes>
           <Route path="/parking/:id" element={ui} />
           <Route path="/dashboard/parking/:id" element={ui} />
-          <Route path="/parking" element={<div>Bản đồ tìm bãi</div>} />
-          <Route path="/queues" element={<div>Hàng đợi ảo</div>} />
+          <Route path="/dashboard/search" element={<div>Bản đồ tìm bãi (SCR-015)</div>} />
+          <Route path="/dashboard/bookings" element={<div>Vé & Đặt chỗ của tôi (SCR-017)</div>} />
+          <Route path="/dashboard/queues" element={<div>Hàng đợi ảo Cát Lái (SCR-018)</div>} />
         </Routes>
       </MemoryRouter>
     </QueryClientProvider>
   )
 }
 
-describe('SCR-016: Parking Details & Instant Physical Reservation (Chi tiết bãi đỗ & Đặt giữ chỗ)', () => {
+describe('SCR-016: Parking Details & Instant Physical Reservation (Chi tiết bãi đỗ & Đặt giữ chỗ 10p)', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     vi.mocked(apiClient.get).mockImplementation((url: string) => {
+      if (url.includes('/api/v1/parking-lots/9999')) {
+        const error = new Error('Not Found') as Error & { response?: { status?: number } }
+        error.response = { status: 404 }
+        return Promise.reject(error)
+      }
+      if (url.includes('/api/v1/parking-lots/500')) {
+        return Promise.reject(new Error('Server Error 500'))
+      }
       if (url.includes('/api/v1/parking-lots/')) {
         return Promise.resolve({ data: fallbackFacilityDetail })
       }
       if (url.includes('/api/v1/reviews/')) {
         return Promise.resolve({ data: fallbackDriverReviews })
+      }
+      return Promise.resolve({ data: {} })
+    })
+
+    vi.mocked(apiClient.post).mockImplementation((url: string) => {
+      if (url.includes('/api/v1/bookings')) {
+        return Promise.resolve({
+          data: {
+            id: 'BK-2025-CLG2-014',
+            bookingId: 'BK-2025-CLG2-014',
+            slotBerth: 'BERTH C-14',
+            payOsCheckoutUrl: 'https://pay.payos.vn/web/demo-sth-deposit-20',
+          },
+        })
       }
       return Promise.resolve({ data: {} })
     })
@@ -185,11 +208,11 @@ describe('SCR-016: Parking Details & Instant Physical Reservation (Chi tiết b�
     ).toBeInTheDocument()
   })
 
-  it('opens interactive booking flow modal and processes payment simulation', async () => {
+  it('opens interactive 2-step booking flow modal (GAP-05 · SCR-MOD-07) and processes PayOS 20% deposit', async () => {
     renderWithProviders(<ParkingDetailPage />)
 
     // Modal initially not visible
-    expect(screen.queryByText(/THANH TOÁN GIỮ CHỖ VẬT LÝ/i)).not.toBeInTheDocument()
+    expect(screen.queryByText(/GAP-05 · ĐẶT GIỮ CHỖ 10 PHÚT/i)).not.toBeInTheDocument()
 
     // Click CTA to open modal
     const openModalBtn = screen.getByRole('button', {
@@ -197,15 +220,37 @@ describe('SCR-016: Parking Details & Instant Physical Reservation (Chi tiết b�
     })
     fireEvent.click(openModalBtn)
 
-    // Modal is opened
-    expect(screen.getByText(/THANH TOÁN GIỮ CHỖ VẬT LÝ/i)).toBeInTheDocument()
-    expect(screen.getByText(/Xác Nhận Giữ Slot \(10 Phút\)/i)).toBeInTheDocument()
-    expect(screen.getByText(/Ví Tài Xế SmartTruck Pay/i)).toBeInTheDocument()
-    expect(screen.getByText(/Tài Khoản Doanh Nghiệp \(Post-Paid\)/i)).toBeInTheDocument()
+    // Modal Step 1: Configuration is opened
+    expect(screen.getByText(/GAP-05 · ĐẶT GIỮ CHỖ 10 PHÚT/i)).toBeInTheDocument()
+    expect(
+      screen.getByRole('heading', {
+        level: 2,
+        name: /Bước 1: Xác Nhận Thông Tin & Khóa Slot/i,
+      })
+    ).toBeInTheDocument()
+    expect(screen.getByText(/HOLD TTL/i)).toBeInTheDocument()
+    expect(screen.getByText(/Cổng Thanh Toán Quốc Gia PayOS \(VietQR\)/i)).toBeInTheDocument()
 
-    // Confirm payment button
+    // Step 1: Click Continue to Step 2
+    const step1Btn = screen.getByRole('button', {
+      name: /TIẾP TỤC THANH TOÁN CỌC/i,
+    })
+    fireEvent.click(step1Btn)
+
+    // Modal Step 2: PayOS Checkout is displayed
+    expect(
+      screen.getByRole('heading', {
+        level: 2,
+        name: /Bước 2: Thanh Toán Cọc PayOS \(20%\)/i,
+      })
+    ).toBeInTheDocument()
+    expect(screen.getByText(/KẾT NỐI CỔNG PAYOS VIETQR 24\/7/i)).toBeInTheDocument()
+    expect(screen.getByText(/STH-BKG-2025-CLG2/i)).toBeInTheDocument()
+    expect(screen.getByText(/Mở liên kết thanh toán PayOS Checkout/i)).toBeInTheDocument()
+
+    // Confirm PayOS payment button
     const confirmBtn = screen.getByRole('button', {
-      name: /THANH TOÁN 100\.000 ₫ & MỞ KHÓA BARIE/i,
+      name: /THANH TOÁN .* & MỞ KHÓA BARIE/i,
     })
     fireEvent.click(confirmBtn)
 
@@ -214,26 +259,42 @@ describe('SCR-016: Parking Details & Instant Physical Reservation (Chi tiết b�
       screen.getByText(/ĐANG KHÓA SLOT VẬT LÝ & GỬI ALPR\.\.\./i)
     ).toBeInTheDocument()
 
-    // Wait for success confirmation
+    // Wait for Step 3: Success confirmation
     await waitFor(
       () => {
+        expect(screen.getByText(/GIAO DỊCH PAYOS HOÀN TẤT/i)).toBeInTheDocument()
+        expect(screen.getByText(/Giao dịch giữ chỗ thành công/i)).toBeInTheDocument()
         expect(
-          screen.getByText(/Giao dịch giữ chỗ thành công/i)
-        ).toBeInTheDocument()
-        expect(
-          screen.getByText(/ĐẶT CHỖ THÀNH CÔNG! Slot BERTH C-14/i)
+          screen.getByText(/ĐẶT CHỖ THÀNH CÔNG! Slot/i)
         ).toBeInTheDocument()
       },
       { timeout: 3000 }
     )
 
+    // Outbound action button present
+    expect(
+      screen.getByText(/XEM VÉ & MÃ QR TẠI ĐẶT CHỖ CỦA TÔI \(SCR-017\)/i)
+    ).toBeInTheDocument()
+    expect(
+      screen.getByText(/THAM GIA HÀNG ĐỢI ẢO \(SCR-018\)/i)
+    ).toBeInTheDocument()
+
     // Click dismiss button
-    const understandBtn = screen.getByRole('button', {
+    const dismissBtn = screen.getByRole('button', {
       name: /ĐÃ HIỂU & QUAY LẠI/i,
     })
-    fireEvent.click(understandBtn)
+    fireEvent.click(dismissBtn)
 
     // Modal closed
-    expect(screen.queryByText(/THANH TOÁN GIỮ CHỖ VẬT LÝ/i)).not.toBeInTheDocument()
+    expect(screen.queryByText(/GAP-05 · ĐẶT GIỮ CHỖ 10 PHÚT/i)).not.toBeInTheDocument()
+  })
+
+  it('renders empty state when parking lot does not exist', async () => {
+    renderWithProviders(<ParkingDetailPage />, ['/parking/9999'])
+
+    await waitFor(() => {
+      expect(screen.getByText(/Bãi Đỗ Xe Không Tồn Tại/i)).toBeInTheDocument()
+      expect(screen.getByText(/QUAY LẠI BẢN ĐỒ TÌM BÃI \(SCR-015\)/i)).toBeInTheDocument()
+    })
   })
 })

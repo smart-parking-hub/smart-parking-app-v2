@@ -52,10 +52,12 @@ export function CareersFastApplySection() {
 
             <form className="space-y-4" onSubmit={handleSubmit}>
               <div>
-                <label className="block font-inter text-xs text-slate-600 font-medium mb-1">
+                <label htmlFor="fast-apply-fullname" className="block font-inter text-xs text-slate-600 font-medium mb-1">
                   Họ và tên của bạn
                 </label>
                 <input
+                  id="fast-apply-fullname"
+                  name="fullName"
                   type="text"
                   required
                   placeholder="Nguyễn Văn A"
@@ -66,10 +68,12 @@ export function CareersFastApplySection() {
               </div>
 
               <div>
-                <label className="block font-inter text-xs text-slate-600 font-medium mb-1">
+                <label htmlFor="fast-apply-email" className="block font-inter text-xs text-slate-600 font-medium mb-1">
                   Email liên hệ
                 </label>
                 <input
+                  id="fast-apply-email"
+                  name="email"
                   type="email"
                   required
                   placeholder="your.name@domain.com"
@@ -80,10 +84,12 @@ export function CareersFastApplySection() {
               </div>
 
               <div>
-                <label className="block font-inter text-xs text-slate-600 font-medium mb-1">
+                <label htmlFor="fast-apply-cvlink" className="block font-inter text-xs text-slate-600 font-medium mb-1">
                   Link LinkedIn hoặc Link CV
                 </label>
                 <input
+                  id="fast-apply-cvlink"
+                  name="cvLink"
                   type="url"
                   required
                   placeholder="https://linkedin.com/in/..."

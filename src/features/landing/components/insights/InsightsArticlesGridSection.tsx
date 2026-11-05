@@ -151,7 +151,7 @@ export function InsightsArticlesGridSection({
             </h2>
           </div>
           <div className="font-mono text-xs text-slate-500 flex items-center gap-2">
-            <span>HIỂN THỊ: {displayedArticles.length} / 48 TÀI LIỆU KHẢO SÁT</span>
+            <span>HIỂN THỊ: {displayedArticles.length} / {filteredArticles.length} TÀI LIỆU KHẢO SÁT</span>
           </div>
         </div>
 
@@ -213,7 +213,7 @@ export function InsightsArticlesGridSection({
 
         {/* Empty Search Result Fallback */}
         {displayedArticles.length === 0 && (
-          <div className="py-16 text-center bg-white rounded-xl border border-[#E2E8F0]">
+          <div role="status" className="py-16 text-center bg-white rounded-xl border border-[#E2E8F0]">
             <p className="text-slate-500 font-inter text-sm">
               Không tìm thấy bài viết nào phù hợp với từ khóa &quot;{searchQuery}&quot;.
             </p>
@@ -224,10 +224,11 @@ export function InsightsArticlesGridSection({
         <div className="mt-12 flex justify-center">
           <button
             type="button"
-            onClick={() => setVisibleCount((prev) => (prev >= 48 ? 6 : prev + 6))}
-            className="inline-flex items-center gap-2 px-6 py-3 rounded-lg bg-white border border-[#E2E8F0] hover:bg-slate-50 text-[#060D1A] font-sora text-xs font-bold transition-all shadow-sm"
+            disabled={visibleCount >= filteredArticles.length}
+            onClick={() => setVisibleCount((prev) => prev + 6)}
+            className="disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center gap-2 px-6 py-3 rounded-lg bg-white border border-[#E2E8F0] hover:bg-slate-50 text-[#060D1A] font-sora text-xs font-bold transition-all shadow-sm"
           >
-            <span>TẢI THÊM BÀI PHÂN TÍCH TRƯỚC ĐÓ</span>
+            <span>{visibleCount >= filteredArticles.length ? 'ĐÃ HIỂN THỊ TẤT CẢ BÀI VIẾT' : 'TẢI THÊM BÀI PHÂN TÍCH TRƯỚC ĐÓ'}</span>
             <ChevronDown className="w-4 h-4" />
           </button>
         </div>

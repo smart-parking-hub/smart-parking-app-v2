@@ -83,10 +83,12 @@ export function SendReceiptEmailModal({
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1">
+            <label htmlFor="send-receipt-email-input" className="block text-xs font-semibold text-slate-700 mb-1">
               Email Kế Toán Nhận Tệp
             </label>
             <input
+              id="send-receipt-email-input"
+              name="receiptEmail"
               type="email"
               required
               value={email}
