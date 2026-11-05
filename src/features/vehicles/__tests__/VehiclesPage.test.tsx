@@ -295,17 +295,17 @@ describe('SCR-020 VehiclesPage (Quản Lý Phương Tiện Của Tôi)', () => {
     )
 
     await waitFor(() => {
-      expect(screen.getByText('CẤU HÌNH TÀI KHOẢN VẬN HÀNH')).toBeInTheDocument()
+      expect(screen.getByText('Tài khoản tài xế')).toBeInTheDocument()
     })
 
     // Sidebar items
-    expect(screen.getByText('Thông tin cá nhân & Giấy phép')).toBeInTheDocument()
+    expect(screen.getByText('Thông tin cá nhân')).toBeInTheDocument()
     expect(screen.getByText('Đội xe của tôi')).toBeInTheDocument()
-    expect(screen.getByText('Lịch sử cước & Hóa đơn VAT')).toBeInTheDocument()
-    expect(screen.getByText('Đổi mật khẩu bảo mật')).toBeInTheDocument()
+    expect(screen.getByText('Lịch sử thanh toán')).toBeInTheDocument()
+    expect(screen.getByText('Bảo mật tài khoản')).toBeInTheDocument()
 
     // Notification settings modal
-    const notifBtn = screen.getByText(/Thiết lập thông báo hệ thống/i)
+    const notifBtn = screen.getByText('Thông báo')
     await user.click(notifBtn)
 
     expect(screen.getByText('Thiết Lập Thông Báo Hệ Thống')).toBeInTheDocument()

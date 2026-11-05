@@ -1,332 +1,47 @@
-import { useState, useEffect } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { useForm } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
-import { z } from 'zod'
-import { CheckCircle2, AlertCircle, RefreshCw, Zap } from 'lucide-react'
+import { Link } from 'react-router-dom'
+import { ArrowLeft, ArrowUpRight, UserRound } from 'lucide-react'
+import { fetchMerchantProfile } from '../api/merchantProfileApi'
+import { errorMessage } from '@/shared/api/resources'
+import { Notice } from '@/shared/components/Workspace'
+import { MerchantProfileForm } from '../components/MerchantProfileForm'
+import { ProfileDocuments } from '../components/ProfileDocuments'
+import { ProfileBankDetails } from '../components/ProfileBankDetails'
+import { profileButton } from '../components/ProfileSection'
 
-import {
-  fetchMerchantProfile,
-  updateMerchantProfileApi,
-  uploadMerchantDocumentApi,
-  saveNotificationSettings,
-  requestFastWithdrawalApi,
-} from '../api/merchantProfileApi'
-import type {
-  MerchantNotificationSettings,
-  StoredDocument,
-} from '../types/merchantProfileTypes'
-
-import { MerchantProfileHeaderRibbon } from '../components/MerchantProfileHeaderRibbon'
-import { MerchantIdentitySummaryCard } from '../components/MerchantIdentitySummaryCard'
-import { MerchantWalletSummaryCard } from '../components/MerchantWalletSummaryCard'
-import { MerchantPolicyCard } from '../components/MerchantPolicyCard'
-import { LegalInfoFormCard } from '../components/LegalInfoFormCard'
-import { BankingProfileCard } from '../components/BankingProfileCard'
-import { NotificationChannelsConfigCard } from '../components/NotificationChannelsConfigCard'
-import { ProfileActionsFooter } from '../components/ProfileActionsFooter'
-import { FastWithdrawModal } from '../components/FastWithdrawModal'
-import { DocumentPreviewModal } from '../components/DocumentPreviewModal'
-import { MerchantProfileSkeleton } from '../components/MerchantProfileSkeleton'
-
-const profileFormSchema = z.object({
-  fullName: z
-    .string()
-    .min(1, 'Vui lòng nhập tên người đại diện pháp luật')
-    .max(100, 'Tối đa 100 ký tự'),
-  email: z.string().email('Địa chỉ email không đúng định dạng').max(100, 'Tối đa 100 ký tự'),
-  emergencyContact: z.string().max(20, 'Hotline khẩn cấp tối đa 20 ký tự').optional(),
-  address: z.string().max(255, 'Địa chỉ tối đa 255 ký tự').optional(),
-})
-
-type ProfileFormData = z.infer<typeof profileFormSchema>
-
+export const merchantProfileKey = ['merchant-profile-summary'] as const
 export function MerchantProfilePage() {
-  const queryClient = useQueryClient()
-
-  const {
-    data: profile,
-    isLoading,
-    error,
-    refetch,
-    isRefetching,
-  } = useQuery({
-    queryKey: ['merchant-profile-summary'],
-    queryFn: fetchMerchantProfile,
-    staleTime: 30000,
-  })
-
-  const [notificationSettings, setNotificationSettings] = useState<MerchantNotificationSettings>({
-    webPushHorn: true,
-    smsCriticalAlert: true,
-    zaloOaStatement: false,
-  })
-
-  const [isSaving, setIsSaving] = useState(false)
-  const [isUploadingDoc, setIsUploadingDoc] = useState(false)
-  const [isWithdrawModalOpen, setIsWithdrawModalOpen] = useState(false)
-  const [isWithdrawing, setIsWithdrawing] = useState(false)
-  const [previewDoc, setPreviewDoc] = useState<StoredDocument | null>(null)
-
-  // Floating Toast State
-  const [toast, setToast] = useState<{
-    show: boolean
-    message: string
-    icon: 'check' | 'payments' | 'refresh' | 'error'
-  }>({
-    show: false,
-    message: '',
-    icon: 'check',
-  })
-
-  const showToast = (
-    message: string,
-    icon: 'check' | 'payments' | 'refresh' | 'error' = 'check',
-  ) => {
-    setToast({ show: true, message, icon })
-    setTimeout(() => {
-      setToast((prev) => ({ ...prev, show: false }))
-    }, 3200)
-  }
-
-  const {
-    register,
-    handleSubmit,
-    reset,
-    formState: { errors },
-  } = useForm<ProfileFormData>({
-    resolver: zodResolver(profileFormSchema),
-    defaultValues: {
-      fullName: '',
-      email: '',
-      emergencyContact: '',
-      address: '',
-    },
-  })
-
-  // Synchronize form values whenever profile data is retrieved
-  useEffect(() => {
-    if (profile) {
-      reset({
-        fullName: profile.fullName || '',
-        email: profile.email || '',
-        emergencyContact: profile.emergencyContact || '',
-        address: profile.address || '',
-      })
-      if (profile.notificationSettings) {
-        setNotificationSettings(profile.notificationSettings)
-      }
-    }
-  }, [profile, reset])
-
-  // Save profile changes handler
-  const onSaveProfile = handleSubmit(async (data) => {
-    setIsSaving(true)
-    try {
-      const updated = await updateMerchantProfileApi({
-        fullName: data.fullName,
-        email: data.email,
-        emergencyContact: data.emergencyContact,
-        address: data.address,
-      })
-      queryClient.setQueryData(['merchant-profile-summary'], updated)
-      showToast('Đã lưu cập nhật hồ sơ doanh nghiệp thành công!', 'check')
-    } catch {
-      showToast('Có lỗi xảy ra khi lưu hồ sơ. Vui lòng thử lại!', 'error')
-    } finally {
-      setIsSaving(false)
-    }
-  })
-
-  // Reset form handler
-  const handleResetForm = () => {
-    if (profile) {
-      reset({
-        fullName: profile.fullName || '',
-        email: profile.email || '',
-        emergencyContact: profile.emergencyContact || '',
-        address: profile.address || '',
-      })
-      const defaultNotifs: MerchantNotificationSettings = {
-        webPushHorn: true,
-        smsCriticalAlert: true,
-        zaloOaStatement: false,
-      }
-      setNotificationSettings(defaultNotifs)
-      saveNotificationSettings(defaultNotifs)
-      showToast('Đã đặt lại cấu hình thông báo và dữ liệu gốc.', 'refresh')
-    }
-  }
-
-  // Notification toggle handler
-  const handleNotificationChange = (
-    key: keyof MerchantNotificationSettings,
-    value: boolean,
-  ) => {
-    const nextSettings = {
-      ...notificationSettings,
-      [key]: value,
-    }
-    setNotificationSettings(nextSettings)
-    saveNotificationSettings(nextSettings)
-    showToast('Cấu hình kênh thông báo & hồ sơ doanh nghiệp đã được lưu.', 'check')
-  }
-
-  // Document upload handler
-  const handleUploadDocument = async (businessLicense: string, file: File | null) => {
-    setIsUploadingDoc(true)
-    try {
-      const { updatedProfile } = await uploadMerchantDocumentApi({
-        businessLicense,
-        file,
-      })
-      queryClient.setQueryData(['merchant-profile-summary'], updatedProfile)
-      showToast('Đã cập nhật giấy tờ pháp lý thành công!', 'check')
-    } catch {
-      showToast('Tải lên tệp thất bại, vui lòng kiểm tra lại định dạng tệp.', 'error')
-    } finally {
-      setIsUploadingDoc(false)
-    }
-  }
-
-  // Fast withdrawal confirm handler
-  const handleConfirmWithdraw = async (amount: number) => {
-    if (!profile) return
-    setIsWithdrawing(true)
-    try {
-      await requestFastWithdrawalApi({
-        amount,
-        bankName: profile.bankName,
-        bankAccountNum: profile.bankAccountNum,
-        accountHolder: profile.bankAccountHolder,
-      })
-      setIsWithdrawModalOpen(false)
-      const formatted = new Intl.NumberFormat('vi-VN').format(amount)
-      showToast(`Lệnh rút ${formatted} ₫ đang được Napas247 xử lý tới MB Bank.`, 'payments')
-    } catch {
-      showToast('Không thể tạo yêu cầu rút tiền lúc này.', 'error')
-    } finally {
-      setIsWithdrawing(false)
-    }
-  }
-
-  if (isLoading) {
-    return <MerchantProfileSkeleton />
-  }
-
-  if (error || !profile) {
-    return (
-      <div className="max-w-[1280px] mx-auto px-4 lg:px-8 py-10">
-        <div className="bg-rose-50 border border-rose-200 rounded-2xl p-8 text-center space-y-3">
-          <AlertCircle className="w-12 h-12 text-rose-600 mx-auto" />
-          <h3 className="font-sora text-lg font-bold text-rose-900">
-            Không thể tải hồ sơ chủ bãi
-          </h3>
-          <p className="text-xs lg:text-sm text-rose-700 max-w-lg mx-auto">
-            Hệ thống quản lý định danh Merchant đang gián đoạn kết nối. Vui lòng tải lại hoặc liên hệ
-            bộ phận hỗ trợ vận hành.
-          </p>
-          <button
-            type="button"
-            onClick={() => void refetch()}
-            disabled={isRefetching}
-            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#d95f00] text-white text-xs font-bold hover:bg-[#b85000] transition-colors cursor-pointer disabled:opacity-50"
-          >
-            <RefreshCw className={`w-4 h-4 ${isRefetching ? 'animate-spin' : ''}`} />
-            <span>{isRefetching ? 'Đang thử lại...' : 'Tải lại trang'}</span>
-          </button>
-        </div>
+  const cache = useQueryClient()
+  const query = useQuery({ queryKey: merchantProfileKey, queryFn: fetchMerchantProfile, staleTime: 30_000, retry: false, refetchOnWindowFocus: false })
+  const profile = query.data
+  return <div className="mx-auto w-full max-w-[1180px] px-4 py-8 font-inter text-base leading-relaxed text-brand-navy sm:px-8 lg:py-10">
+    <header className="mb-8">
+      <Link to="/merchant/dashboard" className="mb-5 inline-flex items-center gap-2 text-base text-brand-muted hover:text-brand-navy focus-visible:outline-2 focus-visible:outline-brand-orange"><ArrowLeft size={16} aria-hidden="true" /> Tổng quan</Link>
+      <div className="border-l-4 border-brand-orange pl-5">
+        <h1 className="font-sora text-2xl font-semibold tracking-tight sm:text-3xl">Hồ sơ chủ bãi</h1>
+        <p className="mt-3 text-base text-brand-muted">Quản lý thông tin liên hệ, giấy tờ và tài khoản nhận tiền.</p>
       </div>
-    )
-  }
-
-  return (
-    <div className="w-full pb-16">
-      <div className="w-full max-w-[1280px] mx-auto px-4 lg:px-8 py-6 space-y-6">
-        {/* Top Identity / Page Header Ribbon */}
-        <MerchantProfileHeaderRibbon
-          profile={profile}
-          onShowCertificate={() =>
-            alert(
-              'Chứng chỉ An toàn thông tin ISO 27001:2022 & Thẩm định Cục ĐKVN số #VN-2024-88219 (Hiệu lực: 31/12/2026)',
-            )
-          }
-        />
-
-        {/* Two-Column Master Layout (40% Left : 60% Right on Desktop) */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-          {/* LEFT COLUMN: Thẻ Tóm Tắt Pháp Nhân & Tài Khoản Ví (40% ~ 5 Cols) */}
-          <aside className="lg:col-span-5 flex flex-col gap-6">
-            <MerchantIdentitySummaryCard profile={profile} />
-            <MerchantWalletSummaryCard
-              profile={profile}
-              onOpenWithdrawModal={() => setIsWithdrawModalOpen(true)}
-            />
-            <MerchantPolicyCard profile={profile} />
-          </aside>
-
-          {/* RIGHT COLUMN: Form Cấu Hình Chi Tiết - 3 Khối (60% ~ 7 Cols) */}
-          <main className="lg:col-span-7 flex flex-col gap-6">
-            <LegalInfoFormCard
-              profile={profile}
-              register={register}
-              errors={errors}
-              onUploadDocument={handleUploadDocument}
-              isUploadingDoc={isUploadingDoc}
-              onPreviewDocument={(doc) => setPreviewDoc(doc)}
-            />
-
-            <BankingProfileCard profile={profile} />
-
-            <NotificationChannelsConfigCard
-              settings={notificationSettings}
-              onChange={handleNotificationChange}
-            />
-
-            <ProfileActionsFooter
-              lastUpdated={profile.lastUpdated}
-              isSaving={isSaving}
-              onReset={handleResetForm}
-              onSave={onSaveProfile}
-            />
-          </main>
+    </header>
+    {query.isPending ? <div role="status" className="space-y-5 motion-safe:animate-pulse"><p>Đang tải hồ sơ…</p><div className="h-40 rounded-2xl bg-brand-border" /><div className="h-72 rounded-2xl bg-brand-border" /></div>
+      : query.isError ? <Notice error><div><p>{errorMessage(query.error)}</p><button type="button" disabled={query.isFetching} className={`${profileButton} mt-4`} onClick={() => void query.refetch()}>Thử lại</button></div></Notice>
+      : !profile ? <Notice>Chưa có hồ sơ chủ bãi.</Notice>
+      : <div className="grid items-start gap-6 xl:grid-cols-[260px_minmax(0,1fr)]">
+        <aside aria-label="Tóm tắt tài khoản chủ bãi" className="overflow-hidden rounded-2xl border border-brand-border bg-white xl:sticky xl:top-24">
+          <div className="flex items-center gap-3 border-b border-brand-border p-5">
+            <div className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-brand-navy text-white"><UserRound size={21} aria-hidden="true" /></div>
+            <div className="min-w-0"><p className="break-words text-base font-semibold">{profile.fullName || 'Chưa cập nhật tên'}</p><p className="mt-1 break-words text-sm text-brand-muted">{profile.phone || 'Chưa có số điện thoại'}</p></div>
+          </div>
+          <nav aria-label="Các phần hồ sơ" className="flex flex-col gap-1 p-3">
+            {[["lien-he", "Thông tin liên hệ"], ["giay-to", "Giấy tờ pháp lý"], ["ngan-hang", "Tài khoản ngân hàng"]].map(([id, label], index) => <a key={id} href={`#${id}`} className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-brand-navy hover:bg-brand-surface focus-visible:outline-2 focus-visible:outline-brand-orange"><span className="text-sm text-brand-orange-ink" aria-hidden="true">0{index + 1}</span>{label}</a>)}
+          </nav>
+          {profile.verificationLabel && <p className="border-t border-brand-border px-5 py-4 text-sm text-brand-muted">Trạng thái hồ sơ<br /><span className="mt-1 inline-block font-semibold text-brand-navy">{profile.verificationLabel}</span></p>}
+          {profile.walletBalance !== null && <div className="border-t border-brand-border px-5 py-4"><p className="text-sm text-brand-muted">Số dư ví</p><p className="mt-1 text-lg font-semibold tabular-nums">{new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(Number(profile.walletBalance))}</p><Link className="mt-3 inline-flex items-center gap-1 rounded text-sm font-medium text-brand-orange-ink focus-visible:outline-2 focus-visible:outline-brand-orange" to="/merchant/withdrawals">Đến Ví & Rút tiền <ArrowUpRight size={15} aria-hidden="true" /></Link></div>}
+        </aside>
+        <div className="min-w-0 space-y-6">
+          <MerchantProfileForm key={profile.merchantId} profile={profile} onUpdated={data => cache.setQueryData(merchantProfileKey, data)} />
+          <ProfileDocuments profile={profile} onUpdated={data => cache.setQueryData(merchantProfileKey, data)} />
+          <ProfileBankDetails profile={profile} />
         </div>
-      </div>
-
-      {/* Interactive Modal for Fast Withdrawal Simulation */}
-      <FastWithdrawModal
-        isOpen={isWithdrawModalOpen}
-        onClose={() => setIsWithdrawModalOpen(false)}
-        profile={profile}
-        onConfirm={handleConfirmWithdraw}
-        isSubmitting={isWithdrawing}
-      />
-
-      {/* Document Preview Modal */}
-      <DocumentPreviewModal document={previewDoc} onClose={() => setPreviewDoc(null)} />
-
-      {/* Notification Toast Container */}
-      <div
-        id="toast-notification"
-        className={`fixed bottom-6 right-6 z-50 transform transition-all duration-300 pointer-events-none ${
-          toast.show ? 'translate-y-0 opacity-100' : 'translate-y-24 opacity-0'
-        }`}
-      >
-        <div className="flex items-center gap-3 px-4 py-3 bg-[#131b2e] text-white rounded-xl shadow-2xl border border-slate-700">
-          {toast.icon === 'payments' ? (
-            <Zap className="w-5 h-5 text-[#d95f00]" id="toast-icon" />
-          ) : toast.icon === 'refresh' ? (
-            <RefreshCw className="w-5 h-5 text-[#d95f00]" id="toast-icon" />
-          ) : toast.icon === 'error' ? (
-            <AlertCircle className="w-5 h-5 text-rose-500" id="toast-icon" />
-          ) : (
-            <CheckCircle2 className="w-5 h-5 text-[#d95f00]" id="toast-icon" />
-          )}
-          <span className="font-medium text-xs lg:text-sm" id="toast-message">
-            {toast.message}
-          </span>
-        </div>
-      </div>
-    </div>
-  )
+      </div>}
+  </div>
 }

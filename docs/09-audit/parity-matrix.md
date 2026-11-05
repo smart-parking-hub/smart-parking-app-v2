@@ -197,3 +197,8 @@
 | Thẻ Tiến Độ Hoàn Thiện Hồ Sơ | [`EditMerchantChecklistCard.tsx`](file:///d:/SmartParkingHub/smart-parking-app-v2/src/features/merchant/parking-lots/components/edit/EditMerchantChecklistCard.tsx) | Realtime Validator | **New Feature (Checklist 3/3 hạng mục)** |
 | Sticky Footer Actions Bar | [`EditMerchantActionFooter.tsx`](file:///d:/SmartParkingHub/smart-parking-app-v2/src/features/merchant/parking-lots/components/edit/EditMerchantActionFooter.tsx) | `PUT /api/v1/merchant/parking-lots/{id}` | **Preserved & Enhanced (Hủy, Lưu nháp, Gửi duyệt kèm spinner)** |
 | Shimmer Loading Placeholder | [`EditMerchantParkingLotSkeleton.tsx`](file:///d:/SmartParkingHub/smart-parking-app-v2/src/features/merchant/parking-lots/components/edit/EditMerchantParkingLotSkeleton.tsx) | — | **Preserved (Zero-layout-shift)** |
+
+
+## SCR-021 profile simplification — 2026-11-05
+
+User-approved API-only redesign. Personal profile, one emergency contact and password operations preserved using verified users/me endpoints; unsupported demo fields removed. Readonly login phone matches backend behavior. See [current SCR-021 record](scr-021-driver-profile-record.md) for parity, tests and limitations.
