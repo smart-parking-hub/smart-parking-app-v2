@@ -63,10 +63,12 @@ export function CompanyInvoiceConfigModal({
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1">
+            <label htmlFor="company-name-input" className="block text-xs font-semibold text-slate-700 mb-1">
               Tên Doanh Nghiệp / Công Ty Vận Tải
             </label>
             <input
+              id="company-name-input"
+              name="companyName"
               type="text"
               required
               value={form.companyName}
@@ -77,10 +79,12 @@ export function CompanyInvoiceConfigModal({
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">
+              <label htmlFor="company-tax-id-input" className="block text-xs font-semibold text-slate-700 mb-1">
                 Mã Số Thuế (MST)
               </label>
               <input
+                id="company-tax-id-input"
+                name="taxId"
                 type="text"
                 required
                 value={form.taxId}
@@ -90,10 +94,12 @@ export function CompanyInvoiceConfigModal({
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">
+              <label htmlFor="company-accounting-email-input" className="block text-xs font-semibold text-slate-700 mb-1">
                 Email Nhận Hóa Đơn Kế Toán
               </label>
               <input
+                id="company-accounting-email-input"
+                name="accountingEmail"
                 type="email"
                 required
                 value={form.accountingEmail}
@@ -104,10 +110,12 @@ export function CompanyInvoiceConfigModal({
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1">
+            <label htmlFor="company-address-input" className="block text-xs font-semibold text-slate-700 mb-1">
               Địa Chỉ Trụ Sở Công Ty (Ghi trên HĐĐT)
             </label>
             <input
+              id="company-address-input"
+              name="companyAddress"
               type="text"
               required
               value={form.companyAddress}
@@ -118,10 +126,12 @@ export function CompanyInvoiceConfigModal({
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
             <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">
+              <label htmlFor="company-integration-software-select" className="block text-xs font-semibold text-slate-700 mb-1">
                 Phần Mềm Kế Toán Kết Nối
               </label>
               <select
+                id="company-integration-software-select"
+                name="integrationSoftware"
                 value={form.integrationSoftware}
                 onChange={(e) => setForm({ ...form, integrationSoftware: e.target.value })}
                 className="w-full h-11 px-3 text-xs md:text-sm bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-orange-500"
@@ -135,8 +145,10 @@ export function CompanyInvoiceConfigModal({
             </div>
 
             <div className="flex items-center pt-6">
-              <label className="flex items-center gap-2 cursor-pointer text-xs text-slate-700 font-medium">
+              <label htmlFor="company-auto-send-xml-checkbox" className="flex items-center gap-2 cursor-pointer text-xs text-slate-700 font-medium">
                 <input
+                  id="company-auto-send-xml-checkbox"
+                  name="autoSendXml"
                   type="checkbox"
                   checked={form.autoSendXml}
                   onChange={(e) => setForm({ ...form, autoSendXml: e.target.checked })}

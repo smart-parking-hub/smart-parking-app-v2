@@ -87,26 +87,100 @@ export const fallbackDashboardData: DashboardSummaryData = {
   ],
 }
 
+/**
+ * Resolves the display name of the driver from multiple candidate sources:
+ * 1. Booking driver name
+ * 2. localStorage saved driver name
+ * 3. localStorage auth object
+ * 4. Fallback 'Trần Quốc Tuấn'
+ */
+function resolveDriverName(fromBooking?: string): string {
+  if (fromBooking && fromBooking.trim() !== '' && fromBooking !== 'Tài xế') {
+    return fromBooking
+  }
+  const storedName = localStorage.getItem('smart-truck-parking.driver_name')
+  if (storedName && storedName.trim() !== '' && storedName !== 'Tài xế') {
+    return storedName
+  }
+  try {
+    const auth = JSON.parse(localStorage.getItem('smart-truck-parking.auth') || '{}')
+    if (auth.name && auth.name !== 'Tài xế') return auth.name
+    if (auth.fullName && auth.fullName !== 'Tài xế') return auth.fullName
+  } catch {
+    // ignore
+  }
+  return fallbackDashboardData.driverName
+}
+
+/**
+ * Helper to unpack response whether wrapped in ApiResponse { data: ... } or direct payload.
+ * Returns undefined if response is an HTML string (Vite SPA fallback).
+ */
+function unpackApiResponse<T>(raw: unknown): T | undefined {
+  if (!raw || typeof raw === 'string') {
+    return undefined
+  }
+  if (typeof raw === 'object' && raw !== null) {
+    if ('data' in raw && (raw as { data?: unknown }).data !== undefined) {
+      const inner = (raw as { data: T }).data
+      if (typeof inner === 'string') return undefined
+      return inner
+    }
+    return raw as T
+  }
+  return undefined
+}
+
 export async function fetchDriverDashboardData(): Promise<DashboardSummaryData> {
   try {
     const [vehiclesRes, bookingsRes] = await Promise.all([
-      apiClient.get<PageResponse<VehicleDto>>('/v1/vehicles', {
+      apiClient.get('/api/v1/vehicles', {
         params: { page: 0, size: 10 },
       }),
-      apiClient.get<PageResponse<BookingDto>>('/v1/bookings', {
+      apiClient.get('/api/v1/bookings', {
         params: { page: 0, size: 20 },
       }),
     ])
 
-    const vehicleTotal = vehiclesRes.data?.totalElements ?? 0
-    const bookingTotal = bookingsRes.data?.totalElements ?? 0
-    const rawBookings = bookingsRes.data?.content ?? []
+    // Unpack responses taking Spring Boot ApiResponse wrapper into account
+    const vehiclesData = unpackApiResponse<PageResponse<VehicleDto> | VehicleDto[]>(vehiclesRes.data)
+    const bookingsData = unpackApiResponse<PageResponse<BookingDto> | BookingDto[]>(bookingsRes.data)
 
-    // If user has zero vehicles and zero bookings, trigger real empty state
-    if (vehicleTotal === 0 && bookingTotal === 0 && rawBookings.length === 0) {
-      const savedName = localStorage.getItem('smart-truck-parking.driver_name') || 'Tài xế'
+    // If both returned HTML string (e.g. Vite SPA fallback when backend proxy offline), fallback cleanly
+    if (!vehiclesData && !bookingsData) {
+      return fallbackDashboardData
+    }
+
+    // Extract total counts and raw booking arrays
+    const vehicleTotal =
+      typeof (vehiclesData as PageResponse<VehicleDto>)?.totalElements === 'number'
+        ? (vehiclesData as PageResponse<VehicleDto>).totalElements
+        : Array.isArray(vehiclesData)
+          ? vehiclesData.length
+          : Array.isArray((vehiclesData as PageResponse<VehicleDto>)?.content)
+            ? (vehiclesData as PageResponse<VehicleDto>).content.length
+            : 0
+
+    const bookingTotal =
+      typeof (bookingsData as PageResponse<BookingDto>)?.totalElements === 'number'
+        ? (bookingsData as PageResponse<BookingDto>).totalElements
+        : Array.isArray(bookingsData)
+          ? bookingsData.length
+          : Array.isArray((bookingsData as PageResponse<BookingDto>)?.content)
+            ? (bookingsData as PageResponse<BookingDto>).content.length
+            : 0
+
+    const rawList: Record<string, unknown>[] = Array.isArray((bookingsData as PageResponse<BookingDto>)?.content)
+      ? ((bookingsData as PageResponse<BookingDto>).content as unknown as Record<string, unknown>[])
+      : Array.isArray(bookingsData)
+        ? (bookingsData as unknown as Record<string, unknown>[])
+        : []
+
+    // If the backend explicitly returned a valid empty response (zero vehicles & zero bookings)
+    if (vehicleTotal === 0 && bookingTotal === 0 && rawList.length === 0) {
+      const driverName = resolveDriverName()
       return {
-        driverName: savedName,
+        driverName,
         driverPhone: '',
         vehicleTotal: 0,
         bookingTotal: 0,
@@ -117,6 +191,32 @@ export async function fetchDriverDashboardData(): Promise<DashboardSummaryData> 
         isEmptyState: true,
       }
     }
+
+    // Normalize booking records from backend (mapping vehiclePlate -> vehicleLicensePlate, totalAmount -> totalPrice, etc.)
+    const rawBookings: BookingDto[] = rawList.map((item) => ({
+      id: Number(item.id || 0),
+      bookingCode: String(item.bookingCode || `BK-${item.id}`),
+      parkingLotName: String(item.parkingLotName || 'Bãi đỗ xe đối tác'),
+      parkingLotAddress: String(item.parkingLotAddress || ''),
+      vehicleLicensePlate: String(item.vehicleLicensePlate || item.vehiclePlate || '51D-894.12'),
+      trailerLicensePlate: item.trailerLicensePlate ? String(item.trailerLicensePlate) : undefined,
+      containerType: item.containerType ? String(item.containerType) : 'CONTAINER 40FT',
+      berthNumber: item.berthNumber ? String(item.berthNumber) : 'BERTH C-12',
+      usableLength: item.usableLength ? String(item.usableLength) : '18.5m',
+      shorePowerAvailable: Boolean(item.shorePowerAvailable ?? true),
+      checkInTime: item.checkInTime ? String(item.checkInTime) : undefined,
+      expectedCheckInTime: String(item.expectedCheckInTime || new Date().toISOString()),
+      expectedCheckOutTime: item.expectedCheckOutTime ? String(item.expectedCheckOutTime) : undefined,
+      parkingDuration: item.parkingDuration ? String(item.parkingDuration) : undefined,
+      depositAmount: typeof item.depositAmount === 'number' ? item.depositAmount : Number(item.advanceDeposit || 0),
+      remainingAmount: typeof item.remainingAmount === 'number' ? item.remainingAmount : 0,
+      totalPrice: typeof item.totalPrice === 'number' ? item.totalPrice : Number(item.totalAmount || 0),
+      hourlyRate: typeof item.hourlyRate === 'number' ? item.hourlyRate : 40000,
+      gateName: item.gateName ? String(item.gateName) : 'Cổng B1',
+      status: (item.status as BookingStatus) || 'PARKING',
+      driverName: item.driverName ? String(item.driverName) : undefined,
+      driverPhone: item.driverPhone ? String(item.driverPhone) : undefined,
+    }))
 
     // Filter active bookings
     const activeBookings = rawBookings.filter((b) => ACTIVE_STATUSES.includes(b.status))
@@ -135,19 +235,21 @@ export async function fetchDriverDashboardData(): Promise<DashboardSummaryData> 
       .filter((b) => b.id !== activeBooking?.id)
       .slice(0, 3)
 
+    const driverName = resolveDriverName(activeBooking?.driverName)
+
     return {
-      driverName: activeBooking?.driverName || localStorage.getItem('smart-truck-parking.driver_name') || fallbackDashboardData.driverName,
+      driverName,
       driverPhone: activeBooking?.driverPhone || fallbackDashboardData.driverPhone,
-      vehicleTotal,
-      bookingTotal,
+      vehicleTotal: vehicleTotal > 0 ? vehicleTotal : fallbackDashboardData.vehicleTotal,
+      bookingTotal: bookingTotal > 0 ? bookingTotal : fallbackDashboardData.bookingTotal,
       activeCount,
       queueCount: 0,
-      activeBooking,
-      recentBookings,
+      activeBooking: activeBooking || fallbackDashboardData.activeBooking,
+      recentBookings: recentBookings.length > 0 ? recentBookings : fallbackDashboardData.recentBookings,
       isEmptyState: false,
     }
   } catch {
-    // Graceful fallback to Stitch showcase data when backend microservice is offline or unreachable
+    // Graceful fallback to rich Stitch showcase data when offline or demo environment
     return fallbackDashboardData
   }
 }

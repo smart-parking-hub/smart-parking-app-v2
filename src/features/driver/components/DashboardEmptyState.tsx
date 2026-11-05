@@ -6,6 +6,11 @@ interface DashboardEmptyStateProps {
 }
 
 export function DashboardEmptyState({ driverName }: DashboardEmptyStateProps) {
+  const displayTitle =
+    driverName && driverName.trim() !== '' && driverName !== 'Tài xế'
+      ? `Bác Tài ${driverName} Chưa Có Hoạt Động Điều Phối Nào`
+      : 'Bác Tài Chưa Có Hoạt Động Điều Phối Nào'
+
   return (
     <div className="w-full bg-white rounded-xl border border-slate-200 p-8 lg:p-12 text-center mb-6">
       <div className="max-w-xl mx-auto flex flex-col items-center">
@@ -14,7 +19,7 @@ export function DashboardEmptyState({ driverName }: DashboardEmptyStateProps) {
         </div>
 
         <h3 className="font-sora text-lg lg:text-xl font-bold text-slate-900 mb-2">
-          {driverName ? `Bác Tài ${driverName} Chưa Có Hoạt Động Điều Phối Nào` : 'Chưa Có Hoạt Động Điều Phối Nào'}
+          {displayTitle}
         </h3>
         <p className="text-xs sm:text-sm text-slate-500 max-w-lg mb-6 leading-relaxed">
           Hệ thống sẵn sàng hỗ trợ bạn theo dõi vị trí bãi đỗ, quản lý số đăng kiểm rơ-moóc, kiểm tra tĩnh không cầu vượt và xuất hóa đơn điện tử tự động.

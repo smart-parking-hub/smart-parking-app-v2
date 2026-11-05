@@ -80,7 +80,7 @@ export function EditMerchantParkingLotHeader({
           className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-white text-[#131b2e] hover:bg-slate-100 border border-slate-200 text-xs sm:text-sm font-semibold transition-colors cursor-pointer shadow-2xs"
         >
           <ArrowLeft className="w-4 h-4 text-slate-600" />
-          <span>Quay lại Chi Tiết Bãi (SCR-030)</span>
+          <span>Quay lại Chi Tiết Bãi</span>
         </button>
         <button
           type="button"

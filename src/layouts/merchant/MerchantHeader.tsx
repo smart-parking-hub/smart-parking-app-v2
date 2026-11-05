@@ -1,6 +1,6 @@
 import { clearSession } from '@/features/auth'
 import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useLocation } from 'react-router-dom'
 import {
   Building2,
   Store,
@@ -8,6 +8,7 @@ import {
   Bell,
   User,
   Menu,
+  LogOut,
 } from 'lucide-react'
 import { Select, type SelectOption } from '@/shared/components/Select'
 
@@ -25,6 +26,16 @@ const YARD_OPTIONS: SelectOption[] = [
 export function MerchantHeader({ onToggleMobileMenu }: MerchantHeaderProps) {
   const navigate = useNavigate()
   const [selectedYard, setSelectedYard] = useState('all')
+  const location = useLocation()
+  if (location.pathname === '/merchant/profile') return (
+    <header className="fixed inset-x-0 top-0 z-40 flex h-16 items-center justify-between gap-4 border-b border-brand-border bg-white px-4 font-inter text-base lg:left-[260px] lg:px-8">
+      <div className="flex min-w-0 items-center gap-3">
+        <button type="button" onClick={onToggleMobileMenu} aria-label="Mở menu" className="rounded-lg p-2 lg:hidden focus-visible:outline-2 focus-visible:outline-brand-orange"><Menu size={22} /></button>
+        <nav aria-label="Đường dẫn" className="flex flex-wrap items-center gap-2 text-brand-muted"><Link to="/merchant/dashboard" className="hover:text-brand-navy">Tổng quan</Link><span aria-hidden="true">/</span><span aria-current="page" className="font-semibold text-brand-navy">Hồ sơ chủ bãi</span></nav>
+      </div>
+      <button type="button" className="inline-flex min-h-10 shrink-0 items-center justify-center gap-2 rounded-xl border border-red-200 bg-white px-3.5 py-2 text-sm font-semibold text-red-700 transition-colors hover:border-red-300 hover:bg-red-50 active:bg-red-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-500" onClick={() => { clearSession(); navigate('/login', { replace: true }) }}><LogOut size={16} aria-hidden="true" />Đăng xuất</button>
+    </header>
+  )
 
   return (
     <header className="fixed top-0 left-0 lg:left-[260px] right-0 h-16 bg-white border-b border-slate-200/90 z-40 px-4 lg:px-6 flex items-center justify-between shadow-2xs">
@@ -97,7 +108,7 @@ export function MerchantHeader({ onToggleMobileMenu }: MerchantHeaderProps) {
 
         <div className="h-6 w-px bg-slate-200 hidden sm:block" />
 
-        <button type="button" className="text-sm text-slate-600 underline" onClick={() => { clearSession(); navigate('/login', { replace: true }) }}>Đăng xuất</button>
+        <button type="button" className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border border-red-200 bg-white px-3.5 py-2 text-sm font-semibold text-red-700 transition-colors hover:border-red-300 hover:bg-red-50 active:bg-red-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-500" onClick={() => { clearSession(); navigate('/login', { replace: true }) }}><LogOut size={16} aria-hidden="true" />Đăng xuất</button>
         {/* Merchant Profile */}
         <Link
           to="/merchant/profile"

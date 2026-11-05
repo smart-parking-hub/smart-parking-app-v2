@@ -1,6 +1,11 @@
 import { ArrowRight, Calculator, Star } from 'lucide-react'
+import { Link } from 'react-router-dom'
 
-export function OwnerHeroSection() {
+export interface OwnerHeroSectionProps {
+  onOpenLeadModal?: () => void
+}
+
+export function OwnerHeroSection({ onOpenLeadModal }: OwnerHeroSectionProps = {}) {
   return (
     <section
       className="relative bg-brand-navy text-white pt-12 pb-24 md:pt-16 md:pb-32 overflow-hidden"
@@ -38,13 +43,24 @@ export function OwnerHeroSection() {
 
             {/* Dual Button Action Group */}
             <div className="flex flex-wrap items-center gap-4 pt-2 w-full sm:w-auto">
-              <a
-                className="inline-flex items-center justify-center gap-2 bg-brand-orange hover:bg-brand-orange-hover text-white font-sora font-semibold text-sm sm:text-base px-7 py-4 rounded-xl shadow-lg shadow-brand-orange/20 transition-all hover:scale-[1.02] active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-orange focus-visible:ring-offset-2"
-                href="#onboarding-form"
-              >
-                <span>ĐĂNG KÝ HỢP TÁC BÃI ĐỖ</span>
-                <ArrowRight className="h-5 w-5 text-white" aria-hidden="true" />
-              </a>
+              {onOpenLeadModal ? (
+                <button
+                  type="button"
+                  onClick={onOpenLeadModal}
+                  className="inline-flex items-center justify-center gap-2 bg-brand-orange hover:bg-brand-orange-hover text-white font-sora font-semibold text-sm sm:text-base px-7 py-4 rounded-xl shadow-lg shadow-brand-orange/20 transition-all hover:scale-[1.02] active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-orange focus-visible:ring-offset-2"
+                >
+                  <span>ĐĂNG KÝ HỢP TÁC BÃI ĐỖ</span>
+                  <ArrowRight className="h-5 w-5 text-white" aria-hidden="true" />
+                </button>
+              ) : (
+                <a
+                  className="inline-flex items-center justify-center gap-2 bg-brand-orange hover:bg-brand-orange-hover text-white font-sora font-semibold text-sm sm:text-base px-7 py-4 rounded-xl shadow-lg shadow-brand-orange/20 transition-all hover:scale-[1.02] active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-orange focus-visible:ring-offset-2"
+                  href="#onboarding-form"
+                >
+                  <span>ĐĂNG KÝ HỢP TÁC BÃI ĐỖ</span>
+                  <ArrowRight className="h-5 w-5 text-white" aria-hidden="true" />
+                </a>
+              )}
               <a
                 className="inline-flex items-center justify-center gap-2 bg-brand-navy-light/80 hover:bg-slate-800 text-white border border-[#1E3A5F] font-sora font-semibold text-sm sm:text-base px-6 py-4 rounded-xl transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-orange"
                 href="#roi-calculator"
@@ -54,8 +70,19 @@ export function OwnerHeroSection() {
               </a>
             </div>
 
+            {/* Inbound & Outbound Quick Link to SCR-028 & SCR-011 */}
+            <div className="flex items-center gap-4 text-xs font-inter text-slate-400">
+              <span>Đã có tài khoản đối tác?</span>
+              <Link
+                to="/merchant/parking-lots"
+                className="text-brand-orange hover:underline font-semibold"
+              >
+                Vào Cổng Bãi Đỗ &rarr;
+              </Link>
+            </div>
+
             {/* Fretrix Social Proof Strip */}
-            <div className="pt-6 flex flex-wrap items-center gap-6 border-t border-slate-800/80 w-full mt-4">
+            <div className="pt-6 flex flex-wrap items-center gap-6 border-t border-slate-800/80 w-full mt-2">
               <div className="flex items-center gap-1.5 text-brand-orange">
                 {[...Array(5)].map((_, i) => (
                   <Star
