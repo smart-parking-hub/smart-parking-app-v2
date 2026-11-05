@@ -83,7 +83,7 @@ const BaselineOverviewPage = lazy(() =>
   import('@/app/pages/BaselineOverviewPage').then((module) => ({ default: module.BaselineOverviewPage })),
 )
 const DashboardHomePage = lazy(() =>
-  import('@/features/dashboard').then((module) => ({ default: module.DashboardHomePage })),
+  import('@/features/driver').then((module) => ({ default: module.DriverDashboardPage })),
 )
 const SearchParkingPage = lazy(() =>
   import('@/features/parking-search').then((module) => ({ default: module.SearchParkingPage })),

@@ -67,7 +67,8 @@ describe('SCR-014: Driver Dashboard Home (Tổng quan Tài xế)', () => {
 
     // 1. Welcome banner greeting
     await waitFor(() => {
-      expect(screen.getByText(/Xin Chào, Bác Tài Trần Quốc Tuấn/i)).toBeInTheDocument()
+      expect(screen.getByText(/Xin Chào,/i)).toBeInTheDocument()
+      expect(screen.getByText(/Bác Tài Trần Quốc Tuấn/i)).toBeInTheDocument()
     })
     expect(
       screen.getByText(/HẠ TẦNG ĐIỀU PHỐI ĐIỂM ĐỖ THÔNG MINH/i),
@@ -128,14 +129,14 @@ describe('SCR-014: Driver Dashboard Home (Tổng quan Tài xế)', () => {
   it('renders DriverLayout with shared Header and Footer', () => {
     renderWithProviders(<DriverLayout />)
 
-    // Header elements (hotline and 'TRỰC TUYẾN' removed per design request)
+    // Header elements
     const brandElements = screen.getAllByText(/SMARTTRUCK/i)
     expect(brandElements.length).toBeGreaterThanOrEqual(1)
     expect(screen.getByText(/CỔNG THÔNG TIN TÀI XẾ/i)).toBeInTheDocument()
     expect(screen.queryByText(/TRỰC TUYẾN/i)).not.toBeInTheDocument()
     expect(screen.queryByText(/HOTLINE ĐIỀU PHỐI 24\/7:/i)).not.toBeInTheDocument()
 
-    // Footer elements (support hotline retained)
+    // Footer elements
     expect(screen.getByText(/V2.8.4-OPS/i)).toBeInTheDocument()
     expect(screen.getByText(/ISO\/IEC 27001:2022/i)).toBeInTheDocument()
     expect(screen.getByText(/1900 6868/i)).toBeInTheDocument()
