@@ -1,6 +1,11 @@
 import { ArrowRight, Calculator, Star } from 'lucide-react'
+import { Link } from 'react-router-dom'
 
-export function OwnerHeroSection() {
+export interface OwnerHeroSectionProps {
+  onOpenLeadModal?: () => void
+}
+
+export function OwnerHeroSection({ onOpenLeadModal }: OwnerHeroSectionProps = {}) {
   return (
     <section
       className="relative bg-brand-navy text-white pt-8 pb-16 md:pt-12 md:pb-24 overflow-hidden"
@@ -35,13 +40,24 @@ export function OwnerHeroSection() {
 
             {/* Dual Button Action Group */}
             <div className="flex flex-wrap items-center gap-3.5 pt-1 w-full sm:w-auto">
-              <a
-                className="inline-flex items-center justify-center gap-2 bg-brand-orange hover:bg-brand-orange-hover text-[#060D1A] font-sora font-bold text-sm sm:text-base px-6 py-3.5 rounded-xl transition-all hover:scale-[1.01] active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-orange cursor-pointer"
-                href="#onboarding-form"
-              >
-                <span>ĐĂNG KÝ HỢP TÁC BÃI ĐỖ</span>
-                <ArrowRight className="h-4 w-4" aria-hidden="true" />
-              </a>
+              {onOpenLeadModal ? (
+                <button
+                  type="button"
+                  onClick={onOpenLeadModal}
+                  className="inline-flex items-center justify-center gap-2 bg-brand-orange hover:bg-brand-orange-hover text-[#060D1A] font-sora font-bold text-sm sm:text-base px-6 py-3.5 rounded-xl transition-all hover:scale-[1.01] active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-orange cursor-pointer"
+                >
+                  <span>ĐĂNG KÝ HỢP TÁC BÃI ĐỖ</span>
+                  <ArrowRight className="h-4 w-4" aria-hidden="true" />
+                </button>
+              ) : (
+                <a
+                  className="inline-flex items-center justify-center gap-2 bg-brand-orange hover:bg-brand-orange-hover text-[#060D1A] font-sora font-bold text-sm sm:text-base px-6 py-3.5 rounded-xl transition-all hover:scale-[1.01] active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-orange cursor-pointer"
+                  href="#onboarding-form"
+                >
+                  <span>ĐĂNG KÝ HỢP TÁC BÃI ĐỖ</span>
+                  <ArrowRight className="h-4 w-4" aria-hidden="true" />
+                </a>
+              )}
               <a
                 className="inline-flex items-center justify-center gap-2 bg-[#0B1528] hover:bg-slate-800 text-white border border-slate-700 font-sora font-semibold text-sm sm:text-base px-5 py-3.5 rounded-xl transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 cursor-pointer"
                 href="#roi-calculator"
@@ -49,6 +65,17 @@ export function OwnerHeroSection() {
                 <Calculator className="h-4 w-4 text-brand-orange" aria-hidden="true" />
                 <span>TÍNH THỬ DOANH THU BÃI</span>
               </a>
+            </div>
+
+            {/* Inbound & Outbound Quick Link to SCR-028 & SCR-011 */}
+            <div className="flex items-center gap-4 text-xs font-inter text-slate-400">
+              <span>Đã có tài khoản đối tác?</span>
+              <Link
+                to="/merchant/parking-lots"
+                className="text-brand-orange hover:underline font-semibold"
+              >
+                Vào Cổng Bãi Đỗ &rarr;
+              </Link>
             </div>
 
             {/* Social Proof Strip */}

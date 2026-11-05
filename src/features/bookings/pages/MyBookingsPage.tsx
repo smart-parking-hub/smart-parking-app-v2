@@ -1,9 +1,7 @@
-import { useState, useMemo, useRef } from 'react'
-import { useQuery, useQueryClient } from '@tanstack/react-query'
-import type {
-  BookingItemDto,
-  FilterStatusTab,
-} from '../types/bookingTypes'
+import { useMemo, useRef } from 'react'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { CheckCircle2, AlertCircle, Info, X } from 'lucide-react'
+import type { BookingItemDto } from '../types/bookingTypes'
 import {
   fetchMyBookings,
   fallbackBookingsList,
@@ -11,6 +9,7 @@ import {
   submitReviewApi,
 } from '../api/bookingApi'
 import { exportSvgToPng } from '../utils/qrExportUtil'
+import { useBookingStore } from '../store/bookingStore'
 import { BookingsCommandToolbar } from '../components/BookingsCommandToolbar'
 import { BookingMasterList } from '../components/BookingMasterList'
 import { BookingDetailView } from '../components/BookingDetailView'
@@ -18,33 +17,96 @@ import { CancelBookingModal } from '../components/CancelBookingModal'
 import { ReviewBookingModal } from '../components/ReviewBookingModal'
 import { PayOsCheckoutModal } from '../components/PayOsCheckoutModal'
 import { BookingsSkeleton } from '../components/BookingsSkeleton'
+import { BookingsEmptyState } from '../components/BookingsEmptyState'
+import { BookingsErrorState } from '../components/BookingsErrorState'
 
 export function MyBookingsPage() {
   const queryClient = useQueryClient()
   const qrSvgRef = useRef<SVGSVGElement | null>(null)
 
-  const [activeTab, setActiveTab] = useState<FilterStatusTab>('ALL')
-  const [searchKeyword, setSearchKeyword] = useState('')
-  const [selectedBookingId, setSelectedBookingId] = useState<number>(1)
+  // Zustand UI State Store
+  const {
+    activeTab,
+    setActiveTab,
+    searchKeyword,
+    setSearchKeyword,
+    selectedBookingId,
+    setSelectedBookingId,
+    isCancelModalOpen,
+    openCancelModal,
+    closeCancelModal,
+    isReviewModalOpen,
+    openReviewModal,
+    closeReviewModal,
+    isPayOsModalOpen,
+    openPayOsModal,
+    closePayOsModal,
+    payOsType,
+    toastMessage,
+    toastType,
+    showToast,
+    clearToast,
+  } = useBookingStore()
 
-  // Modals state
-  const [isCancelModalOpen, setIsCancelModalOpen] = useState(false)
-  const [isReviewModalOpen, setIsReviewModalOpen] = useState(false)
-  const [isPayOsModalOpen, setIsPayOsModalOpen] = useState(false)
-  const [payOsType, setPayOsType] = useState<'DEPOSIT' | 'FINAL'>('FINAL')
-  const [isDownloadingQr, setIsDownloadingQr] = useState(false)
-
-  // Fetch bookings with rich fallback
+  // Fetch bookings with TanStack Query
   const {
     data: bookings = fallbackBookingsList,
     isLoading,
+    isError,
+    error,
     refetch,
     isRefetching,
-  } = useQuery({
+  } = useQuery<BookingItemDto[]>({
     queryKey: ['my-bookings-list'],
     queryFn: fetchMyBookings,
     initialData: fallbackBookingsList,
     staleTime: 30000,
+  })
+
+  // Cancel booking mutation
+  const cancelMutation = useMutation({
+    mutationFn: cancelBookingApi,
+    onSuccess: (result, variables) => {
+      queryClient.setQueryData<BookingItemDto[]>(['my-bookings-list'], (prev) =>
+        (prev || []).map((item) =>
+          item.id === variables.bookingId
+            ? {
+                ...item,
+                status: 'CANCELLED',
+                statusBadgeLabel: 'ĐÃ HỦY VÉ',
+              }
+            : item
+        )
+      )
+      showToast(result.message || 'Hủy đặt chỗ thành công! Đã gửi yêu cầu hoàn tiền.', 'success')
+      closeCancelModal()
+    },
+    onError: () => {
+      showToast('Không thể hủy vé lúc này. Vui lòng thử lại hoặc gọi tổng đài trực ban.', 'error')
+    },
+  })
+
+  // Review booking mutation
+  const reviewMutation = useMutation({
+    mutationFn: submitReviewApi,
+    onSuccess: (result, variables) => {
+      queryClient.setQueryData<BookingItemDto[]>(['my-bookings-list'], (prev) =>
+        (prev || []).map((item) =>
+          item.id === variables.bookingId
+            ? {
+                ...item,
+                status: 'REVIEWED',
+                statusBadgeLabel: 'ĐÃ ĐÁNH GIÁ',
+              }
+            : item
+        )
+      )
+      showToast(result.message || 'Cảm ơn bạn đã gửi đánh giá trải nghiệm đỗ xe!', 'success')
+      closeReviewModal()
+    },
+    onError: () => {
+      showToast('Gửi đánh giá không thành công. Vui lòng thử lại sau.', 'error')
+    },
   })
 
   // Calculate tab counts
@@ -108,8 +170,7 @@ export function MyBookingsPage() {
     })
   }, [bookings, activeTab, searchKeyword])
 
-  // Current selected booking:
-  // Prefer selectedBookingId if it's in filteredBookings, otherwise fall back to filteredBookings[0]
+  // Current selected booking
   const selectedBooking = useMemo(() => {
     const inFiltered = filteredBookings.find((b) => b.id === selectedBookingId)
     if (inFiltered) return inFiltered
@@ -118,67 +179,50 @@ export function MyBookingsPage() {
 
   // Handlers
   const handleDownloadQr = async () => {
-    if (!qrSvgRef.current) return
-    setIsDownloadingQr(true)
+    if (!qrSvgRef.current || !selectedBooking) return
+    showToast('Đang kết xuất vé QR định dạng PNG...', 'info')
     await exportSvgToPng(qrSvgRef.current, `ve-xe-${selectedBooking.bookingCode}`)
-    setIsDownloadingQr(false)
+    showToast(`Đã tải vé QR [${selectedBooking.bookingCode}] thành công!`, 'success')
   }
 
   const handleExportInvoice = () => {
-    alert(
-      `ĐÃ GỬI HÓA ĐƠN ĐIỆN TỬ VAT CHO ĐƠN ${selectedBooking.bookingCode} VÀO EMAIL TÀI XẾ.`
+    if (!selectedBooking) return
+    showToast(
+      `Đã gửi hóa đơn điện tử VAT cho đơn ${selectedBooking.bookingCode} vào email tài xế.`,
+      'success'
     )
   }
 
   const handlePayCashAtGate = () => {
-    alert(
-      `Vui lòng xuất trình mã QR ${selectedBooking.gateToken} cho nhân viên soát vé tại làn xuất bãi.`
+    if (!selectedBooking) return
+    showToast(
+      `Vui lòng xuất trình mã QR token ${selectedBooking.gateToken} cho nhân viên soát vé tại làn xuất bãi.`,
+      'info'
     )
   }
 
   const handleOpenMapDirections = () => {
+    if (!selectedBooking) return
     const query = encodeURIComponent(selectedBooking.parkingLotAddress)
     window.open(`https://www.google.com/maps/search/?api=1&query=${query}`, '_blank')
   }
 
   const handleConfirmCancel = async (reason: string, bankAccount?: string) => {
-    await cancelBookingApi({
+    if (!selectedBooking) return
+    await cancelMutation.mutateAsync({
       bookingId: selectedBooking.id,
       reason,
       bankAccount,
     })
-    queryClient.setQueryData<BookingItemDto[]>(['my-bookings-list'], (prev) =>
-      (prev || []).map((item) =>
-        item.id === selectedBooking.id
-          ? {
-              ...item,
-              status: 'CANCELLED',
-              statusBadgeLabel: 'ĐÃ HỦY VÉ',
-            }
-          : item
-      )
-    )
-    alert('HỦY ĐẶT CHỖ THÀNH CÔNG! Tiền cọc sẽ được xử lý hoàn tiền theo quy định.')
   }
 
   const handleSubmitReview = async (rating: number, comment: string) => {
-    await submitReviewApi({
+    if (!selectedBooking) return
+    await reviewMutation.mutateAsync({
       bookingId: selectedBooking.id,
       rating,
       comment,
     })
-    queryClient.setQueryData<BookingItemDto[]>(['my-bookings-list'], (prev) =>
-      (prev || []).map((item) =>
-        item.id === selectedBooking.id
-          ? {
-              ...item,
-              status: 'REVIEWED',
-              statusBadgeLabel: 'ĐÃ ĐÁNH GIÁ',
-            }
-          : item
-      )
-    )
-    alert('CẢM ƠN BẠN ĐÃ ĐÁNH GIÁ CHẤT LƯỢNG BÃI XE!')
   }
 
   const handlePaymentCompleted = (bookingId: number, type: 'DEPOSIT' | 'FINAL') => {
@@ -201,14 +245,57 @@ export function MyBookingsPage() {
         }
       })
     )
+    showToast(
+      type === 'DEPOSIT'
+        ? 'Thanh toán cọc 20% thành công! Barie ALPR sẵn sàng mở.'
+        : 'Quyết toán cước đỗ PayOS thành công! Chúc bạn thượng lộ bình an.',
+      'success'
+    )
   }
 
-  if (isLoading && !bookings) {
+  // 1. Loading State
+  if (isLoading && (!bookings || bookings.length === 0)) {
     return <BookingsSkeleton />
+  }
+
+  // 2. Error State
+  if (isError && (!bookings || bookings.length === 0)) {
+    return (
+      <div className="w-full bg-[#f8f9ff] min-h-[calc(100vh-140px)] p-6">
+        <BookingsErrorState
+          errorMessage={
+            error instanceof Error ? error.message : 'Không thể kết nối máy chủ quản lý đặt chỗ.'
+          }
+          onRetry={() => refetch()}
+        />
+      </div>
+    )
   }
 
   return (
     <div className="w-full bg-[#f8f9ff] min-h-[calc(100vh-140px)]">
+      {/* Toast Notification Banner */}
+      {toastMessage && (
+        <div
+          role="status"
+          aria-live="polite"
+          className="fixed bottom-6 right-6 z-50 bg-slate-900 text-white px-5 py-3.5 rounded-2xl shadow-2xl flex items-center gap-3 border border-slate-700 animate-in slide-in-from-bottom-4 duration-200 max-w-md"
+        >
+          {toastType === 'success' && <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0" />}
+          {toastType === 'error' && <AlertCircle className="w-5 h-5 text-red-400 shrink-0" />}
+          {toastType === 'info' && <Info className="w-5 h-5 text-[#d95f00] shrink-0" />}
+          <span className="text-xs font-semibold leading-relaxed flex-1">{toastMessage}</span>
+          <button
+            type="button"
+            onClick={clearToast}
+            aria-label="Đóng thông báo"
+            className="text-slate-400 hover:text-white p-1 rounded-lg transition-colors cursor-pointer"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+      )}
+
       {/* Top Command Toolbar */}
       <BookingsCommandToolbar
         activeTab={activeTab}
@@ -219,66 +306,72 @@ export function MyBookingsPage() {
         activeVehiclePlate={selectedBooking?.vehiclePlate || '51D-894.12'}
       />
 
-      {/* Master-Detail 2-Column Workspace */}
+      {/* Main Workspace */}
       <div className="max-w-[1280px] w-full mx-auto px-4 lg:px-6 py-6">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-          {/* Left Column: Master List */}
-          <BookingMasterList
-            bookings={filteredBookings}
-            selectedBookingId={selectedBooking?.id || 1}
-            onSelectBooking={(b) => setSelectedBookingId(b.id)}
-            onRefresh={() => refetch()}
-            isRefreshing={isRefetching}
-            onPayDepositQuick={(b) => {
-              setSelectedBookingId(b.id)
-              setPayOsType('DEPOSIT')
-              setIsPayOsModalOpen(true)
+        {filteredBookings.length === 0 ? (
+          // 3. Empty State (Filtered or Total)
+          <BookingsEmptyState
+            searchKeyword={searchKeyword}
+            activeTab={activeTab}
+            onResetFilters={() => {
+              setActiveTab('ALL')
+              setSearchKeyword('')
             }}
           />
-
-          {/* Right Column: Detail View */}
-          {selectedBooking && (
-            <BookingDetailView
-              ref={qrSvgRef}
-              booking={selectedBooking}
-              onDownloadQr={handleDownloadQr}
-              isDownloadingQr={isDownloadingQr}
-              onExportInvoice={handleExportInvoice}
-              onPayFinal={() => {
-                setPayOsType('FINAL')
-                setIsPayOsModalOpen(true)
+        ) : (
+          /* Master-Detail 2-Column Workspace */
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+            {/* Left Column: Master List (approx 38% on desktop) */}
+            <BookingMasterList
+              bookings={filteredBookings}
+              selectedBookingId={selectedBooking?.id || 1}
+              onSelectBooking={(b) => setSelectedBookingId(b.id)}
+              onRefresh={() => refetch()}
+              isRefreshing={isRefetching}
+              onPayDepositQuick={(b) => {
+                setSelectedBookingId(b.id)
+                openPayOsModal('DEPOSIT')
               }}
-              onPayDeposit={() => {
-                setPayOsType('DEPOSIT')
-                setIsPayOsModalOpen(true)
-              }}
-              onCancelBooking={() => setIsCancelModalOpen(true)}
-              onOpenReview={() => setIsReviewModalOpen(true)}
-              onPayCashAtGate={handlePayCashAtGate}
-              onOpenMapDirections={handleOpenMapDirections}
             />
-          )}
-        </div>
+
+            {/* Right Column: Detail View (approx 62% on desktop) */}
+            {selectedBooking && (
+              <BookingDetailView
+                ref={qrSvgRef}
+                booking={selectedBooking}
+                onDownloadQr={handleDownloadQr}
+                isDownloadingQr={false}
+                onExportInvoice={handleExportInvoice}
+                onPayFinal={() => openPayOsModal('FINAL')}
+                onPayDeposit={() => openPayOsModal('DEPOSIT')}
+                onCancelBooking={openCancelModal}
+                onOpenReview={openReviewModal}
+                onPayCashAtGate={handlePayCashAtGate}
+                onOpenMapDirections={handleOpenMapDirections}
+              />
+            )}
+          </div>
+        )}
       </div>
 
       {/* Modals */}
       <CancelBookingModal
         isOpen={isCancelModalOpen}
-        onClose={() => setIsCancelModalOpen(false)}
+        onClose={closeCancelModal}
         booking={selectedBooking}
         onConfirmCancel={handleConfirmCancel}
       />
 
       <ReviewBookingModal
         isOpen={isReviewModalOpen}
-        onClose={() => setIsReviewModalOpen(false)}
+        onClose={closeReviewModal}
         booking={selectedBooking}
         onSubmitReview={handleSubmitReview}
       />
 
       <PayOsCheckoutModal
         isOpen={isPayOsModalOpen}
-        onClose={() => setIsPayOsModalOpen(false)}
+        onClose={closePayOsModal}
         booking={selectedBooking}
         paymentType={payOsType}
         onPaymentCompleted={handlePaymentCompleted}

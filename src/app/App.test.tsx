@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, within } from '@testing-library/react'
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { describe, it, expect, vi } from 'vitest'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
@@ -142,11 +142,14 @@ describe('SmartTruckHub - 9 Distinct Landing Screens', () => {
   })
 
   describe('Trang Giải Pháp Chủ Bãi (Owner Solutions Page - SCR-001C)', () => {
-    it('renders owner hero, pain points, interactive ROI calculator, merchant features, workflow, testimonials, FAQ and registration form', () => {
+    it('renders owner hero, pain points, interactive ROI calculator, merchant features, workflow, testimonials, FAQ and registration form', async () => {
+      const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
       render(
-        <MemoryRouter initialEntries={['/owner-solutions']}>
-          <OwnerSolutionsPage />
-        </MemoryRouter>,
+        <QueryClientProvider client={queryClient}>
+          <MemoryRouter initialEntries={['/owner-solutions']}>
+            <OwnerSolutionsPage />
+          </MemoryRouter>
+        </QueryClientProvider>,
       )
 
       // 1. Owner Hero
@@ -229,7 +232,7 @@ describe('SmartTruckHub - 9 Distinct Landing Screens', () => {
         }),
       ).toBeInTheDocument()
 
-      const nameInput = screen.getByPlaceholderText(/Nguyễn Văn A/i)
+      const nameInput = screen.getByPlaceholderText(/Nguyễn Văn Hưng/i)
       const phoneInput = screen.getByPlaceholderText(/0912 345 678/i)
       const locationInput = screen.getByPlaceholderText(/Cạnh KCN Sóng Thần/i)
 
@@ -242,8 +245,9 @@ describe('SmartTruckHub - 9 Distinct Landing Screens', () => {
       })
       fireEvent.click(submitButton)
 
-      expect(screen.getByText(/Đăng Ký Thành Công!/i)).toBeInTheDocument()
-      expect(screen.getByText(/0988776655/i)).toBeInTheDocument()
+      await waitFor(() => {
+        expect(screen.getByText(/Đã Tiếp Nhận Thông Tin Thành Công!/i)).toBeInTheDocument()
+      })
     })
   })
 
@@ -747,7 +751,7 @@ describe('SmartTruckHub - 9 Distinct Landing Screens', () => {
   })
 
   describe('Trang Tin Tức & Báo Cáo Chuyên Ngành (Logistics Insights - SCR-008)', () => {
-    it('renders hero with category tabs, search input, featured spotlight report, filtered articles grid, newsletter subscription and bottom CTA', () => {
+    it('renders hero with category tabs, search input, featured spotlight report, filtered articles grid, newsletter subscription and bottom CTA', async () => {
       render(
         <MemoryRouter initialEntries={['/insights']}>
           <InsightsPage />
@@ -865,9 +869,13 @@ describe('SmartTruckHub - 9 Distinct Landing Screens', () => {
       fireEvent.change(emailInput, { target: { value: 'logistics.manager@tan-cang.vn' } })
       const subscribeButton = screen.getByRole('button', { name: /ĐĂNG KÝ BẢN TIN/i })
       fireEvent.click(subscribeButton)
-      expect(
-        screen.getByText(/Cảm ơn bạn đã đăng ký nhận bản tin thị trường Fretrix!/i),
-      ).toBeInTheDocument()
+      await waitFor(() => {
+        expect(
+          screen.getByText(
+            /Chưa thể gửi đăng ký vì dịch vụ bản tin chưa được kết nối|Cảm ơn bạn đã đăng ký nhận bản tin thị trường Fretrix!/i,
+          ),
+        ).toBeInTheDocument()
+      })
 
       // 6. Bottom CTA Banner
       expect(

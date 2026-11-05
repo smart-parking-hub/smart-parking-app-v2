@@ -147,13 +147,13 @@ export function MerchantSidebar({ mobileOpen = false, onCloseMobile }: MerchantS
               <span>1900 6868 (Nhánh 2)</span>
             </a>
           </div>
-          <div className="flex items-center justify-between font-mono text-[11px] text-[#7c839b]/80 pt-1 border-t border-[#233144]/60">
+          {location.pathname !== '/merchant/profile' && <div className="flex items-center justify-between font-mono text-[11px] text-[#7c839b]/80 pt-1 border-t border-[#233144]/60">
             <span>Hệ thống: V2.8.4-OPS</span>
             <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-[#233144] text-white border border-slate-700 text-[10px] font-semibold">
               <ShieldCheck className="w-3 h-3 text-emerald-400" />
               <span>ISO 27001</span>
             </span>
-          </div>
+          </div>}
         </div>
       </aside>
     </>

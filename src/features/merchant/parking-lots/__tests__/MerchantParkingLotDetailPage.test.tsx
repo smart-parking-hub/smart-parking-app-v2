@@ -51,11 +51,11 @@ describe('SCR-030: MerchantParkingLotDetailPage (Chi tiết hồ sơ kỹ thuậ
 
     // 2. Action buttons
     expect(screen.getByRole('button', { name: /Chỉnh Sửa Hồ Sơ/i })).toBeInTheDocument()
-    const slotBtn = screen.getByRole('button', { name: /Cấu Hình Slot/i })
-    const priceBtn = screen.getByRole('button', { name: /Cấu Hình Bảng Giá/i })
+    const slotBtn = screen.getByRole('button', { name: /Cấu Hình Sức Chứa Slot/i })
+    const priceBtn = screen.getByRole('button', { name: /Biểu Phí Niêm Yết/i })
     expect(slotBtn).not.toBeDisabled()
     expect(priceBtn).not.toBeDisabled()
-    expect(screen.getByRole('button', { name: /MỞ QUÉT QR BARIE/i })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /TRẠM QUÉT QR BARIE/i })).toBeInTheDocument()
 
     // 3. Bento 4 metrics
     expect(screen.getByText(/Doanh Thu Tháng Này/i)).toBeInTheDocument()
@@ -98,8 +98,8 @@ describe('SCR-030: MerchantParkingLotDetailPage (Chi tiết hồ sơ kỹ thuậ
     })
 
     // Slot & Pricing buttons should be disabled for unapproved yards
-    const slotBtn = screen.getByRole('button', { name: /Cấu Hình Slot/i })
-    const priceBtn = screen.getByRole('button', { name: /Cấu Hình Bảng Giá/i })
+    const slotBtn = screen.getByRole('button', { name: /Cấu Hình Sức Chứa Slot/i })
+    const priceBtn = screen.getByRole('button', { name: /Biểu Phí Niêm Yết/i })
     expect(slotBtn).toBeDisabled()
     expect(priceBtn).toBeDisabled()
 

@@ -1,25 +1,44 @@
-import { useState, useId } from 'react'
-import { ArrowRight, CheckCircle2, Check } from 'lucide-react'
+import { useId } from 'react'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { ArrowRight, CheckCircle2, MapPin, Check } from 'lucide-react'
+import { Link } from 'react-router-dom'
+import { ownerLeadSchema, type OwnerLeadFormValues } from '@/entities/owner/types'
+import { Button } from '@/shared/components/Button'
 
-export function OwnerOnboardingFormSection() {
-  const [formData, setFormData] = useState({
-    name: '',
-    phone: '',
-    location: '',
-    area: '7000-15000',
-    status: 'operating',
-  })
-  const [submitted, setSubmitted] = useState(false)
+export interface OwnerOnboardingFormSectionProps {
+  onSuccessSubmit?: (data: OwnerLeadFormValues) => void
+}
 
+export function OwnerOnboardingFormSection({ onSuccessSubmit }: OwnerOnboardingFormSectionProps = {}) {
   const nameId = useId()
   const phoneId = useId()
   const locationId = useId()
   const areaId = useId()
   const statusId = useId()
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    setSubmitted(true)
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors, isSubmitting, isSubmitSuccessful },
+  } = useForm<OwnerLeadFormValues>({
+    resolver: zodResolver(ownerLeadSchema),
+    defaultValues: {
+      name: '',
+      phone: '',
+      location: '',
+      area: '7000-15000',
+      status: 'operating',
+      email: '',
+      notes: '',
+    },
+  })
+
+  const onSubmit = async (data: OwnerLeadFormValues) => {
+    // Giả lập lưu trữ lead và gọi callback
+    await new Promise((resolve) => setTimeout(resolve, 600))
+    onSuccessSubmit?.(data)
   }
 
   return (
@@ -104,53 +123,64 @@ export function OwnerOnboardingFormSection() {
                 Đăng Ký Khảo Sát &amp; Mở Bãi Hợp Tác
               </h3>
               <p className="text-xs text-slate-400 font-inter mt-1">
-                Vui lòng điền thông tin người phụ trách quản lý mặt bằng.
+                Vui lòng cung cấp vị trí và diện tích khu đất để nhận báo cáo phân tích dòng tiền trong 24h.
               </p>
             </div>
 
-            {submitted ? (
-              <div className="py-8 text-center space-y-3.5">
+            {isSubmitSuccessful ? (
+              <div
+                className="py-8 text-center space-y-3.5 animate-in fade-in zoom-in duration-300"
+                id="onboarding-success-state"
+              >
                 <div className="w-12 h-12 rounded-full bg-brand-orange/20 text-brand-orange flex items-center justify-center mx-auto">
                   <CheckCircle2 className="h-7 w-7 text-brand-orange" aria-hidden="true" />
                 </div>
                 <h4 className="font-sora text-lg sm:text-xl font-bold text-white">
-                  Đăng Ký Thành Công!
+                  Đã Tiếp Nhận Thông Tin Thành Công!
                 </h4>
-                <p className="text-sm font-inter text-slate-300 max-w-md mx-auto leading-relaxed">
-                  Cảm ơn Quý đối tác! Chuyên viên phụ trách khu vực của SmartTruckHub sẽ liên hệ qua số điện thoại <strong className="text-white">{formData.phone}</strong> trong vòng 2 giờ làm việc để xếp lịch khảo sát thực địa.
+                <p className="font-inter text-sm text-slate-300 max-w-sm mx-auto leading-relaxed">
+                  Cảm ơn bạn đã tin tưởng SmartTruckHub. Chuyên viên quản lý mặt bằng sẽ liên hệ trong 2 giờ làm việc để xếp lịch đo đạc thực địa.
                 </p>
-                <button
-                  type="button"
-                  onClick={() => setSubmitted(false)}
-                  className="text-xs font-semibold text-brand-orange hover:underline pt-1 cursor-pointer"
-                >
-                  Gửi thông tin mặt bằng khác
-                </button>
+                <div className="pt-4 flex flex-col sm:flex-row items-center justify-center gap-3">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => reset()}
+                    className="text-xs cursor-pointer"
+                  >
+                    Gửi thêm hồ sơ mặt bằng khác
+                  </Button>
+                  <Link
+                    to="/merchant/parking-lots"
+                    className="inline-flex items-center justify-center text-xs font-semibold text-brand-orange hover:text-white transition-colors px-3 py-2"
+                  >
+                    Đến Cổng Quản Trị Bãi &rarr;
+                  </Link>
+                </div>
               </div>
             ) : (
-              <form
-                className="space-y-3.5 font-inter text-sm"
-                id="merchant-reg-form"
-                onSubmit={handleSubmit}
-              >
+              <form onSubmit={handleSubmit(onSubmit)} className="space-y-3.5 font-inter text-sm" id="merchant-reg-form">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                   <div>
                     <label
                       className="block text-xs font-semibold text-slate-300 uppercase mb-1.5"
                       htmlFor={nameId}
                     >
-                      Họ và tên chủ bãi / Quản lý *
+                      Họ và tên chủ bãi *
                     </label>
                     <input
-                      className="w-full bg-[#060D1A] border border-slate-700 text-white px-3.5 py-2.5 rounded-xl placeholder:text-slate-500 focus:outline-none focus:border-brand-orange focus:ring-1 focus:ring-brand-orange"
                       id={nameId}
-                      placeholder="Nguyễn Văn A"
-                      required
-                      type="text"
-                      value={formData.name}
-                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                      {...register('name')}
+                      placeholder="VD: Nguyễn Văn Hưng"
+                      className={`w-full bg-[#060D1A] border text-white px-3.5 py-2.5 rounded-xl placeholder:text-slate-500 focus:outline-none focus:border-brand-orange text-sm ${
+                        errors.name ? 'border-rose-500' : 'border-slate-700'
+                      }`}
                     />
+                    {errors.name && (
+                      <p className="text-xs text-rose-400 mt-1">{errors.name.message}</p>
+                    )}
                   </div>
+
                   <div>
                     <label
                       className="block text-xs font-semibold text-slate-300 uppercase mb-1.5"
@@ -159,14 +189,17 @@ export function OwnerOnboardingFormSection() {
                       Số điện thoại liên hệ *
                     </label>
                     <input
-                      className="w-full bg-[#060D1A] border border-slate-700 text-white px-3.5 py-2.5 rounded-xl placeholder:text-slate-500 focus:outline-none focus:border-brand-orange focus:ring-1 focus:ring-brand-orange"
                       id={phoneId}
+                      {...register('phone')}
                       placeholder="0912 345 678"
-                      required
                       type="tel"
-                      value={formData.phone}
-                      onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                      className={`w-full bg-[#060D1A] border text-white px-3.5 py-2.5 rounded-xl placeholder:text-slate-500 focus:outline-none focus:border-brand-orange text-sm ${
+                        errors.phone ? 'border-rose-500' : 'border-slate-700'
+                      }`}
                     />
+                    {errors.phone && (
+                      <p className="text-xs text-rose-400 mt-1">{errors.phone.message}</p>
+                    )}
                   </div>
                 </div>
 
@@ -177,15 +210,20 @@ export function OwnerOnboardingFormSection() {
                   >
                     Vị trí mặt bằng bãi xe (Tỉnh/Thành &amp; Tuyến đường) *
                   </label>
-                  <input
-                    className="w-full bg-[#060D1A] border border-slate-700 text-white px-3.5 py-2.5 rounded-xl placeholder:text-slate-500 focus:outline-none focus:border-brand-orange focus:ring-1 focus:ring-brand-orange"
-                    id={locationId}
-                    placeholder="VD: Cạnh KCN Sóng Thần, Dĩ An, Bình Dương"
-                    required
-                    type="text"
-                    value={formData.location}
-                    onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-                  />
+                  <div className="relative">
+                    <input
+                      id={locationId}
+                      {...register('location')}
+                      placeholder="VD: Cạnh KCN Sóng Thần, Dĩ An, Bình Dương"
+                      className={`w-full bg-[#060D1A] border text-white px-3.5 py-2.5 pr-10 rounded-xl placeholder:text-slate-500 focus:outline-none focus:border-brand-orange text-sm ${
+                        errors.location ? 'border-rose-500' : 'border-slate-700'
+                      }`}
+                    />
+                    <MapPin className="w-4 h-4 text-slate-400 absolute right-3.5 top-3 pointer-events-none" />
+                  </div>
+                  {errors.location && (
+                    <p className="text-xs text-rose-400 mt-1">{errors.location.message}</p>
+                  )}
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
@@ -197,10 +235,9 @@ export function OwnerOnboardingFormSection() {
                       Diện tích ước tính (m²)
                     </label>
                     <select
-                      className="w-full bg-[#060D1A] border border-slate-700 text-white px-3.5 py-2.5 rounded-xl focus:outline-none focus:border-brand-orange focus:ring-1 focus:ring-brand-orange"
                       id={areaId}
-                      value={formData.area}
-                      onChange={(e) => setFormData({ ...formData, area: e.target.value })}
+                      {...register('area')}
+                      className="w-full bg-[#060D1A] border border-slate-700 text-white px-3.5 py-2.5 rounded-xl focus:outline-none focus:border-brand-orange focus:ring-1 focus:ring-brand-orange text-sm"
                     >
                       <option value="under-3000">Dưới 3.000 m² (20 - 40 xe)</option>
                       <option value="3000-7000">3.000 - 7.000 m² (50 - 100 xe)</option>
@@ -216,10 +253,9 @@ export function OwnerOnboardingFormSection() {
                       Hiện trạng mặt bằng
                     </label>
                     <select
-                      className="w-full bg-[#060D1A] border border-slate-700 text-white px-3.5 py-2.5 rounded-xl focus:outline-none focus:border-brand-orange focus:ring-1 focus:ring-brand-orange"
                       id={statusId}
-                      value={formData.status}
-                      onChange={(e) => setFormData({ ...formData, status: e.target.value })}
+                      {...register('status')}
+                      className="w-full bg-[#060D1A] border border-slate-700 text-white px-3.5 py-2.5 rounded-xl focus:outline-none focus:border-brand-orange focus:ring-1 focus:ring-brand-orange text-sm"
                     >
                       <option value="operating">Đang hoạt động giữ xe thủ công</option>
                       <option value="empty-land">Đất trống chưa khai thác</option>
@@ -229,13 +265,16 @@ export function OwnerOnboardingFormSection() {
                 </div>
 
                 <div className="pt-2">
-                  <button
-                    className="w-full inline-flex items-center justify-center gap-2 bg-brand-orange hover:bg-brand-orange-hover text-[#060D1A] font-sora font-bold text-sm sm:text-base py-3.5 rounded-xl transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-orange cursor-pointer"
+                  <Button
                     type="submit"
+                    variant="primary"
+                    size="lg"
+                    className="w-full bg-brand-orange hover:bg-brand-orange-hover text-[#060D1A] font-sora font-bold text-sm sm:text-base py-3.5 rounded-xl cursor-pointer"
+                    isLoading={isSubmitting}
                   >
                     <span>XÁC NHẬN ĐĂNG KÝ KHẢO SÁT MIỄN PHÍ</span>
-                    <ArrowRight className="h-5 w-5" aria-hidden="true" />
-                  </button>
+                    <ArrowRight className="h-5 w-5 ml-2" aria-hidden="true" />
+                  </Button>
                 </div>
 
                 <p className="text-center text-xs text-slate-400 pt-1">

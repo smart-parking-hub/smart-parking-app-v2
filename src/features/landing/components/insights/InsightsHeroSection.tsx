@@ -68,6 +68,7 @@ export function InsightsHeroSection({
                   type="button"
                   role="tab"
                   aria-selected={isActive}
+                  aria-pressed={isActive}
                   onClick={() => onSelectCategory(cat.id)}
                   className={`category-btn px-5 py-2.5 rounded-full text-xs font-semibold uppercase tracking-wider transition-all whitespace-nowrap ${
                     isActive
@@ -87,6 +88,7 @@ export function InsightsHeroSection({
             <input
               type="text"
               id="articleSearch"
+              aria-label="Tìm kiếm bài viết"
               value={searchQuery}
               onChange={(e) => onSearchChange(e.target.value)}
               placeholder="Tìm kiếm bài viết, mã bến, chỉ số..."

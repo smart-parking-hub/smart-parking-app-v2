@@ -7,6 +7,7 @@ import {
   BellRing,
   ArrowRight,
   ChevronRight,
+  UserRound,
 } from 'lucide-react'
 
 export type AccountSidebarTab =
@@ -17,16 +18,47 @@ export type AccountSidebarTab =
   | 'notifications'
 
 export interface ProfileSidebarNavProps {
+  compact?: boolean
   activeTab?: AccountSidebarTab
   onOpenChangePassword?: () => void
   onOpenNotificationSettings?: () => void
 }
 
 export function ProfileSidebarNav({
+  compact = false,
   activeTab = 'profile',
   onOpenChangePassword,
   onOpenNotificationSettings,
 }: ProfileSidebarNavProps) {
+  if (compact) {
+    const items = [
+      { id: 'profile', to: '/profile', label: 'Thông tin cá nhân', icon: UserCheck },
+      { id: 'vehicles', to: '/vehicles', label: 'Đội xe của tôi', icon: Truck },
+      { id: 'payments', to: '/payments', label: 'Lịch sử thanh toán', icon: Receipt },
+      { id: 'change-password', to: '/profile#bao-mat', label: 'Bảo mật tài khoản', icon: KeyRound },
+      { id: 'notifications', to: '/notifications', label: 'Thông báo', icon: BellRing },
+    ]
+    return <div className="overflow-hidden rounded-2xl border border-brand-border bg-white font-inter text-sm text-brand-navy">
+      <div className="flex items-center gap-3 border-b border-brand-border p-5">
+        <div className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-brand-navy text-white"><UserRound size={21} aria-hidden="true" /></div>
+        <div><p className="text-base font-semibold">Tài khoản tài xế</p><p className="mt-1 text-sm text-brand-muted">Hồ sơ và hoạt động</p></div>
+      </div>
+      <nav aria-label="Liên kết tài khoản" className="space-y-1 p-3">
+        {items.map(item => {
+          const Icon = item.icon
+          const current = item.id === activeTab
+          return <Link key={item.id} to={item.to} aria-current={current ? 'page' : undefined}
+            onClick={event => {
+              const action = item.id === 'notifications' ? onOpenNotificationSettings : item.id === 'change-password' ? onOpenChangePassword : undefined
+              if (action) { event.preventDefault(); action() }
+            }}
+            className={`flex min-h-11 items-center gap-3 rounded-lg px-3 py-2.5 font-medium transition-colors focus-visible:outline-2 focus-visible:outline-brand-orange ${current ? 'bg-brand-surface font-semibold text-brand-orange-ink' : 'text-brand-muted hover:bg-brand-surface hover:text-brand-navy'}`}>
+            <Icon size={18} aria-hidden="true" /><span className="min-w-0 flex-1">{item.label}</span><ChevronRight size={15} aria-hidden="true" />
+          </Link>
+        })}
+      </nav>
+    </div>
+  }
   return (
     <nav className="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden flex flex-col">
       {/* Title Header */}

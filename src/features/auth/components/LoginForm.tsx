@@ -5,7 +5,7 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { isAxiosError } from 'axios'
-import { ArrowUpRight, LoaderCircle } from 'lucide-react'
+import { ArrowUpRight, Check, LoaderCircle, ShieldCheck, Store, Truck } from 'lucide-react'
 import { control, button, Notice } from '@/shared/components/Workspace'
 import { errorMessage, sendData } from '@/shared/api/resources'
 import { loginDestination, readSession, saveSession } from '../model/session'
@@ -15,11 +15,18 @@ export const loginSchema = z.object({
 })
 type LoginFields = z.infer<typeof loginSchema>
 const responseSchema = z.object({ token: z.string().min(1), role: z.enum(['DRIVER', 'MERCHANT', 'ADMIN']) })
+const demoAccounts = [
+  { phone: '0909128374', name: 'Nguyễn Văn Hùng', role: 'Tài xế 01', icon: Truck },
+  { phone: '0918239485', name: 'Trần Quốc Tuấn', role: 'Tài xế 02', icon: Truck },
+  { phone: '0908123456', name: 'Lê Văn Thành', role: 'Chủ bãi đỗ', icon: Store },
+  { phone: '0903829145', name: 'Nguyễn Hoàng Nam', role: 'Quản trị viên', icon: ShieldCheck },
+]
 export function LoginForm() {
   const navigate = useNavigate()
   const location = useLocation()
   const cache = useQueryClient()
   const [showPassword, setShowPassword] = useState(false)
+  const [selectedPhone, setSelectedPhone] = useState('')
   const [remember, setRemember] = useState(() => Boolean(localStorage.getItem('remembered_phone')))
   const form = useForm<LoginFields>({ resolver: zodResolver(loginSchema), defaultValues: { phone: localStorage.getItem('remembered_phone') || '', password: '' } })
   const login = useMutation({
@@ -41,6 +48,25 @@ export function LoginForm() {
   })
   const submit = form.handleSubmit((fields) => { if (!login.isPending) login.mutate(fields) })
   return <>
+    {import.meta.env.DEV && <section aria-label="Tài khoản trải nghiệm" className="mb-8 rounded-2xl border border-brand-muted/20 bg-white/60 p-4 sm:p-5">
+      <div className="mb-4 flex items-center justify-between gap-3">
+        <div><p className="font-sora text-base font-semibold text-brand-navy">Chọn vai trò. Bắt đầu ngay.</p><p className="mt-1 text-xs text-brand-muted">Chọn tài khoản mẫu để tự động điền thông tin.</p></div>
+        <span className="rounded-full bg-brand-navy px-3 py-1 text-xs font-semibold text-white">DEMO</span>
+      </div>
+      <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+        {demoAccounts.map(({ phone, name, role, icon: Icon }) => <button key={phone} type="button" disabled={login.isPending} aria-pressed={selectedPhone === phone} onClick={() => {
+          setSelectedPhone(phone)
+          form.setValue('phone', phone, { shouldValidate: true })
+          form.setValue('password', 'password123', { shouldValidate: true })
+          login.reset()
+        }} className={`group flex items-center gap-3 rounded-xl border p-3 text-left transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-600 disabled:opacity-50 ${selectedPhone === phone ? 'border-orange-600 bg-orange-50' : 'border-brand-muted/20 bg-white hover:border-orange-600'}`}>
+          <span className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-brand-navy text-white"><Icon size={20} aria-hidden="true" /></span>
+          <span className="min-w-0 flex-1"><span className="block text-xs font-semibold text-brand-muted">{role}</span><span className="mt-1 block truncate text-sm font-semibold text-brand-navy">{name}</span></span>
+          {selectedPhone === phone && <Check size={16} className="text-orange-700" aria-hidden="true" />}
+        </button>)}
+      </div>
+      <p role="status" className="mt-3 text-xs text-brand-muted">{selectedPhone ? 'Đã điền tài khoản mẫu. Nhấn Đăng nhập để tiếp tục.' : '4 tài khoản mẫu · 2 tài xế / 1 chủ bãi / 1 quản trị viên'}</p>
+    </section>}
     <form noValidate onSubmit={submit} className="space-y-6" aria-busy={login.isPending}>
       <fieldset disabled={login.isPending} className="space-y-6">
         <div className="space-y-3">

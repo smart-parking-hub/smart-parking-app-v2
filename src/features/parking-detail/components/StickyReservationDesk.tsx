@@ -24,6 +24,7 @@ export function StickyReservationDesk({
 }: StickyReservationDeskProps) {
   // 10-minute lock countdown timer
   const [secondsLeft, setSecondsLeft] = useState(10 * 60)
+  const [selectedDuration, setSelectedDuration] = useState(reservationState.durationHours || 6)
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -35,6 +36,11 @@ export function StickyReservationDesk({
   const minutes = Math.floor(secondsLeft / 60)
   const seconds = secondsLeft % 60
   const formattedCountdown = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`
+
+  const hourlyRate = reservationState.parkingRatePerHour || 40000
+  const totalAmount = selectedDuration * hourlyRate
+  const depositAmount = Math.round(totalAmount * 0.2) // 20% deposit
+  const settlementAtExit = totalAmount - depositAmount
 
   const formatCurrency = (val: number) => {
     return new Intl.NumberFormat('vi-VN').format(val) + ' ₫'
@@ -75,7 +81,7 @@ export function StickyReservationDesk({
           <label className="text-xs font-bold text-slate-700 flex items-center justify-between">
             <span>Phương Tiện Đăng Ký</span>
             <Link
-              to="/vehicles"
+              to="/dashboard/vehicles"
               className="text-[#d95f00] hover:underline font-normal text-xs"
             >
               + Đổi xe khác
@@ -127,9 +133,20 @@ export function StickyReservationDesk({
           </div>
           <div className="flex flex-col gap-1">
             <span className="text-xs text-slate-500">Thời gian đỗ</span>
-            <div className="bg-slate-50 border border-slate-200/80 px-3 py-2 rounded-lg text-slate-900 font-mono text-xs font-bold flex items-center justify-between">
-              <span>{reservationState.durationUntilText}</span>
-              <Hourglass className="w-3.5 h-3.5 text-slate-400" />
+            <div className="bg-slate-50 border border-slate-200/80 px-2 py-1.5 rounded-lg text-slate-900 font-mono text-xs font-bold flex items-center justify-between">
+              <select
+                aria-label="Chọn thời gian đỗ"
+                value={selectedDuration}
+                onChange={(e) => setSelectedDuration(Number(e.target.value))}
+                className="bg-transparent font-mono text-xs font-bold text-slate-900 focus:outline-hidden w-full cursor-pointer"
+              >
+                {[2, 4, 6, 8, 12, 24].map((h) => (
+                  <option key={h} value={h}>
+                    {h} Giờ
+                  </option>
+                ))}
+              </select>
+              <Hourglass className="w-3.5 h-3.5 text-slate-400 shrink-0" />
             </div>
           </div>
         </div>
@@ -138,16 +155,16 @@ export function StickyReservationDesk({
         <div className="p-4 bg-slate-50 border border-slate-200/80 rounded-lg flex flex-col gap-2.5 text-xs">
           <div className="flex items-center justify-between text-slate-600">
             <span>
-              Tiền giờ đỗ ({reservationState.durationHours}h × {formatCurrency(reservationState.parkingRatePerHour)}):
+              Tiền giờ đỗ ({selectedDuration}h × {formatCurrency(hourlyRate)}):
             </span>
             <span className="font-mono font-semibold text-slate-900">
-              {formatCurrency(reservationState.parkingTotalAmount)}
+              {formatCurrency(totalAmount)}
             </span>
           </div>
 
           <div className="flex items-center justify-between text-slate-600">
             <span className="flex items-center gap-1">
-              <span>Cọc giữ slot 10 phút:</span>
+              <span>Cọc giữ slot 10 phút (20%):</span>
               <span
                 title="Hoàn 100% nếu check-in đúng hẹn hoặc hủy trước 60 phút"
                 className="inline-flex cursor-pointer"
@@ -156,7 +173,7 @@ export function StickyReservationDesk({
               </span>
             </span>
             <span className="font-mono font-semibold text-slate-900">
-              {formatCurrency(reservationState.depositAmount)}
+              {formatCurrency(depositAmount)}
             </span>
           </div>
 
@@ -165,14 +182,14 @@ export function StickyReservationDesk({
           <div className="flex items-center justify-between text-slate-900">
             <span className="font-bold text-sm">Tổng thanh toán cọc ngay:</span>
             <span className="text-lg font-bold text-[#d95f00] font-mono">
-              {formatCurrency(reservationState.depositAmount)}
+              {formatCurrency(depositAmount)}
             </span>
           </div>
 
           <div className="flex items-center justify-between text-[11px] text-slate-500 pt-0.5">
             <span>Số tiền quyết toán tại bãi lúc xuất xe:</span>
             <span className="font-mono font-semibold text-slate-700">
-              {formatCurrency(reservationState.settlementAtExitAmount)}
+              {formatCurrency(settlementAtExit)}
             </span>
           </div>
         </div>
@@ -182,7 +199,7 @@ export function StickyReservationDesk({
           type="button"
           id="btn-open-booking-modal"
           onClick={onOpenBookingModal}
-          className="w-full bg-[#d95f00] hover:bg-[#b84e00] text-white font-bold text-sm py-3 px-4 rounded-lg flex items-center justify-center gap-2 transition-all shadow-sm hover:shadow-md active:scale-[0.99] cursor-pointer"
+          className="w-full bg-[#d95f00] hover:bg-[#b84e00] text-white font-bold text-xs py-3.5 px-4 rounded-xl flex items-center justify-center gap-2 transition-all shadow-sm hover:shadow-md active:scale-[0.99] cursor-pointer"
         >
           <span>XÁC NHẬN ĐẶT CHỖ &amp; MỞ THANH TOÁN CỌC</span>
           <ArrowRight className="w-4 h-4" />
@@ -191,8 +208,8 @@ export function StickyReservationDesk({
         {/* Virtual Queue Fallback Link */}
         <div className="pt-1 text-center">
           <Link
-            to="/queues"
-            className="inline-flex items-center gap-2 px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs rounded-lg w-full justify-center transition-colors border border-slate-200/80"
+            to="/dashboard/queues"
+            className="inline-flex items-center gap-2 px-3 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs rounded-xl w-full justify-center transition-colors border border-slate-200/80"
           >
             <ListOrdered className="w-4 h-4 text-[#455f87]" />
             <span>Tham Gia Hàng Đợi Ảo Cát Lái (Nhận Push Ưu Tiên)</span>

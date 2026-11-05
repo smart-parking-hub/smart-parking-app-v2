@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Link } from 'react-router-dom'
 import { LandingNavbar } from '../components/common/LandingNavbar'
 import { LandingFooter } from '../components/common/LandingFooter'
 import {
@@ -21,6 +22,11 @@ export function InsightsPage() {
 
       {/* Main Content Sections */}
       <main className="flex-1 w-full" id="main-content">
+        <nav aria-label="Đường dẫn trang" className="mx-auto flex max-w-[1240px] items-center gap-3 px-6 py-5 text-sm">
+          <Link to="/" className="text-brand-muted underline underline-offset-4 focus-visible:ring-2 focus-visible:ring-brand-orange">Trang chủ</Link>
+          <span aria-hidden="true">/</span>
+          <span aria-current="page" className="font-semibold text-brand-navy">Tin tức & Báo cáo</span>
+        </nav>
         <InsightsHeroSection
           selectedCategory={selectedCategory}
           onSelectCategory={setSelectedCategory}
