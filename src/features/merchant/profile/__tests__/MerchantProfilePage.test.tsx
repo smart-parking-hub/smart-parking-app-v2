@@ -1,255 +1,80 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, screen, waitFor, fireEvent } from '@testing-library/react'
-import { MemoryRouter, Route, Routes } from 'react-router-dom'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { cleanup, render, screen, waitFor } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
+import { MemoryRouter } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { apiClient } from '@/shared/api/client'
-import { MerchantLayout } from '@/layouts/MerchantLayout'
 import { MerchantProfilePage } from '../pages/MerchantProfilePage'
-import { fallbackMerchantProfile } from '../api/merchantProfileApi'
 
-vi.mock('@/shared/api/client', () => ({
-  apiClient: {
-    get: vi.fn(),
-    put: vi.fn(),
-    post: vi.fn(),
-  },
-}))
-
-function renderMerchantProfilePage(initialEntries = ['/merchant/profile']) {
-  const queryClient = new QueryClient({
-    defaultOptions: {
-      queries: {
-        retry: false,
-      },
-    },
-  })
-
-  return render(
-    <QueryClientProvider client={queryClient}>
-      <MemoryRouter initialEntries={initialEntries}>
-        <Routes>
-          <Route path="/merchant" element={<MerchantLayout />}>
-            <Route path="profile" element={<MerchantProfilePage />} />
-          </Route>
-        </Routes>
-      </MemoryRouter>
-    </QueryClientProvider>,
-  )
+vi.mock('@/shared/api/client', () => ({ apiClient: { get: vi.fn(), put: vi.fn(), post: vi.fn() } }))
+const profile = { merchantId: 7, userId: 12, fullName: 'Nguyễn Minh', phone: '0901234567', email: 'minh@example.com', address: '', emergencyContact: '', businessLicense: 'GP-123', bankName: 'Ngân hàng thử nghiệm', bankAccountNum: '1234567890', maskedBankAccount: '******7890', walletBalance: 0, verificationLabel: 'Đã xác thực' }
+function mount() {
+  return render(<QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } })}><MemoryRouter><MerchantProfilePage /></MemoryRouter></QueryClientProvider>)
 }
-
-describe('SCR-027: MerchantProfilePage (Hồ Sơ Doanh Nghiệp Chủ Bãi)', () => {
-  beforeEach(() => {
-    vi.clearAllMocks()
-    localStorage.clear()
-    vi.mocked(apiClient.get).mockResolvedValue({
-      data: {
-        data: fallbackMerchantProfile,
-      },
-    })
-    vi.mocked(apiClient.put).mockResolvedValue({
-      data: {
-        data: {
-          ...fallbackMerchantProfile,
-          fullName: 'Lê Văn Thành (Đã Sửa)',
-        },
-      },
-    })
+afterEach(cleanup)
+beforeEach(() => { vi.clearAllMocks(); localStorage.clear(); vi.mocked(apiClient.get).mockResolvedValue({ data: { data: profile } }) })
+describe('Merchant profile backed by the real API contract', () => {
+  it('shows only supported fields and hides speculative blocks', async () => {
+    mount()
+    expect(await screen.findByLabelText('Họ và tên')).toHaveValue('Nguyễn Minh')
+    expect(screen.getByRole('navigation', { name: 'Các phần hồ sơ' })).toBeInTheDocument()
+    for (const text of [/ISO 27001/, /Napas247/i, /OTP VERIFIED/, /Chính Sách Cắt Cước/, /Zalo Official/, /ChungNhan_PCCC/]) expect(screen.queryByText(text)).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Lưu thay đổi' })).toBeDisabled()
   })
-
-  it('renders merchant layout, header ribbon with #MCH-88219 and ISO 27001 eKYC badge', async () => {
-    renderMerchantProfilePage()
-
-    // 1. Sidebar Brand & Navigation
-    await waitFor(() => {
-      expect(screen.getAllByText(/SMARTTRUCK/i).length).toBeGreaterThanOrEqual(1)
-      expect(screen.getByText('Hồ sơ bến bãi')).toBeInTheDocument()
-    })
-
-    // 2. Top Header Ribbon
-    await waitFor(() => {
-      expect(screen.getByText('Hồ Sơ Doanh Nghiệp Chủ Bãi')).toBeInTheDocument()
-      expect(screen.getByText(/MERCHANT_ID: #MCH-88219/i)).toBeInTheDocument()
-      expect(screen.getByText(/ĐÃ XÁC THỰC DOANH NGHIỆP E-KYC/i)).toBeInTheDocument()
-      expect(screen.getByText(/TIÊU CHUẨN ISO 27001 • CỤC ĐKVN/i)).toBeInTheDocument()
-    })
+  it('shows loading, then empty for a null profile', async () => {
+    vi.mocked(apiClient.get).mockResolvedValue({ data: { data: null } })
+    mount()
+    expect(screen.getByRole('status')).toHaveTextContent('Đang tải')
+    expect(await screen.findByText('Chưa có hồ sơ chủ bãi.')).toBeInTheDocument()
   })
-
-  it('renders left column summary cards: Corporate Identity, Available Revenue Balance, and Tax Policy', async () => {
-    renderMerchantProfilePage()
-
-    await waitFor(() => {
-      // Identity Card
-      expect(
-        screen.getByText('Công ty TNHH Tiếp Vận & Kho Bãi Tân Cảng Sài Gòn'),
-      ).toBeInTheDocument()
-      expect(screen.getByText('0908 123 456')).toBeInTheDocument()
-      expect(screen.getByText('OTP VERIFIED')).toBeInTheDocument()
-      expect(screen.getByText('0314892719')).toBeInTheDocument()
-      expect(screen.getByText('03 Bãi Depot Cát Lái & Hải Phòng')).toBeInTheDocument()
-      expect(screen.getByText(/Hạn kiểm duyệt định kỳ:/i)).toBeInTheDocument()
-
-      // Revenue Balance Card
-      expect(screen.getByText(/Ví Doanh Thu Sẵn Sàng Rút/i)).toBeInTheDocument()
-      expect(screen.getByText('42.800.000')).toBeInTheDocument()
-      expect(screen.getByText(/25.000.000 ₫/i)).toBeInTheDocument()
-      expect(screen.getByText(/TẠO YÊU CẦU RÚT TIỀN NGAY/i)).toBeInTheDocument()
-
-      // Tax Policy Card
-      expect(screen.getByText(/Chính Sách Cắt Cước & Thuế/i)).toBeInTheDocument()
-      expect(screen.getByText(/5.0%/i)).toBeInTheDocument()
-    })
+  it('never falls back to cached demo data on API failure and retries', async () => {
+    localStorage.setItem('smarttruck_merchant_profile_v2', JSON.stringify({ fullName: 'Demo cũ' }))
+    vi.mocked(apiClient.get).mockRejectedValueOnce(new Error('Mất kết nối')).mockResolvedValueOnce({ data: { data: profile } })
+    mount()
+    await userEvent.click(await screen.findByRole('button', { name: 'Thử lại' }))
+    expect(await screen.findByLabelText('Họ và tên')).toHaveValue('Nguyễn Minh')
+    expect(screen.queryByText('Demo cũ')).not.toBeInTheDocument()
   })
-
-  it('renders right column 3 operational blocks: Legal Info, Banking Profile, and Notification Channels', async () => {
-    renderMerchantProfilePage()
-
-    await waitFor(() => {
-      // Block 01
-      expect(screen.getByText(/Thông Tin Pháp Lý Doanh Nghiệp/i)).toBeInTheDocument()
-      expect(screen.getByText(/DỮ LIỆU ĐÃ KHÓA THẨM ĐỊNH/i)).toBeInTheDocument()
-      expect(screen.getByText('GPKD_TanCang_2018.pdf')).toBeInTheDocument()
-      expect(screen.getByText('ChungNhan_PCCC_CatLai.pdf')).toBeInTheDocument()
-
-      // Block 02
-      expect(screen.getByText(/Tài Khoản Ngân Hàng Thụ Hưởng Rút Tiền/i)).toBeInTheDocument()
-      expect(screen.getByText(/VIETQR NAPAS247/i)).toBeInTheDocument()
-      expect(screen.getByText(/MB Bank/i)).toBeInTheDocument()
-
-      // Block 03
-      expect(screen.getByText(/Cấu Hình Kênh Nhận Thông Báo Vận Hành/i)).toBeInTheDocument()
-      expect(
-        screen.getByText(/Web Push: Âm thanh còi xe tải khi có khách đặt mới/i),
-      ).toBeInTheDocument()
-      expect(
-        screen.getByText(/SMS Khẩn cấp 24\/7: Cảnh báo bãi đỗ chạm ngưỡng 95%/i),
-      ).toBeInTheDocument()
-      expect(
-        screen.getByText(/Zalo Official Account: Nhận bảng kê đối soát doanh thu mỗi 23h30/i),
-      ).toBeInTheDocument()
-    })
+  it('validates email before sending and resets unsaved edits', async () => {
+    const user = userEvent.setup(); mount()
+    const email = await screen.findByLabelText('Email')
+    await user.clear(email); await user.type(email, 'wrong')
+    await user.click(screen.getByRole('button', { name: 'Lưu thay đổi' }))
+    expect(await screen.findByText('Email không hợp lệ.')).toBeInTheDocument()
+    expect(apiClient.put).not.toHaveBeenCalled()
+    await user.click(screen.getByRole('button', { name: 'Hủy thay đổi' }))
+    expect(email).toHaveValue('minh@example.com')
   })
-
-  it('toggles masking on bank account number between masked and full value', async () => {
-    renderMerchantProfilePage()
-
-    await waitFor(() => {
-      expect(screen.getByText(/Tài Khoản Ngân Hàng Thụ Hưởng Rút Tiền/i)).toBeInTheDocument()
-    })
-
-    const bankInput = document.getElementById('bank-acc-input') as HTMLInputElement
-    const toggleBtn = document.getElementById('btn-toggle-mask')
-
-    expect(bankInput).not.toBeNull()
-    expect(toggleBtn).not.toBeNull()
-
-    // 1. Initial State: Masked
-    expect(bankInput.value).toBe('0882****9999')
-    expect(screen.getByText('Hiển thị đầy đủ')).toBeInTheDocument()
-
-    // 2. Click Reveal
-    fireEvent.click(toggleBtn!)
-    expect(bankInput.value).toBe('0882199999999')
-    expect(screen.getByText('Ẩn số tài khoản')).toBeInTheDocument()
-
-    // 3. Click Mask again
-    fireEvent.click(toggleBtn!)
-    expect(bankInput.value).toBe('0882****9999')
-    expect(screen.getByText('Hiển thị đầy đủ')).toBeInTheDocument()
+  it('saves through PUT and reports failure without claiming success', async () => {
+    const user = userEvent.setup(); vi.mocked(apiClient.put).mockRejectedValueOnce(new Error('Không lưu được')).mockResolvedValueOnce({ data: { data: { ...profile, fullName: 'Tên mới' } } })
+    mount(); const name = await screen.findByLabelText('Họ và tên')
+    await user.clear(name); await user.type(name, 'Tên mới')
+    await user.click(screen.getByRole('button', { name: 'Lưu thay đổi' }))
+    expect(await screen.findByRole('alert')).toHaveTextContent('Không lưu được')
+    expect(screen.queryByText('Đã lưu thông tin liên hệ.')).not.toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: 'Lưu thay đổi' }))
+    expect(await screen.findByText('Đã lưu thông tin liên hệ.')).toBeInTheDocument()
+    expect(apiClient.put).toHaveBeenLastCalledWith('/api/v1/merchant/profile', { fullName: 'Tên mới', email: profile.email, address: '', emergencyContact: '' })
   })
-
-  it('opens fast withdrawal modal and simulates cashout via Napas247', async () => {
-    renderMerchantProfilePage()
-
-    await waitFor(() => {
-      expect(screen.getByText(/TẠO YÊU CẦU RÚT TIỀN NGAY/i)).toBeInTheDocument()
-    })
-
-    const openBtn = screen.getByText(/TẠO YÊU CẦU RÚT TIỀN NGAY/i)
-    fireEvent.click(openBtn)
-
-    // Modal appears
-    await waitFor(() => {
-      expect(screen.getByText(/Yêu Cầu Rút Tiền Về MB Bank/i)).toBeInTheDocument()
-      expect(screen.getByText(/MB BANK • 0882199999999/i)).toBeInTheDocument()
-    })
-
-    // Click ALL button
-    const allBtn = screen.getByText('TẤT CẢ')
-    fireEvent.click(allBtn)
-
-    // Click Confirm
-    const confirmBtn = screen.getByText('Xác Nhận Rút Tiền Ngay')
-    fireEvent.click(confirmBtn)
-
-    // Modal closes and Napas toast displays
-    await waitFor(() => {
-      expect(
-        screen.getByText(/Lệnh rút 42.800.000 ₫ đang được Napas247 xử lý tới MB Bank/i),
-      ).toBeInTheDocument()
-    })
+  it('masks and reveals bank account details', async () => {
+    const user = userEvent.setup(); mount()
+    expect(await screen.findByText('******7890')).toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: 'Hiển thị số tài khoản' }))
+    expect(screen.getByText('1234567890')).toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: 'Ẩn số tài khoản' }))
+    expect(screen.queryByText('1234567890')).not.toBeInTheDocument()
   })
-
-  it('toggles notification switches and triggers settings toast', async () => {
-    renderMerchantProfilePage()
-
-    await waitFor(() => {
-      expect(screen.getByText(/Cấu Hình Kênh Nhận Thông Báo Vận Hành/i)).toBeInTheDocument()
-    })
-
-    const hornSwitch = document.getElementById('toggle-web-horn') as HTMLInputElement
-    expect(hornSwitch).not.toBeNull()
-    expect(hornSwitch.checked).toBe(true)
-
-    // Toggle horn switch off
-    fireEvent.click(hornSwitch)
-    expect(hornSwitch.checked).toBe(false)
-
-    await waitFor(() => {
-      expect(
-        screen.getByText(/Cấu hình kênh thông báo & hồ sơ doanh nghiệp đã được lưu./i),
-      ).toBeInTheDocument()
-    })
-  })
-
-  it('submits updated profile and shows success feedback toast', async () => {
-    renderMerchantProfilePage()
-
-    await waitFor(() => {
-      expect(screen.getByDisplayValue('Lê Văn Thành')).toBeInTheDocument()
-    })
-
-    const saveBtn = document.getElementById('btn-save-profile')
-    expect(saveBtn).not.toBeNull()
-
-    fireEvent.click(saveBtn!)
-
-    await waitFor(() => {
-      expect(
-        screen.getByText(/Đã lưu cập nhật hồ sơ doanh nghiệp thành công!/i),
-      ).toBeInTheDocument()
-    })
-  })
-
-  it('opens document preview modal on clicking preview button', async () => {
-    renderMerchantProfilePage()
-
-    await waitFor(() => {
-      expect(screen.getByText('GPKD_TanCang_2018.pdf')).toBeInTheDocument()
-    })
-
-    const previewBtn = screen.getByLabelText('Xem tài liệu GPKD_TanCang_2018.pdf')
-    fireEvent.click(previewBtn)
-
-    await waitFor(() => {
-      expect(screen.getByText(/Xem Trước Tài Liệu Pháp Lý/i)).toBeInTheDocument()
-      expect(screen.getByText('Ký số CA Viettel')).toBeInTheDocument()
-    })
-
-    const closeBtn = screen.getByLabelText('Đóng xem trước')
-    fireEvent.click(closeBtn)
-
-    await waitFor(() => {
-      expect(screen.queryByText(/Xem Trước Tài Liệu Pháp Lý/i)).not.toBeInTheDocument()
-    })
+  it('rejects oversized files and uploads a valid document to the supported endpoint', async () => {
+    const user = userEvent.setup(); vi.mocked(apiClient.post).mockResolvedValue({ data: { data: profile } })
+    mount(); const input = await screen.findByLabelText('Tệp đính kèm')
+    const large = new File(['x'], 'large.pdf', { type: 'application/pdf' }); Object.defineProperty(large, 'size', { value: 6 * 1024 * 1024 })
+    await user.upload(input, large)
+    expect(screen.getByRole('alert')).toHaveTextContent('5 MB')
+    expect(apiClient.post).not.toHaveBeenCalled()
+    await user.upload(input, new File(['document'], 'license.pdf', { type: 'application/pdf' }))
+    await user.click(screen.getByRole('button', { name: 'Gửi giấy tờ' }))
+    expect(await screen.findByText('Đã gửi giấy tờ thành công.')).toBeInTheDocument()
+    expect(apiClient.post).toHaveBeenCalledWith('/api/v1/merchant/profile/documents', expect.any(FormData), { headers: { 'Content-Type': 'multipart/form-data' } })
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Gửi giấy tờ' })).toBeDisabled())
   })
 })

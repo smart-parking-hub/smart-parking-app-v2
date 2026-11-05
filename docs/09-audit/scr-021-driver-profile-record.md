@@ -1,3 +1,47 @@
+# SCR-021 — Simplified API-backed driver profile
+
+Last verified: 2026-11-05. Owner: project maintainers.
+
+User authorized the same readability and API-only cleanup as the merchant profile. This section supersedes the historical design/demo record below.
+
+## Design and scope
+
+- Restrained editorial account design, DFII 13/15: impact 3 + fit 5 + feasibility 4 + performance 4 - consistency risk 3.
+- Existing local Be Vietnam Pro headings and Source Sans 3 body, 16px controls, brand color variables, orange heading rule, neutral panels and sparse focus/hover transitions.
+- Three clear sections: personal details, emergency phone and security. Desktop sidebar becomes wrapping navigation on mobile.
+- Route/profile feature boundary preserved; DriverLayout omits its distracting floating copilot and marketing footer only on profile routes. Other screens retain their existing layout and shared profile sidebar/notification components.
+- No new dependency, backend change or database change.
+
+## API and parity
+
+Verified from identity-service UserController, UserProfileDto, UserServiceImpl, ChangePasswordRequest and User domain model.
+
+| Capability | Result |
+| --- | --- |
+| Profile data | GET /api/v1/users/me; TanStack Query, loading skeleton, null empty state, error/retry; no demo fallback |
+| Edit profile | PUT /api/v1/users/me: fullName, email, address, emergencyContact; existing phone included unchanged in DTO |
+| Login phone | Readonly: backend updateProfile does not update user.phone |
+| Emergency contacts | One real emergencyContact field; removed fictitious second contact, names and relationships |
+| Password | POST /api/v1/users/me/password; RHF/Zod 6–50 chars, confirmation match, pending lock, actual error/success and password fields reset on success |
+| Header identity | Invalidates current-user/header query after profile save |
+| Avatar/eKYC, license, CCCD, station, ratings/KPI, VAT setup | Removed from this screen: not part of the verified profile DTO/API |
+| Notification preferences | Local-only modal removed from this screen; shared code retained for existing consumers elsewhere |
+| Navigation | Dashboard return; vehicles/payments links without invented counts; section anchors |
+
+## Validation
+
+- 7 new profile component tests passed: supported data, loading/empty, retry, validation/cancel, failed/successful save, password validation and failed/successful password update.
+- Related suites (profile, vehicles, notifications, change-password): 44/44 passed. Existing sibling tests emit network errors from their own unmocked requests; this report does not certify those suites warning-free.
+- ESLint: clean. TypeScript + production build: passed.
+- Isolated Playwright with mocked API: 1440px desktop and 390px mobile; invalid email and required password errors visible; no horizontal overflow or pageerror events.
+- Screenshots: D:/DuAnOjt/driver-profile-desktop.png and D:/DuAnOjt/driver-profile-mobile.png (test data only).
+- Full suite was not rerun for this change; preceding merchant audit recorded unrelated Blog-role and duplicate-route test failures.
+- Remaining: live API write/password verification and user acceptance. No real password or profile was changed during testing.
+
+---
+
+## Historical implementation record (superseded)
+
 # Audit Record: SCR-021 Driver Profile & eKYC Operations Workbench (Hồ Sơ Bác Tài & Thông Tin Trực Ban)
 
 ## 1. Thông Tin Nhận Diện Màn Hình
@@ -46,3 +90,8 @@
 - **ESLint**: `eslint .` -> 0 cảnh báo, 0 lỗi.
 - **Vitest Unit Tests**: 73/73 tests passed (100% pass rate across 9 suites).
 - **Vite Production Build**: `tsc -b && vite build` -> Hoàn thành thành công trong 7.87s.
+
+
+### Follow-up — compact navigation and logout polish (2026-11-05)
+
+Driver Profile and Vehicles now share ProfileSidebarNav compact variant (260px card, common account heading/links, active-page indication, no placeholder counts). The unbacked fleet operations sidebar card is no longer rendered on Vehicles. Other consumers retain their existing variant. Profile section links are available through the form headings; security navigation targets /profile#bao-mat. Merchant logout now uses an icon, soft red border, hover/active and keyboard focus styles; logout behavior is unchanged. Related suites: 51 tests passed; ESLint and production build passed. Sibling network-test stderr remains as documented above.
