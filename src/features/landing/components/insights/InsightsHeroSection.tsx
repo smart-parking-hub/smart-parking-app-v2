@@ -57,7 +57,7 @@ export function InsightsHeroSection({
           <div
             className="flex items-center gap-2 overflow-x-auto pb-2 md:pb-0 scrollbar-none"
             id="categoryFilterBar"
-            role="group"
+            role="tablist"
             aria-label="Bộ lọc chuyên mục bài viết"
           >
             {categories.map((cat) => {
@@ -66,7 +66,8 @@ export function InsightsHeroSection({
                 <button
                   key={cat.id}
                   type="button"
-                  
+                  role="tab"
+                  aria-selected={isActive}
                   aria-pressed={isActive}
                   onClick={() => onSelectCategory(cat.id)}
                   className={`category-btn px-5 py-2.5 rounded-full text-xs font-semibold uppercase tracking-wider transition-all whitespace-nowrap ${

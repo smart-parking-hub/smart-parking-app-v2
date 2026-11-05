@@ -39,26 +39,25 @@ export function HomeTestimonials() {
       <div className="max-w-[1240px] mx-auto px-6">
         <div className="flex flex-col md:flex-row md:items-end justify-between mb-16 gap-6">
           <div>
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded bg-slate-100 border border-slate-200 text-brand-orange text-xs font-semibold uppercase tracking-wider mb-3">
-              BẢO CHỨNG TỪ KHÁCH HÀNG THỰC TẾ
-            </div>
-            <h2 className="font-sora font-extrabold text-3xl sm:text-4xl text-brand-navy tracking-tight">
-              Được Tin Dùng Bởi Hơn 2,400+ <br />
-              <span className="text-brand-orange">Đội Xe &amp; Quản Lý Vận Hành Toàn Quốc</span>
+            <h2 className="font-sora font-extrabold text-3xl sm:text-4xl lg:text-5xl text-brand-navy tracking-tight">
+              Được Tin Dùng Toàn Quốc
             </h2>
+            <p className="font-inter text-base sm:text-lg text-slate-600 mt-2">
+              Hơn 2,400+ đội xe và chủ bãi bến vận hành thông suốt mỗi ngày.
+            </p>
           </div>
           <div className="flex items-center gap-2">
             <button
               type="button"
               aria-label="Đánh giá trước đó"
-              className="w-12 h-12 rounded-xl border border-brand-border bg-white text-slate-700 hover:bg-slate-100 flex items-center justify-center transition-colors cursor-pointer"
+              className="w-12 h-12 rounded-xl border border-slate-300 bg-white text-slate-700 hover:bg-slate-100 flex items-center justify-center transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-orange"
             >
               <ArrowLeft className="h-5 w-5" aria-hidden="true" />
             </button>
             <button
               type="button"
               aria-label="Đánh giá tiếp theo"
-              className="w-12 h-12 rounded-xl border border-brand-border bg-white text-slate-700 hover:bg-slate-100 flex items-center justify-center transition-colors cursor-pointer"
+              className="w-12 h-12 rounded-xl border border-slate-300 bg-white text-slate-700 hover:bg-slate-100 flex items-center justify-center transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-orange"
             >
               <ArrowRight className="h-5 w-5" aria-hidden="true" />
             </button>
@@ -70,11 +69,7 @@ export function HomeTestimonials() {
           {testimonials.map((t) => (
             <div
               key={t.id}
-              className={
-                t.theme === 'dark'
-                  ? 'bg-brand-navy rounded-2xl p-8 border border-slate-800 flex flex-col justify-between text-white shadow-sm'
-                  : 'bg-brand-surface rounded-2xl p-8 border border-brand-border flex flex-col justify-between shadow-sm'
-              }
+              className="bg-slate-50 rounded-2xl p-8 flex flex-col justify-between"
             >
               <div>
                 <div className="flex items-center gap-1 text-brand-orange mb-6">
@@ -88,43 +83,19 @@ export function HomeTestimonials() {
                     <StarHalf className="h-4.5 w-4.5 fill-brand-orange text-brand-orange" aria-hidden="true" />
                   )}
                 </div>
-                <p
-                  className={
-                    t.theme === 'dark'
-                      ? 'font-inter text-sm text-slate-200 leading-relaxed mb-6 italic'
-                      : 'font-inter text-sm text-slate-700 leading-relaxed mb-6 italic'
-                  }
-                >
+                <p className="font-inter text-base text-slate-700 leading-relaxed mb-6 italic">
                   {t.quote}
                 </p>
               </div>
-              <div
-                className={
-                  t.theme === 'dark'
-                    ? 'pt-6 border-t border-slate-800 flex items-center gap-3.5'
-                    : 'pt-6 border-t border-slate-200 flex items-center gap-3.5'
-                }
-              >
-                <div
-                  className={
-                    t.theme === 'dark'
-                      ? 'w-11 h-11 rounded-full bg-brand-orange text-white flex items-center justify-center font-sora font-bold text-sm'
-                      : 'w-11 h-11 rounded-full bg-slate-800 text-white flex items-center justify-center font-sora font-bold text-sm'
-                  }
-                >
+              <div className="pt-6 flex items-center gap-3.5">
+                <div className="w-11 h-11 rounded-full bg-brand-navy text-white flex items-center justify-center font-sora font-bold text-sm">
                   {t.initials}
                 </div>
                 <div>
-                  <div
-                    className={
-                      t.theme === 'dark'
-                        ? 'font-sora font-bold text-sm text-white'
-                        : 'font-sora font-bold text-sm text-brand-navy'
-                    }
-                  >
+                  <div className="font-sora font-bold text-base text-brand-navy">
                     {t.name}
                   </div>
-                  <div className="font-inter text-xs text-slate-400">{t.role}</div>
+                  <div className="font-inter text-sm text-slate-500">{t.role}</div>
                 </div>
               </div>
             </div>

@@ -52,12 +52,12 @@ export function DriverDashboardPage() {
 
   return (
     <div className="w-full min-h-[calc(100vh-140px)] bg-[#f8f9ff]">
-      <div className="max-w-[1280px] mx-auto px-4 lg:px-8 py-6">
+      <div className="max-w-[1280px] mx-auto px-4 lg:px-8 py-6 pb-20 lg:pb-24">
         {/* Floating Success Toast */}
         {successToast && (
           <div
             role="status"
-            className="mb-4 p-4 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-900 text-xs flex items-center justify-between shadow-sm animate-in fade-in"
+            className="mb-4 p-3 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-900 text-xs flex items-center justify-between"
           >
             <div className="flex items-center gap-2">
               <CheckCircle className="w-4 h-4 text-emerald-600 shrink-0" />
@@ -81,10 +81,10 @@ export function DriverDashboardPage() {
           /* 2. Error State */
           <div
             role="alert"
-            className="w-full bg-rose-50 border border-rose-200 rounded-2xl p-6 lg:p-8 text-center my-8 shadow-sm"
+            className="w-full bg-rose-50 border border-rose-200 rounded-xl p-6 lg:p-8 text-center my-6"
           >
             <AlertCircle className="w-10 h-10 text-rose-600 mx-auto mb-2" />
-            <h3 className="font-sora text-lg font-bold text-rose-900">
+            <h3 className="font-sora text-base sm:text-lg font-bold text-rose-900">
               Không thể tải dữ liệu điều phối bến bãi
             </h3>
             <p className="text-xs text-rose-700 mt-1 mb-4 max-w-md mx-auto">
@@ -95,7 +95,7 @@ export function DriverDashboardPage() {
               type="button"
               onClick={() => void refetch()}
               disabled={isRefetching}
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#d95f00] hover:bg-[#b85000] text-white font-semibold text-xs transition-colors cursor-pointer disabled:opacity-50 shadow-md"
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-[#d95f00] hover:bg-[#b85000] text-white font-medium text-xs transition-colors cursor-pointer disabled:opacity-50"
             >
               <RefreshCw className={`w-4 h-4 ${isRefetching ? 'animate-spin' : ''}`} />
               <span>{isRefetching ? 'Đang thử lại...' : 'Thử lại (Tải lại dữ liệu)'}</span>
@@ -124,12 +124,12 @@ export function DriverDashboardPage() {
                   type="text"
                   placeholder="Tra cứu nhanh biển số, mã đặt chỗ BK-... hoặc số slot..."
                   {...register('query')}
-                  className="w-full pl-9 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-xs text-[#0d1c2e] placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#d95f00]/30 focus:border-[#d95f00]"
+                  className="w-full pl-9 pr-4 py-2 bg-white border border-slate-200 rounded-lg text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-[#d95f00] focus:border-[#d95f00]"
                 />
               </div>
               <button
                 type="submit"
-                className="px-4 py-2.5 rounded-xl bg-[#131b2e] hover:bg-[#233144] text-white font-semibold text-xs transition-colors cursor-pointer whitespace-nowrap"
+                className="px-4 py-2 rounded-lg bg-slate-900 hover:bg-slate-800 text-white font-medium text-xs transition-colors cursor-pointer whitespace-nowrap"
               >
                 Tra Cứu Nhanh
               </button>
@@ -178,4 +178,3 @@ export function DriverDashboardPage() {
     </div>
   )
 }
-

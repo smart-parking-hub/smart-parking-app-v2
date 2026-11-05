@@ -32,13 +32,10 @@ export function DriverTestimonialsSection() {
     <section className="w-full bg-[#EEF2F7] py-24 px-6 text-[#0F172A]" id="danh-gia-tai-xe">
       <div className="max-w-[1240px] mx-auto">
         <div className="flex flex-col items-center text-center mb-16">
-          <span className="font-inter text-xs font-bold tracking-widest text-[#F97316] uppercase bg-white border border-[#D7DFE9] px-3 py-1 rounded mb-3">
-            TIẾNG NÓI TỪ CỘNG ĐỒNG BÁC TÀI
-          </span>
-          <h2 className="font-sora text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight text-[#0F172A]">
-            Những Chuyến Xe Bình An Sau Tay Lái.
+          <h2 className="font-sora text-3xl sm:text-4xl font-extrabold tracking-tight text-[#0F172A]">
+            Những Chuyến Xe Bình An Sau Tay Lái
           </h2>
-          <p className="font-inter text-sm sm:text-base text-[#475569] mt-2 max-w-xl">
+          <p className="font-inter text-base sm:text-lg text-slate-600 mt-3 max-w-xl">
             Hơn 45,000 bác tài khắp các tuyến huyết mạch tin dùng SmartTruckHub mỗi ngày để giữ an toàn cho hàng hóa và giấc ngủ.
           </p>
         </div>
@@ -50,26 +47,26 @@ export function DriverTestimonialsSection() {
             return (
               <div
                 key={t.id}
-                className="bg-white border border-[#D7DFE9] rounded-lg p-6 flex flex-col justify-between hover:border-[#1E3A5F] transition-all"
+                className="bg-white border border-slate-200/80 rounded-2xl p-7 flex flex-col justify-between hover:border-slate-400 transition-all"
               >
                 <div>
-                  <div className="flex items-center gap-1 text-[#F97316] mb-4">
-                    <Star className="h-[18px] w-[18px] fill-[#F97316]" aria-hidden="true" />
-                    <Star className="h-[18px] w-[18px] fill-[#F97316]" aria-hidden="true" />
-                    <Star className="h-[18px] w-[18px] fill-[#F97316]" aria-hidden="true" />
-                    <Star className="h-[18px] w-[18px] fill-[#F97316]" aria-hidden="true" />
-                    <Star className="h-[18px] w-[18px] fill-[#F97316]" aria-hidden="true" />
+                  <div className="flex items-center gap-1 text-brand-orange mb-4">
+                    <Star className="h-4 w-4 fill-brand-orange" aria-hidden="true" />
+                    <Star className="h-4 w-4 fill-brand-orange" aria-hidden="true" />
+                    <Star className="h-4 w-4 fill-brand-orange" aria-hidden="true" />
+                    <Star className="h-4 w-4 fill-brand-orange" aria-hidden="true" />
+                    <Star className="h-4 w-4 fill-brand-orange" aria-hidden="true" />
                   </div>
-                  <p className="font-inter text-sm text-[#0F172A] leading-relaxed mb-6 italic">
+                  <p className="font-inter text-base text-slate-700 leading-relaxed mb-6">
                     {t.quote}
                   </p>
                 </div>
-                <div className="pt-4 border-t border-[#D7DFE9] flex items-center justify-between">
+                <div className="pt-4 border-t border-slate-100 flex items-center justify-between">
                   <div>
-                    <div className="font-sora text-sm font-bold text-[#0F172A]">{t.author}</div>
-                    <div className="text-xs text-[#475569] font-inter">{t.role}</div>
+                    <div className="font-sora text-base font-bold text-slate-900">{t.author}</div>
+                    <div className="text-sm text-slate-500 font-inter mt-0.5">{t.role}</div>
                   </div>
-                  <Icon className="h-6 w-6 text-[#475569] shrink-0" aria-hidden="true" />
+                  <Icon className="h-6 w-6 text-slate-400 shrink-0" aria-hidden="true" />
                 </div>
               </div>
             )

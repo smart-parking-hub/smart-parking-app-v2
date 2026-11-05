@@ -82,13 +82,13 @@ export function OwnerFaqSection() {
   ]
 
   return (
-    <section className="w-full bg-white py-24 px-6 text-[#0F172A]" id="faq">
+    <section className="w-full bg-white py-20 px-6 text-slate-900 border-b border-slate-200/80" id="faq">
       <div className="max-w-4xl mx-auto">
         <div className="mb-14 text-center">
-          <span className="font-inter text-xs font-bold tracking-widest text-brand-orange uppercase bg-slate-100 border border-slate-200 px-3 py-1 rounded inline-block mb-3">
+          <div className="font-inter text-xs font-semibold text-slate-500 uppercase tracking-normal mb-2.5">
             GIẢI ĐÁP THẮC MẮC ĐỐI TÁC
-          </span>
-          <h2 className="font-sora text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight text-[#0F172A]">
+          </div>
+          <h2 className="font-sora text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight text-slate-900">
             Câu Hỏi Thường Gặp Của Chủ Mặt Bằng.
           </h2>
           <p className="font-inter text-sm sm:text-base text-slate-600 mt-2">
@@ -102,10 +102,10 @@ export function OwnerFaqSection() {
           {faqs.map((faq) => (
             <details
               key={faq.id}
-              className="group bg-[#EEF2F7] border border-[#D7DFE9] p-5 rounded-2xl transition-all open:bg-white open:shadow-sm"
+              className="group bg-slate-50/70 border border-slate-200/80 p-5 rounded-2xl transition-all open:bg-white open:border-slate-300"
               open={faq.defaultOpen || undefined}
             >
-              <summary className="font-sora text-base sm:text-lg font-bold text-[#0F172A] cursor-pointer list-none flex justify-between items-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-orange rounded">
+              <summary className="font-sora text-base sm:text-lg font-bold text-slate-900 cursor-pointer list-none flex justify-between items-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-orange rounded">
                 <span>{faq.question}</span>
                 <ChevronDown
                   className="h-5 w-5 text-slate-500 group-open:rotate-180 transition-transform shrink-0 ml-4"
