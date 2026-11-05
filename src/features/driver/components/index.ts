@@ -1,3 +1,14 @@
+// SCR-014 Driver Dashboard components
+export * from './DriverWelcomeBanner'
+export * from './DriverStatGrid'
+export * from './ActiveTripCard'
+export * from './DriverShortcuts'
+export * from './RecentBookingsTable'
+export * from './QrCheckoutModal'
+export * from './DashboardSkeleton'
+export * from './DashboardEmptyState'
+
+// SCR-016 Parking Detail components
 export * from '../../parking-detail/components/FacilityHeaderSection'
 export * from '../../parking-detail/components/PhotoGallerySection'
 export * from '../../parking-detail/components/SlotCapacityMatrixSection'

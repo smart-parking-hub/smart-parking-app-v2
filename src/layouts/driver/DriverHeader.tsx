@@ -20,6 +20,7 @@ const links = [
   ['/vehicles', 'Đội xe của tôi'],
   ['/disputes', 'Khiếu nại'],
 ]
+
 export function DriverHeader() {
   const location = useLocation()
   const [mobileOpen, setMobileOpen] = useState(false)
@@ -36,11 +37,17 @@ export function DriverHeader() {
     } catch {
       /* No previous session profile. */
     }
+    const storedName = localStorage.getItem('smart-truck-parking.driver_name')
     return {
-      name: localStorage.getItem('smart-truck-parking.driver_name') || 'Tài xế',
+      name:
+        storedName && storedName.trim() !== '' && storedName !== 'Tài xế'
+          ? storedName
+          : 'Trần Quốc Tuấn',
+      role: 'Tài xế',
       phone,
     }
   })
+
   const initials = identity.name
     .trim()
     .split(/\s+/)
@@ -48,6 +55,7 @@ export function DriverHeader() {
     .map((part) => part[0])
     .join('')
     .toUpperCase()
+
   const active = (path: string) => {
     const current = location.pathname
       .replace(/^\/design-preview/, '')
@@ -59,10 +67,12 @@ export function DriverHeader() {
         )
       : current.startsWith(path)
   }
+
   const closeMenus = () => {
     setAccountOpen(false)
     setMobileOpen(false)
   }
+
   const nav = (mobile = false) =>
     links.map(([to, label]) => (
       <Link
@@ -75,6 +85,7 @@ export function DriverHeader() {
         {label}
       </Link>
     ))
+
   return (
     <header
       className="fixed inset-x-0 top-0 z-50 border-b border-white/10 bg-brand-navy font-inter text-white"
@@ -105,32 +116,36 @@ export function DriverHeader() {
             <Link
               to="/notifications"
               aria-label="Thông báo"
-              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-white/10 text-slate-300 hover:bg-white/10"
+              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-white/10 text-slate-300 hover:bg-white/10 transition-colors"
             >
               <Bell size={20} />
             </Link>
             <div className="relative">
               <button
+                type="button"
                 onClick={() => setAccountOpen(!accountOpen)}
                 aria-expanded={accountOpen}
                 aria-controls="driver-account-menu"
-                aria-label="Menu tài khoản"
-                className="flex min-h-12 shrink-0 items-center gap-3 rounded-xl px-1 text-left sm:pr-3"
+                aria-label="Menu tài khoản tài xế"
+                className="group flex min-h-12 shrink-0 items-center gap-2.5 rounded-xl border border-transparent px-2.5 py-1.5 text-left transition-all duration-150 hover:border-white/15 hover:bg-white/10 active:scale-[0.98] cursor-pointer"
               >
-                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/10 text-sm font-bold">
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/10 text-sm font-bold text-white transition-colors group-hover:bg-brand-orange group-hover:text-white">
                   {initials}
                 </span>
                 <span className="hidden w-36 min-w-0 sm:block">
-                  <span className="block truncate text-[15px] font-semibold leading-6">
+                  <span className="block truncate text-[14px] font-semibold leading-5 text-white">
                     {identity.name}
                   </span>
-                  <span className="block whitespace-nowrap text-sm leading-5 text-slate-400">
-                    {identity.phone || 'Tài khoản tài xế'}
+                  <span className="mt-0.5 inline-flex items-center gap-1.5 whitespace-nowrap text-xs font-medium text-brand-orange">
+                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
+                    {identity.role}
                   </span>
                 </span>
                 <ChevronDown
                   size={15}
-                  className="hidden shrink-0 text-slate-400 sm:block"
+                  className={`hidden shrink-0 text-slate-400 transition-transform duration-200 group-hover:text-white sm:block ${
+                    accountOpen ? 'rotate-180 text-white' : ''
+                  }`}
                 />
               </button>
               {accountOpen && (
@@ -144,13 +159,19 @@ export function DriverHeader() {
                     id="driver-account-menu"
                     className="absolute right-0 z-50 mt-3 w-64 rounded-2xl border border-brand-border bg-white p-2 text-brand-navy shadow-xl"
                   >
-                    <p className="truncate border-b border-brand-border px-3 py-4 font-semibold">
-                      {identity.name}
-                    </p>
+                    <div className="border-b border-brand-border px-3 py-3">
+                      <p className="truncate font-semibold text-slate-900">
+                        {identity.name}
+                      </p>
+                      <p className="mt-0.5 inline-flex items-center gap-1.5 text-xs text-brand-orange font-medium">
+                        <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                        Vai trò: {identity.role}
+                      </p>
+                    </div>
                     <Link
                       to="/profile"
                       onClick={closeMenus}
-                      className="flex items-center gap-3 rounded-xl px-3 py-3 text-sm hover:bg-brand-surface"
+                      className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm hover:bg-brand-surface text-slate-700 hover:text-brand-navy transition-colors"
                     >
                       <User size={17} />
                       Hồ sơ cá nhân
@@ -158,18 +179,19 @@ export function DriverHeader() {
                     <Link
                       to="/change-password"
                       onClick={closeMenus}
-                      className="flex items-center gap-3 rounded-xl px-3 py-3 text-sm hover:bg-brand-surface"
+                      className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm hover:bg-brand-surface text-slate-700 hover:text-brand-navy transition-colors"
                     >
                       <KeyRound size={17} />
                       Đổi mật khẩu
                     </Link>
                     <button
+                      type="button"
                       onClick={() => {
                         localStorage.removeItem('access_token')
                         localStorage.removeItem('smart-truck-parking.auth')
                         window.location.href = '/login'
                       }}
-                      className="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-sm text-red-700 hover:bg-red-50"
+                      className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-red-700 hover:bg-red-50 transition-colors cursor-pointer"
                     >
                       <LogOut size={17} />
                       Đăng xuất
@@ -182,7 +204,7 @@ export function DriverHeader() {
               aria-label="Toggle menu"
               aria-expanded={mobileOpen}
               onClick={() => setMobileOpen(!mobileOpen)}
-              className="rounded-lg p-2 lg:hidden"
+              className="rounded-lg p-2 lg:hidden text-slate-200 hover:text-white hover:bg-white/10"
             >
               {mobileOpen ? <X /> : <Menu />}
             </button>
