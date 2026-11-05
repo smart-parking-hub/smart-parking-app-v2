@@ -22,6 +22,8 @@ import { DriverReviewsSection } from '../components/DriverReviewsSection'
 import { StickyReservationDesk } from '../components/StickyReservationDesk'
 import { BookingPaymentModal } from '../components/BookingPaymentModal'
 import { ParkingDetailSkeleton } from '../components/ParkingDetailSkeleton'
+import { ParkingDetailEmptyState } from '../components/ParkingDetailEmptyState'
+import { ParkingDetailErrorState } from '../components/ParkingDetailErrorState'
 
 export function ParkingDetailPage() {
   const { id } = useParams<{ id: string }>()
@@ -29,29 +31,50 @@ export function ParkingDetailPage() {
 
   const [isModalOpen, setIsModalOpen] = useState(false)
 
-  // Fetch facility dossier with initial fallback
+  // Fetch facility dossier with client caching
   const {
-    data: facility = fallbackFacilityDetail,
+    data: facility,
     isLoading: isLoadingFacility,
+    isError: isErrorFacility,
+    error: facilityError,
+    refetch: refetchFacility,
   } = useQuery({
     queryKey: ['parking-facility-detail', facilityId],
     queryFn: () => fetchFacilityDetail(facilityId),
-    initialData: fallbackFacilityDetail,
-    staleTime: 30000,
+    initialData: facilityId === 1 ? fallbackFacilityDetail : undefined,
+    staleTime: 60000,
   })
 
   // Fetch driver reviews with initial fallback
-  const {
-    data: reviews = fallbackDriverReviews,
-  } = useQuery({
+  const { data: reviews = fallbackDriverReviews } = useQuery({
     queryKey: ['parking-driver-reviews', facilityId],
     queryFn: () => fetchDriverReviews(facilityId),
     initialData: fallbackDriverReviews,
-    staleTime: 30000,
+    staleTime: 60000,
   })
 
+  // 1. Loading State
   if (isLoadingFacility && !facility) {
     return <ParkingDetailSkeleton />
+  }
+
+  // 2. Error State
+  if (isErrorFacility) {
+    return (
+      <ParkingDetailErrorState
+        errorMessage={
+          facilityError instanceof Error
+            ? facilityError.message
+            : 'Không thể kết nối đến máy chủ điều phối bãi đỗ.'
+        }
+        onRetry={() => refetchFacility()}
+      />
+    )
+  }
+
+  // 3. Empty State
+  if (!facility) {
+    return <ParkingDetailEmptyState facilityId={facilityId} />
   }
 
   const currentFacility = facility
@@ -63,11 +86,11 @@ export function ParkingDetailPage() {
           {/* Top Breadcrumb Navigation & Realtime Status */}
           <div className="flex items-center justify-between pb-4 mb-4 border-b border-slate-200">
             <Link
-              to="/parking"
+              to="/dashboard/search"
               className="inline-flex items-center gap-1.5 text-slate-600 hover:text-slate-900 text-xs font-semibold transition-colors group"
             >
               <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform text-[#d95f00]" />
-              <span>QUAY LẠI BẢN ĐỒ TÌM BÃI (/parking)</span>
+              <span>QUAY LẠI BẢN ĐỒ TÌM BÃI (/dashboard/search)</span>
             </Link>
 
             <div className="flex items-center gap-2 font-mono text-xs text-slate-600">
@@ -117,11 +140,12 @@ export function ParkingDetailPage() {
         </div>
       </div>
 
-      {/* Interactive Booking Flow Modal */}
+      {/* Interactive 2-Step Booking Flow Modal (GAP-05 · SCR-MOD-07) */}
       <BookingPaymentModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        facilityName="Tân Cảng Cát Lái - Gate 2"
+        facilityName={currentFacility.name || 'Tân Cảng Cát Lái - Gate 2'}
+        facilityId={facilityId}
         reservationState={fallbackReservationState}
       />
     </div>
