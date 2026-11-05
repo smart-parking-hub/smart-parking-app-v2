@@ -1,3 +1,4 @@
+import { clearSession } from '@/features/auth'
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import {
@@ -96,6 +97,7 @@ export function MerchantHeader({ onToggleMobileMenu }: MerchantHeaderProps) {
 
         <div className="h-6 w-px bg-slate-200 hidden sm:block" />
 
+        <button type="button" className="text-sm text-slate-600 underline" onClick={() => { clearSession(); navigate('/login', { replace: true }) }}>Đăng xuất</button>
         {/* Merchant Profile */}
         <Link
           to="/merchant/profile"

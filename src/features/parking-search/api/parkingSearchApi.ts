@@ -148,8 +148,8 @@ export async function fetchParkingLots(
     queueWaitingCount: item.queueWaitingCount,
     queueEtaMinutes: item.queueEtaMinutes,
     amenities: item.amenities ?? [],
-    latitude: item.latitude ?? NaN,
-    longitude: item.longitude ?? NaN,
+    latitude: item.latitude != null ? Number(item.latitude) : NaN,
+    longitude: item.longitude != null ? Number(item.longitude) : NaN,
     ratingAverage: item.averageRating ?? item.ratingAverage ?? 0,
   }))
   return mapped

@@ -31,3 +31,5 @@
 | `SCR-029` | Merchant Create Parking Lot Wizard (Đăng ký bãi đỗ xe & depot mới) | `/merchant/parking-lots/new` | `features/merchant/parking-lots` | Stitch HTML/CSS (`web_dashboard`) | **IMPLEMENTED** | Sẵn sàng nghiệm thu |
 | `SCR-030` | Merchant Parking Lot Details & Telemetry (Chi tiết bãi đỗ xe & Hồ sơ kỹ thuật) | `/merchant/parking-lots/:parkingLotId` | `features/merchant/parking-lots` | Stitch HTML/CSS (`web_dashboard`) | **IMPLEMENTED** | Sẵn sàng nghiệm thu |
 | `SCR-031` | Edit Merchant Parking Lot (Chỉnh sửa & Cập nhật hồ sơ bãi đỗ) | `/merchant/parking-lots/:parkingLotId/edit` | `features/merchant/parking-lots` | Stitch HTML/CSS (`web_dashboard`) | **IMPLEMENTED** | Sẵn sàng nghiệm thu |
+
+SCR-010 (2026-11-05): /login dùng LoginPage + AuthLayout riêng; Redux session sync, guest guard, role redirect, toast; 217 unit/component tests và 7 E2E PASS. Live backend acceptance pending. Xem [báo cáo](./scr-010-login-record.md).
