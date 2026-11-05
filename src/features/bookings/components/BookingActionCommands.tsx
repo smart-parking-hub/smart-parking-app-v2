@@ -5,6 +5,7 @@ import {
   PhoneCall,
   Star,
   XCircle,
+  Wallet,
 } from 'lucide-react'
 import type { BookingItemDto } from '../types/bookingTypes'
 import { Link } from 'react-router-dom'
@@ -41,7 +42,15 @@ export function BookingActionCommands({
 
   return (
     <div className="flex flex-col gap-3">
-      {isCompleted && <Link to={`/disputes?bookingId=${booking.id}`} className="rounded-xl border border-slate-300 bg-white px-4 py-3 text-center text-sm font-semibold text-slate-800">Gửi khiếu nại về lượt đỗ</Link>}
+      {isCompleted && (
+        <Link
+          to={`/disputes?bookingId=${booking.id}`}
+          className="rounded-xl border border-slate-300 bg-white px-4 py-3 text-center text-sm font-semibold text-slate-800 hover:bg-slate-50 transition-colors"
+        >
+          Gửi khiếu nại về lượt đỗ
+        </Link>
+      )}
+
       {/* Primary CTA Buttons according to lifecycle */}
       {(isParking || isAwaitingFinal) && (
         <button
@@ -77,14 +86,14 @@ export function BookingActionCommands({
       )}
 
       {/* Secondary Quick Action Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
         <button
           type="button"
           onClick={onPayCashAtGate}
           className="h-10 px-3 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-lg text-xs font-medium transition-colors flex items-center justify-center gap-1.5 shadow-2xs cursor-pointer"
         >
           <Receipt className="w-4 h-4 text-slate-500" />
-          <span>Trả tiền mặt tại cổng</span>
+          <span>Tiền mặt tại cổng</span>
         </button>
 
         <button
@@ -93,8 +102,16 @@ export function BookingActionCommands({
           className="h-10 px-3 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-lg text-xs font-medium transition-colors flex items-center justify-center gap-1.5 shadow-2xs cursor-pointer"
         >
           <Navigation className="w-4 h-4 text-[#455f87]" />
-          <span>Chỉ đường Maps tới cổng</span>
+          <span>Chỉ đường Maps</span>
         </button>
+
+        <Link
+          to="/payments"
+          className="h-10 px-3 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-lg text-xs font-medium transition-colors flex items-center justify-center gap-1.5 shadow-2xs cursor-pointer"
+        >
+          <Wallet className="w-4 h-4 text-[#d95f00]" />
+          <span>Ví & GD (SCR-019)</span>
+        </Link>
 
         <button
           type="button"
@@ -102,7 +119,7 @@ export function BookingActionCommands({
           className="h-10 px-3 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-lg text-xs font-medium transition-colors flex items-center justify-center gap-1.5 shadow-2xs cursor-pointer"
         >
           <PhoneCall className="w-4 h-4 text-[#d95f00]" />
-          <span>Trực ban: 0908 123 456</span>
+          <span>0908 123 456</span>
         </button>
       </div>
 
@@ -114,7 +131,7 @@ export function BookingActionCommands({
           className="text-xs text-red-600 hover:text-red-700 font-semibold py-1 flex items-center justify-center gap-1 hover:underline cursor-pointer"
         >
           <XCircle className="w-3.5 h-3.5" />
-          <span>Hủy đặt chỗ này (Hoàn tiền cọc theo quy định)</span>
+          <span>Hủy đặt chỗ này (SCR-MOD-03: Hoàn tiền cọc theo quy định)</span>
         </button>
       )}
     </div>

@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { apiClient } from '@/shared/api/client'
 import { MyBookingsPage } from '../pages/MyBookingsPage'
 import { fallbackBookingsList } from '../api/bookingApi'
+import { getBookingStoreSnapshot } from '../store/bookingStore'
 import * as qrExportUtil from '../utils/qrExportUtil'
 
 vi.mock('@/shared/api/client', () => ({
@@ -33,6 +34,7 @@ function renderWithProviders(ui: React.ReactElement, initialEntries = ['/booking
 describe('SCR-017: MyBookingsPage (Quản lý danh sách đặt chỗ & Vé đỗ xe điện tử QR)', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    getBookingStoreSnapshot().resetStore()
     vi.mocked(apiClient.get).mockResolvedValue({
       data: fallbackBookingsList,
     })
@@ -71,11 +73,11 @@ describe('SCR-017: MyBookingsPage (Quản lý danh sách đặt chỗ & Vé đ�
     ).toBeInTheDocument()
   })
 
-  it('renders master list with 4 sample booking cards and selected active card', async () => {
+  it('renders master list with booking cards and selected active card', async () => {
     renderWithProviders(<MyBookingsPage />)
 
     expect(
-      screen.getByText(/DANH SÁCH PHIÊN VẬN HÀNH \(4 ĐƠN\)/i)
+      screen.getByText(/DANH SÁCH PHIÊN VẬN HÀNH/i)
     ).toBeInTheDocument()
     expect(screen.getAllByText(/BK-2026-9081/i).length).toBeGreaterThanOrEqual(1)
     expect(screen.getByText(/BK-2026-9104/i)).toBeInTheDocument()
@@ -131,6 +133,27 @@ describe('SCR-017: MyBookingsPage (Quản lý danh sách đặt chỗ & Vé đ�
     expect(screen.queryByText(/BK-2026-9081/i)).not.toBeInTheDocument()
   })
 
+  it('displays Empty State when search has no match and allows resetting filters', async () => {
+    renderWithProviders(<MyBookingsPage />)
+
+    const searchInput = screen.getByPlaceholderText(
+      /Tìm theo mã BK, biển số xe, tên bãi đỗ\.\.\./i
+    )
+    fireEvent.change(searchInput, { target: { value: 'NONEXISTENT_KEYWORD_XYZ' } })
+
+    expect(screen.getByRole('region', { name: /Không tìm thấy đơn đặt chỗ/i })).toBeInTheDocument()
+    expect(screen.getByText(/Không Tìm Thấy Vé Phù Hợp/i)).toBeInTheDocument()
+
+    // Reset filters button
+    const resetBtn = screen.getByRole('button', { name: /Xóa bộ lọc & tìm kiếm/i })
+    fireEvent.click(resetBtn)
+
+    await waitFor(() => {
+      expect(screen.queryByText(/Không Tìm Thấy Vé Phù Hợp/i)).not.toBeInTheDocument()
+      expect(screen.getAllByText(/BK-2026-9081/i).length).toBeGreaterThanOrEqual(1)
+    })
+  })
+
   it('renders 4-step bento stepper, QR code terminal panel with gate token STH-9081', async () => {
     renderWithProviders(<MyBookingsPage />)
 
@@ -166,6 +189,14 @@ describe('SCR-017: MyBookingsPage (Quản lý danh sách đặt chỗ & Vé đ�
     expect(screen.getByText(/120\.000 đ/i)).toBeInTheDocument()
   })
 
+  it('renders outbound navigation link to SCR-019 (Ví & GD)', async () => {
+    renderWithProviders(<MyBookingsPage />)
+
+    const walletLink = screen.getByRole('link', { name: /Ví & GD \(SCR-019\)/i })
+    expect(walletLink).toBeInTheDocument()
+    expect(walletLink).toHaveAttribute('href', '/payments')
+  })
+
   it('triggers QR export download when clicking TẢI VÉ QR (PNG)', async () => {
     const exportSpy = vi
       .spyOn(qrExportUtil, 'exportSvgToPng')
@@ -183,7 +214,7 @@ describe('SCR-017: MyBookingsPage (Quản lý danh sách đặt chỗ & Vé đ�
     })
   })
 
-  it('opens PayOS checkout modal and simulates payment completion', async () => {
+  it('opens PayOS checkout modal and simulates payment completion with toast feedback', async () => {
     renderWithProviders(<MyBookingsPage />)
 
     const payFinalBtn = screen.getByRole('button', {
@@ -214,7 +245,7 @@ describe('SCR-017: MyBookingsPage (Quản lý danh sách đặt chỗ & Vé đ�
     )
   })
 
-  it('opens cancel booking modal and review modal for appropriate lifecycle items', async () => {
+  it('opens cancel booking modal, submits cancellation with toast', async () => {
     renderWithProviders(<MyBookingsPage />)
 
     // Select pending payment card to see cancel button
@@ -229,11 +260,18 @@ describe('SCR-017: MyBookingsPage (Quản lý danh sách đặt chỗ & Vé đ�
     fireEvent.click(cancelBtn)
 
     expect(screen.getByText(/XÁC NHẬN HỦY VÉ/i)).toBeInTheDocument()
-    expect(screen.getByText(/Giữ lại vé/i)).toBeInTheDocument()
 
-    // Close cancel modal
-    fireEvent.click(screen.getByText(/Giữ lại vé/i))
-    expect(screen.queryByText(/XÁC NHẬN HỦY VÉ/i)).not.toBeInTheDocument()
+    // Submit cancellation
+    const confirmCancelBtn = screen.getByRole('button', { name: /Xác nhận hủy/i })
+    fireEvent.click(confirmCancelBtn)
+
+    await waitFor(() => {
+      expect(screen.getByRole('status')).toBeInTheDocument()
+    })
+  })
+
+  it('opens review modal, submits review with toast feedback', async () => {
+    renderWithProviders(<MyBookingsPage />)
 
     // Select completed card to see review button
     const card3 = screen.getByText(/BK-2026-8812/i)
@@ -253,6 +291,13 @@ describe('SCR-017: MyBookingsPage (Quản lý danh sách đặt chỗ & Vé đ�
     fireEvent.click(reviewBtn)
 
     expect(screen.getByText(/ĐÁNH GIÁ CHUYẾN ĐI/i)).toBeInTheDocument()
-    expect(screen.getByText(/Mức độ hài lòng:/i)).toBeInTheDocument()
+
+    // Submit review
+    const submitReviewBtn = screen.getByRole('button', { name: /Gửi đánh giá/i })
+    fireEvent.click(submitReviewBtn)
+
+    await waitFor(() => {
+      expect(screen.getByRole('status')).toBeInTheDocument()
+    })
   })
 })

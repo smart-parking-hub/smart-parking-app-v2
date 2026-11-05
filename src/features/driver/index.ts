@@ -21,5 +21,50 @@ export * from '../parking-search'
 // SCR-016: Parking Detail & Reservation Desk
 export * from '../parking-detail'
 
+// SCR-017: Driver Bookings & QR Ticket
+export {
+  MyBookingsPage,
+  BookingsCommandToolbar,
+  BookingCardItem,
+  BookingMasterList,
+  BookingDetailHeader,
+  BookingBentoStepper,
+  BookingQrTerminalPanel,
+  TariffAuditTable,
+  BookingActionCommands,
+  BookingDetailView,
+  CancelBookingModal,
+  ReviewBookingModal,
+  PayOsCheckoutModal,
+  BookingsSkeleton,
+  BookingsEmptyState,
+  BookingsErrorState,
+  useBookingStore,
+  getBookingStoreSnapshot,
+  cancelBookingSchema,
+  reviewBookingSchema,
+  bookingFilterSchema,
+  fetchMyBookings,
+  fallbackBookingsList,
+  cancelBookingApi,
+  submitReviewApi,
+  payBookingDepositApi,
+  payBookingFinalApi,
+  exportSvgToPng,
+} from '../bookings'
+
+export type {
+  BookingItemDto,
+  FilterStatusTab,
+  CancelBookingRequest,
+  ReviewBookingRequest,
+  CancelBookingFormData,
+  ReviewBookingFormData,
+  BookingFilterFormData,
+  BookingUIState,
+  BookingUIActions,
+  BookingStore,
+} from '../bookings'
+
 // Shared driver feature components
 export * from './components'
