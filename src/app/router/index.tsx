@@ -232,7 +232,6 @@ export const router = createBrowserRouter([
   { path: '/403', element: <AccessPage /> },
   { path: '/contact', element: <ContactPage /> },
   { path: '/company/contact', element: <ContactPage /> },
-  { path: '/solutions/owners', element: <OwnerSolutionsPage /> },
   { path: '/solutions/api', element: <ApiDocsPage /> },
   { path: '/company/about', element: <AboutUsPage /> },
   { path: '/company/careers', element: <CareersPage /> },
