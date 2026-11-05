@@ -1,19 +1,15 @@
-import { useState, type FormEvent } from 'react'
+import { useState } from 'react'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { z } from 'zod'
 import { MailCheck, CheckCircle2 } from 'lucide-react'
 
 export function InsightsNewsletterSection() {
-  const [email, setEmail] = useState('')
   const [isSubscribed, setIsSubscribed] = useState(false)
-
-  const handleSubmit = (e: FormEvent) => {
-    e.preventDefault()
-    if (!email) return
-    setIsSubscribed(true)
-    setTimeout(() => {
-      setIsSubscribed(false)
-      setEmail('')
-    }, 5000)
-  }
+  const { register, handleSubmit, formState: { errors } } = useForm<{ email: string }>({
+    resolver: zodResolver(z.object({ email: z.string().trim().email('Vui lòng nhập email hợp lệ.') })),
+    defaultValues: { email: '' },
+  })
 
   return (
     <section className="w-full bg-white py-14 border-b border-[#E2E8F0]">
@@ -36,14 +32,15 @@ export function InsightsNewsletterSection() {
             </div>
 
             <div className="lg:col-span-5">
-              <form className="flex flex-col gap-3" onSubmit={handleSubmit}>
+              <form className="flex flex-col gap-3" noValidate onSubmit={handleSubmit(() => setIsSubscribed(true))}>
                 <div className="flex flex-col sm:flex-row gap-2">
                   <input
                     type="email"
-                    required
+                    aria-label="Email nhận bản tin"
+                    aria-invalid={Boolean(errors.email)}
+                    aria-describedby="newsletter-feedback"
+                    {...register('email')}
                     placeholder="Nhập email doanh nghiệp của bạn..."
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
                     className="bg-slate-900 border border-slate-700 text-white font-inter text-sm px-4 py-3.5 rounded-lg flex-1 outline-none placeholder:text-slate-400 focus:ring-2 focus:ring-[#F97316] transition-all"
                   />
                   <button
@@ -54,13 +51,16 @@ export function InsightsNewsletterSection() {
                   </button>
                 </div>
 
+                <div id="newsletter-feedback" role="status">
+                {errors.email && <p className="text-sm text-orange-300">{errors.email.message}</p>}
                 {isSubscribed && (
                   <div className="p-3 rounded-lg bg-emerald-950/80 border border-emerald-800 text-emerald-300 text-xs flex items-center gap-2 animate-in fade-in duration-200">
                     <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
-                    <span>Cảm ơn bạn đã đăng ký nhận bản tin thị trường Fretrix!</span>
+                    <span>Chưa thể gửi đăng ký vì dịch vụ bản tin chưa được kết nối. Vui lòng thử lại sau.</span>
                   </div>
                 )}
 
+                </div>
                 <p className="font-mono text-xs text-slate-400">
                   Không spam. Hủy đăng ký bất kỳ lúc nào. Dữ liệu bảo mật theo ISO 27001.
                 </p>
