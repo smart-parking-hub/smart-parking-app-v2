@@ -1,30 +1,30 @@
 import { Link } from 'react-router-dom'
-import { Map, Warehouse, ReceiptText, AlertTriangle } from 'lucide-react'
+import { Map, Warehouse, ReceiptText, AlertTriangle, ArrowUpRight } from 'lucide-react'
 
 const shortcuts = [
   {
-    step: '01',
+    id: 'parking',
     title: 'Tìm Bãi Đỗ & Bảng Giá',
     desc: 'Tra cứu theo bán kính, tĩnh không, trạm sạc',
     to: '/parking',
     icon: Map,
   },
   {
-    step: '02',
+    id: 'vehicles',
     title: 'Quản Lý Phương Tiện',
     desc: 'Cập nhật đầu kéo, rơ-moóc & số đăng kiểm',
     to: '/vehicles',
     icon: Warehouse,
   },
   {
-    step: '03',
+    id: 'payments',
     title: 'Hóa Đơn Điện Tử VAT',
     desc: 'Xuất hóa đơn công ty vận tải, đối soát cước',
     to: '/payments',
     icon: ReceiptText,
   },
   {
-    step: '04',
+    id: 'notifications',
     title: 'Cảnh Báo Tĩnh Không & Cân',
     desc: 'Thông tin cầu vượt, trạm cân tải trọng 24/7',
     to: '/notifications',
@@ -35,40 +35,36 @@ const shortcuts = [
 export function DriverShortcuts() {
   return (
     <section className="w-full mb-6">
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex items-center justify-between mb-3">
         <div>
-          <h3 className="font-sora text-lg lg:text-xl text-[#0d1c2e] font-bold">
+          <h3 className="font-sora text-base sm:text-lg text-slate-900 font-bold">
             Nghiệp Vụ Tài Xế Nhanh
           </h3>
-          <p className="text-xs lg:text-sm text-[#45464d]">
+          <p className="text-xs text-slate-500">
             Thao tác tra cứu và điều phối xe chỉ với 1 chạm
           </p>
         </div>
-        <span className="font-mono text-xs text-slate-500 uppercase tracking-wider font-semibold">
-          LỐI TẮT NHANH
+        <span className="text-xs text-slate-500 font-normal">
+          Lối tắt điều hướng
         </span>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {shortcuts.map(({ step, title, desc, to, icon: Icon }) => (
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+        {shortcuts.map(({ id, title, desc, to, icon: Icon }) => (
           <Link
-            key={step}
+            key={id}
             to={to}
-            className="group p-5 bg-white rounded-2xl border border-slate-200/80 hover:bg-[#eff4ff] hover:border-blue-200 shadow-2xs hover:shadow-sm transition-all flex flex-col justify-between h-40"
+            className="group p-4 bg-white rounded-xl border border-slate-200 hover:border-slate-300 transition-colors flex flex-col justify-between h-32 sm:h-36"
           >
             <div className="flex items-center justify-between">
-              <span className="w-10 h-10 rounded-xl bg-[#e6eeff] flex items-center justify-center text-[#0d1c2e] group-hover:bg-[#d95f00] group-hover:text-white transition-colors">
-                <Icon className="w-5 h-5" />
-              </span>
-              <span className="font-mono text-xs text-slate-400 font-bold px-2 py-0.5 rounded bg-slate-100">
-                {step}
-              </span>
+              <Icon className="w-5 h-5 text-slate-500 group-hover:text-[#d95f00] transition-colors" />
+              <ArrowUpRight className="w-3.5 h-3.5 text-slate-400 group-hover:text-slate-700 transition-colors" />
             </div>
             <div>
-              <span className="font-sora text-sm sm:text-base font-bold text-[#0d1c2e] block group-hover:text-[#d95f00] transition-colors leading-tight mb-1">
+              <span className="font-sora text-xs sm:text-sm font-semibold text-slate-900 block group-hover:text-[#d95f00] transition-colors leading-snug mb-0.5">
                 {title}
               </span>
-              <p className="text-xs text-slate-600 line-clamp-1 font-medium">{desc}</p>
+              <p className="text-xs text-slate-500 line-clamp-1">{desc}</p>
             </div>
           </Link>
         ))}
