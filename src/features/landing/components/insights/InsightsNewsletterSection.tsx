@@ -12,7 +12,7 @@ export function InsightsNewsletterSection() {
   })
 
   return (
-    <section className="w-full bg-white py-14 border-b border-[#E2E8F0]">
+    <section id="ban-tin" className="scroll-mt-24 w-full bg-white py-14 border-b border-[#E2E8F0]">
       <div className="max-w-[1240px] mx-auto px-6">
         <div className="relative overflow-hidden bg-[#060D1A] text-white rounded-2xl p-8 md:p-12 lg:p-14 shadow-xl border border-slate-800">
           <div className="relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
