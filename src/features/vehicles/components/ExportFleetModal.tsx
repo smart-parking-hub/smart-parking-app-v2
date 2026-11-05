@@ -120,8 +120,10 @@ export function ExportFleetModal({ vehicles, isOpen, onClose }: ExportFleetModal
           </div>
 
           <div className="flex flex-col gap-2 pt-2 border-t border-slate-100">
-            <label className="flex items-center gap-2 cursor-pointer">
+            <label htmlFor="export-registry-dossier-checkbox" className="flex items-center gap-2 cursor-pointer">
               <input
+                id="export-registry-dossier-checkbox"
+                name="includeRegistryDossier"
                 type="checkbox"
                 checked={includeRegistryDossier}
                 onChange={(e) => setIncludeRegistryDossier(e.target.checked)}
