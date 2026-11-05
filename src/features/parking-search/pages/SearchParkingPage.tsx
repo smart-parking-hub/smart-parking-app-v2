@@ -133,7 +133,7 @@ export function SearchParkingPage() {
               type="button"
               onClick={() => void refetch()}
               disabled={isRefetching}
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#d95f00] text-white text-xs font-semibold hover:bg-[#b85000] transition-colors cursor-pointer disabled:opacity-50"
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-brand-orange text-white text-xs font-semibold hover:bg-brand-orange-hover transition-colors cursor-pointer disabled:opacity-50"
             >
               <RefreshCw
                 className={`w-4 h-4 ${isRefetching ? 'animate-spin' : ''}`}
