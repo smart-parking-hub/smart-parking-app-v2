@@ -516,6 +516,10 @@ export const router = createBrowserRouter([
     element: <DriverSolutionsPage />,
   },
   {
+    path: '/solutions/owners',
+    element: <OwnerSolutionsPage withLayout={true} />,
+  },
+  {
     path: '/owner-solutions',
     element: <OwnerSolutionsPage />,
   },
