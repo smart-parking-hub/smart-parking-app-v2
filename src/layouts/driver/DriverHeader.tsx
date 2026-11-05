@@ -1,3 +1,4 @@
+import { clearSession } from '@/features/auth'
 import { useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import {
@@ -165,7 +166,7 @@ export function DriverHeader() {
                     </Link>
                     <button
                       onClick={() => {
-                        localStorage.removeItem('access_token')
+                        clearSession()
                         localStorage.removeItem('smart-truck-parking.auth')
                         window.location.href = '/login'
                       }}

@@ -1,3 +1,5 @@
+import { Provider } from 'react-redux'
+import { store } from '@/app/store'
 import {
   beforeAll,
   beforeEach,
@@ -45,7 +47,7 @@ function show(children: ReactNode, route = '/') {
         })
       }
     >
-      <MemoryRouter initialEntries={[route]}>{children}</MemoryRouter>
+      <Provider store={store}><MemoryRouter initialEntries={[route]}>{children}</MemoryRouter></Provider>
     </QueryClientProvider>,
   )
 }

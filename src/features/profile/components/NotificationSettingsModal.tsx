@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { BellRing, X, CheckCircle2 } from 'lucide-react'
 
 interface NotificationSettingsModalProps {
@@ -15,11 +15,15 @@ export function NotificationSettingsModal({
   const [emailReceipts, setEmailReceipts] = useState(true)
   const [saved, setSaved] = useState(false)
 
+  const saveTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
+  useEffect(() => () => clearTimeout(saveTimer.current), [])
+
   if (!isOpen) return null
 
   const handleSave = () => {
     setSaved(true)
-    setTimeout(() => {
+    clearTimeout(saveTimer.current)
+    saveTimer.current = setTimeout(() => {
       setSaved(false)
       onClose()
     }, 1000)
