@@ -36,6 +36,9 @@ export function TransactionFilterToolbar({
         <div className="flex-1 relative flex items-center">
           <Search className="w-5 h-5 text-slate-400 absolute left-4 pointer-events-none" />
           <input
+            id="transaction-search-input"
+            name="transactionSearch"
+            aria-label="Tra cứu mã giao dịch, mã booking, tên bãi đỗ hoặc biển số xe"
             type="text"
             value={search}
             onChange={(e) => onSearchChange(e.target.value)}

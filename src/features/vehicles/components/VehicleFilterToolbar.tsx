@@ -32,6 +32,9 @@ export function VehicleFilterToolbar({
       <div className="relative flex-1 min-w-[280px]">
         <Search className="w-5 h-5 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
         <input
+          id="vehicles-search-input"
+          name="vehicleSearch"
+          aria-label="Tìm kiếm theo biển kiểm soát, nhãn hiệu hoặc số khung"
           type="text"
           value={search}
           onChange={(e) => onSearchChange(e.target.value)}
@@ -44,10 +47,13 @@ export function VehicleFilterToolbar({
       <div className="flex flex-wrap items-center gap-3">
         {/* Type Filter */}
         <div className="flex items-center bg-slate-100 border border-slate-200/80 rounded-xl px-3 py-1">
-          <span className="text-xs font-semibold text-slate-500 mr-2 whitespace-nowrap">
+          <label htmlFor="vehicle-type-filter-select" className="text-xs font-semibold text-slate-500 mr-2 whitespace-nowrap">
             Phân loại:
-          </span>
+          </label>
           <select
+            id="vehicle-type-filter-select"
+            name="vehicleTypeFilter"
+            aria-label="Lọc theo phân loại phương tiện"
             value={typeFilter}
             onChange={(e) => onTypeFilterChange(e.target.value as 'all' | VehicleClassType)}
             className="bg-transparent text-xs font-bold text-slate-900 focus:outline-none cursor-pointer py-1"
@@ -62,10 +68,13 @@ export function VehicleFilterToolbar({
 
         {/* Status Filter */}
         <div className="flex items-center bg-slate-100 border border-slate-200/80 rounded-xl px-3 py-1">
-          <span className="text-xs font-semibold text-slate-500 mr-2 whitespace-nowrap">
+          <label htmlFor="vehicle-status-filter-select" className="text-xs font-semibold text-slate-500 mr-2 whitespace-nowrap">
             Trạng thái:
-          </span>
+          </label>
           <select
+            id="vehicle-status-filter-select"
+            name="vehicleStatusFilter"
+            aria-label="Lọc theo trạng thái phương tiện"
             value={statusFilter}
             onChange={(e) => onStatusFilterChange(e.target.value as 'all' | VehicleStatusType)}
             className="bg-transparent text-xs font-bold text-slate-900 focus:outline-none cursor-pointer py-1"
