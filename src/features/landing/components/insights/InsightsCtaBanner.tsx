@@ -22,6 +22,7 @@ export function InsightsCtaBanner() {
           </div>
 
           <div className="flex flex-wrap items-center gap-4 shrink-0">
+            <Link to="/" className="rounded-lg border border-brand-border px-7 py-3.5 text-sm font-semibold focus-visible:ring-2 focus-visible:ring-brand-orange">Về trang chủ</Link>
             <Link
               to="/driver-solutions"
               className="px-7 py-3.5 rounded-lg bg-[#F97316] hover:bg-[#EA580C] text-white font-sora text-xs font-bold shadow-md transition-all active:scale-95 text-center"
