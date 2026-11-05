@@ -18,7 +18,7 @@ export function AboutCtaBanner() {
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 shrink-0 w-full lg:w-auto">
           <a
             className="inline-flex items-center justify-center h-[52px] px-8 bg-[#F97316] hover:bg-[#EA580C] text-white font-semibold text-sm sm:text-base rounded transition-colors gap-2 shadow-sm text-center"
-            href="#doi-tac"
+            href="/company/contact"
           >
             LIÊN HỆ ĐỐI TÁC CHIẾN LƯỢC
             <ArrowRight className="w-4 h-4" aria-hidden="true" />

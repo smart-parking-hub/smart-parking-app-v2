@@ -26,7 +26,7 @@ export function LandingFooter() {
 
           {/* Col 2: For Drivers */}
           <div>
-            <h4 className="font-sora font-bold text-sm text-white uppercase tracking-wider mb-4">Dành Cho Tài Xế</h4>
+            <h2 className="font-sora font-bold text-sm text-white uppercase tracking-wider mb-4">Dành Cho Tài Xế</h2>
             <ul className="space-y-2.5 text-xs">
               <li>
                 <a className="hover:text-white transition-colors" href="#tim-bai-ngay">
@@ -58,7 +58,7 @@ export function LandingFooter() {
 
           {/* Col 3: For Lot Owners */}
           <div>
-            <h4 className="font-sora font-bold text-sm text-white uppercase tracking-wider mb-4">Dành Cho Chủ Bãi</h4>
+            <h2 className="font-sora font-bold text-sm text-white uppercase tracking-wider mb-4">Dành Cho Chủ Bãi</h2>
             <ul className="space-y-2.5 text-xs">
               <li>
                 <a className="hover:text-white transition-colors" href="#giai-phap-chu-bai">
@@ -90,7 +90,7 @@ export function LandingFooter() {
 
           {/* Col 4: Legal & Support */}
           <div>
-            <h4 className="font-sora font-bold text-sm text-white uppercase tracking-wider mb-4">Pháp Lý &amp; Hỗ Trợ</h4>
+            <h2 className="font-sora font-bold text-sm text-white uppercase tracking-wider mb-4">Pháp Lý &amp; Hỗ Trợ</h2>
             <ul className="space-y-2.5 text-xs mb-5">
               <li>
                 <a className="hover:text-white transition-colors" href="/contact">
@@ -135,7 +135,7 @@ export function LandingFooter() {
         </div>
 
         {/* Bottom Legal Notice */}
-        <div className="pt-8 border-t border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-500">
+        <div className="pt-8 border-t border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-400">
           <p>© 2026 SmartTruckHub Vietnam. Bản quyền thuộc về Công ty Cổ phần Công nghệ SmartTruckHub.</p>
           <div className="flex items-center gap-6">
             <span>Tiêu chuẩn bảo mật ISO 27001</span>

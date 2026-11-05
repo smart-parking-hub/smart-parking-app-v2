@@ -1,38 +1,38 @@
-import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { AlertCircle, RefreshCw } from 'lucide-react'
 
-import type {
-  ParkingLotItem,
-  SearchFilterState,
+import {
+  searchFilterSchema,
+  type ParkingLotItem,
+  type SearchFilterState,
 } from '../types/parkingSearchTypes'
 import {
   fetchParkingLots,
   fallbackVehicleOptions,
 } from '../api/parkingSearchApi'
+import {
+  useParkingSearchStore,
+  parkingSearchStore,
+} from '../store/parkingSearchStore'
 import { TopFilterBar } from '../components/TopFilterBar'
 import { SmartLocationBar } from '../components/SmartLocationBar'
 import { YardCardList } from '../components/YardCardList'
 import { InteractiveMapCanvas } from '../components/InteractiveMapCanvas'
-import { QuickBookingDrawer } from '../components/QuickBookingDrawer'
+import { InlineQuickBookPanel } from '../components/InlineQuickBookPanel'
 import { SearchParkingSkeleton } from '../components/SearchParkingSkeleton'
 import type { Coordinates, Place } from '../api/mapProvider'
 
 export function SearchParkingPage() {
-  const [filters, setFilters] = useState<SearchFilterState>({
-    selectedVehicleId: 'cont40',
-    vehicleType: 'CONTAINER',
-    radiusKm: 15,
-    sortBy: 'distance',
-    includeFull: true,
-    keyword: '',
-  })
+  const filters = useParkingSearchStore((s) => s.filters)
+  const selectedLotId = useParkingSearchStore((s) => s.selectedLotId)
+  const quickBookLot = useParkingSearchStore((s) => s.quickBookLot)
+  const quickBookOpen = useParkingSearchStore((s) => s.quickBookOpen)
+  const searchText = useParkingSearchStore((s) => s.searchText)
+  const origin = useParkingSearchStore((s) => s.origin)
 
-  const [selectedLotId, setSelectedLotId] = useState<number>(1)
-  const [quickBookLot, setQuickBookLot] = useState<ParkingLotItem | null>(null)
-  const [quickBookOpen, setQuickBookOpen] = useState(false)
-  const [searchText, setSearchText] = useState('')
-  const [origin, setOrigin] = useState<Coordinates>()
+  // Validate filter parameters with Zod schema
+  const parsedFilters = searchFilterSchema.safeParse(filters)
+  const validFilters = parsedFilters.success ? parsedFilters.data : filters
 
   const {
     data: lots = [],
@@ -41,36 +41,27 @@ export function SearchParkingPage() {
     refetch,
     isRefetching,
   } = useQuery({
-    queryKey: ['parking-lots-search', filters],
-    queryFn: () => fetchParkingLots(filters),
+    queryKey: ['parking-lots-search', validFilters],
+    queryFn: () => fetchParkingLots(validFilters),
     staleTime: 30000,
   })
 
   const handleFilterChange = (updated: Partial<SearchFilterState>) => {
-    setFilters((prev) => ({ ...prev, ...updated }))
+    parkingSearchStore.setFilters(updated)
   }
 
   const selectedLot = lots.find((l) => l.id === selectedLotId) || lots[0]
 
   const handleOpenQuickBook = (lot: ParkingLotItem) => {
-    setSelectedLotId(lot.id)
-    setQuickBookLot(lot)
-    setQuickBookOpen(true)
+    parkingSearchStore.openQuickBook(lot)
   }
 
   const handleLocateMe = (point: Coordinates) => {
-    setOrigin(point)
-    setSearchText('Vị trí hiện tại của tôi')
-    handleFilterChange({ ...point, keyword: '' })
+    parkingSearchStore.locateMe(point)
   }
+
   const handleSelectPlace = (place: Place) => {
-    setOrigin(place)
-    setSearchText(place.label)
-    handleFilterChange({
-      latitude: place.latitude,
-      longitude: place.longitude,
-      keyword: '',
-    })
+    parkingSearchStore.selectPlace(place)
   }
 
   return (
@@ -92,6 +83,7 @@ export function SearchParkingPage() {
             Bản đồ OpenStreetMap
           </span>
         </header>
+
         {/* Top Control Filter Bar: 3 Evenly Spaced Columns (Phương tiện -> Sắp xếp -> Bán kính) */}
         <TopFilterBar
           filters={filters}
@@ -103,7 +95,7 @@ export function SearchParkingPage() {
         <div className="w-full mb-5">
           <SmartLocationBar
             value={searchText}
-            onChange={setSearchText}
+            onChange={(text) => parkingSearchStore.setSearchText(text)}
             onLocateMe={handleLocateMe}
             onSelectPlace={handleSelectPlace}
             totalResults={lots.length}
@@ -119,11 +111,14 @@ export function SearchParkingPage() {
         {isLoading ? (
           <SearchParkingSkeleton />
         ) : error ? (
-          /* Error State */
-          <div className="bg-rose-50 border border-rose-200 rounded-2xl p-6 text-center my-6">
+          /* Error State (Mã lỗi: ERR_GEO_DISPATCH_TIMEOUT) */
+          <div
+            role="alert"
+            className="bg-rose-50 border border-rose-200 rounded-2xl p-6 text-center my-6"
+          >
             <AlertCircle className="w-10 h-10 text-rose-600 mx-auto mb-2" />
             <h4 className="font-sora text-base font-bold text-rose-900">
-              Không thể tải dữ liệu bản đồ bãi xe
+              Không thể tải dữ liệu bản đồ bãi xe (Mã lỗi: ERR_GEO_DISPATCH_TIMEOUT)
             </h4>
             <p className="text-xs text-rose-700 mt-1 mb-4">
               Hệ thống tìm kiếm định vị tạm thời gián đoạn. Vui lòng kiểm tra
@@ -142,16 +137,23 @@ export function SearchParkingPage() {
             </button>
           </div>
         ) : (
-          /* Split View Workbench: Left Yard List (max 2 cards visible with internal scrollbar) and Right Map */
+          /* Split View Workbench: Left Yard List and Right Map */
           <div className="grid grid-cols-1 xl:grid-cols-[minmax(380px,0.8fr)_minmax(0,1.35fr)] gap-7 2xl:gap-10 items-start mt-2">
             {/* Left Column: Operational Yard List (5 cols ~ 42%) */}
             <div className="min-w-0 flex flex-col gap-4">
               <YardCardList
                 lots={lots}
                 selectedLotId={selectedLot?.id}
-                onSelectLot={(lot) => setSelectedLotId(lot.id)}
+                onSelectLot={(lot) => parkingSearchStore.setSelectedLotId(lot.id)}
                 onQuickBook={handleOpenQuickBook}
                 onQueue={handleOpenQuickBook}
+                radiusKm={filters.radiusKm}
+                includeFull={filters.includeFull}
+                onExpandRadius={() => handleFilterChange({ radiusKm: 35 })}
+                onToggleIncludeFull={() =>
+                  handleFilterChange({ includeFull: !filters.includeFull })
+                }
+                onResetFilters={() => parkingSearchStore.resetFilters()}
               />
             </div>
 
@@ -161,17 +163,17 @@ export function SearchParkingPage() {
                 lots={lots}
                 selectedLot={selectedLot}
                 origin={origin}
-                onSelectLot={(lot) => setSelectedLotId(lot.id)}
+                onSelectLot={(lot) => parkingSearchStore.setSelectedLotId(lot.id)}
                 onQuickBook={handleOpenQuickBook}
               />
             </div>
           </div>
         )}
 
-        {/* Inline Quick Reservation Drawer Modal */}
-        <QuickBookingDrawer
+        {/* GAP-04: Inline Quick Reservation Drawer Panel (SCR-MOD-06) */}
+        <InlineQuickBookPanel
           open={quickBookOpen}
-          onClose={() => setQuickBookOpen(false)}
+          onClose={() => parkingSearchStore.closeQuickBook()}
           lot={quickBookLot || undefined}
         />
       </div>

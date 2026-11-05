@@ -1,3 +1,4 @@
+import { LandingMetadata } from './LandingMetadata'
 import { useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { Truck, Headset, Menu, X } from 'lucide-react'
@@ -7,9 +8,9 @@ export function LandingNavbar() {
   const location = useLocation()
 
   const isDriverPage =
-    location.pathname.includes('driver-solutions') || location.pathname.includes('giai-phap-tai-xe')
+    location.pathname.includes('driver-solutions') || location.pathname.includes('giai-phap-tai-xe') || location.pathname.includes('solutions/drivers')
   const isOwnerPage =
-    location.pathname.includes('owner-solutions') || location.pathname.includes('giai-phap-chu-bai')
+    location.pathname.includes('owner-solutions') || location.pathname.includes('giai-phap-chu-bai') || location.pathname.includes('solutions/owners')
   const isPricingPage =
     location.pathname.includes('pricing') || location.pathname.includes('bang-gia')
   const isApiPage =
@@ -90,10 +91,10 @@ export function LandingNavbar() {
         { label: 'Kết nối API', href: '/api-docs' },
         {
           label: 'Về chúng tôi',
-          href: '/about',
+          href: '/company/about',
           isCurrent: true,
         },
-        { label: 'Liên hệ', href: '#lien-he' },
+        { label: 'Liên hệ', href: '/company/contact' },
       ]
     : isApiPage
     ? [
@@ -260,10 +261,11 @@ export function LandingNavbar() {
 
   return (
     <header className="sticky top-0 inset-x-0 z-50 bg-white/95 backdrop-blur-md border-b border-brand-border">
-      <div className="max-w-[1240px] mx-auto h-20 px-6 flex items-center justify-between gap-6">
+      <LandingMetadata />
+      <div className="max-w-[1440px] mx-auto h-20 px-4 xl:px-6 flex items-center justify-between gap-3">
         {/* Brand Logo */}
         <Link
-          className="flex items-center gap-2.5 shrink-0 group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-orange rounded-lg"
+          className="flex items-center gap-2 sm:gap-2.5 shrink-0 group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-orange rounded-lg"
           to="/"
           aria-label="SmartTruckHub Trang chủ"
         >
@@ -271,17 +273,17 @@ export function LandingNavbar() {
             <Truck className="h-6 w-6 text-white" aria-hidden="true" />
           </div>
           <div className="flex items-center gap-1.5">
-            <span className="font-sora font-bold text-xl tracking-tight text-brand-navy">
-              SMART<span className="text-brand-orange">TRUCK</span>
+            <span className="font-sora font-bold text-base sm:text-xl tracking-tight text-brand-navy">
+              SMART<span className="text-brand-orange-ink">TRUCK</span>
             </span>
-            <span className="bg-slate-100 text-slate-700 text-[11px] font-semibold tracking-wider px-2 py-0.5 rounded border border-slate-200 uppercase">
+            <span className="hidden sm:inline bg-slate-100 text-slate-700 text-[11px] font-semibold tracking-wider px-2 py-0.5 rounded border border-slate-200 uppercase">
               HUB
             </span>
           </div>
         </Link>
 
         {/* Desktop Nav */}
-        <nav className="hidden lg:flex items-center gap-7" aria-label="Điều hướng chính">
+        <nav className="hidden xl:flex items-center gap-1 xl:gap-3 whitespace-nowrap" aria-label="Điều hướng chính">
           {navLinks.map((item) => {
             const isInternal = item.href.startsWith('/') && !item.href.includes('#')
             if (isInternal) {
@@ -291,7 +293,7 @@ export function LandingNavbar() {
                   to={item.href}
                   className={`text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-orange rounded px-1.5 py-0.5 ${
                     item.isCurrent
-                      ? 'text-brand-orange font-semibold border-b-2 border-brand-orange pb-0.5'
+                      ? 'text-brand-orange-ink font-semibold border-b-2 border-brand-orange pb-0.5'
                       : 'text-slate-600 hover:text-brand-navy font-medium'
                   }`}
                 >
@@ -312,15 +314,15 @@ export function LandingNavbar() {
         </nav>
 
         {/* Right Actions */}
-        <div className="flex items-center gap-5 shrink-0">
+        <div className="flex items-center gap-3 shrink-0 whitespace-nowrap">
           <a
-            className="hidden sm:flex items-center gap-2 text-slate-600 hover:text-brand-navy text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-orange rounded"
+            className="hidden min-[1400px]:flex items-center gap-2 text-slate-600 hover:text-brand-navy text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-orange rounded"
             href="tel:19006868"
           >
             <Headset className="h-5 w-5 text-slate-400" aria-hidden="true" />
             <span>1900 6868</span>
           </a>
-          <div className="h-4 w-px bg-slate-200 hidden sm:block" />
+          <div className="h-4 w-px bg-slate-200 hidden min-[1400px]:block" />
           <Link
             className="hidden md:inline-flex text-sm font-medium text-slate-700 hover:text-brand-navy transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-orange rounded px-2 py-1"
             to="/login"
@@ -328,7 +330,7 @@ export function LandingNavbar() {
             Đăng nhập
           </Link>
           <a
-            className="inline-flex items-center justify-center bg-brand-orange hover:bg-brand-orange-hover text-white text-sm font-semibold px-5 py-2.5 rounded-lg shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-orange focus-visible:ring-offset-2"
+            className="hidden sm:inline-flex items-center justify-center bg-brand-orange hover:bg-brand-orange-hover text-brand-navy text-sm font-semibold px-3 sm:px-5 py-2.5 rounded-lg shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-orange focus-visible:ring-offset-2"
             href={ctaHref}
           >
             {ctaLabel}
@@ -337,7 +339,7 @@ export function LandingNavbar() {
           {/* Mobile Hamburger Toggle Button */}
           <button
             type="button"
-            className="lg:hidden p-2 rounded-lg text-slate-700 hover:bg-slate-100 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-orange"
+            className="xl:hidden p-2 rounded-lg text-slate-700 hover:bg-slate-100 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-orange"
             aria-label={mobileMenuOpen ? 'Đóng menu điều hướng' : 'Mở menu điều hướng'}
             aria-expanded={mobileMenuOpen}
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
@@ -353,7 +355,7 @@ export function LandingNavbar() {
 
       {/* Mobile Navigation Drawer / Dropdown */}
       {mobileMenuOpen && (
-        <div className="lg:hidden bg-white border-b border-brand-border px-6 py-6 shadow-xl animate-in slide-in-from-top-2 duration-200">
+        <div className="xl:hidden bg-white border-b border-brand-border px-6 py-6 shadow-xl animate-in slide-in-from-top-2 duration-200">
           <nav className="flex flex-col gap-4 mb-6" aria-label="Điều hướng di động">
             {navLinks.map((item) => {
               const isInternal = item.href.startsWith('/') && !item.href.includes('#')
@@ -364,7 +366,7 @@ export function LandingNavbar() {
                     to={item.href}
                     className={`text-base py-1.5 border-b border-slate-100 ${
                       item.isCurrent
-                        ? 'text-brand-orange font-semibold'
+                        ? 'text-brand-orange-ink font-semibold'
                         : 'text-slate-700 hover:text-brand-orange font-medium'
                     }`}
                     onClick={closeMobileMenu}
@@ -386,6 +388,13 @@ export function LandingNavbar() {
             })}
           </nav>
           <div className="pt-2 flex flex-col gap-3">
+            <a
+              href={ctaHref}
+              onClick={closeMobileMenu}
+              className="sm:hidden text-center rounded-lg bg-brand-orange text-brand-navy font-semibold px-4 py-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-orange"
+            >
+              {ctaLabel}
+            </a>
             <a
               className="flex items-center justify-center gap-2 text-slate-700 font-semibold text-sm py-2"
               href="tel:19006868"

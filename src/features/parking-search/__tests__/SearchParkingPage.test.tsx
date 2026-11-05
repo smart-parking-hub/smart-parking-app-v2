@@ -133,4 +133,49 @@ describe('SCR-015: Interactive Parking Search & Map (Bản đồ tìm kiếm bã
     // Success confirmation screen
     expect(screen.getByText(/Giữ Chỗ Thành Công!/i)).toBeInTheDocument()
   })
+
+  it('displays empty state when no parking lots match criteria and allows expanding radius', async () => {
+    vi.mocked(apiClient.get).mockResolvedValueOnce({
+      data: {
+        content: [],
+        totalElements: 0,
+        totalPages: 0,
+        size: 20,
+        number: 0,
+      },
+    })
+
+    renderWithProviders(<SearchParkingPage />)
+
+    await waitFor(() => {
+      expect(
+        screen.getByText(/Không Tìm Thấy Bãi Đỗ Xe Nào Phù Hợp/i),
+      ).toBeInTheDocument()
+    })
+
+    expect(
+      screen.getByText(/Mở rộng bán kính \(35km\)/i),
+    ).toBeInTheDocument()
+    expect(screen.getByText(/Đặt lại bộ lọc/i)).toBeInTheDocument()
+
+    // Click expand radius
+    const expandBtn = screen.getByText(/Mở rộng bán kính \(35km\)/i)
+    fireEvent.click(expandBtn)
+  })
+
+  it('displays error alert with ERR_GEO_DISPATCH_TIMEOUT when server request fails', async () => {
+    vi.mocked(apiClient.get).mockRejectedValueOnce(
+      new Error('Network connection timeout'),
+    )
+
+    renderWithProviders(<SearchParkingPage />)
+
+    await waitFor(() => {
+      expect(
+        screen.getByText(/ERR_GEO_DISPATCH_TIMEOUT/i),
+      ).toBeInTheDocument()
+    })
+
+    expect(screen.getByText(/Tải lại bãi xe/i)).toBeInTheDocument()
+  })
 })

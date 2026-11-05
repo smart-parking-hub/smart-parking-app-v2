@@ -1,4 +1,7 @@
+import { clearSession } from '@/features/auth'
 import { useState } from 'react'
+import { useQuery } from '@tanstack/react-query'
+import { getData } from '@/shared/api/resources'
 import { Link, useLocation } from 'react-router-dom'
 import {
   Bell,
@@ -20,27 +23,17 @@ const links = [
   ['/vehicles', 'Đội xe của tôi'],
   ['/disputes', 'Khiếu nại'],
 ]
+
 export function DriverHeader() {
   const location = useLocation()
   const [mobileOpen, setMobileOpen] = useState(false)
   const [accountOpen, setAccountOpen] = useState(false)
-  const [identity] = useState(() => {
-    let phone = ''
-    try {
-      phone =
-        (
-          JSON.parse(
-            localStorage.getItem('smart-truck-parking.auth') || '{}',
-          ) as { phone?: string }
-        ).phone || ''
-    } catch {
-      /* No previous session profile. */
-    }
-    return {
-      name: localStorage.getItem('smart-truck-parking.driver_name') || 'Tài xế',
-      phone,
-    }
+  const { data: profile } = useQuery({
+    queryKey: ['current-user', 'header'],
+    queryFn: () => getData<{ fullName?: string }>('/api/v1/users/me'),
+    staleTime: 60_000,
   })
+  const identity = { name: profile?.fullName?.trim() || 'Tài khoản của bạn', role: 'Tài xế' }
   const initials = identity.name
     .trim()
     .split(/\s+/)
@@ -48,6 +41,7 @@ export function DriverHeader() {
     .map((part) => part[0])
     .join('')
     .toUpperCase()
+
   const active = (path: string) => {
     const current = location.pathname
       .replace(/^\/design-preview/, '')
@@ -59,10 +53,12 @@ export function DriverHeader() {
         )
       : current.startsWith(path)
   }
+
   const closeMenus = () => {
     setAccountOpen(false)
     setMobileOpen(false)
   }
+
   const nav = (mobile = false) =>
     links.map(([to, label]) => (
       <Link
@@ -75,6 +71,7 @@ export function DriverHeader() {
         {label}
       </Link>
     ))
+
   return (
     <header
       className="fixed inset-x-0 top-0 z-50 border-b border-white/10 bg-brand-navy font-inter text-white"
@@ -105,32 +102,35 @@ export function DriverHeader() {
             <Link
               to="/notifications"
               aria-label="Thông báo"
-              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-white/10 text-slate-300 hover:bg-white/10"
+              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-white/10 text-slate-300 hover:bg-white/10 transition-colors"
             >
               <Bell size={20} />
             </Link>
             <div className="relative">
               <button
+                type="button"
                 onClick={() => setAccountOpen(!accountOpen)}
                 aria-expanded={accountOpen}
                 aria-controls="driver-account-menu"
                 aria-label="Menu tài khoản"
-                className="flex min-h-12 shrink-0 items-center gap-3 rounded-xl px-1 text-left sm:pr-3"
+                className="group flex min-h-12 shrink-0 items-center gap-3 rounded-xl px-2 py-1.5 text-left transition-colors hover:bg-white/5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-orange sm:pr-3"
               >
-                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/10 text-sm font-bold">
-                  {initials}
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-brand-orange/30 bg-brand-orange/10 font-sora text-sm font-semibold text-brand-orange">
+                  {profile?.fullName?.trim() ? initials : <User size={20} aria-hidden="true" />}
                 </span>
                 <span className="hidden w-36 min-w-0 sm:block">
-                  <span className="block truncate text-[15px] font-semibold leading-6">
+                  <span title={identity.name} className="block truncate font-sora text-[13px] font-semibold leading-6">
                     {identity.name}
                   </span>
-                  <span className="block whitespace-nowrap text-sm leading-5 text-slate-400">
-                    {identity.phone || 'Tài khoản tài xế'}
+                  <span className="flex items-center gap-1.5 text-xs leading-5 text-slate-300">
+                    <Truck size={12} className="text-brand-orange" aria-hidden="true" />Tài xế
                   </span>
                 </span>
                 <ChevronDown
                   size={15}
-                  className="hidden shrink-0 text-slate-400 sm:block"
+                  className={`hidden shrink-0 text-slate-400 transition-transform duration-200 group-hover:text-white sm:block ${
+                    accountOpen ? 'rotate-180 text-white' : ''
+                  }`}
                 />
               </button>
               {accountOpen && (
@@ -146,11 +146,12 @@ export function DriverHeader() {
                   >
                     <p className="truncate border-b border-brand-border px-3 py-4 font-semibold">
                       {identity.name}
+                      <span className="mt-1 block text-xs font-normal text-brand-muted">Tài xế · Tài khoản cá nhân</span>
                     </p>
                     <Link
                       to="/profile"
                       onClick={closeMenus}
-                      className="flex items-center gap-3 rounded-xl px-3 py-3 text-sm hover:bg-brand-surface"
+                      className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm hover:bg-brand-surface text-slate-700 hover:text-brand-navy transition-colors"
                     >
                       <User size={17} />
                       Hồ sơ cá nhân
@@ -158,18 +159,19 @@ export function DriverHeader() {
                     <Link
                       to="/change-password"
                       onClick={closeMenus}
-                      className="flex items-center gap-3 rounded-xl px-3 py-3 text-sm hover:bg-brand-surface"
+                      className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm hover:bg-brand-surface text-slate-700 hover:text-brand-navy transition-colors"
                     >
                       <KeyRound size={17} />
                       Đổi mật khẩu
                     </Link>
                     <button
+                      type="button"
                       onClick={() => {
-                        localStorage.removeItem('access_token')
+                        clearSession()
                         localStorage.removeItem('smart-truck-parking.auth')
                         window.location.href = '/login'
                       }}
-                      className="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-sm text-red-700 hover:bg-red-50"
+                      className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-red-700 hover:bg-red-50 transition-colors cursor-pointer"
                     >
                       <LogOut size={17} />
                       Đăng xuất
@@ -182,7 +184,7 @@ export function DriverHeader() {
               aria-label="Toggle menu"
               aria-expanded={mobileOpen}
               onClick={() => setMobileOpen(!mobileOpen)}
-              className="rounded-lg p-2 lg:hidden"
+              className="rounded-lg p-2 lg:hidden text-slate-200 hover:text-white hover:bg-white/10"
             >
               {mobileOpen ? <X /> : <Menu />}
             </button>
@@ -203,3 +205,4 @@ export function DriverHeader() {
     </header>
   )
 }
+
