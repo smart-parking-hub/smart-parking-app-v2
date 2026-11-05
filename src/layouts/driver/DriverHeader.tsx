@@ -1,5 +1,7 @@
 import { clearSession } from '@/features/auth'
 import { useState } from 'react'
+import { useQuery } from '@tanstack/react-query'
+import { getData } from '@/shared/api/resources'
 import { Link, useLocation } from 'react-router-dom'
 import {
   Bell,
@@ -25,23 +27,12 @@ export function DriverHeader() {
   const location = useLocation()
   const [mobileOpen, setMobileOpen] = useState(false)
   const [accountOpen, setAccountOpen] = useState(false)
-  const [identity] = useState(() => {
-    let phone = ''
-    try {
-      phone =
-        (
-          JSON.parse(
-            localStorage.getItem('smart-truck-parking.auth') || '{}',
-          ) as { phone?: string }
-        ).phone || ''
-    } catch {
-      /* No previous session profile. */
-    }
-    return {
-      name: localStorage.getItem('smart-truck-parking.driver_name') || 'Tài xế',
-      phone,
-    }
+  const { data: profile } = useQuery({
+    queryKey: ['current-user', 'header'],
+    queryFn: () => getData<{ fullName?: string }>('/api/v1/users/me'),
+    staleTime: 60_000,
   })
+  const identity = { name: profile?.fullName?.trim() || 'Tài khoản của bạn' }
   const initials = identity.name
     .trim()
     .split(/\s+/)
@@ -116,17 +107,17 @@ export function DriverHeader() {
                 aria-expanded={accountOpen}
                 aria-controls="driver-account-menu"
                 aria-label="Menu tài khoản"
-                className="flex min-h-12 shrink-0 items-center gap-3 rounded-xl px-1 text-left sm:pr-3"
+                className="flex min-h-12 shrink-0 items-center gap-3 rounded-xl px-2 py-1.5 text-left transition-colors hover:bg-white/5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-orange sm:pr-3"
               >
-                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/10 text-sm font-bold">
-                  {initials}
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-brand-orange/30 bg-brand-orange/10 font-sora text-sm font-semibold text-brand-orange">
+                  {profile?.fullName?.trim() ? initials : <User size={20} aria-hidden="true" />}
                 </span>
                 <span className="hidden w-36 min-w-0 sm:block">
-                  <span className="block truncate text-[15px] font-semibold leading-6">
+                  <span title={identity.name} className="block truncate font-sora text-[13px] font-semibold leading-6">
                     {identity.name}
                   </span>
-                  <span className="block whitespace-nowrap text-sm leading-5 text-slate-400">
-                    {identity.phone || 'Tài khoản tài xế'}
+                  <span className="flex items-center gap-1.5 text-xs leading-5 text-slate-300">
+                    <Truck size={12} className="text-brand-orange" aria-hidden="true" />Tài xế
                   </span>
                 </span>
                 <ChevronDown
@@ -147,6 +138,7 @@ export function DriverHeader() {
                   >
                     <p className="truncate border-b border-brand-border px-3 py-4 font-semibold">
                       {identity.name}
+                      <span className="mt-1 block text-xs font-normal text-brand-muted">Tài xế · Tài khoản cá nhân</span>
                     </p>
                     <Link
                       to="/profile"
