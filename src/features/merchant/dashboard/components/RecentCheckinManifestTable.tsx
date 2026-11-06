@@ -75,7 +75,7 @@ export function RecentCheckinManifestTable({ checkins }: RecentCheckinManifestTa
               <th className="px-4 font-bold">Loại Xe / Slot</th>
               <th className="px-4 font-bold">Cổng Vào</th>
               <th className="px-4 font-bold">Giờ Check-in</th>
-              <th className="px-4 font-bold">Cọc Giữ Chỗ</th>
+              <th className="px-4 font-bold text-right">Cọc Giữ Chỗ</th>
               <th className="px-4 font-bold text-right rounded-r-xl">Trạng Thái Vận Hành</th>
             </tr>
           </thead>
@@ -118,7 +118,7 @@ export function RecentCheckinManifestTable({ checkins }: RecentCheckinManifestTa
                 <td className="px-4 font-mono text-slate-700 font-semibold">{item.checkinTimeText}</td>
 
                 {/* Deposit */}
-                <td className="px-4 font-mono font-bold text-[#0d1c2e]">
+                <td className="px-4 font-mono font-bold text-[#0d1c2e] text-right tabular-nums">
                   {formatCurrency(item.depositAmount)}
                 </td>
 

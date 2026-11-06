@@ -21,12 +21,14 @@ import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import type { ReactNode } from 'react'
 import { getData, sendData } from '@/shared/api/resources'
 import { MerchantScannerPage } from './ScannerPage'
+import { MerchantBookingsPage } from './BookingsPages'
 import { MerchantWithdrawalsPage } from './FinancePages'
 import { RequireRole, sessionRole } from '@/features/auth'
 import { DecisionDialog } from '@/features/admin'
 import { DisputesPage } from '@/features/disputes'
 import { vehicleTypes } from '@/entities/operations'
 import { MerchantLotPage } from './LotPages'
+import { PortalNotificationsPage } from '@/features/portal/AccountPages'
 
 vi.mock('@/shared/api/resources', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@/shared/api/resources')>()),
@@ -152,6 +154,41 @@ describe('Gate settlement contract', () => {
         '/api/v1/merchant/confirm-cash',
         { bookingCode: 'BK-001', parkingLotId: 12 },
       ),
+    )
+  })
+  it('prevents duplicate submissions on cash settlement confirmation while mutation is pending', async () => {
+    let resolveCash!: (value: null) => void
+    const pendingCashPromise = new Promise<null>((resolve) => {
+      resolveCash = resolve
+    })
+    send
+      .mockResolvedValueOnce({
+        bookingCode: 'BK-002',
+        totalAmount: 100000,
+        advanceDeposit: 30000,
+        amountDue: 70000,
+        parkingMinutes: 120,
+        bookingStatus: 'AWAITING_FINAL_PAYMENT',
+      })
+      .mockReturnValueOnce(pendingCashPromise)
+    show(<MerchantScannerPage />, '/?code=BK-002&lot=12')
+    await screen.findByText('Bãi kiểm thử')
+    fireEvent.click(screen.getByRole('button', { name: 'XE RA' }))
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Kiểm tra & quyết toán xe ra' }),
+    )
+    expect(await screen.findByText('Quyết toán lượt đỗ')).toBeInTheDocument()
+    const confirmCashBtn = screen.getByRole('button', { name: /Đã nhận đủ tiền mặt/ })
+    fireEvent.click(confirmCashBtn)
+    await waitFor(() => expect(confirmCashBtn).toBeDisabled())
+    expect(confirmCashBtn).toHaveAttribute('aria-busy', 'true')
+    fireEvent.click(confirmCashBtn)
+    expect(send).toHaveBeenCalledTimes(2)
+    resolveCash(null)
+    await waitFor(() =>
+      expect(
+        screen.getByText('Đã xác nhận thu tiền mặt và trả chỗ thành công.'),
+      ).toBeInTheDocument(),
     )
   })
   it('surfaces backend errors without marking a vehicle admitted', async () => {
@@ -373,5 +410,81 @@ describe('Finance, disputes and lot configuration', () => {
     await waitFor(() =>
       expect(screen.getByText('Đã lưu cấu hình thành công.')).toBeInTheDocument(),
     )
+  })
+})
+
+describe('Merchant bookings dispatch and notifications center', () => {
+  it('filters merchant bookings by operational status and displays right-aligned deposit', async () => {
+    get.mockResolvedValue({
+      content: [
+        {
+          id: 101,
+          bookingCode: 'BK-101',
+          vehicleLicensePlate: '29A-12345',
+          parkingLotName: 'Bãi xe Trung Tâm',
+          expectedCheckInTime: '2026-11-06T10:00:00Z',
+          advanceDeposit: 50000,
+          status: 'PENDING_CHECKIN',
+        },
+        {
+          id: 102,
+          bookingCode: 'BK-102',
+          vehicleLicensePlate: '51B-99999',
+          parkingLotName: 'Bãi xe Miền Đông',
+          expectedCheckInTime: '2026-11-06T11:00:00Z',
+          advanceDeposit: 80000,
+          status: 'PARKING',
+        },
+      ],
+      totalPages: 1,
+      totalElements: 2,
+    })
+    show(<MerchantBookingsPage />)
+    expect(await screen.findByText('BK-101')).toBeInTheDocument()
+    expect(screen.getByText('BK-102')).toBeInTheDocument()
+
+    // Test status filter tabs
+    const parkingTab = screen.getByRole('tab', { name: /Đang đỗ xe/i })
+    fireEvent.click(parkingTab)
+    expect(screen.queryByText('BK-101')).not.toBeInTheDocument()
+    expect(screen.getByText('BK-102')).toBeInTheDocument()
+
+    // Switch back to All
+    const allTab = screen.getByRole('tab', { name: /Tất cả trạng thái/i })
+    fireEvent.click(allTab)
+    expect(screen.getByText('BK-101')).toBeInTheDocument()
+    expect(screen.getByText('BK-102')).toBeInTheDocument()
+  })
+
+  it('prevents double-click when marking all notifications as read', async () => {
+    let resolveRead!: (value: null) => void
+    const pendingReadPromise = new Promise<null>((resolve) => {
+      resolveRead = resolve
+    })
+    get.mockResolvedValue({
+      content: [
+        {
+          id: 1,
+          title: 'Booking mới',
+          content: 'Tài xế đã đặt chỗ thành công',
+          type: 'BOOKING',
+          readAt: null,
+          createdAt: '2026-11-06T09:00:00Z',
+        },
+      ],
+      totalPages: 1,
+      totalElements: 1,
+    })
+    send.mockReturnValue(pendingReadPromise)
+    show(<PortalNotificationsPage />)
+    expect(await screen.findByText('Trung tâm thông báo')).toBeInTheDocument()
+    const markAllBtn = screen.getByRole('button', { name: 'Đánh dấu tất cả đã đọc' })
+    fireEvent.click(markAllBtn)
+    await waitFor(() => expect(markAllBtn).toBeDisabled())
+    expect(markAllBtn).toHaveAttribute('aria-busy', 'true')
+    fireEvent.click(markAllBtn)
+    expect(send).toHaveBeenCalledTimes(1)
+    resolveRead(null)
+    await waitFor(() => expect(markAllBtn).not.toBeDisabled())
   })
 })
