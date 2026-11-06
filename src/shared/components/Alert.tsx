@@ -1,11 +1,12 @@
 import React from 'react'
-import { AlertCircle, CheckCircle, Info, XCircle } from 'lucide-react'
+import { AlertCircle, CheckCircle, Info, XCircle, X } from 'lucide-react'
 import { cn } from '@/shared/utils/cn'
 
 export interface AlertProps extends React.HTMLAttributes<HTMLDivElement> {
   variant?: 'info' | 'success' | 'warning' | 'error'
   title?: string
   action?: React.ReactNode
+  onClose?: () => void
 }
 
 export function Alert({
@@ -13,6 +14,7 @@ export function Alert({
   variant = 'info',
   title,
   action,
+  onClose,
   children,
   ...props
 }: AlertProps) {
@@ -36,18 +38,28 @@ export function Alert({
     <div
       role="alert"
       className={cn(
-        'relative w-full rounded-lg border p-4 flex items-start gap-3 text-sm',
+        'relative w-full rounded-xl border p-4 flex items-start gap-3 text-sm',
         styles[variant],
         className
       )}
       {...props}
     >
       <Icon className="h-5 w-5 shrink-0 mt-0.5" aria-hidden="true" />
-      <div className="flex-1">
-        {title && <h5 className="font-semibold mb-1 leading-none tracking-tight">{title}</h5>}
+      <div className="flex-1 min-w-0">
+        {title && <h5 className="font-semibold mb-1 leading-snug tracking-tight">{title}</h5>}
         <div className="text-sm opacity-90 leading-relaxed">{children}</div>
       </div>
       {action && <div className="shrink-0">{action}</div>}
+      {onClose && (
+        <button
+          type="button"
+          onClick={onClose}
+          aria-label="Đóng thông báo"
+          className="shrink-0 p-1 text-slate-400 hover:text-slate-700 rounded-lg hover:bg-black/5 transition-colors cursor-pointer"
+        >
+          <X className="w-4 h-4" />
+        </button>
+      )}
     </div>
   )
 }

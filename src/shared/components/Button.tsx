@@ -5,6 +5,8 @@ export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElemen
   variant?: 'primary' | 'secondary' | 'outline' | 'ghost' | 'danger'
   size?: 'sm' | 'md' | 'lg'
   isLoading?: boolean
+  leftIcon?: React.ReactNode
+  rightIcon?: React.ReactNode
 }
 
 export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
@@ -15,6 +17,8 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       size = 'md',
       isLoading = false,
       disabled,
+      leftIcon,
+      rightIcon,
       children,
       ...props
     },
@@ -22,42 +26,46 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   ) => {
     const variantStyles = {
       primary:
-        'bg-[#F97316] hover:bg-[#EA580C] text-white shadow-sm focus-visible:ring-[#F97316]',
+        'bg-[#d95f00] hover:bg-[#b84e00] active:bg-[#9e4300] text-white shadow-xs focus-visible:ring-[#d95f00]/40 active:scale-[0.99]',
       secondary:
-        'bg-[#0F172A] hover:bg-[#1E293B] text-slate-200 border border-[#1E3A5F] focus-visible:ring-slate-400',
+        'bg-slate-100 hover:bg-slate-200 active:bg-slate-300 text-slate-800 border border-slate-200 focus-visible:ring-slate-400 active:scale-[0.99]',
       outline:
-        'bg-transparent hover:bg-slate-100 text-slate-800 border border-slate-300 focus-visible:ring-slate-400',
+        'bg-transparent hover:bg-slate-50 active:bg-slate-100 text-slate-800 border border-slate-300 focus-visible:ring-slate-400 active:scale-[0.99]',
       ghost:
-        'bg-transparent hover:bg-slate-100 text-slate-700 focus-visible:ring-slate-400',
+        'bg-transparent hover:bg-slate-100 active:bg-slate-200 text-slate-700 focus-visible:ring-slate-400',
       danger:
-        'bg-red-600 hover:bg-red-700 text-white focus-visible:ring-red-600',
+        'bg-rose-600 hover:bg-rose-700 active:bg-rose-800 text-white shadow-xs focus-visible:ring-rose-500 active:scale-[0.99]',
     }
 
     const sizeStyles = {
-      sm: 'text-xs px-3 py-1.5 rounded',
-      md: 'text-sm px-5 py-2.5 rounded-lg',
-      lg: 'text-base px-7 py-3.5 rounded-lg font-semibold',
+      sm: 'h-8 px-3 text-xs rounded-lg gap-1.5',
+      md: 'h-10 px-4 text-sm font-semibold rounded-xl gap-2',
+      lg: 'h-12 px-6 text-base font-bold rounded-xl gap-2.5',
     }
 
     return (
       <button
         ref={ref}
         disabled={disabled || isLoading}
+        aria-busy={isLoading}
         className={cn(
-          'inline-flex items-center justify-center font-medium transition-all cursor-pointer select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none',
+          'inline-flex items-center justify-center font-medium transition-all cursor-pointer select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:pointer-events-none',
           variantStyles[variant],
           sizeStyles[size],
           className
         )}
         {...props}
       >
-        {isLoading && (
+        {isLoading ? (
           <span
-            className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent"
+            className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent shrink-0"
             aria-hidden="true"
           />
-        )}
+        ) : leftIcon ? (
+          <span className="shrink-0">{leftIcon}</span>
+        ) : null}
         {children}
+        {!isLoading && rightIcon ? <span className="shrink-0">{rightIcon}</span> : null}
       </button>
     )
   }

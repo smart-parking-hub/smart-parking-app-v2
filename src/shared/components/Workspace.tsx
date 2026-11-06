@@ -1,11 +1,12 @@
 import { useEffect, useId, useRef, useState, type ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import { AlertCircle, ArrowLeft, ArrowRight, Search, X } from 'lucide-react'
+import { cn } from '@/shared/utils/cn'
 
 export const control =
-  'w-full rounded-xl border border-brand-border bg-white px-3 py-3 text-sm text-brand-navy outline-none focus:ring-2 focus:ring-brand-orange disabled:opacity-50'
+  'w-full rounded-xl border border-brand-border bg-white px-3 py-3 text-sm text-brand-navy outline-none focus:ring-2 focus:ring-brand-primary disabled:opacity-50'
 export const button =
-  'inline-flex items-center justify-center gap-2 rounded-xl bg-brand-orange px-4 py-3 text-sm font-semibold text-brand-navy hover:bg-brand-orange-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-orange disabled:opacity-50 disabled:cursor-not-allowed'
+  'inline-flex items-center justify-center gap-2 rounded-xl bg-brand-primary px-4 py-3 text-sm font-semibold text-white hover:bg-brand-primary-hover active:bg-brand-primary-active focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-primary disabled:opacity-50 disabled:cursor-not-allowed transition-colors'
 export const secondary =
   'inline-flex items-center justify-center gap-2 rounded-xl border border-brand-border bg-white px-4 py-3 text-sm font-semibold text-brand-navy hover:bg-brand-surface disabled:opacity-50'
 export const money = (value: unknown) =>
@@ -218,6 +219,7 @@ export function Dialog({
 export interface Column<T> {
   label: string
   render: (row: T) => ReactNode
+  align?: 'left' | 'center' | 'right'
 }
 export function DataTable<T extends { id: number }>({
   rows,
@@ -269,7 +271,12 @@ export function DataTable<T extends { id: number }>({
             <tr>
               {columns.map((col) => (
                 <th
-                  className="whitespace-nowrap px-4 py-4"
+                  className={cn(
+                    'whitespace-nowrap px-4 py-4',
+                    col.align === 'right' && 'text-right',
+                    col.align === 'center' && 'text-center',
+                    (!col.align || col.align === 'left') && 'text-left'
+                  )}
                   key={col.label}
                   scope="col"
                 >
@@ -287,7 +294,14 @@ export function DataTable<T extends { id: number }>({
             {shown.map((row) => (
               <tr key={row.id} className="hover:bg-brand-surface/50">
                 {columns.map((col) => (
-                  <td className="max-w-md px-4 py-5" key={col.label}>
+                  <td
+                    className={cn(
+                      'max-w-md px-4 py-5',
+                      col.align === 'right' && 'text-right',
+                      col.align === 'center' && 'text-center'
+                    )}
+                    key={col.label}
+                  >
                     {col.render(row)}
                   </td>
                 ))}
