@@ -198,6 +198,84 @@ describe('Finance, disputes and lot configuration', () => {
       screen.getByRole('button', { name: '+ Yêu cầu rút tiền' }),
     ).toBeDisabled()
   })
+  it('disables withdrawal button with explanation when wallet balance < 50000', async () => {
+    get.mockImplementation(async (url) => {
+      if (url === '/api/v1/merchant/revenue') {
+        return {
+          currentWalletBalance: 20000,
+          totalNetRevenue: 20000,
+          minWithdrawalAmount: 50000,
+          totalGrossRevenue: 22000,
+          totalPlatformFee: 2000,
+          completedBookings: 1,
+        }
+      }
+      return page
+    })
+    show(<MerchantWithdrawalsPage />)
+    await screen.findByText('Số dư khả dụng')
+    const btn = await screen.findByRole('button', { name: '+ Yêu cầu rút tiền' })
+    expect(btn).toBeDisabled()
+    expect(btn).toHaveAttribute('title', expect.stringContaining('50.000'))
+    expect(await screen.findByText(/chưa đạt hạn mức tối thiểu/i)).toBeInTheDocument()
+  })
+  it('enables withdrawal button when wallet balance >= 50000 and opens dialog with quick select', async () => {
+    get.mockImplementation(async (url) => {
+      if (url === '/api/v1/merchant/revenue') {
+        return {
+          currentWalletBalance: 500000,
+          totalNetRevenue: 500000,
+          minWithdrawalAmount: 50000,
+          totalGrossRevenue: 550000,
+          totalPlatformFee: 50000,
+          completedBookings: 10,
+        }
+      }
+      if (url === '/api/v1/merchant/profile') {
+        return {
+          bankName: 'Vietcombank',
+          bankAccountNum: '0123456789',
+          fullName: 'NGUYEN VAN TEST',
+        }
+      }
+      return page
+    })
+    send.mockResolvedValue(null)
+    show(<MerchantWithdrawalsPage />)
+    await screen.findByText('Số dư khả dụng')
+    const btn = await screen.findByRole('button', { name: '+ Yêu cầu rút tiền' })
+    expect(btn).not.toBeDisabled()
+    fireEvent.click(btn)
+
+    expect(await screen.findByText('Tạo yêu cầu rút tiền')).toBeInTheDocument()
+    const minBtn = screen.getByRole('button', { name: /Tối thiểu/i })
+    fireEvent.click(minBtn)
+    expect(screen.getByLabelText('Số tiền rút (VND)')).toHaveValue(50000)
+
+    const maxBtn = screen.getByRole('button', { name: /Toàn bộ/i })
+    fireEvent.click(maxBtn)
+    expect(screen.getByLabelText('Số tiền rút (VND)')).toHaveValue(500000)
+
+    fireEvent.change(screen.getByLabelText('Ngân hàng nhận'), {
+      target: { value: 'Vietcombank' },
+    })
+    fireEvent.change(screen.getByLabelText('Số tài khoản thụ hưởng'), {
+      target: { value: '0123456789' },
+    })
+    fireEvent.change(screen.getByLabelText('Tên chủ tài khoản'), {
+      target: { value: 'NGUYEN VAN TEST' },
+    })
+
+    fireEvent.click(screen.getByRole('button', { name: 'Gửi yêu cầu phê duyệt' }))
+    await waitFor(() =>
+      expect(send).toHaveBeenCalledWith('post', '/api/v1/withdrawals', {
+        amount: 500000,
+        bankName: 'Vietcombank',
+        bankAccountNumber: '0123456789',
+        accountHolderName: 'NGUYEN VAN TEST',
+      }),
+    )
+  })
   it('renders a driver complaint list with an empty state', async () => {
     get.mockResolvedValue({ ...page, content: [], totalElements: 0 })
     show(<DisputesPage role="driver" />)
@@ -241,5 +319,59 @@ describe('Finance, disputes and lot configuration', () => {
         overtimePenaltyMultiplier: 1,
       })),
     })
+  })
+  it('enforces occupied invariant and right-aligned input in SlotEditor', async () => {
+    get.mockResolvedValue({
+      id: 12,
+      name: 'Bãi kiểm thử sức chứa',
+      status: 'APPROVED',
+      slots: [
+        { id: 1, vehicleType: 'CONTAINER', totalCapacity: 30, availableCapacity: 5 },
+      ],
+      pricingRules: [],
+    })
+    send.mockResolvedValue(null)
+    show(
+      <Routes>
+        <Route path="/lots/:id" element={<MerchantLotPage mode="slots" />} />
+      </Routes>,
+      '/lots/12',
+    )
+    await screen.findByText('Phân bổ chỗ đỗ')
+    expect(await screen.findByText(/Đang đỗ thực tế:/i)).toBeInTheDocument()
+    expect(screen.getByText('25')).toBeInTheDocument()
+    const containerInput = screen.getByLabelText(/Tổng sức chứa \(min: 25\)/i)
+    expect(containerInput).toHaveAttribute('min', '25')
+  })
+  it('prevents duplicate submissions in pricing editor while request is pending', async () => {
+    let resolveMutation!: (value: null) => void
+    const pendingPromise = new Promise<null>((resolve) => {
+      resolveMutation = resolve
+    })
+    get.mockResolvedValue({
+      id: 12,
+      name: 'Bãi',
+      status: 'APPROVED',
+      slots: [],
+      pricingRules: [],
+    })
+    send.mockReturnValue(pendingPromise)
+    show(
+      <Routes>
+        <Route path="/lots/:id" element={<MerchantLotPage mode="pricing" />} />
+      </Routes>,
+      '/lots/12',
+    )
+    await screen.findByText('Biểu phí cho 5 loại phương tiện')
+    const submitBtn = screen.getByRole('button', { name: 'Lưu thay đổi' })
+    fireEvent.click(submitBtn)
+    await waitFor(() => expect(submitBtn).toBeDisabled())
+    expect(submitBtn).toHaveTextContent(/Đang lưu/i)
+    fireEvent.click(submitBtn)
+    expect(send).toHaveBeenCalledTimes(1)
+    resolveMutation(null)
+    await waitFor(() =>
+      expect(screen.getByText('Đã lưu cấu hình thành công.')).toBeInTheDocument(),
+    )
   })
 })

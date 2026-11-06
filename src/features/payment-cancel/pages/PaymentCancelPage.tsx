@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import type { PendingTicketDto } from '../types/paymentCancelTypes'
 import {
@@ -30,6 +30,13 @@ export function PaymentCancelPage() {
   const [toastMessage, setToastMessage] = useState<string | null>(null)
 
   const isExpired = remainingSeconds <= 0
+  const mountedRef = useRef(true)
+
+  useEffect(() => {
+    return () => {
+      mountedRef.current = false
+    }
+  }, [])
 
   const formatTime = useCallback((sec: number) => {
     const safeSec = Math.max(0, sec)
@@ -98,7 +105,7 @@ export function PaymentCancelPage() {
         }, 800)
       }
     } finally {
-      setTimeout(() => setIsRepaying(false), 1200)
+      setTimeout(() => { if (mountedRef.current) setIsRepaying(false) }, 1200)
     }
   }
 

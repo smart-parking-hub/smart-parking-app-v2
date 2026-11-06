@@ -66,7 +66,7 @@ export function MerchantSlotCard({
     <article
       data-vehicle={item.vehicleType}
       data-occupied={occupied}
-      className={`p-5 lg:p-6 rounded-2xl bg-white border border-slate-200/80 shadow-xs flex flex-col lg:flex-row lg:items-center justify-between gap-6 transition-all ${
+      className={`p-5 lg:p-6 rounded-2xl bg-white border border-slate-200/80 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-5 lg:gap-6 transition-all ${
         !isConfigured ? 'opacity-85' : ''
       }`}
     >
@@ -141,9 +141,9 @@ export function MerchantSlotCard({
       </div>
 
       {/* Cột 2: Thanh tiến trình Occupancy & Bộ Điều Khiển Stepper */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6 lg:shrink-0">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-5 sm:gap-6 md:shrink-0 w-full md:w-auto justify-between sm:justify-end">
         {/* Thanh tỷ lệ lấp đầy */}
-        <div className="w-full sm:w-56 flex flex-col gap-1.5">
+        <div className="w-full sm:w-52 lg:w-56 flex flex-col gap-1.5">
           <div className="flex justify-between font-mono text-xs">
             <span className="text-slate-600">
               Đang đỗ: <strong className="text-slate-900 font-bold">{occupied}</strong> /{' '}
@@ -205,7 +205,7 @@ export function MerchantSlotCard({
               onClick={handleStepDown}
               disabled={disabled || draftCapacity <= occupied}
               aria-label={`Giảm sức chứa ${item.typeNameVi}`}
-              className="w-9 h-9 rounded-lg bg-white text-slate-800 hover:bg-slate-200 transition-colors flex items-center justify-center font-bold disabled:opacity-35 disabled:hover:bg-white cursor-pointer"
+              className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-white text-slate-800 hover:bg-slate-200 transition-colors flex items-center justify-center font-bold disabled:opacity-35 disabled:hover:bg-white disabled:cursor-not-allowed disabled:pointer-events-none cursor-pointer"
             >
               <Minus className="w-4 h-4" />
             </button>
@@ -217,7 +217,7 @@ export function MerchantSlotCard({
               value={draftCapacity}
               onChange={handleInputChange}
               disabled={disabled}
-              className="w-20 text-center font-sora text-lg font-bold bg-transparent text-slate-900 focus:outline-none"
+              className="w-20 text-center font-sora text-lg font-bold bg-transparent text-slate-900 focus:outline-none tabular-nums font-mono"
             />
 
             <button
@@ -225,7 +225,7 @@ export function MerchantSlotCard({
               onClick={handleStepUp}
               disabled={disabled || draftCapacity >= item.maxAllowed}
               aria-label={`Tăng sức chứa ${item.typeNameVi}`}
-              className="w-9 h-9 rounded-lg bg-white text-slate-800 hover:bg-slate-200 transition-colors flex items-center justify-center font-bold disabled:opacity-35 disabled:hover:bg-white cursor-pointer"
+              className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-white text-slate-800 hover:bg-slate-200 transition-colors flex items-center justify-center font-bold disabled:opacity-35 disabled:hover:bg-white disabled:cursor-not-allowed disabled:pointer-events-none cursor-pointer"
             >
               <Plus className="w-4 h-4" />
             </button>
