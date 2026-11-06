@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import { X, ShieldCheck, Printer, CheckCircle2, FileText, Cpu, Truck, Zap, Thermometer } from 'lucide-react'
 import type { VehicleItem } from '../types/vehicleTypes'
 
@@ -12,6 +13,22 @@ export function ViewInspectionDossierModal({
   isOpen,
   onClose,
 }: ViewInspectionDossierModalProps) {
+  useEffect(() => {
+    if (!isOpen) return
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onClose()
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    const originalOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown)
+      document.body.style.overflow = originalOverflow
+    }
+  }, [isOpen, onClose])
+
   if (!isOpen || !vehicle) return null
 
   const handlePrint = () => {
@@ -19,7 +36,12 @@ export function ViewInspectionDossierModal({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs">
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="inspection-dossier-modal-title"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs"
+    >
       <div className="bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-2xl max-h-[90vh] overflow-y-auto flex flex-col animate-in fade-in zoom-in-95 duration-150">
         {/* Header */}
         <div className="p-5 border-b border-slate-200 flex items-center justify-between bg-slate-50 sticky top-0 z-10">
@@ -29,7 +51,7 @@ export function ViewInspectionDossierModal({
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h3 className="font-sora font-bold text-slate-900 text-lg">
+                <h3 id="inspection-dossier-modal-title" className="font-sora font-bold text-slate-900 text-lg">
                   Hồ Sơ Kỹ Thuật &amp; Kiểm Định
                 </h3>
                 <span className="font-mono text-xs font-bold px-2 py-0.5 rounded bg-orange-100 text-orange-800">

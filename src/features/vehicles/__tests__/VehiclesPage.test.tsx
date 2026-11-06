@@ -310,4 +310,65 @@ describe('SCR-020 VehiclesPage (Quản Lý Phương Tiện Của Tôi)', () => {
 
     expect(screen.getByText('Thiết Lập Thông Báo Hệ Thống')).toBeInTheDocument()
   })
+
+  it('closes modals (Export, Register) when pressing Escape key (TSK-P2-02 A11y)', async () => {
+    const user = userEvent.setup()
+    render(
+      <MemoryRouter>
+        <VehiclesPage />
+      </MemoryRouter>,
+    )
+
+    await waitFor(() => {
+      expect(screen.getByText('Quản Lý Phương Tiện Của Tôi')).toBeInTheDocument()
+    })
+
+    // Test Export modal Escape
+    const exportBtn = screen.getByRole('button', { name: /XUẤT DANH SÁCH ĐỘI XE/i })
+    await user.click(exportBtn)
+    expect(screen.getByText('Xuất Báo Cáo Đội Xe')).toBeInTheDocument()
+    await user.keyboard('{Escape}')
+    await waitFor(() => {
+      expect(screen.queryByText('Xuất Báo Cáo Đội Xe')).not.toBeInTheDocument()
+    })
+
+    // Test Register modal Escape
+    const registerBtn = screen.getByRole('button', { name: /\+ ĐĂNG KÝ PHƯƠNG TIỆN MỚI/i })
+    await user.click(registerBtn)
+    expect(screen.getByText('Khai Báo Hồ Sơ Vận Hành')).toBeInTheDocument()
+    await user.keyboard('{Escape}')
+    await waitFor(() => {
+      expect(screen.queryByText('Khai Báo Hồ Sơ Vận Hành')).not.toBeInTheDocument()
+    })
+  })
+
+  it('exports fleet list as UTF-8 BOM CSV with proper columns (TSK-P1-01 / APP-03)', async () => {
+    const user = userEvent.setup()
+    render(
+      <MemoryRouter>
+        <VehiclesPage />
+      </MemoryRouter>,
+    )
+
+    await waitFor(() => {
+      expect(screen.getByText('XUẤT DANH SÁCH ĐỘI XE')).toBeInTheDocument()
+    })
+
+    const exportBtn = screen.getByRole('button', { name: /XUẤT DANH SÁCH ĐỘI XE/i })
+    await user.click(exportBtn)
+
+    expect(screen.getByText('Xuất Báo Cáo Đội Xe')).toBeInTheDocument()
+
+    // Select CSV format
+    const csvBtn = screen.getByRole('button', { name: /CSV Data/i })
+    await user.click(csvBtn)
+
+    // Trigger download
+    const downloadBtn = screen.getByRole('button', { name: /Tải Về Ngay/i })
+    await user.click(downloadBtn)
+
+    await waitFor(() => {
+      expect(screen.getByText(/Tệp danh sách phương tiện đã tải xuống thành công!/i)).toBeInTheDocument()
+    })
+  })
 })

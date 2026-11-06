@@ -1,6 +1,12 @@
-import { useState } from 'react'
-import { X, FileSpreadsheet, FileText, Download, CheckCircle2 } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { X, FileSpreadsheet, FileText, Download, CheckCircle2, Loader2 } from 'lucide-react'
 import type { VehicleItem } from '../types/vehicleTypes'
+import {
+  generateCsvContent,
+  getFormattedDateForFilename,
+  downloadFile,
+  type CsvColumn,
+} from '@/shared/utils/exportToCsvUtil'
 
 interface ExportFleetModalProps {
   vehicles: VehicleItem[]
@@ -14,26 +20,77 @@ export function ExportFleetModal({ vehicles, isOpen, onClose }: ExportFleetModal
   const [isExporting, setIsExporting] = useState(false)
   const [exportDone, setExportDone] = useState(false)
 
+  useEffect(() => {
+    if (!isOpen) return
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && !isExporting) {
+        onClose()
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    const originalOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown)
+      document.body.style.overflow = originalOverflow
+    }
+  }, [isOpen, isExporting, onClose])
+
   if (!isOpen) return null
 
   const handleExport = () => {
+    if (isExporting) return
     setIsExporting(true)
     setTimeout(() => {
       setIsExporting(false)
       setExportDone(true)
 
-      // Simulate download safely across browser & test environments
-      if (typeof window !== 'undefined' && typeof window.URL?.createObjectURL === 'function') {
-        const filename = `Danh_Sach_Doi_Xe_SmartTruckHub_${new Date().toISOString().slice(0, 10)}.${
-          format === 'excel' ? 'xlsx' : format === 'pdf' ? 'pdf' : 'csv'
+      const columns: CsvColumn<VehicleItem>[] = [
+        { header: 'Mã Số', accessor: 'id' },
+        { header: 'Biển Số', accessor: 'licensePlate' },
+        { header: 'Phân Loại', accessor: 'vehicleClassLabel' },
+        { header: 'Nhãn Hiệu / Model', accessor: 'brandModel' },
+        { header: 'Cấu Hình Trục', accessor: 'axleConfig' },
+        { header: 'Tự Trọng (Tấn)', accessor: 'curbWeightTon' },
+        { header: 'Tải Trọng Kéo Theo (Tấn)', accessor: 'towingWeightTon' },
+        { header: 'Hạn Đăng Kiểm', accessor: 'inspectionExpiryDate' },
+        { header: 'Số Bảo Hiểm TNDS', accessor: 'insuranceNumber' },
+        {
+          header: 'Đồng Bộ ALPR',
+          accessor: (v) => (v.alprSyncStatus === 'SYNCED' ? 'Đã kích hoạt' : 'Chờ kích hoạt'),
+        },
+        { header: 'Mặc Định Vận Hành', accessor: (v) => (v.isDefault ? 'Có' : 'Không') },
+        {
+          header: 'Trạng Thái',
+          accessor: (v) =>
+            v.status === 'ACTIVE' ? 'Hoạt Động' : v.status === 'LOCKED' ? 'Tạm Khóa' : 'Chờ Duyệt',
+        },
+      ]
+
+      if (includeRegistryDossier) {
+        columns.push(
+          { header: 'Thời Hạn Còn Lại', accessor: 'inspectionRemainingText' },
+          { header: 'Chi Tiết Kỹ Thuật', accessor: 'specDetails' },
+        )
+      }
+
+      if (format === 'csv' || format === 'excel') {
+        const csvContent = generateCsvContent(vehicles, columns)
+        const filename = `SmartTruck_DoiXe_${getFormattedDateForFilename()}.${
+          format === 'excel' ? 'xlsx' : 'csv'
         }`
-        const blob = new Blob([JSON.stringify(vehicles, null, 2)], { type: 'text/plain' })
-        const url = window.URL.createObjectURL(blob)
-        const link = document.createElement('a')
-        link.href = url
-        link.download = filename
-        link.click()
-        window.URL.revokeObjectURL(url)
+        downloadFile(csvContent, filename)
+      } else {
+        const pdfContent =
+          `DANH SÁCH ĐỘI XE SMARTTRUCK\nNgày xuất: ${new Date().toLocaleDateString('vi-VN')}\nTổng số xe: ${vehicles.length}\n\n` +
+          vehicles
+            .map(
+              (v, i) =>
+                `${i + 1}. [${v.licensePlate}] - ${v.brandModel} (${v.vehicleClassLabel}) | Hạn kiểm định: ${v.inspectionExpiryDate}`,
+            )
+            .join('\n')
+        const filename = `SmartTruck_DoiXe_${getFormattedDateForFilename()}.pdf`
+        downloadFile(pdfContent, filename, 'application/pdf')
       }
 
       setTimeout(() => {
@@ -44,7 +101,12 @@ export function ExportFleetModal({ vehicles, isOpen, onClose }: ExportFleetModal
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs">
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="export-fleet-modal-title"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs"
+    >
       <div className="bg-white rounded-2xl shadow-xl border border-slate-200 w-full max-w-md overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-150">
         {/* Header */}
         <div className="p-4 sm:p-5 border-b border-slate-200 flex items-center justify-between bg-slate-50">
@@ -53,7 +115,7 @@ export function ExportFleetModal({ vehicles, isOpen, onClose }: ExportFleetModal
               <Download className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="font-sora font-bold text-slate-900 text-base sm:text-lg">
+              <h3 id="export-fleet-modal-title" className="font-sora font-bold text-slate-900 text-base sm:text-lg">
                 Xuất Báo Cáo Đội Xe
               </h3>
               <p className="text-xs font-mono text-slate-500">{vehicles.length} PHƯƠNG TIỆN ĐÃ CHỌN</p>
@@ -62,6 +124,7 @@ export function ExportFleetModal({ vehicles, isOpen, onClose }: ExportFleetModal
           <button
             type="button"
             onClick={onClose}
+            aria-label="Đóng"
             className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-200/60 transition-colors"
           >
             <X className="w-5 h-5" />
@@ -152,10 +215,15 @@ export function ExportFleetModal({ vehicles, isOpen, onClose }: ExportFleetModal
           <button
             type="button"
             disabled={isExporting}
+            aria-busy={isExporting}
             onClick={handleExport}
-            className="px-4 py-2 rounded-xl bg-orange-600 hover:bg-orange-700 text-white text-xs font-semibold shadow-xs transition-colors flex items-center gap-1.5 disabled:opacity-50"
+            className="px-4 py-2 rounded-xl bg-orange-600 hover:bg-orange-700 text-white text-xs font-semibold shadow-xs transition-colors flex items-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            <Download className="w-4 h-4" />
+            {isExporting ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              <Download className="w-4 h-4" />
+            )}
             <span>{isExporting ? 'Đang xuất...' : 'Tải Về Ngay'}</span>
           </button>
         </div>
