@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, screen, waitFor } from '@testing-library/react'
+import { render, screen, waitFor, fireEvent } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
@@ -236,6 +236,58 @@ describe('SCR-028: MerchantParkingLotsPage (Danh mục bãi đỗ xe sở hữu)
 
     const closeBtn = screen.getByRole('button', { name: 'Đóng' })
     await user.click(closeBtn)
+
+    await waitFor(() => {
+      expect(screen.queryByText('Xuất Báo Cáo Mặt Bằng Bãi Đỗ')).not.toBeInTheDocument()
+    })
+  })
+
+  it('downloads real CSV report file with UTF-8 BOM when clicking Tải Báo Cáo (TSK-P1-01 / APP-07)', async () => {
+    const user = userEvent.setup()
+    const mockCreateObjectURL = vi.fn().mockReturnValue('blob:mock-csv-report')
+    const mockRevokeObjectURL = vi.fn()
+    window.URL.createObjectURL = mockCreateObjectURL
+    window.URL.revokeObjectURL = mockRevokeObjectURL
+
+    const originalClick = HTMLAnchorElement.prototype.click
+    HTMLAnchorElement.prototype.click = vi.fn()
+
+    renderMerchantParkingLots()
+
+    await waitFor(() => {
+      expect(screen.getByText('Xuất Báo Cáo Mặt Bằng')).toBeInTheDocument()
+    })
+
+    // Open Modal
+    await user.click(screen.getByText('Xuất Báo Cáo Mặt Bằng'))
+
+    // Choose CSV format
+    const csvBtn = screen.getByRole('button', { name: /CSV UTF-8/i })
+    await user.click(csvBtn)
+
+    // Click Download
+    const downloadBtn = screen.getByRole('button', { name: /Tải Báo Cáo \(CSV\)/i })
+    await user.click(downloadBtn)
+
+    expect(mockCreateObjectURL).toHaveBeenCalled()
+    expect(await screen.findByText('Đã Xuất File')).toBeInTheDocument()
+
+    HTMLAnchorElement.prototype.click = originalClick
+  })
+
+  it('closes Export Report Modal when pressing Escape key (TSK-P2-02 A11y)', async () => {
+    const user = userEvent.setup()
+    renderMerchantParkingLots()
+
+    await waitFor(() => {
+      expect(screen.getByText('Xuất Báo Cáo Mặt Bằng')).toBeInTheDocument()
+    })
+
+    await user.click(screen.getByText('Xuất Báo Cáo Mặt Bằng'))
+    expect(screen.getByText('Xuất Báo Cáo Mặt Bằng Bãi Đỗ')).toBeInTheDocument()
+
+    // Press Escape
+    fireEvent.keyDown(window, { key: 'Escape' })
 
     await waitFor(() => {
       expect(screen.queryByText('Xuất Báo Cáo Mặt Bằng Bãi Đỗ')).not.toBeInTheDocument()

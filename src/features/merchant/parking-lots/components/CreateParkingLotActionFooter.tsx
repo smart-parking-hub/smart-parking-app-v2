@@ -26,7 +26,7 @@ export function CreateParkingLotActionFooter({
         type="button"
         onClick={onBack}
         disabled={submitting}
-        className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-[#eff4ff] hover:bg-[#d5e3fc] text-[#0d1c2e] transition-colors text-xs sm:text-sm font-semibold flex items-center justify-center gap-2 border border-slate-200 cursor-pointer disabled:opacity-50"
+        className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-[#eff4ff] hover:bg-[#d5e3fc] text-[#0d1c2e] transition-colors text-xs sm:text-sm font-semibold flex items-center justify-center gap-2 border border-slate-200 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
       >
         <ArrowLeft className="w-4 h-4 text-slate-600" />
         <span>
@@ -45,7 +45,7 @@ export function CreateParkingLotActionFooter({
           type="button"
           onClick={onSaveDraft}
           disabled={submitting}
-          className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-white hover:bg-slate-50 text-[#0d1c2e] transition-colors text-xs sm:text-sm font-semibold flex items-center justify-center gap-2 border border-slate-200 shadow-2xs cursor-pointer"
+          className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-white hover:bg-slate-50 text-[#0d1c2e] transition-colors text-xs sm:text-sm font-semibold flex items-center justify-center gap-2 border border-slate-200 shadow-2xs cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {draftSaved ? (
             <>
@@ -79,7 +79,8 @@ export function CreateParkingLotActionFooter({
             type="button"
             onClick={onSubmit}
             disabled={submitting}
-            className="w-full sm:w-auto px-7 py-2.5 rounded-xl bg-[#d95f00] hover:bg-[#b84e00] text-white transition-all text-xs sm:text-sm font-bold shadow-xs flex items-center justify-center gap-2 cursor-pointer disabled:opacity-70"
+            aria-busy={submitting}
+            className="w-full sm:w-auto px-7 py-2.5 rounded-xl bg-[#d95f00] hover:bg-[#b84e00] text-white transition-all text-xs sm:text-sm font-bold shadow-xs flex items-center justify-center gap-2 cursor-pointer disabled:opacity-70 disabled:cursor-not-allowed disabled:pointer-events-none"
           >
             {submitting ? (
               <>

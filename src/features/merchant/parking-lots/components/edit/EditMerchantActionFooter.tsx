@@ -36,7 +36,8 @@ export function EditMerchantActionFooter({
           <button
             type="button"
             onClick={onCancel}
-            className="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-[#131b2e] font-semibold text-xs sm:text-sm transition-colors cursor-pointer border border-slate-200 shadow-2xs"
+            disabled={submitting}
+            className="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-[#131b2e] font-semibold text-xs sm:text-sm transition-colors cursor-pointer border border-slate-200 shadow-2xs disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Hủy Bỏ Thay Đổi
           </button>
@@ -44,7 +45,8 @@ export function EditMerchantActionFooter({
           <button
             type="button"
             onClick={onSaveDraft}
-            className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-[#131b2e] text-white hover:bg-slate-800 font-semibold text-xs sm:text-sm transition-colors cursor-pointer shadow-2xs"
+            disabled={submitting}
+            className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-[#131b2e] text-white hover:bg-slate-800 font-semibold text-xs sm:text-sm transition-colors cursor-pointer shadow-2xs disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <Save className="w-4 h-4 text-slate-300" />
             <span>Lưu Bản Nháp Nội Bộ</span>
@@ -54,8 +56,9 @@ export function EditMerchantActionFooter({
             id="btn-submit-review"
             type="button"
             disabled={disabled || submitting}
+            aria-busy={submitting}
             onClick={onSubmit}
-            className="px-5 py-2.5 rounded-xl bg-[#d95f00] text-white hover:bg-[#b84e00] font-bold text-xs sm:text-sm tracking-wide transition-all flex items-center gap-2 shadow-sm cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+            className="px-5 py-2.5 rounded-xl bg-[#d95f00] text-white hover:bg-[#b84e00] font-bold text-xs sm:text-sm tracking-wide transition-all flex items-center gap-2 shadow-sm cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed disabled:pointer-events-none"
           >
             {submitting ? (
               <>

@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect, useCallback } from 'react'
 import {
   Images,
   UploadCloud,
@@ -40,19 +40,41 @@ export function MerchantLotGallery({
     setLightboxIndex(index)
   }
 
-  const closeLightbox = () => {
+  const closeLightbox = useCallback(() => {
     setLightboxIndex(null)
-  }
+  }, [])
 
-  const prevImage = () => {
-    if (lightboxIndex === null) return
-    setLightboxIndex((lightboxIndex - 1 + images.length) % images.length)
-  }
+  const prevImage = useCallback(() => {
+    setLightboxIndex((curr) => (curr === null ? null : (curr - 1 + images.length) % images.length))
+  }, [images.length])
 
-  const nextImage = () => {
+  const nextImage = useCallback(() => {
+    setLightboxIndex((curr) => (curr === null ? null : (curr + 1) % images.length))
+  }, [images.length])
+
+  // A11y: Escape Key, Arrow Navigation & Body Scroll Lock
+  useEffect(() => {
     if (lightboxIndex === null) return
-    setLightboxIndex((lightboxIndex + 1) % images.length)
-  }
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        closeLightbox()
+      } else if (e.key === 'ArrowLeft') {
+        prevImage()
+      } else if (e.key === 'ArrowRight') {
+        nextImage()
+      }
+    }
+
+    const originalOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    window.addEventListener('keydown', handleKeyDown)
+
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown)
+      document.body.style.overflow = originalOverflow
+    }
+  }, [lightboxIndex, closeLightbox, prevImage, nextImage])
 
   return (
     <div className="bg-white p-5 lg:p-6 rounded-2xl shadow-xs border border-slate-200/80 flex flex-col gap-4">
@@ -100,52 +122,49 @@ export function MerchantLotGallery({
           <p className="text-xs text-slate-500">Chưa có ảnh thực tế bến bãi. Hãy tải ảnh lên.</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
           {images.map((img, idx) => (
             <div
-              key={img.id}
+              key={img.id || idx}
               onClick={() => openLightbox(idx)}
-              className="relative group rounded-xl overflow-hidden bg-[#131b2e] h-52 cursor-pointer shadow-xs border border-slate-200/40"
+              className="group relative aspect-4/3 rounded-xl overflow-hidden bg-slate-100 border border-slate-200/80 cursor-pointer shadow-2xs hover:shadow-md transition-all"
             >
               <img
                 src={img.url}
                 alt={img.title}
-                className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-                loading="lazy"
+                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
               />
 
-              {/* Gradient Scrim */}
-              <div className="absolute inset-0 bg-gradient-to-t from-[#131b2e] via-transparent to-transparent opacity-80 group-hover:opacity-90 transition-opacity" />
-
               {/* Cover Badge */}
-              {img.isCover && (
-                <div className="absolute top-2.5 left-2.5 px-2 py-0.5 rounded bg-[#d95f00] text-white font-mono text-[10px] font-bold uppercase tracking-wider shadow-xs">
+              {img.isCover ? (
+                <div className="absolute top-2 left-2 px-2 py-0.5 rounded bg-[#d95f00] text-white font-mono text-[10px] font-bold uppercase tracking-wider shadow-xs">
                   Ảnh đại diện bìa
+                </div>
+              ) : (
+                <div className="absolute top-2 left-2 px-2 py-0.5 rounded-md bg-[#0d1c2e]/85 backdrop-blur-xs text-[10px] font-mono font-bold text-white uppercase tracking-wider">
+                  HẠ TẦNG
                 </div>
               )}
 
-              {/* Bottom Info & Zoom Icon */}
-              <div className="absolute bottom-2.5 left-2.5 right-2.5 flex justify-between items-end text-white">
-                <div>
-                  <div className="text-xs sm:text-sm font-bold leading-snug drop-shadow-xs">
-                    {img.title}
-                  </div>
-                  <div className="font-mono text-[11px] text-slate-200/80 drop-shadow-xs">
-                    {img.subtitle}
-                  </div>
-                </div>
-                <div className="w-7 h-7 rounded-lg bg-black/40 backdrop-blur-xs flex items-center justify-center text-[#ffdbca] group-hover:bg-[#d95f00] group-hover:text-white transition-colors">
-                  <ZoomIn className="w-4 h-4" />
-                </div>
+              {/* Hover overlay with zoom icon */}
+              <div className="absolute inset-0 bg-[#0d1c2e]/40 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center p-3 text-white text-center">
+                <ZoomIn className="w-6 h-6 mb-1 text-white" />
+                <span className="text-xs font-bold leading-tight line-clamp-1">{img.title}</span>
+                <span className="text-[10px] opacity-80 mt-0.5 line-clamp-1">{img.subtitle}</span>
               </div>
             </div>
           ))}
         </div>
       )}
 
-      {/* Lightbox Modal */}
+      {/* Lightbox Modal (A11y: Escape Key, Arrow Nav, Scroll Lock) */}
       {lightboxIndex !== null && images[lightboxIndex] && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-xs p-4 animate-in fade-in duration-200">
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-label={images[lightboxIndex].title}
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-xs p-4 animate-in fade-in duration-200"
+        >
           <div className="relative max-w-4xl w-full flex flex-col items-center">
             {/* Close Button */}
             <button

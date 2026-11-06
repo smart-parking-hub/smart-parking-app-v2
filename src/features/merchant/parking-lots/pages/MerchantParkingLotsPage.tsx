@@ -244,6 +244,7 @@ export function MerchantParkingLotsPage() {
         isOpen={exportModalOpen}
         onClose={() => setExportModalOpen(false)}
         totalLots={data.totalElements}
+        lots={data.content}
       />
     </main>
   )

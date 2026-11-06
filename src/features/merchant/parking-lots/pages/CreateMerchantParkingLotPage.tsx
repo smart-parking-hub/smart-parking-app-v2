@@ -28,23 +28,23 @@ const DRAFT_STORAGE_KEY = 'merchant_lot_registration_draft'
 // Zod Validation Schema matching Backend CreateParkingLotRequest
 const createLotFormSchema = z.object({
   name: z
-    .string()
-    .trim()
-    .min(1, 'Tên bãi đỗ không được để trống')
-    .max(150, 'Tên bãi đỗ không được vượt quá 150 ký tự'),
+  .string()
+  .trim()
+  .min(1, 'Tên bãi đỗ không được để trống')
+  .max(150, 'Tên bãi đỗ không được vượt quá 150 ký tự'),
   address: z
-    .string()
-    .trim()
-    .min(1, 'Địa chỉ bãi đỗ không được để trống')
-    .max(255, 'Địa chỉ không được vượt quá 255 ký tự'),
+  .string()
+  .trim()
+  .min(1, 'Địa chỉ bãi đỗ không được để trống')
+  .max(255, 'Địa chỉ không được vượt quá 255 ký tự'),
   latitude: z
-    .number({ invalid_type_error: 'Vui lòng nhập vĩ độ hợp lệ' })
-    .min(-90, 'Vĩ độ phải từ -90 đến 90')
-    .max(90, 'Vĩ độ phải từ -90 đến 90'),
+  .number({ invalid_type_error: 'Vui lòng nhập vĩ độ hợp lệ' })
+  .min(-90, 'Vĩ độ phải từ -90 đến 90')
+  .max(90, 'Vĩ độ phải từ -90 đến 90'),
   longitude: z
-    .number({ invalid_type_error: 'Vui lòng nhập kinh độ hợp lệ' })
-    .min(-180, 'Kinh độ phải từ -180 đến 180')
-    .max(180, 'Kinh độ phải từ -180 đến 180'),
+  .number({ invalid_type_error: 'Vui lòng nhập kinh độ hợp lệ' })
+  .min(-180, 'Kinh độ phải từ -180 đến 180')
+  .max(180, 'Kinh độ phải từ -180 đến 180'),
 })
 
 type CreateLotFormData = z.infer<typeof createLotFormSchema>
@@ -197,8 +197,9 @@ export function CreateMerchantParkingLotPage() {
     }, 3500)
   }
 
-  // Two-Phase Final Submission Handler
+  // Two-Phase Final Submission Handler (Double-Click Prevention)
   const onSubmitFinal = async (data: CreateLotFormData) => {
+    if (submitting) return
     setSubmitting(true)
     setUploadError(undefined)
 
@@ -247,7 +248,7 @@ export function CreateMerchantParkingLotPage() {
 
   // Retry Upload Handler in case of Phase 2 failure
   const handleRetryUpload = async () => {
-    if (!createdParkingLotId) return
+    if (!createdParkingLotId || submitting) return
     setSubmitting(true)
     setUploadError(undefined)
 

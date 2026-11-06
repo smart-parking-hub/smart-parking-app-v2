@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, screen, waitFor } from '@testing-library/react'
+import { render, screen, waitFor, fireEvent } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
@@ -129,6 +129,29 @@ describe('SCR-030: MerchantParkingLotDetailPage (Chi tiết hồ sơ kỹ thuậ
     // Close lightbox
     const closeBtn = screen.getByRole('button', { name: 'Đóng xem ảnh' })
     await user.click(closeBtn)
+
+    await waitFor(() => {
+      expect(screen.queryByText(/1 \/ 4/)).not.toBeInTheDocument()
+    })
+  })
+
+  it('closes lightbox on Escape key and locks body scroll (TSK-P2-02 A11y)', async () => {
+    const user = userEvent.setup()
+    renderPage(1)
+
+    await waitFor(() => {
+      expect(screen.getByText('Trạm Cổng Barie ALPR Thông Minh')).toBeInTheDocument()
+    })
+
+    const coverTitle = screen.getByText('Trạm Cổng Barie ALPR Thông Minh')
+    await user.click(coverTitle)
+
+    await waitFor(() => {
+      expect(screen.getByText(/1 \/ 4/)).toBeInTheDocument()
+    })
+
+    // Press Escape
+    fireEvent.keyDown(window, { key: 'Escape' })
 
     await waitFor(() => {
       expect(screen.queryByText(/1 \/ 4/)).not.toBeInTheDocument()

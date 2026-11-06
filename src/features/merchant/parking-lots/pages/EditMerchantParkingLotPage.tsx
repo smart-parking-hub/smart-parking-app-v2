@@ -150,8 +150,27 @@ export function EditMerchantParkingLotPage() {
     void loadData()
   }, [loadData])
 
+  // A11y: Escape Key & Scroll Lock for History Modal
+  useEffect(() => {
+    if (!showHistoryModal) return
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setShowHistoryModal(false)
+      }
+    }
+
+    const originalOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    window.addEventListener('keydown', handleKeyDown)
+
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown)
+      document.body.style.overflow = originalOverflow
+    }
+  }, [showHistoryModal])
+
   // Can edit only when CHANGES_REQUESTED or REJECTED
-  // Note: if lot is mock or newly created, default to allowing edit for demo inspection
   const canEdit = !lot || lot.status === 'CHANGES_REQUESTED' || lot.status === 'REJECTED'
 
   // Handle Save Draft
@@ -172,8 +191,9 @@ export function EditMerchantParkingLotPage() {
     setTimeout(() => setToastMessage(null), 3000)
   }
 
-  // Handle Submit Form
+  // Handle Submit Form (Double-Click Prevention)
   const onSubmit = async (data: EditParkingLotFormData) => {
+    if (submitting) return
     if (!canEdit) {
       setToastMessage('Hồ sơ bãi đỗ đang bị khóa chỉnh sửa theo quy định an toàn.')
       setTimeout(() => setToastMessage(null), 3000)
@@ -353,14 +373,19 @@ export function EditMerchantParkingLotPage() {
         </form>
       </div>
 
-      {/* History Modal */}
+      {/* History Modal (A11y: Escape Key, Scroll Lock, ARIA attributes) */}
       {showHistoryModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-2xs p-4 animate-in fade-in">
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="history-modal-title"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-2xs p-4 animate-in fade-in"
+        >
           <div className="bg-white rounded-2xl max-w-lg w-full p-6 space-y-5 shadow-2xl border border-slate-200">
             <div className="flex items-center justify-between pb-3 border-b border-slate-100">
               <div className="flex items-center gap-2 text-[#131b2e]">
                 <History className="w-5 h-5 text-[#d95f00]" />
-                <h3 className="font-sora text-base sm:text-lg font-bold">
+                <h3 id="history-modal-title" className="font-sora text-base sm:text-lg font-bold">
                   Nhật Ký Thẩm Định Mặt Bằng
                 </h3>
               </div>
@@ -368,6 +393,7 @@ export function EditMerchantParkingLotPage() {
                 type="button"
                 onClick={() => setShowHistoryModal(false)}
                 className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-700 hover:bg-slate-100 cursor-pointer"
+                aria-label="Đóng"
               >
                 <X className="w-5 h-5" />
               </button>
