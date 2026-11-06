@@ -79,10 +79,29 @@ export function DisputesPage({
               columns={[
                 {
                   label: 'Hồ sơ',
-                  render: (r) => <span className="font-mono">KN-{r.id}</span>,
+                  align: 'right',
+                  render: (r) => <span className="font-mono tabular-nums font-semibold">KN-{r.id}</span>,
                 },
-                { label: 'Booking', render: (r) => `#${r.bookingId}` },
+                {
+                  label: 'Booking',
+                  align: 'right',
+                  render: (r) => <span className="font-mono tabular-nums">#{r.bookingId}</span>,
+                },
                 { label: 'Lý do', render: (r) => r.reason },
+                {
+                  label: 'Tiền bồi thường',
+                  align: 'right',
+                  render: (r) => {
+                    const amt = (r as { amount?: number; compensationAmount?: number }).compensationAmount ?? (r as { amount?: number }).amount
+                    return (
+                      <span className="font-mono tabular-nums">
+                        {amt !== undefined && amt !== null
+                          ? `${new Intl.NumberFormat('vi-VN').format(amt)} ₫`
+                          : '—'}
+                      </span>
+                    )
+                  },
+                },
                 { label: 'Thời gian', render: (r) => date(r.createdAt) },
                 {
                   label: 'Trạng thái',

@@ -188,9 +188,19 @@ export function Dialog({
   useEffect(() => {
     const element = ref.current
     const previous = document.activeElement
-    element?.showModal()
+    if (element) {
+      element.setAttribute('open', '')
+      if (typeof element.showModal === 'function') {
+        element.showModal()
+      }
+    }
     return () => {
-      element?.close()
+      if (element) {
+        element.removeAttribute('open')
+        if (typeof element.close === 'function') {
+          element.close()
+        }
+      }
       if (previous instanceof HTMLElement) previous.focus()
     }
   }, [])

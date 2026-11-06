@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import { AlertTriangle, X, Trash2 } from 'lucide-react'
 
 interface LeaveQueueConfirmModalProps {
@@ -17,6 +18,26 @@ export function LeaveQueueConfirmModal({
   parkingLotName,
   isLeaving,
 }: LeaveQueueConfirmModalProps) {
+  // Escape key handler & body scroll lock
+  useEffect(() => {
+    if (!isOpen) return
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && !isLeaving) {
+        onClose()
+      }
+    }
+
+    const prevOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    window.addEventListener('keydown', handleKeyDown)
+
+    return () => {
+      document.body.style.overflow = prevOverflow
+      window.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [isOpen, isLeaving, onClose])
+
   if (!isOpen) return null
 
   return (
@@ -24,14 +45,21 @@ export function LeaveQueueConfirmModal({
       role="dialog"
       aria-modal="true"
       aria-labelledby="leave-queue-modal-title"
+      onClick={() => {
+        if (!isLeaving) onClose()
+      }}
       className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in duration-150"
     >
-      <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-200 relative">
+      <div
+        onClick={(e) => e.stopPropagation()}
+        className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-200 relative"
+      >
         <button
           type="button"
           onClick={onClose}
+          disabled={isLeaving}
           aria-label="Đóng"
-          className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 p-1 rounded-lg transition-colors"
+          className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 p-1.5 rounded-lg hover:bg-slate-100 transition-colors disabled:opacity-50"
         >
           <X className="w-5 h-5" />
         </button>

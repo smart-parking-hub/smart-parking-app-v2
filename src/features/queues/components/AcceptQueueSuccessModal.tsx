@@ -1,4 +1,5 @@
-import { CheckCircle2, Ticket, ArrowRight, ShieldCheck, Clock } from 'lucide-react'
+import { useEffect } from 'react'
+import { CheckCircle2, Ticket, ArrowRight, ShieldCheck, Clock, X } from 'lucide-react'
 import { Link } from 'react-router-dom'
 
 interface AcceptQueueSuccessModalProps {
@@ -16,6 +17,26 @@ export function AcceptQueueSuccessModal({
   berthCode,
   parkingLotName,
 }: AcceptQueueSuccessModalProps) {
+  // Escape key handler & body scroll lock
+  useEffect(() => {
+    if (!isOpen) return
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onClose()
+      }
+    }
+
+    const prevOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    window.addEventListener('keydown', handleKeyDown)
+
+    return () => {
+      document.body.style.overflow = prevOverflow
+      window.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [isOpen, onClose])
+
   if (!isOpen) return null
 
   return (
@@ -23,9 +44,22 @@ export function AcceptQueueSuccessModal({
       role="dialog"
       aria-modal="true"
       aria-labelledby="accept-queue-modal-title"
+      onClick={onClose}
       className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in duration-150"
     >
-      <div className="bg-white rounded-2xl max-w-lg w-full p-6 md:p-8 shadow-2xl border border-slate-200 text-center">
+      <div
+        onClick={(e) => e.stopPropagation()}
+        className="bg-white rounded-2xl max-w-lg w-full p-6 md:p-8 shadow-2xl border border-slate-200 text-center relative"
+      >
+        <button
+          type="button"
+          onClick={onClose}
+          aria-label="Đóng"
+          className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 p-1.5 rounded-lg hover:bg-slate-100 transition-colors"
+        >
+          <X className="w-5 h-5" />
+        </button>
+
         <div className="w-16 h-16 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto mb-4 border border-emerald-200 ring-8 ring-emerald-50">
           <CheckCircle2 className="w-8 h-8" />
         </div>

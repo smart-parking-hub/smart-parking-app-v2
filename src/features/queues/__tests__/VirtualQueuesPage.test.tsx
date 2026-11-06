@@ -216,4 +216,87 @@ describe('SCR-018: VirtualQueuesPage (Hàng Đợi Ảo Thông Minh)', () => {
     expect(screen.getByText(/Bán Kính Radar Geofence 5\.0 KM/i)).toBeInTheDocument()
     expect(screen.getByText(/Giới Hạn 1 Hàng Đợi Đồng Thời/i)).toBeInTheDocument()
   })
+
+  it('closes AcceptQueueSuccessModal when clicking close button [X], clicking backdrop or pressing Escape (Acceptance Criteria 1)', async () => {
+    renderWithProviders(<VirtualQueuesPage />)
+
+    // Open AcceptQueueSuccessModal
+    const acceptButton = screen.getByRole('button', {
+      name: /Nhận Slot & Tạo Booking Ngay/i,
+    })
+    fireEvent.click(acceptButton)
+
+    await waitFor(() => {
+      expect(screen.getByRole('heading', { name: /Nhận Slot Đỗ Xe Thành Công!/i })).toBeInTheDocument()
+    })
+
+    // 1. Close via [X] button or bottom close button
+    const closeButtons = screen.getAllByRole('button', { name: 'Đóng' })
+    expect(closeButtons.length).toBe(2) // Both [X] top-right button and bottom "Đóng" button
+
+    // Test close via Escape key
+    fireEvent.keyDown(window, { key: 'Escape' })
+    await waitFor(() => {
+      expect(screen.queryByRole('heading', { name: /Nhận Slot Đỗ Xe Thành Công!/i })).not.toBeInTheDocument()
+    })
+
+    // Reopen and test close via [X] button
+    fireEvent.click(acceptButton)
+    await waitFor(() => {
+      expect(screen.getByRole('heading', { name: /Nhận Slot Đỗ Xe Thành Công!/i })).toBeInTheDocument()
+    })
+
+    const [xBtn] = screen.getAllByRole('button', { name: 'Đóng' })
+    fireEvent.click(xBtn)
+    await waitFor(() => {
+      expect(screen.queryByRole('heading', { name: /Nhận Slot Đỗ Xe Thành Công!/i })).not.toBeInTheDocument()
+    })
+
+    // Reopen and test backdrop click
+    fireEvent.click(acceptButton)
+    await waitFor(() => {
+      expect(screen.getByRole('heading', { name: /Nhận Slot Đỗ Xe Thành Công!/i })).toBeInTheDocument()
+    })
+
+    const dialogOverlay = screen.getByRole('dialog')
+    fireEvent.click(dialogOverlay)
+    await waitFor(() => {
+      expect(screen.queryByRole('heading', { name: /Nhận Slot Đỗ Xe Thành Công!/i })).not.toBeInTheDocument()
+    })
+  })
+
+  it('renders friendly EmptyState with CTA "Tìm bãi xe khác" when queue is empty (Acceptance Criteria 2)', async () => {
+    renderWithProviders(<VirtualQueuesPage />)
+
+    // Toggle demo to waiting state, then leave queue
+    const toggleDemoBtn = screen.getByRole('button', {
+      name: /Mô phỏng: Chuyển về Đang chờ/i,
+    })
+    fireEvent.click(toggleDemoBtn)
+
+    const leaveButton = screen.getByRole('button', { name: /Rời hàng đợi/i })
+    fireEvent.click(leaveButton)
+
+    const confirmLeaveBtn = screen.getByRole('button', { name: /Xác nhận rời hàng/i })
+    fireEvent.click(confirmLeaveBtn)
+
+    await waitFor(() => {
+      expect(screen.getByText(/Bạn chưa có lượt xếp hàng nào đang hoạt động/i)).toBeInTheDocument()
+    })
+
+    // Verify EmptyState CTA "Tìm bãi xe khác"
+    const findOtherLotsBtn = screen.getByRole('link', { name: /Tìm bãi xe khác/i })
+    expect(findOtherLotsBtn).toBeInTheDocument()
+
+    // Switch to history tab and test search with 0 matches
+    const historyTab = screen.getByRole('tab', { name: /Lịch sử xếp hàng/i })
+    fireEvent.click(historyTab)
+
+    const searchInput = screen.getByPlaceholderText(/Tìm theo mã, bãi xe, biển số\.\.\./i)
+    fireEvent.change(searchInput, { target: { value: 'ZERO_MATCH_XYZ_12345' } })
+
+    expect(screen.getByText(/Không tìm thấy lượt xếp hàng nào/i)).toBeInTheDocument()
+    const historyEmptyCta = screen.getAllByRole('link', { name: /Tìm bãi xe khác/i })
+    expect(historyEmptyCta.length).toBeGreaterThanOrEqual(1)
+  })
 })
