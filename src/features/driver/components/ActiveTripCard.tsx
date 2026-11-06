@@ -209,10 +209,15 @@ export function ActiveTripCard({ booking, onOpenQr }: ActiveTripCardProps) {
             </button>
             <div className="grid grid-cols-2 gap-2">
               <a
-                href="https://maps.google.com"
+                href={
+                  booking.parkingLotAddress
+                    ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${booking.parkingLotName} ${booking.parkingLotAddress}`)}`
+                    : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(booking.parkingLotName || 'Bãi đỗ xe')}`
+                }
                 target="_blank"
                 rel="noreferrer"
                 className="h-9 px-3 rounded-lg bg-white border border-slate-200 hover:border-slate-300 text-slate-700 hover:text-slate-900 font-medium text-xs flex items-center justify-center gap-1.5 transition-colors"
+                title={`Chỉ đường tới ${booking.parkingLotName}`}
               >
                 <Navigation className="w-3.5 h-3.5 text-slate-500" />
                 <span>Chỉ đường</span>

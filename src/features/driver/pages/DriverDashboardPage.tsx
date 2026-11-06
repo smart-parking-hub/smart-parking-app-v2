@@ -1,3 +1,4 @@
+import { useState, useMemo } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { AlertCircle, RefreshCw, Search, CheckCircle, X } from 'lucide-react'
 import { useForm } from 'react-hook-form'
@@ -45,13 +46,28 @@ export function DriverDashboardPage() {
     defaultValues: { query: '' },
   })
 
+  const [searchFilter, setSearchFilter] = useState('')
+
   const onQuickSearch = (formData: QuickSearchFormData) => {
+    setSearchFilter(formData.query.trim().toLowerCase())
     setSuccessToast(`Đang lọc mã: "${formData.query}". Hệ thống đã đối chiếu dữ liệu.`)
     reset()
   }
 
+  const filteredRecentBookings = useMemo(() => {
+    if (!data?.recentBookings) return []
+    if (!searchFilter) return data.recentBookings
+    return data.recentBookings.filter(
+      (b) =>
+        b.bookingCode.toLowerCase().includes(searchFilter) ||
+        b.parkingLotName.toLowerCase().includes(searchFilter) ||
+        b.vehicleLicensePlate.toLowerCase().includes(searchFilter) ||
+        (b.berthNumber && b.berthNumber.toLowerCase().includes(searchFilter)),
+    )
+  }, [data?.recentBookings, searchFilter])
+
   return (
-    <div className="w-full min-h-[calc(100vh-140px)] bg-[#f8f9ff]">
+    <div className="w-full min-h-[calc(100vh-var(--driver-header-height,140px))] bg-[#f8f9ff]">
       <div className="max-w-[1280px] mx-auto px-4 lg:px-8 py-6 pb-20 lg:pb-24">
         {/* Floating Success Toast */}
         {successToast && (
@@ -159,10 +175,25 @@ export function DriverDashboardPage() {
             {/* Quick Shortcuts Matrix */}
             <DriverShortcuts />
 
+            {searchFilter && (
+              <div className="mb-4 flex items-center justify-between p-2.5 bg-blue-50 border border-blue-200 rounded-lg text-xs text-blue-900">
+                <span>
+                  Đang lọc lịch sử theo từ khóa: <strong>"{searchFilter}"</strong> ({filteredRecentBookings.length} kết quả)
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setSearchFilter('')}
+                  className="text-blue-700 hover:text-blue-900 font-medium underline cursor-pointer"
+                >
+                  Xóa bộ lọc
+                </button>
+              </div>
+            )}
+
             {/* Recent Completed Bookings Table */}
             <RecentBookingsTable
-              bookings={data.recentBookings}
-              totalCount={data.bookingTotal}
+              bookings={filteredRecentBookings}
+              totalCount={searchFilter ? filteredRecentBookings.length : data.bookingTotal}
             />
 
             {/* ALPR Fast-Checkout QR Modal */}

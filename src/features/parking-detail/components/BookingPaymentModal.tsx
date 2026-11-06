@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   X,
@@ -14,6 +14,7 @@ import {
   ArrowLeft,
   ListOrdered,
   Ticket,
+  AlertTriangle,
 } from 'lucide-react'
 import type {
   PaymentMethodType,
@@ -54,13 +55,34 @@ export function BookingPaymentModal({
   // 10-Minute Hold TTL Countdown Timer (600s)
   const [secondsLeft, setSecondsLeft] = useState<number>(10 * 60)
 
+  const handleModalClose = useCallback(() => {
+    setStep('CONFIGURATION')
+    setValidationError(null)
+    setIsSubmitting(false)
+    setBookingResult(null)
+    onClose()
+  }, [onClose])
+
   useEffect(() => {
     if (!isOpen) return
     const timer = setInterval(() => {
       setSecondsLeft((prev) => (prev > 0 ? prev - 1 : 0))
     }, 1000)
-    return () => clearInterval(timer)
-  }, [isOpen])
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        handleModalClose()
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    document.body.style.overflow = 'hidden'
+
+    return () => {
+      clearInterval(timer)
+      window.removeEventListener('keydown', handleKeyDown)
+      document.body.style.overflow = 'unset'
+    }
+  }, [isOpen, handleModalClose])
 
   // Format countdown mm:ss
   const minutes = Math.floor(secondsLeft / 60)
@@ -90,6 +112,7 @@ export function BookingPaymentModal({
 
   const handleConfirmPayment = async () => {
     setIsSubmitting(true)
+    setValidationError(null)
     try {
       const result = await submitDepositReservation({
         facilityId,
@@ -106,43 +129,15 @@ export function BookingPaymentModal({
       if (onPaymentSuccess) {
         onPaymentSuccess(result.bookingId)
       }
-    } catch {
-      // Fallback result on network error
-      const fallbackResult: BookingCreationResult = {
-        bookingId: 'BK-2025-CLG2-014',
-        facilityId,
-        facilityName,
-        slotBerth: reservationState.suggestedBerth || 'BERTH C-14',
-        vehiclePlate: reservationState.registeredPlate,
-        vehicleType: reservationState.vehicleDescription,
-        durationHours,
-        totalAmount,
-        depositAmount,
-        depositPercentage: 20,
-        remainingAmount: settlementAtExit,
-        holdExpiresAt: '16:40 (10 phút)',
-        holdTtlSeconds: 600,
-        paymentMethod,
-        payOsCheckoutUrl: 'https://pay.payos.vn/web/demo-sth-deposit-20',
-        createdAt: new Date().toISOString(),
-        status: 'HOLD_CONFIRMED',
-      }
-      setBookingResult(fallbackResult)
-      setStep('SUCCESS')
-      if (onPaymentSuccess) {
-        onPaymentSuccess(fallbackResult.bookingId)
-      }
+    } catch (err: unknown) {
+      const errorMsg =
+        err instanceof Error
+          ? err.message
+          : 'Không thể kết nối đến máy chủ hoặc bãi đỗ xe đã hết slot trống. Vui lòng kiểm tra lại kết nối và thử lại.'
+      setValidationError(errorMsg)
     } finally {
       setIsSubmitting(false)
     }
-  }
-
-  const handleModalClose = () => {
-    setStep('CONFIGURATION')
-    setValidationError(null)
-    setIsSubmitting(false)
-    setBookingResult(null)
-    onClose()
   }
 
   return (
@@ -500,6 +495,17 @@ export function BookingPaymentModal({
                 <ExternalLink className="w-3.5 h-3.5" />
               </a>
             </div>
+
+            {/* Step 2 Error alert if payment failed */}
+            {validationError && (
+              <div
+                role="alert"
+                className="p-3 bg-red-50 border border-red-200 rounded-xl text-red-700 text-xs flex items-center gap-2"
+              >
+                <AlertTriangle className="w-4 h-4 shrink-0 text-red-600" />
+                <span>{validationError}</span>
+              </div>
+            )}
 
             {/* Step 2 Action Buttons */}
             <div className="flex items-center gap-2 pt-1">

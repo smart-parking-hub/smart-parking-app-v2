@@ -97,6 +97,20 @@ export function InlineQuickBookPanel({
 
   const handleConfirm = () => {
     const code = `BK-HOLD-2026-${Math.floor(1000 + Math.random() * 9000)}`
+    try {
+      localStorage.setItem(
+        'smart-truck-parking.active_hold',
+        JSON.stringify({
+          code,
+          parkingLotId: lot?.id,
+          parkingLotName: lot?.name,
+          heldAt: new Date().toISOString(),
+          expiresAt: new Date(Date.now() + 10 * 60 * 1000).toISOString(),
+        }),
+      )
+    } catch {
+      // ignore storage errors
+    }
     setReservationCode(code)
     setConfirmed(true)
     onConfirmSuccess?.(code)

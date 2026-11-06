@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { X, AlertTriangle, Loader2 } from 'lucide-react'
 import type { BookingItemDto } from '../types/bookingTypes'
 import { cancelBookingSchema } from '../schemas/bookingSchemas'
@@ -29,6 +29,19 @@ export function CancelBookingModal({
   const [bankAccount, setBankAccount] = useState('')
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({})
   const [isSubmitting, setIsSubmitting] = useState(false)
+
+  useEffect(() => {
+    if (!isOpen) return
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose()
+    }
+    document.body.style.overflow = 'hidden'
+    window.addEventListener('keydown', handleKeyDown)
+    return () => {
+      document.body.style.overflow = 'unset'
+      window.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [isOpen, onClose])
 
   if (!isOpen || !booking) return null
 

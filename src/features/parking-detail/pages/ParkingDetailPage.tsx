@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { ArrowLeft } from 'lucide-react'
@@ -53,6 +53,53 @@ export function ParkingDetailPage() {
     staleTime: 60000,
   })
 
+  const dynamicCapacityCategories = useMemo(() => {
+    if (!facility || facility.id === 1) return fallbackCapacityCategories
+    const total = facility.totalCapacity || 100
+    const avail = facility.totalAvailableSlots || 0
+    const occupiedPercent = total > 0 ? Math.round(((total - avail) / total) * 100) : 0
+    return [
+      {
+        id: 'cont40-45',
+        categoryName: 'Xe Đầu Kéo & Container 40FT / 45FT',
+        subDescription: 'Chiều dài ô đỗ 16.5m · Tải trục 40T · Sẵn dây cắm Reefer',
+        highDemandLabel: avail < total * 0.2 ? `MẬT ĐỘ CAO ${occupiedPercent}%` : undefined,
+        highDemandOccupiedPercent: occupiedPercent,
+        availableSlots: Math.round(avail * 0.45),
+        totalSlots: Math.round(total * 0.45),
+        occupiedPercent,
+        iconName: 'directions_boat',
+      },
+      {
+        id: 'heavy-truck',
+        categoryName: 'Xe Tải Nặng (trên 10 tấn - 3, 4 chân)',
+        subDescription: 'Ô đỗ xe tải 12m · Tự do quay đầu bán kính 18m',
+        availableSlots: Math.round(avail * 0.3),
+        totalSlots: Math.round(total * 0.3),
+        occupiedPercent,
+        iconName: 'local_shipping',
+      },
+      {
+        id: 'medium-truck',
+        categoryName: 'Xe Tải Trung (3.5 - 10 tấn)',
+        subDescription: 'Ô đỗ 8.5m · Lối ra thông thoáng',
+        availableSlots: Math.max(0, avail - Math.round(avail * 0.45) - Math.round(avail * 0.3)),
+        totalSlots: Math.max(0, total - Math.round(total * 0.45) - Math.round(total * 0.3)),
+        occupiedPercent,
+        iconName: 'local_shipping',
+      },
+    ]
+  }, [facility])
+
+  const dynamicReservationState = useMemo(() => {
+    if (!facility || facility.id === 1) return fallbackReservationState
+    return {
+      ...fallbackReservationState,
+      matchingSlotsCount: facility.totalAvailableSlots,
+      suggestedBerth: `BERTH ${facility.code || 'GATE'}-${Math.max(1, Math.min(20, facility.totalAvailableSlots))}`,
+    }
+  }, [facility])
+
   // 1. Loading State
   if (isLoadingFacility && !facility) {
     return <ParkingDetailSkeleton />
@@ -95,7 +142,10 @@ export function ParkingDetailPage() {
 
             <div className="flex items-center gap-2 font-mono text-xs text-slate-600">
               <span className="w-2 h-2 rounded-full bg-[#d95f00] animate-pulse inline-block" />
-              <span>CẬP NHẬT TRẠNG THÁI REALTIME: CÁT LÁI GATE 2</span>
+              <span>
+                CẬP NHẬT TRẠNG THÁI REALTIME:{' '}
+                {currentFacility.id === 1 ? 'CÁT LÁI GATE 2' : (currentFacility.name?.toUpperCase() || 'CÁT LÁI GATE 2')}
+              </span>
             </div>
           </div>
 
@@ -111,7 +161,7 @@ export function ParkingDetailPage() {
 
               {/* 3. Live Slot Capacity Matrix */}
               <SlotCapacityMatrixSection
-                categories={fallbackCapacityCategories}
+                categories={dynamicCapacityCategories}
                 totalAvailable={currentFacility.totalAvailableSlots}
                 totalCapacity={currentFacility.totalCapacity}
                 totalAreaM2={currentFacility.totalAreaM2}
@@ -133,7 +183,7 @@ export function ParkingDetailPage() {
 
             {/* RIGHT COLUMN: 35% (4 cols) Sticky Reservation Desk */}
             <StickyReservationDesk
-              reservationState={fallbackReservationState}
+              reservationState={dynamicReservationState}
               onOpenBookingModal={() => setIsModalOpen(true)}
             />
           </div>
@@ -146,7 +196,7 @@ export function ParkingDetailPage() {
         onClose={() => setIsModalOpen(false)}
         facilityName={currentFacility.name || 'Tân Cảng Cát Lái - Gate 2'}
         facilityId={facilityId}
-        reservationState={fallbackReservationState}
+        reservationState={dynamicReservationState}
       />
     </div>
   )
