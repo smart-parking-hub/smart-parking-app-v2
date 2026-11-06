@@ -1,7 +1,8 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useForm } from 'react-hook-form'
 import { Link } from 'react-router-dom'
+import { LoaderCircle } from 'lucide-react'
 import type { Revenue, Withdrawal } from '@/entities/operations'
 import {
   getData,
@@ -24,6 +25,8 @@ import {
   control,
   button,
 } from '@/shared/components/Workspace'
+import { cn } from '@/shared/utils/cn'
+
 export function MerchantRevenuePage() {
   const filters = useForm({
     defaultValues: { startDate: '', endDate: '', granularity: 'DAY' },
@@ -76,7 +79,9 @@ export function MerchantRevenuePage() {
               <option value="YEAR">Theo năm</option>
             </select>
           </Field>
-          <button className={button}>Áp dụng</button>
+          <button type="submit" className={button}>
+            Áp dụng
+          </button>
           {filters.formState.errors.endDate && (
             <Notice error>Ngày kết thúc phải từ ngày bắt đầu.</Notice>
           )}
@@ -114,7 +119,7 @@ export function MerchantRevenuePage() {
                         {money(point.revenue)}
                       </span>
                       <div
-                        className="w-full max-w-12 rounded-t-md bg-brand-orange"
+                        className="w-full max-w-12 rounded-t-md bg-brand-primary transition-all hover:brightness-110"
                         style={{
                           height: `${Math.max(4, (point.revenue / Math.max(1, ...data.series.map((p) => p.revenue))) * 180)}px`,
                         }}
@@ -145,6 +150,7 @@ export function MerchantRevenuePage() {
     </Workspace>
   )
 }
+
 export function MerchantWithdrawalsPage() {
   const [page, setPage] = useState(0)
   const [open, setOpen] = useState(false)
@@ -159,20 +165,52 @@ export function MerchantWithdrawalsPage() {
     queryFn: () => getData<Revenue>('/api/v1/merchant/revenue'),
     retry: false,
   })
+
+  const currentBalance = Number(revenue.data?.currentWalletBalance ?? 0)
+  const minWithdrawal = Math.max(
+    50000,
+    Number(revenue.data?.minWithdrawalAmount ?? 50000),
+  )
+  const isBalanceInsufficient = Boolean(
+    revenue.data && currentBalance < minWithdrawal,
+  )
+  const isWithdrawDisabled = !revenue.data || isBalanceInsufficient
+
   return (
     <Workspace
       title="Ví & Yêu cầu rút tiền"
       description="Tạo yêu cầu rút tiền về tài khoản ngân hàng. Mọi yêu cầu đều cần quản trị viên phê duyệt."
       actions={
-        <button
-          disabled={!revenue.data}
-          className={button}
-          onClick={() => setOpen(true)}
-        >
-          + Yêu cầu rút tiền
-        </button>
+        <div className="relative inline-flex flex-col items-end">
+          <button
+            disabled={isWithdrawDisabled}
+            className={cn(
+              button,
+              isWithdrawDisabled && 'cursor-not-allowed opacity-60',
+            )}
+            onClick={() => setOpen(true)}
+            aria-disabled={isWithdrawDisabled}
+            title={
+              isBalanceInsufficient
+                ? `Số dư khả dụng tối thiểu để tạo yêu cầu rút tiền là ${money(minWithdrawal)} (Hiện có: ${money(currentBalance)})`
+                : undefined
+            }
+          >
+            + Yêu cầu rút tiền
+          </button>
+          {isBalanceInsufficient && (
+            <span className="mt-1 text-xs text-brand-muted">
+              Cần tối thiểu {money(minWithdrawal)} để rút
+            </span>
+          )}
+        </div>
       }
     >
+      {isBalanceInsufficient && (
+        <Notice>
+          Số dư khả dụng hiện tại ({money(currentBalance)}) chưa đạt hạn mức tối thiểu ({money(minWithdrawal)}) để tạo yêu cầu rút tiền về tài khoản ngân hàng.
+        </Notice>
+      )}
       <QueryState query={revenue}>
         {(data) => (
           <Metrics
@@ -207,7 +245,11 @@ export function MerchantWithdrawalsPage() {
             onPage={setPage}
             columns={[
               { label: 'Yêu cầu', render: (r) => `WD-${r.id}` },
-              { label: 'Số tiền', render: (r) => money(r.amount) },
+              {
+                label: 'Số tiền',
+                render: (r) => money(r.amount),
+                align: 'right',
+              },
               {
                 label: 'Ngân hàng',
                 render: (r) =>
@@ -225,14 +267,15 @@ export function MerchantWithdrawalsPage() {
       </QueryState>
       {open && revenue.data && (
         <WithdrawalDialog
-          balance={revenue.data.currentWalletBalance}
-          minimum={Math.max(50000, revenue.data.minWithdrawalAmount || 0)}
+          balance={currentBalance}
+          minimum={minWithdrawal}
           onClose={() => setOpen(false)}
         />
       )}
     </Workspace>
   )
 }
+
 function WithdrawalDialog({
   balance,
   minimum,
@@ -249,6 +292,40 @@ function WithdrawalDialog({
     bankAccountNumber: string
     accountHolderName: string
   }>()
+
+  // Prepopulate bank details from merchant profile if available
+  const profileQuery = useQuery({
+    queryKey: ['merchant-profile-summary'],
+    queryFn: () =>
+      getData<{
+        bankName?: string
+        bankAccountNum?: string
+        fullName?: string
+      }>('/api/v1/merchant/profile'),
+    staleTime: 60_000,
+    retry: false,
+  })
+
+  useEffect(() => {
+    if (profileQuery.data) {
+      if (profileQuery.data.bankName && !form.getValues('bankName')) {
+        form.setValue('bankName', profileQuery.data.bankName)
+      }
+      if (
+        profileQuery.data.bankAccountNum &&
+        !form.getValues('bankAccountNumber')
+      ) {
+        form.setValue('bankAccountNumber', profileQuery.data.bankAccountNum)
+      }
+      if (
+        profileQuery.data.fullName &&
+        !form.getValues('accountHolderName')
+      ) {
+        form.setValue('accountHolderName', profileQuery.data.fullName)
+      }
+    }
+  }, [profileQuery.data, form])
+
   const mutation = useMutation({
     mutationFn: (data: {
       amount: number
@@ -262,6 +339,9 @@ function WithdrawalDialog({
       onClose()
     },
   })
+
+  const isBalanceValid = balance >= minimum
+
   return (
     <Dialog
       title="Tạo yêu cầu rút tiền"
@@ -273,14 +353,29 @@ function WithdrawalDialog({
         onSubmit={form.handleSubmit((data) => mutation.mutate(data))}
         className="space-y-5"
       >
-        <Notice>
-          Khả dụng: {money(balance)}. Khoản tiền được giữ khi tạo yêu cầu chờ
-          duyệt.
+        <Notice error={!isBalanceValid}>
+          {isBalanceValid ? (
+            <span>
+              Số dư khả dụng:{' '}
+              <strong className="font-semibold">{money(balance)}</strong>. Hạn
+              mức rút: Từ{' '}
+              <strong className="font-semibold">{money(minimum)}</strong> đến{' '}
+              <strong className="font-semibold">{money(balance)}</strong>. Khoản
+              tiền sẽ được tạm giữ chờ phê duyệt.
+            </span>
+          ) : (
+            <span>
+              Số dư khả dụng hiện tại ({money(balance)}) không đủ hạn mức rút
+              tối thiểu ({money(minimum)}).
+            </span>
+          )}
         </Notice>
-        <Field label="Số tiền (VND)">
+        <Field label="Số tiền rút (VND)">
           <input
             type="number"
+            step="1000"
             className={control}
+            placeholder={`Nhập số tiền từ ${minimum.toLocaleString('vi-VN')} ₫`}
             {...form.register('amount', {
               required: true,
               valueAsNumber: true,
@@ -289,20 +384,51 @@ function WithdrawalDialog({
             })}
           />
         </Field>
+        {isBalanceValid && (
+          <div className="-mt-3 flex items-center gap-2 text-xs text-brand-muted">
+            <span>Chọn nhanh:</span>
+            <button
+              type="button"
+              className="font-medium text-brand-primary hover:underline"
+              onClick={() =>
+                form.setValue('amount', minimum, { shouldValidate: true })
+              }
+            >
+              Tối thiểu ({money(minimum)})
+            </button>
+            <span>·</span>
+            <button
+              type="button"
+              className="font-medium text-brand-primary hover:underline"
+              onClick={() =>
+                form.setValue('amount', balance, { shouldValidate: true })
+              }
+            >
+              Toàn bộ ({money(balance)})
+            </button>
+          </div>
+        )}
         {(['bankName', 'bankAccountNumber', 'accountHolderName'] as const).map(
           (key) => (
             <Field
               key={key}
               label={
                 {
-                  bankName: 'Ngân hàng',
-                  bankAccountNumber: 'Số tài khoản',
+                  bankName: 'Ngân hàng nhận',
+                  bankAccountNumber: 'Số tài khoản thụ hưởng',
                   accountHolderName: 'Tên chủ tài khoản',
                 }[key]
               }
             >
               <input
                 className={control}
+                placeholder={
+                  {
+                    bankName: 'Ví dụ: Vietcombank, Techcombank…',
+                    bankAccountNumber: 'Nhập số tài khoản ngân hàng',
+                    accountHolderName: 'NGUYEN VAN A',
+                  }[key]
+                }
                 {...form.register(key, {
                   required: true,
                   ...(key === 'bankAccountNumber'
@@ -315,15 +441,34 @@ function WithdrawalDialog({
         )}
         {Object.keys(form.formState.errors).length > 0 && (
           <Notice error>
-            Kiểm tra thông tin ngân hàng và số tiền: từ {money(minimum)} đến{' '}
-            {money(balance)}.
+            Vui lòng kiểm tra lại thông tin: Số tiền từ {money(minimum)} đến{' '}
+            {money(balance)} và điền đầy đủ tài khoản ngân hàng.
           </Notice>
         )}
         {mutation.isError && (
           <Notice error>{errorMessage(mutation.error)}</Notice>
         )}
-        <button className={`${button} w-full`} disabled={mutation.isPending}>
-          {mutation.isPending ? 'Đang gửi…' : 'Gửi yêu cầu phê duyệt'}
+        <button
+          type="submit"
+          className={cn(
+            `${button} w-full`,
+            (!isBalanceValid || mutation.isPending) &&
+              'cursor-not-allowed opacity-60',
+          )}
+          disabled={!isBalanceValid || mutation.isPending}
+        >
+          {mutation.isPending ? (
+            <>
+              <LoaderCircle
+                size={18}
+                className="animate-spin"
+                aria-hidden="true"
+              />
+              Đang gửi yêu cầu phê duyệt…
+            </>
+          ) : (
+            'Gửi yêu cầu phê duyệt'
+          )}
         </button>
       </form>
     </Dialog>
