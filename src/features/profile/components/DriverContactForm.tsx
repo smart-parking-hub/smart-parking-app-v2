@@ -19,7 +19,7 @@ export function DriverContactForm({ profile, onUpdated }: { profile: DriverProfi
   const form = useForm<UpdateProfileFormData>({ resolver: zodResolver(schema), defaultValues: defaults(profile) })
   const save = useMutation({ mutationFn: (data: UpdateProfileFormData) => updateMyProfile(data, profile.phone), onSuccess: data => { onUpdated(data); form.reset(defaults(data)) } })
   const { errors, isDirty } = form.formState
-  return <form noValidate onSubmit={form.handleSubmit(values => save.mutate(values))} className="space-y-6">
+  return <form noValidate onSubmit={form.handleSubmit(values => { if (save.isPending) return; save.mutate(values) })} className="space-y-6">
     <AccountSection id="ca-nhan" title="Thông tin cá nhân" description="Thông tin cơ bản dùng để liên hệ và quản lý tài khoản của bạn.">
       <fieldset disabled={save.isPending} className="grid min-w-0 gap-6 sm:grid-cols-2">
         <legend className="sr-only">Thông tin cá nhân tài xế</legend>
@@ -40,7 +40,7 @@ export function DriverContactForm({ profile, onUpdated }: { profile: DriverProfi
       {save.isSuccess && <div className="mb-5"><Notice>Đã lưu thông tin hồ sơ.</Notice></div>}
       <div className="flex flex-wrap items-center justify-between gap-4">
         <p className="text-sm text-brand-muted">{isDirty ? 'Bạn có thay đổi chưa lưu.' : 'Thông tin hồ sơ hiện tại của bạn.'}</p>
-        <div className="flex flex-wrap items-center gap-4"><button type="button" disabled={!isDirty || save.isPending} onClick={() => { form.reset(defaults(profile)); save.reset() }} className="rounded-lg px-2 py-3 text-brand-muted underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-brand-orange disabled:opacity-50">Hủy thay đổi</button><button className={accountButton} disabled={!isDirty || save.isPending}>{save.isPending ? 'Đang lưu…' : 'Lưu thay đổi'}</button></div>
+        <div className="flex flex-wrap items-center gap-4"><button type="button" disabled={!isDirty || save.isPending} onClick={() => { form.reset(defaults(profile)); save.reset() }} className="rounded-lg px-2 py-3 text-brand-muted underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-brand-orange disabled:opacity-50">Hủy thay đổi</button><button className={accountButton} disabled={!isDirty || save.isPending} aria-busy={save.isPending}>{save.isPending ? 'Đang lưu…' : 'Lưu thay đổi'}</button></div>
       </div>
     </div>
   </form>

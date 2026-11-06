@@ -38,7 +38,7 @@ export function ChangePasswordCommandHeader({ audit }: ChangePasswordCommandHead
       </div>
 
       {/* Page Header Block */}
-      <div className="bg-white p-6 md:p-8 rounded-2xl border border-slate-200 shadow-xs">
+      <div className="bg-white p-5 sm:p-6 md:p-8 rounded-2xl border border-slate-200 shadow-xs">
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
           <div className="max-w-[760px]">
             <h1 className="text-2xl md:text-3xl font-bold font-sora text-slate-900 tracking-tight">
@@ -49,7 +49,7 @@ export function ChangePasswordCommandHeader({ audit }: ChangePasswordCommandHead
             </p>
           </div>
 
-          <div className="flex items-center gap-4 shrink-0">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 w-full lg:w-auto shrink-0">
             <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 flex items-center gap-3.5">
               <div className="w-12 h-12 rounded-xl bg-slate-900 text-white flex items-center justify-center shrink-0">
                 <KeyRound className="w-6 h-6 text-orange-500" />

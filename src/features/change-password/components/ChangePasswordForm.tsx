@@ -100,6 +100,7 @@ export function ChangePasswordForm({
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
+    if (isSubmitting) return
     setErrorMessage(null)
 
     if (!currentPassword.trim()) {
@@ -138,7 +139,7 @@ export function ChangePasswordForm({
   }
 
   return (
-    <div className="bg-white rounded-2xl p-6 md:p-8 border border-slate-200 shadow-xs flex flex-col gap-6">
+    <div className="bg-white rounded-2xl p-5 sm:p-6 md:p-8 border border-slate-200 shadow-xs flex flex-col gap-6">
       {/* Form Header */}
       <div>
         <div className="flex items-center gap-2.5 mb-1.5">
@@ -334,21 +335,22 @@ export function ChangePasswordForm({
         </div>
 
         {/* Action Buttons Area */}
-        <div className="pt-2 flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div className="pt-2 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
           <button
             type="submit"
             disabled={isSubmitting}
-            className="w-full sm:w-auto h-12 px-7 rounded-xl bg-orange-600 hover:bg-orange-700 active:scale-[0.99] text-white font-bold text-sm flex items-center justify-center gap-2 shadow-sm shadow-orange-600/30 transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+            aria-busy={isSubmitting}
+            className="w-full sm:w-auto min-h-[44px] h-12 px-7 rounded-xl bg-orange-600 hover:bg-orange-700 active:scale-[0.99] text-white font-bold text-sm flex items-center justify-center gap-2 shadow-sm shadow-orange-600/30 transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
           >
             {isSubmitting ? (
               <>
-                <RefreshCw className="w-4 h-4 animate-spin" />
+                <RefreshCw className="w-4 h-4 animate-spin shrink-0" />
                 <span>Đang cập nhật...</span>
               </>
             ) : (
               <>
                 <span>CẬP NHẬT MẬT KHẨU MỚI</span>
-                <ArrowRight className="w-4 h-4" />
+                <ArrowRight className="w-4 h-4 shrink-0" />
               </>
             )}
           </button>
@@ -356,9 +358,9 @@ export function ChangePasswordForm({
           <button
             type="button"
             onClick={onOpenForgotModal}
-            className="text-xs md:text-sm font-semibold text-slate-600 hover:text-orange-600 flex items-center gap-1.5 transition-colors cursor-pointer"
+            className="min-h-[44px] px-2 text-xs md:text-sm font-semibold text-slate-600 hover:text-orange-600 flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
           >
-            <MessageSquare className="w-4 h-4 text-slate-400" />
+            <MessageSquare className="w-4 h-4 text-slate-400 shrink-0" />
             <span>Khôi phục qua SMS OTP</span>
           </button>
         </div>

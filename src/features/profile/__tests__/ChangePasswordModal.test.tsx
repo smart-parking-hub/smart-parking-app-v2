@@ -59,4 +59,25 @@ describe('ChangePasswordModal', () => {
       expect(screen.getByText('Đổi mật khẩu thành công!')).toBeInTheDocument()
     })
   })
+
+  it('closes on Escape key press and backdrop click (A11y compliance)', async () => {
+    const handleClose = vi.fn()
+    render(
+      <ChangePasswordModal
+        isOpen={true}
+        onClose={handleClose}
+        onSave={vi.fn()}
+      />
+    )
+
+    // Escape key
+    fireEvent.keyDown(window, { key: 'Escape' })
+    expect(handleClose).toHaveBeenCalledTimes(1)
+
+    // Backdrop click
+    const dialog = screen.getByRole('dialog')
+    const overlay = dialog.parentElement!
+    fireEvent.click(overlay)
+    expect(handleClose).toHaveBeenCalledTimes(2)
+  })
 })

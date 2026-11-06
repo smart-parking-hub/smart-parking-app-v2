@@ -17,14 +17,14 @@ export function DriverPasswordForm() {
   const save = useMutation({ mutationFn: (data: Values) => changeMyPasswordApi(data.currentPassword, data.newPassword), onSuccess: () => form.reset() })
   const { errors } = form.formState
   return <AccountSection id="bao-mat" title="Bảo mật tài khoản" description="Đổi mật khẩu đăng nhập. Mật khẩu mới cần từ 6 đến 50 ký tự.">
-    <form noValidate onSubmit={form.handleSubmit(values => save.mutate(values))} className="space-y-6">
+    <form noValidate onSubmit={form.handleSubmit(values => { if (save.isPending) return; save.mutate(values) })} className="space-y-6">
       <fieldset disabled={save.isPending} className="grid min-w-0 gap-6 sm:grid-cols-2">
         <legend className="sr-only">Đổi mật khẩu</legend>
         {([['currentPassword', 'Mật khẩu hiện tại', 'current-password'], ['newPassword', 'Mật khẩu mới', 'new-password'], ['confirmation', 'Xác nhận mật khẩu mới', 'new-password']] as const).map(([key, label, complete]) => <AccountField key={key} id={`driver-${key}`} label={label} error={errors[key]?.message}><input id={`driver-${key}`} type="password" autoComplete={complete} className={accountInput} aria-invalid={Boolean(errors[key])} aria-describedby={errors[key] ? `driver-${key}-error` : undefined} {...form.register(key, { onChange: () => save.reset() })} /></AccountField>)}
       </fieldset>
       {save.isError && <Notice error>{errorMessage(save.error)}</Notice>}
       {save.isSuccess && <Notice>Đã đổi mật khẩu thành công.</Notice>}
-      <div className="border-t border-brand-border pt-5"><button className={accountButton} disabled={save.isPending}>{save.isPending ? 'Đang cập nhật…' : 'Cập nhật mật khẩu'}</button></div>
+      <div className="border-t border-brand-border pt-5"><button className={accountButton} disabled={save.isPending} aria-busy={save.isPending}>{save.isPending ? 'Đang cập nhật…' : 'Cập nhật mật khẩu'}</button></div>
     </form>
   </AccountSection>
 }
