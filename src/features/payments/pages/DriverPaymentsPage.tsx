@@ -225,6 +225,7 @@ export function DriverPaymentsPage() {
         onClose={() => setIsExportModalOpen(false)}
         totalRecords={filteredTransactions.length}
         totalAmountText={`${new Intl.NumberFormat('vi-VN').format(metrics.totalSpentMonth)} ₫`}
+        transactions={filteredTransactions}
       />
 
       <SendReceiptEmailModal

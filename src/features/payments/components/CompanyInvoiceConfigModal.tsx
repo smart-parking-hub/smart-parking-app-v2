@@ -1,12 +1,12 @@
-import { useState } from 'react'
-import { X, Building2, Save } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { X, Building2, Save, Loader2 } from 'lucide-react'
 import type { CompanyInvoiceConfig } from '../types/paymentTypes'
 
 interface CompanyInvoiceConfigModalProps {
   isOpen: boolean
   onClose: () => void
   initialConfig: CompanyInvoiceConfig
-  onSave: (config: CompanyInvoiceConfig) => void
+  onSave: (config: CompanyInvoiceConfig) => Promise<void> | void
 }
 
 export function CompanyInvoiceConfigModal({
@@ -16,18 +16,51 @@ export function CompanyInvoiceConfigModal({
   onSave,
 }: CompanyInvoiceConfigModalProps) {
   const [form, setForm] = useState<CompanyInvoiceConfig>(initialConfig)
+  const [isSaving, setIsSaving] = useState(false)
   const [isSavedNotice, setIsSavedNotice] = useState(false)
+
+  // Re-sync form when initialConfig changes
+  useEffect(() => {
+    setForm(initialConfig)
+  }, [initialConfig])
+
+  // Escape key handler & body scroll lock
+  useEffect(() => {
+    if (!isOpen) return
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && !isSaving) {
+        onClose()
+      }
+    }
+
+    const prevOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    window.addEventListener('keydown', handleKeyDown)
+
+    return () => {
+      document.body.style.overflow = prevOverflow
+      window.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [isOpen, isSaving, onClose])
 
   if (!isOpen) return null
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    onSave(form)
-    setIsSavedNotice(true)
-    setTimeout(() => {
-      setIsSavedNotice(false)
-      onClose()
-    }, 800)
+    if (isSaving) return
+
+    setIsSaving(true)
+    try {
+      await onSave(form)
+      setIsSavedNotice(true)
+      setTimeout(() => {
+        setIsSavedNotice(false)
+        onClose()
+      }, 800)
+    } finally {
+      setIsSaving(false)
+    }
   }
 
   return (
@@ -169,16 +202,19 @@ export function CompanyInvoiceConfigModal({
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2.5 rounded-xl text-xs md:text-sm font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 transition-colors"
+              disabled={isSaving}
+              className="px-4 py-2.5 rounded-xl text-xs md:text-sm font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 transition-colors disabled:opacity-50"
             >
               Hủy
             </button>
             <button
               type="submit"
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs md:text-sm font-semibold text-white bg-orange-600 hover:bg-orange-700 transition-colors shadow-sm"
+              disabled={isSaving}
+              aria-busy={isSaving}
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs md:text-sm font-semibold text-white bg-orange-600 hover:bg-orange-700 transition-colors shadow-sm disabled:opacity-50"
             >
-              <Save className="w-4 h-4" />
-              <span>Lưu Cấu Hình</span>
+              {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+              <span>{isSaving ? 'Đang lưu...' : 'Lưu Cấu Hình'}</span>
             </button>
           </div>
         </form>

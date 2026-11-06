@@ -228,4 +228,42 @@ describe('SCR-019: DriverPaymentsPage (Lịch sử thanh toán & Hóa đơn VAT)
       expect(screen.getByText(/Đã gửi email thành công!/i)).toBeInTheDocument()
     })
   })
+
+  it('renders standard EmptyState with "Tìm bãi đỗ ngay" CTA when search yields no results', async () => {
+    renderWithProviders(<DriverPaymentsPage />)
+
+    const searchInput = screen.getByPlaceholderText(/Tra cứu: Mã giao dịch PayOS, Mã Booking/i)
+    fireEvent.change(searchInput, { target: { value: 'NON_EXISTENT_QUERY_XYZ' } })
+
+    expect(screen.getByText(/Không tìm thấy giao dịch nào/i)).toBeInTheDocument()
+    const findParkingCta = screen.getByRole('link', { name: /Tìm bãi đỗ ngay/i })
+    expect(findParkingCta).toBeInTheDocument()
+    expect(findParkingCta).toHaveAttribute('href', '/search')
+  })
+
+  it('closes modals when user presses Escape key', async () => {
+    renderWithProviders(<DriverPaymentsPage />)
+
+    // Open Export Report modal
+    const exportBtn = screen.getByRole('button', { name: /XUẤT BÁO CÁO EXCEL \/ PDF ➞/i })
+    fireEvent.click(exportBtn)
+    expect(screen.getByRole('heading', { name: /Xuất Báo Cáo Sổ Cái Chi Phí/i })).toBeInTheDocument()
+
+    // Press Escape
+    fireEvent.keyDown(window, { key: 'Escape' })
+    await waitFor(() => {
+      expect(screen.queryByRole('heading', { name: /Xuất Báo Cáo Sổ Cái Chi Phí/i })).not.toBeInTheDocument()
+    })
+
+    // Open Company Config modal
+    const configBtn = screen.getByRole('button', { name: /CẤU HÌNH XUẤT HÓA ĐƠN CÔNG TY/i })
+    fireEvent.click(configBtn)
+    expect(screen.getByRole('heading', { name: /Cấu Hình Hóa Đơn Doanh Nghiệp/i })).toBeInTheDocument()
+
+    // Press Escape
+    fireEvent.keyDown(window, { key: 'Escape' })
+    await waitFor(() => {
+      expect(screen.queryByRole('heading', { name: /Cấu Hình Hóa Đơn Doanh Nghiệp/i })).not.toBeInTheDocument()
+    })
+  })
 })

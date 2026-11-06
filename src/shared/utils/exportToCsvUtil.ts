@@ -55,6 +55,9 @@ export function getFormattedDateForFilename(date: Date = new Date()): string {
  * Triggers a native browser file download using a Blob.
  */
 export function downloadFile(content: string, filename: string, mimeType = 'text/csv;charset=utf-8;'): void {
+  if (typeof window === 'undefined' || typeof document === 'undefined') return
+  if (typeof URL === 'undefined' || typeof URL.createObjectURL !== 'function') return
+
   const blob = new Blob([content], { type: mimeType })
   const url = URL.createObjectURL(blob)
   const link = document.createElement('a')

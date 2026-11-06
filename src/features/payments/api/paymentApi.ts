@@ -289,6 +289,30 @@ export const fetchFinancialMetrics = async (): Promise<FinancialMetricsData> => 
 }
 
 export const fetchCompanyInvoiceConfig = async (): Promise<CompanyInvoiceConfig> => {
+  try {
+    const res = await apiClient.get<{ data?: Record<string, unknown> } | Record<string, unknown>>('/api/v1/users/me')
+    const resData = res?.data as unknown
+    const rawData =
+      resData && typeof resData === 'object' && 'data' in resData
+        ? (resData as { data?: Record<string, unknown> }).data
+        : (resData as Record<string, unknown> | undefined)
+
+    if (rawData && typeof rawData === 'object' && ('taxId' in rawData || 'companyName' in rawData)) {
+      const merged: CompanyInvoiceConfig = {
+        companyName: String(rawData.companyName || fallbackCompanyConfig.companyName),
+        taxId: String(rawData.taxId || fallbackCompanyConfig.taxId),
+        accountingEmail: String(rawData.accountingEmail || fallbackCompanyConfig.accountingEmail),
+        companyAddress: String(rawData.companyAddress || fallbackCompanyConfig.companyAddress),
+        autoSendXml: rawData.autoSendXml !== undefined ? Boolean(rawData.autoSendXml) : fallbackCompanyConfig.autoSendXml,
+        integrationSoftware: String(rawData.integrationSoftware || fallbackCompanyConfig.integrationSoftware),
+      }
+      localStorage.setItem('sth.driver.company_invoice_config', JSON.stringify(merged))
+      return merged
+    }
+  } catch {
+    // Graceful fallback to localStorage for offline / mock mode
+  }
+
   const local = localStorage.getItem('sth.driver.company_invoice_config')
   if (local) {
     try {
@@ -304,6 +328,18 @@ export const saveCompanyInvoiceConfig = async (
   config: CompanyInvoiceConfig
 ): Promise<void> => {
   localStorage.setItem('sth.driver.company_invoice_config', JSON.stringify(config))
+  try {
+    await apiClient.put('/api/v1/users/me', {
+      taxId: config.taxId,
+      companyName: config.companyName,
+      companyAddress: config.companyAddress,
+      accountingEmail: config.accountingEmail,
+      integrationSoftware: config.integrationSoftware,
+      autoSendXml: config.autoSendXml,
+    })
+  } catch {
+    // Graceful fallback to localStorage for mock/offline environment
+  }
 }
 
 export const sendReceiptEmailApi = async (
