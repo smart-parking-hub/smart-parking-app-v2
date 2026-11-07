@@ -231,13 +231,43 @@ export function AdminUsersPage() {
       path="/api/v1/admin/users"
       detailLink={(r) => `/admin/users/${r.id}`}
       columns={[
-        { label: 'Tài khoản', render: (r) => `#${r.id}` },
-        { label: 'Điện thoại', render: (r) => r.phone },
-        { label: 'Email', render: (r) => r.email },
-        { label: 'Vai trò', render: (r) => r.role },
+        {
+          label: 'Tài khoản',
+          render: (r) => (
+            <div>
+              <Link
+                to={`/admin/users/${r.id}`}
+                className="font-semibold text-brand-navy hover:text-[#d95f00] transition-colors"
+              >
+                #{r.id} {r.fullName ? `· ${r.fullName}` : ''}
+              </Link>
+            </div>
+          ),
+        },
+        {
+          label: 'Điện thoại',
+          render: (r) => <span className="font-mono text-xs">{r.phone}</span>,
+        },
+        { label: 'Email', render: (r) => r.email || '—' },
+        { label: 'Vai trò', render: (r) => <Badge value={r.role} /> },
         { label: 'Trạng thái', render: (r) => <Badge value={r.status} /> },
-        { label: 'Ngày tham gia', render: (r) => date(r.createdAt) },
+        {
+          label: 'Ngày tham gia',
+          render: (r) => (
+            <span className="whitespace-nowrap text-xs text-brand-muted">
+              {date(r.createdAt)}
+            </span>
+          ),
+        },
       ]}
+      actions={(r) => (
+        <Link
+          to={`/admin/users/${r.id}`}
+          className="inline-flex items-center gap-1.5 rounded-lg border border-brand-border bg-white px-3 py-1.5 text-xs font-semibold text-brand-navy hover:bg-brand-surface hover:text-[#d95f00] transition-colors shadow-xs"
+        >
+          Quản trị
+        </Link>
+      )}
     />
   )
 }
@@ -267,36 +297,85 @@ export function AdminTransactionsPage() {
         title="Giám sát giao dịch"
         path="/api/v1/admin/transactions"
         columns={[
-          { label: 'Mã giao dịch', render: (r) => r.transactionCode },
-          { label: 'Booking', render: (r) => r.bookingCode },
-          { label: 'Số tiền', render: (r) => money(r.amount) },
-          { label: 'Loại', render: (r) => r.type },
+          {
+            label: 'Mã giao dịch',
+            render: (r) => (
+              <span className="font-mono text-xs font-semibold text-brand-navy">
+                {r.transactionCode}
+              </span>
+            ),
+          },
+          {
+            label: 'Booking',
+            render: (r) => (
+              <span className="font-mono text-xs text-brand-muted">
+                {r.bookingCode || '—'}
+              </span>
+            ),
+          },
+          {
+            label: 'Số tiền',
+            align: 'right',
+            render: (r) => (
+              <span className="font-sora font-semibold tabular-nums text-brand-navy">
+                {money(r.amount)}
+              </span>
+            ),
+          },
+          { label: 'Loại', render: (r) => <Badge value={r.type} /> },
           { label: 'Trạng thái', render: (r) => <Badge value={r.status} /> },
-          { label: 'Thời điểm', render: (r) => date(r.createdAt) },
+          {
+            label: 'Thời điểm',
+            render: (r) => (
+              <span className="whitespace-nowrap text-xs text-brand-muted">
+                {date(r.createdAt)}
+              </span>
+            ),
+          },
         ]}
         actions={(r) => (
-          <button className={secondary} onClick={() => setSelected(r)}>
+          <button
+            className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-brand-border bg-white px-3 py-1.5 text-xs font-semibold text-brand-navy hover:bg-brand-surface hover:text-[#d95f00] transition-colors cursor-pointer"
+            onClick={() => setSelected(r)}
+          >
             Đối soát
           </button>
         )}
       />
       {selected && (
-        <Dialog title="Chi tiết đối soát" onClose={() => setSelected(null)}>
-          <dl className="space-y-4">
-            {[
-              ['Mã giao dịch', selected.transactionCode],
-              ['Booking', selected.bookingCode],
-              ['Chủ bãi', selected.merchantName],
-              ['Cổng thanh toán', selected.gateway],
-              ['Số tiền', money(selected.amount)],
-              ['Trạng thái', selected.status],
-            ].map(([label, value]) => (
-              <div key={label} className="flex justify-between gap-4 text-sm">
-                <dt>{label}</dt>
-                <dd className="font-semibold">{value || '—'}</dd>
+        <Dialog
+          title="Chi tiết đối soát giao dịch"
+          onClose={() => setSelected(null)}
+        >
+          <div className="space-y-4">
+            <div className="flex items-center justify-between rounded-xl border border-brand-border bg-brand-surface p-4">
+              <div>
+                <p className="text-xs text-brand-muted">Số tiền giao dịch</p>
+                <p className="font-sora text-2xl font-bold tabular-nums text-[#d95f00]">
+                  {money(selected.amount)}
+                </p>
               </div>
-            ))}
-          </dl>
+              <Badge value={selected.status} />
+            </div>
+            <dl className="divide-y divide-brand-border/60 text-sm">
+              {[
+                ['Mã giao dịch', selected.transactionCode],
+                ['Mã đặt chỗ (Booking)', selected.bookingCode],
+                ['Chủ bãi thụ hưởng', selected.merchantName],
+                ['Cổng thanh toán', selected.gateway],
+                ['Loại giao dịch', selected.type],
+                ['Thời điểm tạo', date(selected.createdAt)],
+              ].map(([label, value]) => (
+                <div
+                  key={label}
+                  className="flex justify-between gap-4 pt-3 pb-1 text-sm"
+                >
+                  <dt className="text-brand-muted">{label}</dt>
+                  <dd className="font-semibold text-brand-navy">{value || '—'}</dd>
+                </div>
+              ))}
+            </dl>
+          </div>
         </Dialog>
       )}
     </>
@@ -309,6 +388,14 @@ interface Decision {
   method?: 'put' | 'post'
   action?: string
   isOptionalReason?: boolean
+  withdrawalInfo?: {
+    id: number
+    amount: number
+    bankName?: string
+    maskedBankAccount?: string
+    accountHolderName?: string
+    merchantName?: string
+  }
 }
 
 export function DecisionDialog({
@@ -357,6 +444,47 @@ export function DecisionDialog({
             ? 'Xác nhận phê duyệt hồ sơ bãi đỗ. Bãi sẽ được công bố và kích hoạt nhận đặt chỗ trên hệ thống.'
             : 'Kiểm tra hồ sơ trước khi xác nhận. Quyết định được lưu vào nhật ký hệ thống.'}
         </Notice>
+        {decision.withdrawalInfo && (
+          <div className="space-y-3 rounded-xl border border-brand-border bg-brand-surface p-4 text-sm">
+            <div className="flex items-center justify-between border-b border-brand-border/60 pb-2">
+              <span className="text-xs font-semibold uppercase tracking-wider text-brand-muted">
+                Lệnh rút tiền #{decision.withdrawalInfo.id}
+              </span>
+              <span className="font-sora text-lg font-bold tabular-nums text-[#d95f00]">
+                {money(decision.withdrawalInfo.amount)}
+              </span>
+            </div>
+            <div className="grid grid-cols-1 gap-2 text-xs sm:grid-cols-2">
+              <div>
+                <span className="text-brand-muted">Chủ bãi thụ hưởng:</span>
+                <p className="font-semibold text-brand-navy">
+                  {decision.withdrawalInfo.merchantName || '—'}
+                </p>
+              </div>
+              <div>
+                <span className="text-brand-muted">Ngân hàng:</span>
+                <p className="font-semibold text-brand-navy">
+                  {decision.withdrawalInfo.bankName || '—'}
+                </p>
+              </div>
+              <div>
+                <span className="text-brand-muted">Số tài khoản:</span>
+                <p className="font-mono font-semibold text-brand-navy">
+                  {decision.withdrawalInfo.maskedBankAccount || '—'}
+                </p>
+              </div>
+              <div>
+                <span className="text-brand-muted">Tên chủ tài khoản:</span>
+                <p className="font-semibold uppercase text-brand-navy">
+                  {decision.withdrawalInfo.accountHolderName || '—'}
+                </p>
+              </div>
+            </div>
+            <p className="text-[11px] italic text-brand-muted">
+              * Vui lòng kiểm tra kỹ số tài khoản và ngân hàng thụ hưởng trước khi bấm xác nhận chuyển tiền.
+            </p>
+          </div>
+        )}
         <Field
           label={
             isLotApproval
@@ -419,16 +547,53 @@ export function AdminWithdrawalsPage() {
         title="Phê duyệt rút tiền"
         path="/api/v1/admin/withdrawals"
         columns={[
-          { label: 'Yêu cầu', render: (r) => `#${r.id}` },
-          { label: 'Chủ bãi', render: (r) => r.merchantName },
-          { label: 'Số tiền', render: (r) => money(r.amount) },
+          {
+            label: 'Yêu cầu',
+            render: (r) => (
+              <span className="font-mono text-xs font-semibold text-brand-navy">
+                #{r.id}
+              </span>
+            ),
+          },
+          {
+            label: 'Chủ bãi',
+            render: (r) => (
+              <span className="font-semibold text-brand-navy">
+                {r.merchantName}
+              </span>
+            ),
+          },
+          {
+            label: 'Số tiền',
+            align: 'right',
+            render: (r) => (
+              <span className="font-sora font-semibold tabular-nums text-brand-navy">
+                {money(r.amount)}
+              </span>
+            ),
+          },
           {
             label: 'Tài khoản nhận',
-            render: (r) =>
-              `${r.bankName || '—'} · ${r.maskedBankAccount || '—'} · ${r.accountHolderName || '—'}`,
+            render: (r) => (
+              <div className="text-xs">
+                <span className="font-semibold text-brand-navy">
+                  {r.bankName || '—'}
+                </span>
+                <p className="font-mono text-brand-muted">
+                  {r.maskedBankAccount || '—'} · {r.accountHolderName || '—'}
+                </p>
+              </div>
+            ),
           },
           { label: 'Trạng thái', render: (r) => <Badge value={r.status} /> },
-          { label: 'Phản hồi', render: (r) => r.decisionReason || '—' },
+          {
+            label: 'Phản hồi',
+            render: (r) => (
+              <span className="text-xs text-brand-muted">
+                {r.decisionReason || '—'}
+              </span>
+            ),
+          },
         ]}
         actions={(r) =>
           r.status === 'PENDING' ? (
@@ -449,6 +614,14 @@ export function AdminWithdrawalsPage() {
                       title,
                       path: `/api/v1/admin/withdrawals/${r.id}/${action}`,
                       action,
+                      withdrawalInfo: {
+                        id: r.id,
+                        amount: r.amount,
+                        bankName: r.bankName,
+                        maskedBankAccount: r.maskedBankAccount,
+                        accountHolderName: r.accountHolderName,
+                        merchantName: r.merchantName,
+                      },
                     })
                   }
                 >
@@ -545,7 +718,7 @@ export function AdminUserDetailPage() {
       title={`Hồ sơ người dùng #${id}`}
       actions={
         <Link className={secondary} to="/admin/users">
-          ← Người dùng
+          ← Danh sách người dùng
         </Link>
       }
     >
@@ -571,7 +744,9 @@ export function AdminUserDetailPage() {
                 ].map(([label, value]) => (
                   <div key={label}>
                     <dt className="text-brand-muted">{label}</dt>
-                    <dd className="mt-2">{value || '—'}</dd>
+                    <dd className="mt-2 font-medium text-brand-navy">
+                      {value || '—'}
+                    </dd>
                   </div>
                 ))}
               </dl>
@@ -587,7 +762,13 @@ export function AdminUserDetailPage() {
                 ].map(([action, title]) => (
                   <button
                     key={action}
-                    className={secondary}
+                    className={
+                      action === 'unban'
+                        ? 'inline-flex items-center justify-center gap-2 rounded-xl bg-[#d95f00] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[#b84e00] active:bg-[#9e4300] transition-colors shadow-xs cursor-pointer'
+                        : action === 'ban'
+                          ? 'inline-flex items-center justify-center gap-2 rounded-xl border border-red-200 bg-red-50 px-4 py-2.5 text-sm font-semibold text-red-700 hover:bg-red-100 transition-colors cursor-pointer'
+                          : secondary
+                    }
                     onClick={() =>
                       setDecision({
                         title,
