@@ -84,12 +84,6 @@ describe('SCR-018: VirtualQueuesPage (Hàng Đợi Ảo Thông Minh)', () => {
   it('renders ALPR timeline flow with vehicle items and user highlight', async () => {
     renderWithProviders(<VirtualQueuesPage />)
 
-    // Expand technical details accordion
-    const toggleDetailsBtn = screen.getByRole('button', {
-      name: /Xem chi tiết phương tiện/i,
-    })
-    fireEvent.click(toggleDetailsBtn)
-
     expect(
       screen.getByText(/Tiến trình điều phối thực tế \(ALPR Pipeline\)/i)
     ).toBeInTheDocument()

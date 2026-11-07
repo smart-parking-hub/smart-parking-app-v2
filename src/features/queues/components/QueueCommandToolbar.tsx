@@ -54,7 +54,7 @@ export function QueueCommandToolbar({
       </div>
 
       {/* Bottom Segmented Controls */}
-      <div className="mt-6 pt-5 border-t border-slate-100 flex flex-wrap items-center justify-between gap-4">
+      <div className="mt-6 pt-5 border-t border-slate-100 flex items-center justify-between gap-4">
         <div className="inline-flex p-1 bg-slate-100/80 rounded-xl border border-slate-200" role="tablist">
           <button
             type="button"
@@ -67,19 +67,8 @@ export function QueueCommandToolbar({
                 : 'text-slate-600 hover:bg-slate-200/60 hover:text-slate-900'
             }`}
           >
-            <span
-              className={`w-2 h-2 rounded-full ${
-                activeTab === 'ACTIVE' ? 'bg-orange-500 animate-pulse' : 'bg-slate-400'
-              }`}
-            />
             <span>Đang hoạt động</span>
-            <span
-              className={`px-2 py-0.5 rounded-full text-xs font-bold ${
-                activeTab === 'ACTIVE'
-                  ? 'bg-orange-100 text-orange-700'
-                  : 'bg-slate-200 text-slate-600'
-              }`}
-            >
+            <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-orange-100 text-orange-700">
               {activeCount}
             </span>
           </button>
@@ -96,21 +85,10 @@ export function QueueCommandToolbar({
             }`}
           >
             <span>Lịch sử giữ chỗ</span>
-            <span
-              className={`px-2 py-0.5 rounded-full text-xs font-bold ${
-                activeTab === 'HISTORY'
-                  ? 'bg-slate-900 text-white'
-                  : 'bg-slate-200 text-slate-600'
-              }`}
-            >
+            <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-orange-100 text-orange-700">
               {historyCount}
             </span>
           </button>
-        </div>
-
-        <div className="text-xs text-slate-500 flex items-center gap-2">
-          <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-          <span>Vị trí tự động đồng bộ thời gian thực theo chuẩn FIFO</span>
         </div>
       </div>
     </div>

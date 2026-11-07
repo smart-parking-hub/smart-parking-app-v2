@@ -8,9 +8,6 @@ import {
   Trash2,
   AlertCircle,
   Zap,
-  ChevronDown,
-  ChevronUp,
-  Layers,
 } from 'lucide-react'
 import type { ActiveQueueItem } from '../types/queueTypes'
 import { QueueTimelineFlow } from './QueueTimelineFlow'
@@ -30,9 +27,6 @@ export function ActiveQueueCard({
   onDecline,
   onToggleStatusDemo,
 }: ActiveQueueCardProps) {
-  // Progressive disclosure state: hide secondary technical info by default
-  const [showTechnicalDetails, setShowTechnicalDetails] = useState(false)
-
   // 15-minute countdown timer state
   const [secondsRemaining, setSecondsRemaining] = useState<number>(() => {
     return item.holdSecondsRemaining ?? (item.status === 'NOTIFIED' ? 540 : 0)
@@ -73,54 +67,54 @@ export function ActiveQueueCard({
       data-testid="active-queue-card"
       className={`bg-white rounded-2xl border transition-all overflow-hidden shadow-sm ${
         isNotified
-          ? 'border-emerald-300 ring-2 ring-emerald-500/20 shadow-emerald-500/5'
+          ? 'border-orange-200 ring-2 ring-orange-500/10 shadow-orange-500/5'
           : 'border-slate-200'
       }`}
     >
-      {/* ── TOP HERO BANNER ── */}
+      {/* ── TOP HERO BANNER (Cam nhạt & Xám cho trạng thái nhận slot) ── */}
       {isNotified ? (
-        <div className="bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 text-white p-5 md:p-6 relative overflow-hidden">
+        <div className="bg-gradient-to-r from-orange-50 via-amber-50/60 to-slate-50 border-b border-orange-200/90 text-slate-900 p-5 md:p-6 relative overflow-hidden">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
               <div className="flex items-center gap-2">
-                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-bold uppercase tracking-wider bg-white/20 text-white">
-                  <span className="w-2 h-2 rounded-full bg-white animate-ping" />
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-bold uppercase tracking-wider bg-orange-100 text-orange-800 border border-orange-200">
+                  <span className="w-2 h-2 rounded-full bg-orange-500 animate-ping" />
                   Đã Có Slot Trống
                 </span>
-                <span className="text-xs text-emerald-100 font-mono">
+                <span className="text-xs text-slate-500 font-mono font-semibold">
                   {item.queueCode}
                 </span>
               </div>
-              <h3 className="text-xl md:text-2xl font-bold font-sora tracking-tight mt-1">
+              <h3 className="text-xl md:text-2xl font-bold font-sora text-slate-900 tracking-tight mt-1">
                 Đã Đến Lượt Của Bạn!
               </h3>
-              <p className="text-sm text-emerald-100 mt-0.5">
+              <p className="text-sm text-slate-600 mt-0.5">
                 Bãi đỗ đã dành một slot phù hợp cho phương tiện của bạn. Vui lòng xác nhận nhận slot trước khi hết hạn giữ chỗ.
               </p>
             </div>
 
             {/* Live Countdown Badge */}
             <div
-              className={`backdrop-blur-md border rounded-2xl p-4 text-center min-w-[160px] transition-all ${
+              className={`border rounded-2xl p-4 text-center min-w-[160px] transition-all ${
                 isUrgent
-                  ? 'bg-rose-950/40 border-rose-300/60 ring-2 ring-rose-400 animate-pulse'
-                  : 'bg-black/25 border-white/20'
+                  ? 'bg-rose-50 border-rose-300 ring-2 ring-rose-400 animate-pulse'
+                  : 'bg-white border-orange-200/80 shadow-xs'
               }`}
             >
-              <span className="text-[11px] font-semibold uppercase tracking-wider text-emerald-200 block">
+              <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 block">
                 {isUrgent ? '⚠️ Sắp hết hạn giữ chỗ' : 'Thời gian giữ slot'}
               </span>
               <div
                 className={`text-2xl md:text-3xl font-mono font-bold tracking-tight my-1 ${
-                  isUrgent ? 'text-rose-200' : 'text-white'
+                  isUrgent ? 'text-rose-600' : 'text-orange-600'
                 }`}
               >
                 {formatTimer(secondsRemaining)}
               </div>
-              <div className="w-full bg-white/20 rounded-full h-1.5 overflow-hidden">
+              <div className="w-full bg-slate-200 rounded-full h-1.5 overflow-hidden">
                 <div
                   className={`h-full rounded-full transition-all duration-1000 ${
-                    isUrgent ? 'bg-rose-400' : 'bg-emerald-300'
+                    isUrgent ? 'bg-rose-500' : 'bg-orange-500'
                   }`}
                   style={{ width: `${progressPercent}%` }}
                 />
@@ -232,63 +226,40 @@ export function ActiveQueueCard({
           </div>
         </div>
 
-        {/* Progressive Disclosure Toggle */}
-        <div className="pt-2">
-          <button
-            type="button"
-            onClick={() => setShowTechnicalDetails(!showTechnicalDetails)}
-            className="inline-flex items-center gap-2 text-xs font-semibold text-slate-600 hover:text-slate-900 p-2 -ml-2 rounded-lg hover:bg-slate-100 transition-colors cursor-pointer select-none"
-          >
-            <Layers className="w-4 h-4 text-orange-500" />
-            <span>
-              {showTechnicalDetails
-                ? 'Thu gọn chi tiết phương tiện & làn điều phối'
-                : 'Xem chi tiết phương tiện & làn điều phối'}
-            </span>
-            {showTechnicalDetails ? (
-              <ChevronUp className="w-4 h-4" />
-            ) : (
-              <ChevronDown className="w-4 h-4" />
-            )}
-          </button>
-
-          {/* Collapsible Panel */}
-          {showTechnicalDetails && (
-            <div className="mt-3 p-4 bg-slate-50 rounded-2xl border border-slate-200/80 space-y-4 animate-in fade-in slide-in-from-top-2 duration-150">
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 text-xs">
-                <div>
-                  <span className="text-slate-400 uppercase font-medium block">Biển số đăng ký</span>
-                  <strong className="text-sm font-mono text-slate-900 block mt-0.5">
-                    {item.vehiclePlate}
-                  </strong>
-                  <span className="text-slate-500">{item.vehicleSpec}</span>
-                </div>
-
-                {item.gateName && (
-                  <div>
-                    <span className="text-slate-400 uppercase font-medium block">Cổng & Làn barie</span>
-                    <strong className="text-sm text-slate-900 block mt-0.5">
-                      {item.gateName}
-                    </strong>
-                    <span className="text-slate-500">Cổng kiểm soát tự động</span>
-                  </div>
-                )}
-
-                <div>
-                  <span className="text-slate-400 uppercase font-medium block">Khoảng cách & ETA</span>
-                  <strong className="text-sm text-slate-900 block mt-0.5">
-                    {item.distanceKm} km (~{item.etaMinutes} phút)
-                  </strong>
-                  <span className="text-emerald-700 font-medium">Hợp lệ trong bán kính bãi</span>
-                </div>
-              </div>
-
-              {/* ALPR Timeline inside details */}
-              <div className="pt-3 border-t border-slate-200">
-                <QueueTimelineFlow items={item.timelineFlow} status={item.status} />
-              </div>
+        {/* Chi tiết phương tiện & làn điều phối (Hiển thị trực tiếp) */}
+        <div className="p-4 bg-slate-50/90 rounded-2xl border border-slate-200/80 space-y-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 text-xs">
+            <div>
+              <span className="text-slate-400 uppercase font-medium block">Biển số đăng ký</span>
+              <strong className="text-sm font-mono text-slate-900 block mt-0.5">
+                {item.vehiclePlate}
+              </strong>
+              <span className="text-slate-500">{item.vehicleSpec}</span>
             </div>
-          )}
+
+            {item.gateName && (
+              <div>
+                <span className="text-slate-400 uppercase font-medium block">Cổng & Làn barie</span>
+                <strong className="text-sm text-slate-900 block mt-0.5">
+                  {item.gateName}
+                </strong>
+                <span className="text-slate-500">Cổng kiểm soát tự động</span>
+              </div>
+            )}
+
+            <div>
+              <span className="text-slate-400 uppercase font-medium block">Khoảng cách & ETA</span>
+              <strong className="text-sm text-slate-900 block mt-0.5">
+                {item.distanceKm} km (~{item.etaMinutes} phút)
+              </strong>
+              <span className="text-emerald-700 font-medium">Hợp lệ trong bán kính bãi</span>
+            </div>
+          </div>
+
+          {/* ALPR Timeline */}
+          <div className="pt-3 border-t border-slate-200">
+            <QueueTimelineFlow items={item.timelineFlow} status={item.status} />
+          </div>
         </div>
 
         {/* Action Controls */}
@@ -299,7 +270,7 @@ export function ActiveQueueCard({
                 <button
                   type="button"
                   onClick={onAccept}
-                  className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm transition-all shadow-md shadow-emerald-600/25 focus:ring-2 focus:ring-emerald-500 focus:outline-none cursor-pointer"
+                  className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-orange-600 hover:bg-orange-700 text-white font-bold text-sm transition-all shadow-md shadow-orange-600/20 focus:ring-2 focus:ring-orange-500 focus:outline-none cursor-pointer"
                 >
                   <CheckCircle2 className="w-5 h-5" />
                   <span>Nhận Slot & Tạo Booking Ngay</span>
