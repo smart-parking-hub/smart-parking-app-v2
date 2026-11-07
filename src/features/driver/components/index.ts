@@ -37,3 +37,13 @@ export * from '../../bookings/components/PayOsCheckoutModal'
 export * from '../../bookings/components/BookingsSkeleton'
 export * from '../../bookings/components/BookingsEmptyState'
 export * from '../../bookings/components/BookingsErrorState'
+
+// SCR-018 Driver Virtual Queues components
+export * from '../../queues/components/QueueCommandToolbar'
+export * from '../../queues/components/ActiveQueueCard'
+export * from '../../queues/components/QueueTimelineFlow'
+export * from '../../queues/components/QueueHistoryTable'
+export * from '../../queues/components/QueueRegulationsSection'
+export * from '../../queues/components/LeaveQueueConfirmModal'
+export * from '../../queues/components/AcceptQueueSuccessModal'
+export * from '../../queues/components/QueueSkeleton'

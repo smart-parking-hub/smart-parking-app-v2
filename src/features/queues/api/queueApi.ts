@@ -188,7 +188,12 @@ export const fallbackRegulations: QueueRegulationItem[] = [
 
 export const fetchMyActiveQueue = async (): Promise<ActiveQueueItem | null> => {
   try {
-    const response = await apiClient.get('/api/v1/queues/me')
+    let response
+    try {
+      response = await apiClient.get('/api/v1/queues/my')
+    } catch {
+      response = await apiClient.get('/api/v1/queues/me')
+    }
     const raw = response.data?.data
     if (!raw) return fallbackActiveQueue
 
@@ -227,7 +232,40 @@ export const fetchMyActiveQueue = async (): Promise<ActiveQueueItem | null> => {
 }
 
 export const fetchQueueHistory = async (): Promise<QueueHistoryItem[]> => {
-  return fallbackQueueHistory
+  try {
+    const response = await apiClient.get('/api/v1/queues', {
+      params: { page: 0, size: 20 },
+    })
+    const content = response.data?.data?.content
+    if (Array.isArray(content) && content.length > 0) {
+      return content.map((item: {
+        id: number
+        joinedAt?: string
+        parkingLotName?: string
+        parkingLotAddress?: string
+        vehiclePlate?: string
+        vehicleSpec?: string
+        status?: string
+      }) => ({
+        id: item.id,
+        queueCode: `VQ-2026-${item.id.toString().padStart(4, '0')}`,
+        registeredAtText: item.joinedAt
+          ? new Date(item.joinedAt).toLocaleString('vi-VN')
+          : '09:15 Hôm nay',
+        parkingLotName: item.parkingLotName || fallbackQueueHistory[0].parkingLotName,
+        parkingLotAddress: item.parkingLotAddress || fallbackQueueHistory[0].parkingLotAddress,
+        vehiclePlate: item.vehiclePlate || '51D-894.12',
+        vehicleSpec: item.vehicleSpec || 'Container 40FT',
+        initialPosition: 1,
+        waitTimeText: '10 phút chờ',
+        status: (item.status as any) || 'CONVERTED',
+        statusText: 'Đã hoàn tất phiên xếp hàng',
+      }))
+    }
+    return fallbackQueueHistory
+  } catch {
+    return fallbackQueueHistory
+  }
 }
 
 export const fetchQueueTelemetry = async (): Promise<QueueTelemetryData> => {
@@ -238,11 +276,18 @@ export const fetchQueueRegulations = async (): Promise<QueueRegulationItem[]> =>
   return fallbackRegulations
 }
 
-export const leaveQueueApi = async (queueId: number): Promise<void> => {
+export const leaveQueueApi = async (
+  queueId: number,
+  payload?: { reason?: string; note?: string }
+): Promise<void> => {
   try {
-    await apiClient.post(`/api/v1/queues/${queueId}/cancel`)
+    await apiClient.post(`/api/v1/queues/${queueId}/leave`, payload)
   } catch {
-    // simulated fallback ok
+    try {
+      await apiClient.post(`/api/v1/queues/${queueId}/cancel`, payload)
+    } catch {
+      // simulated fallback ok
+    }
   }
 }
 

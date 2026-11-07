@@ -1,4 +1,6 @@
 export * from './types/queueTypes'
+export * from './schemas/queueSchemas'
+export * from './store/queueStore'
 export * from './api/queueApi'
 export * from './pages/VirtualQueuesPage'
 export * from './components/QueueCommandToolbar'

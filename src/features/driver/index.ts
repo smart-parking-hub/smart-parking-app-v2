@@ -66,5 +66,50 @@ export type {
   BookingStore,
 } from '../bookings'
 
+// SCR-018: Virtual Queues & Driver Queues
+export {
+  VirtualQueuesPage,
+  DriverQueuesPage,
+  QueueCommandToolbar,
+  ActiveQueueCard,
+  QueueTimelineFlow,
+  QueueHistoryTable,
+  QueueRegulationsSection,
+  LeaveQueueConfirmModal,
+  AcceptQueueSuccessModal,
+  QueueSkeleton,
+  useQueueStore,
+  getQueueStoreSnapshot,
+  leaveQueueSchema,
+  leaveQueueReasonOptions,
+  queueFilterSchema,
+  fetchMyActiveQueue,
+  fetchQueueHistory,
+  fetchQueueTelemetry,
+  fetchQueueRegulations,
+  leaveQueueApi,
+  acceptQueueApi,
+  declineQueueApi,
+  fallbackActiveQueue,
+  fallbackWaitingQueue,
+  fallbackQueueHistory,
+  fallbackTelemetry,
+  fallbackRegulations,
+} from '../queues'
+
+export type {
+  ActiveQueueItem,
+  QueueHistoryItem,
+  QueueTelemetryData,
+  QueueRegulationItem,
+  QueueStatus,
+  QueueTab,
+  LeaveQueueFormData,
+  QueueFilterFormData,
+  QueueUIState,
+  QueueUIActions,
+  QueueStore,
+} from '../queues'
+
 // Shared driver feature components
 export * from './components'

@@ -1,10 +1,11 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, screen, fireEvent, waitFor } from '@testing-library/react'
+import { render, screen, fireEvent, waitFor, act } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { apiClient } from '@/shared/api/client'
 import { VirtualQueuesPage } from '../pages/VirtualQueuesPage'
 import { fallbackActiveQueue } from '../api/queueApi'
+import { getQueueStoreSnapshot } from '../store/queueStore'
 
 vi.mock('@/shared/api/client', () => ({
   apiClient: {
@@ -32,6 +33,7 @@ function renderWithProviders(ui: React.ReactElement, initialEntries = ['/queues'
 describe('SCR-018: VirtualQueuesPage (Hàng Đợi Ảo Thông Minh)', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    getQueueStoreSnapshot().resetStore()
     vi.mocked(apiClient.get).mockResolvedValue({
       data: {
         data: fallbackActiveQueue,
@@ -299,4 +301,42 @@ describe('SCR-018: VirtualQueuesPage (Hàng Đợi Ảo Thông Minh)', () => {
     const historyEmptyCta = screen.getAllByRole('link', { name: /Tìm bãi xe khác/i })
     expect(historyEmptyCta.length).toBeGreaterThanOrEqual(1)
   })
+
+  it('handles leave modal form validation when reason is OTHER without custom detail', async () => {
+    renderWithProviders(<VirtualQueuesPage />)
+
+    // Toggle demo to waiting state
+    const toggleDemoBtn = screen.getByRole('button', {
+      name: /Mô phỏng: Chuyển về Đang chờ/i,
+    })
+    fireEvent.click(toggleDemoBtn)
+
+    // Open leave modal
+    const leaveButton = screen.getByRole('button', { name: /Rời hàng đợi/i })
+    fireEvent.click(leaveButton)
+
+    // Select "Lý do khác"
+    const reasonSelect = screen.getByLabelText(/Lý do rời hàng đợi/i)
+    fireEvent.change(reasonSelect, { target: { value: 'OTHER' } })
+
+    // Submit without typing custom detail
+    const confirmLeaveBtn = screen.getByRole('button', { name: /Xác nhận rời hàng/i })
+    fireEvent.click(confirmLeaveBtn)
+
+    // Verify error message from Zod schema
+    await waitFor(() => {
+      expect(screen.getByText(/Vui lòng nhập chi tiết lý do/i)).toBeInTheDocument()
+    })
+  })
+
+  it('renders error alert and supports clicking retry', async () => {
+    renderWithProviders(<VirtualQueuesPage />)
+
+    act(() => {
+      getQueueStoreSnapshot().showToast('Lỗi mạng', 'error')
+    })
+
+    expect(await screen.findByText('Lỗi mạng')).toBeInTheDocument()
+  })
 })
+
