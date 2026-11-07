@@ -120,40 +120,40 @@ export function ActiveQueueCard({
           </div>
         </div>
       ) : (
-        <div className="bg-slate-700 text-white p-4 md:p-5 border-b border-slate-600">
-          {/* Nền xám cho header theo yêu cầu Hình 1 */}
+        <div className="bg-slate-100 text-slate-900 p-4 md:p-5 border-b border-slate-200">
+          {/* Nền xám chữ đen theo yêu cầu */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div className="flex items-start gap-3">
-              <span className="p-2 rounded-xl bg-slate-800/80 border border-slate-600 shrink-0">
-                <span className="w-6 h-6 flex items-center justify-center font-bold text-white font-sora text-lg">
+              <span className="p-2 rounded-xl bg-white border border-slate-200 shadow-2xs shrink-0">
+                <span className="w-6 h-6 flex items-center justify-center font-bold text-slate-900 font-sora text-lg">
                   #{item.position ?? 1}
                 </span>
               </span>
               <div>
                 <div className="flex items-center gap-2">
-                  {/* Bỏ chấm tròn theo yêu cầu Hình 5 */}
-                  <span className="inline-flex items-center px-3 py-0.5 rounded-full text-xs font-bold uppercase tracking-wider bg-white/15 text-white border border-white/25">
+                  {/* Bỏ chấm tròn, chữ đen trên nền xám */}
+                  <span className="inline-flex items-center px-3 py-0.5 rounded-full text-xs font-bold uppercase tracking-wider bg-white text-slate-800 border border-slate-300 shadow-2xs">
                     Đang chờ vào chỗ
                   </span>
-                  <span className="text-xs text-white/80 font-mono">
+                  <span className="text-xs text-slate-500 font-mono font-semibold">
                     {item.queueCode}
                   </span>
                 </div>
-                <h3 className="text-lg md:text-xl font-bold font-sora text-white tracking-tight mt-1">
+                <h3 className="text-lg md:text-xl font-bold font-sora text-slate-900 tracking-tight mt-1">
                   Vị trí trong hàng đợi: #{item.position ?? 1}
                 </h3>
-                <p className="text-xs md:text-sm text-white/90 mt-0.5">
+                <p className="text-xs md:text-sm text-slate-600 mt-0.5">
                   Tự động thông báo và cấp slot khi bãi đỗ giải phóng chỗ trống phù hợp.
                 </p>
               </div>
             </div>
 
-            <div className="bg-slate-800/80 border border-slate-600 rounded-xl p-2.5 px-4 text-center">
-              <span className="text-[11px] font-semibold text-white/80 block uppercase tracking-wider">
+            <div className="bg-white border border-slate-200/90 rounded-xl p-2.5 px-4 text-center shadow-2xs">
+              <span className="text-[11px] font-semibold text-slate-500 block uppercase tracking-wider">
                 Tốc độ giải phóng bãi
               </span>
-              <span className="text-sm md:text-base font-bold text-white block mt-0.5">
-                {/* Bỏ .0 để số tự nhiên theo yêu cầu Hình 3 */}
+              <span className="text-sm md:text-base font-bold text-slate-900 block mt-0.5">
+                {/* Bỏ .0 để số tự nhiên theo yêu cầu */}
                 {(item.checkOutSpeedText ?? '~4 phút / 1 xe').replace(/\.0\b/g, '')}
               </span>
             </div>
