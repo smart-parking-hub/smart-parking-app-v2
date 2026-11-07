@@ -58,7 +58,7 @@ describe('SCR-018: DriverQueuesPage Export & Integration Verification', () => {
     expect(
       screen.getByRole('heading', {
         level: 1,
-        name: /Hàng Đợi Ảo \(Virtual Queues\)/i,
+        name: /Lượt Chờ Vào Bãi|Hàng Đợi/i,
       })
     ).toBeInTheDocument()
 

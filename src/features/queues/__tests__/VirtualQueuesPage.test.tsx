@@ -58,7 +58,7 @@ describe('SCR-018: VirtualQueuesPage (Hàng Đợi Ảo Thông Minh)', () => {
     expect(
       screen.getByRole('heading', {
         level: 1,
-        name: /Hàng Đợi Ảo \(Virtual Queues\)/i,
+        name: /Lượt Chờ Vào Bãi|Hàng Đợi Ảo/i,
       })
     ).toBeInTheDocument()
     expect(screen.getByText(/Radar 5km Active/i)).toBeInTheDocument()
@@ -84,6 +84,12 @@ describe('SCR-018: VirtualQueuesPage (Hàng Đợi Ảo Thông Minh)', () => {
 
   it('renders ALPR timeline flow with vehicle items and user highlight', async () => {
     renderWithProviders(<VirtualQueuesPage />)
+
+    // Expand technical details accordion
+    const toggleDetailsBtn = screen.getByRole('button', {
+      name: /Xem chi tiết phương tiện/i,
+    })
+    fireEvent.click(toggleDetailsBtn)
 
     expect(
       screen.getByText(/Tiến trình điều phối thực tế \(ALPR Pipeline\)/i)
@@ -124,7 +130,7 @@ describe('SCR-018: VirtualQueuesPage (Hàng Đợi Ảo Thông Minh)', () => {
     fireEvent.click(declineButton)
 
     await waitFor(() => {
-      expect(screen.getByText(/Đang Xếp Hàng Chờ/i)).toBeInTheDocument()
+      expect(screen.getByText(/Đang chờ vào chỗ/i)).toBeInTheDocument()
       expect(screen.getByText(/Vị trí trong hàng đợi: #3/i)).toBeInTheDocument()
     })
   })
@@ -207,6 +213,12 @@ describe('SCR-018: VirtualQueuesPage (Hàng Đợi Ảo Thông Minh)', () => {
   it('renders the 4 operational regulations cards', async () => {
     renderWithProviders(<VirtualQueuesPage />)
 
+    // Expand regulations accordion
+    const toggleRegsBtn = screen.getByRole('button', {
+      name: /Quy Định Vận Hành/i,
+    })
+    fireEvent.click(toggleRegsBtn)
+
     expect(
       screen.getByRole('heading', {
         name: /Quy Định Vận Hành Hàng Đợi Ảo/i,
@@ -214,7 +226,7 @@ describe('SCR-018: VirtualQueuesPage (Hàng Đợi Ảo Thông Minh)', () => {
     ).toBeInTheDocument()
 
     expect(screen.getByText(/Nguyên Tắc FIFO & ALPR Minh Bạch/i)).toBeInTheDocument()
-    expect(screen.getByText(/Thời Gian Giữ Slot 15 Phút/i)).toBeInTheDocument()
+    expect(screen.getAllByText(/Thời Gian Giữ Slot 15 Phút/i).length).toBeGreaterThanOrEqual(1)
     expect(screen.getByText(/Bán Kính Radar Geofence 5\.0 KM/i)).toBeInTheDocument()
     expect(screen.getByText(/Giới Hạn 1 Hàng Đợi Đồng Thời/i)).toBeInTheDocument()
   })

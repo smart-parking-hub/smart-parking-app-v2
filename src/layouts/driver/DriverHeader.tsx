@@ -18,7 +18,7 @@ const links = [
   ['/dashboard', 'Tổng quan'],
   ['/parking', 'Bản đồ tìm bãi'],
   ['/bookings', 'Vé & Đặt chỗ'],
-  ['/queues', 'Hàng đợi ảo'],
+  ['/queues', 'Lượt chờ vào bãi'],
   ['/payments', 'Lịch sử cước'],
   ['/vehicles', 'Đội xe của tôi'],
   ['/disputes', 'Khiếu nại'],

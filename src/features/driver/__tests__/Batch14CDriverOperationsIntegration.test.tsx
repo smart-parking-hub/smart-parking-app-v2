@@ -186,7 +186,12 @@ describe('BATCH-14C: Driver Operations Integration (SCR-018 to SCR-024)', () => 
 
     // Toolbar Header & Title
     expect(screen.getByText(/Hệ thống điều phối hàng đợi thông minh/i)).toBeInTheDocument()
-    expect(screen.getByText(/Hàng Đợi Ảo \(Virtual Queues\)/i)).toBeInTheDocument()
+    expect(
+      screen.getByRole('heading', {
+        level: 1,
+        name: /Lượt Chờ Vào Bãi/i,
+      })
+    ).toBeInTheDocument()
 
     // Active Queue Card details
     expect(await screen.findByText(/Đã Đến Lượt Của Bạn!/i)).toBeInTheDocument()

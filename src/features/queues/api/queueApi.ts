@@ -68,7 +68,7 @@ export const fallbackWaitingQueue: ActiveQueueItem = {
   distanceKm: 3.8,
   etaMinutes: 12,
   status: 'WAITING',
-  statusBadgeLabel: 'ĐANG XẾP HÀNG CHỜ GIẢI PHÓNG',
+  statusBadgeLabel: 'Đang chờ vào chỗ',
   position: 3,
   peopleAhead: 2,
   estimatedWaitMinutes: 15,
@@ -212,8 +212,8 @@ export const fetchMyActiveQueue = async (): Promise<ActiveQueueItem | null> => {
       status: raw.status || 'WAITING',
       statusBadgeLabel:
         raw.status === 'NOTIFIED'
-          ? 'ĐÃ CÓ SLOT TRỐNG - ĐẾN LƯỢT XÁC NHẬN'
-          : 'ĐANG XẾP HÀNG CHỜ GIẢI PHÓNG',
+          ? 'Đã Có Slot Trống - Đến Lượt Bạn'
+          : 'Đang chờ vào chỗ',
       position: raw.position ?? 1,
       peopleAhead: raw.peopleAhead ?? 0,
       estimatedWaitMinutes: (raw.peopleAhead ?? 0) * 5 + 5,

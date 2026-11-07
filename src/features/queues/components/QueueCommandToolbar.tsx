@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { Radio, ShieldCheck, Plus, Sparkles, Activity } from 'lucide-react'
+import { Radio, Plus, Sparkles, Activity } from 'lucide-react'
 import type { QueueTab, QueueTelemetryData } from '../types/queueTypes'
 
 interface QueueCommandToolbarProps {
@@ -18,30 +18,30 @@ export function QueueCommandToolbar({
   telemetry,
 }: QueueCommandToolbarProps) {
   return (
-    <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 md:p-6 mb-6">
+    <div className="bg-white rounded-2xl border border-slate-200/90 shadow-sm p-5 md:p-6 mb-6">
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-        {/* Left: Eyebrow, Title & Description */}
+        {/* Left: Eyebrow, Title & Clean Description */}
         <div className="space-y-1.5">
           <div className="flex items-center gap-2">
-            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold uppercase tracking-wider bg-orange-50 text-orange-600 border border-orange-200/80">
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold uppercase tracking-wider bg-orange-50 text-orange-600 border border-orange-200/80">
               <span className="w-2 h-2 rounded-full bg-orange-500 animate-pulse" />
               Hệ thống điều phối hàng đợi thông minh
             </span>
-            <span className="hidden sm:inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">
+            <span className="hidden sm:inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">
               <Radio className="w-3.5 h-3.5 text-emerald-600 animate-pulse" />
               Radar {telemetry.radarRadiusKm}km Active
             </span>
           </div>
 
           <h1 className="text-2xl md:text-3xl font-bold font-sora text-slate-900 tracking-tight">
-            Hàng Đợi Ảo (Virtual Queues)
+            Lượt Chờ Vào Bãi (Virtual Queues)
           </h1>
           <p className="text-sm md:text-base text-slate-600 max-w-2xl">
-            Theo dõi vị trí thời gian thực, nhận phân bổ slot thông minh theo chuẩn FIFO ALPR và tự động chuyển đổi thành vé đỗ xe khi bãi giải phóng chỗ.
+            Theo dõi số thứ tự thực tế và nhận thông báo ngay khi bãi đỗ giải phóng chỗ trống phù hợp cho phương tiện của bạn.
           </p>
         </div>
 
-        {/* Right: Telemetry chips & CTA */}
+        {/* Right: Quick metric & Outbound CTA */}
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
           <div className="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2">
             <Activity className="w-4 h-4 text-slate-500 shrink-0" />
@@ -55,7 +55,7 @@ export function QueueCommandToolbar({
 
           <Link
             to="/parking"
-            className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-orange-600 hover:bg-orange-700 text-white font-semibold text-sm transition-colors shadow-sm shadow-orange-600/20 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2"
+            className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-orange-600 hover:bg-orange-700 text-white font-semibold text-sm transition-colors shadow-sm shadow-orange-600/20 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 cursor-pointer"
           >
             <Plus className="w-4 h-4" />
             <span>Tìm bãi & Đăng ký</span>
@@ -71,7 +71,7 @@ export function QueueCommandToolbar({
             role="tab"
             aria-selected={activeTab === 'ACTIVE'}
             onClick={() => onTabChange('ACTIVE')}
-            className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
+            className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all cursor-pointer ${
               activeTab === 'ACTIVE'
                 ? 'bg-white text-slate-900 shadow-sm'
                 : 'text-slate-600 hover:text-slate-900'
@@ -95,7 +95,7 @@ export function QueueCommandToolbar({
             role="tab"
             aria-selected={activeTab === 'HISTORY'}
             onClick={() => onTabChange('HISTORY')}
-            className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
+            className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all cursor-pointer ${
               activeTab === 'HISTORY'
                 ? 'bg-white text-slate-900 shadow-sm'
                 : 'text-slate-600 hover:text-slate-900'
@@ -114,16 +114,9 @@ export function QueueCommandToolbar({
           </button>
         </div>
 
-        {/* Realtime Status Badges */}
-        <div className="flex items-center gap-3 text-xs text-slate-500">
-          <span className="flex items-center gap-1.5 font-medium">
-            <ShieldCheck className="w-4 h-4 text-emerald-600" />
-            Chuẩn ALPR FIFO 100%
-          </span>
-          <span className="hidden md:inline">•</span>
-          <span className="hidden md:flex items-center gap-1 font-medium">
-            Cập nhật thời gian thực
-          </span>
+        <div className="text-xs text-slate-500 flex items-center gap-2">
+          <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+          <span>Vị trí tự động đồng bộ thời gian thực theo chuẩn FIFO</span>
         </div>
       </div>
     </div>
