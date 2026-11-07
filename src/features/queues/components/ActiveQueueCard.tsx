@@ -10,7 +10,6 @@ import {
   Zap,
 } from 'lucide-react'
 import type { ActiveQueueItem } from '../types/queueTypes'
-import { QueueTimelineFlow } from './QueueTimelineFlow'
 
 interface ActiveQueueCardProps {
   item: ActiveQueueItem
@@ -256,11 +255,6 @@ export function ActiveQueueCard({
               </strong>
               <span className="text-emerald-700 font-medium">Hợp lệ trong bán kính bãi</span>
             </div>
-          </div>
-
-          {/* ALPR Timeline */}
-          <div className="pt-2 border-t border-slate-200/80">
-            <QueueTimelineFlow items={item.timelineFlow} status={item.status} />
           </div>
         </div>
 

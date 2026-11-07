@@ -27,7 +27,7 @@ export const fallbackActiveQueue: ActiveQueueItem = {
   peopleAhead: 0,
   estimatedWaitMinutes: 0,
   checkOutSpeedText: '~4.2 phút / 1 xe rời bãi',
-  radarCurrentLocation: 'GPS: 10.7629° N, 106.7794° E • Hợp lệ trong vùng đệm 5km',
+  radarCurrentLocation: 'GPS: 10.7629° N, 106.7794° E • Hợp lệ trong bán kính bãi (5km)',
   registeredAtText: '14:20 Hôm nay (03/11/2026)',
   timelineFlow: [
     {
@@ -73,7 +73,7 @@ export const fallbackWaitingQueue: ActiveQueueItem = {
   peopleAhead: 2,
   estimatedWaitMinutes: 15,
   checkOutSpeedText: '~5.0 phút / 1 xe rời bãi',
-  radarCurrentLocation: 'GPS: 10.8912° N, 106.7421° E • Trong vùng đệm chờ 5km',
+  radarCurrentLocation: 'GPS: 10.8912° N, 106.7421° E • Trong bán kính giữ chỗ 5km',
   registeredAtText: '15:10 Hôm nay (03/11/2026)',
   timelineFlow: [
     {

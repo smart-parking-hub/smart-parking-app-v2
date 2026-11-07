@@ -81,15 +81,20 @@ describe('SCR-018: VirtualQueuesPage (Hàng Đợi Ảo Thông Minh)', () => {
     expect(screen.getByText(/Ưu tiên Hàng Lạnh Reefer 380V/i)).toBeInTheDocument()
   })
 
-  it('renders ALPR timeline flow with vehicle items and user highlight', async () => {
+  it('renders essential vehicle specifications, gate information and ETA cleanly without redundant external vehicle pipeline', async () => {
     renderWithProviders(<VirtualQueuesPage />)
 
+    // Essential driver info is rendered
+    expect(screen.getAllByText('51D-894.12').length).toBeGreaterThanOrEqual(1)
+    expect(screen.getByText('Cổng G2 - Làn kiểm soát tự động ALPR')).toBeInTheDocument()
+    expect(screen.getByText('2.4 km (~8 phút)')).toBeInTheDocument()
+    expect(screen.getByText('Hợp lệ trong bán kính bãi')).toBeInTheDocument()
+
+    // Redundant external queue pipeline simulation is removed for cleaner UX
     expect(
-      screen.getByText(/Tiến trình điều phối thực tế \(ALPR Pipeline\)/i)
-    ).toBeInTheDocument()
-    expect(screen.getByText('50H-123.45')).toBeInTheDocument()
-    expect(screen.getByText('60C-982.11')).toBeInTheDocument()
-    expect(screen.getByText(/Xe xuất bãi trước/i)).toBeInTheDocument()
+      screen.queryByText(/Tiến trình điều phối thực tế \(ALPR Pipeline\)/i)
+    ).not.toBeInTheDocument()
+    expect(screen.queryByText('50H-123.45')).not.toBeInTheDocument()
   })
 
   it('accepts slot and opens success modal with booking code and CTA', async () => {

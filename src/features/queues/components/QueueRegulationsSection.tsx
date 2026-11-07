@@ -45,7 +45,7 @@ export function QueueRegulationsSection({
                 Quy Định Vận Hành Hàng Đợi Ảo & Giữ Chỗ Tự Động
               </h3>
               <p className="text-xs text-slate-500">
-                Tìm hiểu các nguyên tắc điều phối FIFO, thời gian giữ slot 15 phút và vùng đệm bãi xe
+                Tìm hiểu các nguyên tắc điều phối thứ tự, thời gian giữ slot 15 phút và bán kính giữ chỗ quanh bãi xe
               </p>
             </div>
           </div>
