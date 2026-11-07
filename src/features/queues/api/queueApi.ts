@@ -72,7 +72,7 @@ export const fallbackWaitingQueue: ActiveQueueItem = {
   position: 3,
   peopleAhead: 2,
   estimatedWaitMinutes: 15,
-  checkOutSpeedText: '~5.0 phút / 1 xe rời bãi',
+  checkOutSpeedText: '~5 phút / 1 xe rời bãi',
   radarCurrentLocation: 'GPS: 10.8912° N, 106.7421° E • Trong bán kính giữ chỗ 5km',
   registeredAtText: '15:10 Hôm nay (03/11/2026)',
   timelineFlow: [

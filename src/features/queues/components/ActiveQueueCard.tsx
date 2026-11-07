@@ -72,8 +72,8 @@ export function ActiveQueueCard({
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
               <div className="flex items-center gap-2">
-                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-bold uppercase tracking-wider bg-orange-100 text-orange-800 border border-orange-200">
-                  <span className="w-2 h-2 rounded-full bg-orange-500 animate-ping" />
+                {/* Bỏ chấm tròn theo yêu cầu Hình 5 */}
+                <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-orange-100 text-orange-800 border border-orange-200">
                   Đã Có Slot Trống
                 </span>
                 <span className="text-xs text-slate-500 font-mono font-semibold">
@@ -120,40 +120,41 @@ export function ActiveQueueCard({
           </div>
         </div>
       ) : (
-        <div className="bg-slate-900 text-white p-4 md:p-5 border-b border-slate-800">
+        <div className="bg-slate-700 text-white p-4 md:p-5 border-b border-slate-600">
+          {/* Nền xám cho header theo yêu cầu Hình 1 */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div className="flex items-start gap-3">
-              <span className="p-2 rounded-xl bg-slate-800 border border-slate-700 shrink-0">
+              <span className="p-2 rounded-xl bg-slate-800/80 border border-slate-600 shrink-0">
                 <span className="w-6 h-6 flex items-center justify-center font-bold text-white font-sora text-lg">
                   #{item.position ?? 1}
                 </span>
               </span>
               <div>
                 <div className="flex items-center gap-2">
-                  {/* Status Badge: Đổi thành chữ trắng toàn bộ theo yêu cầu */}
-                  <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-bold uppercase tracking-wider bg-white/10 text-white border border-white/20">
-                    <span className="w-2 h-2 rounded-full bg-white animate-pulse" />
+                  {/* Bỏ chấm tròn theo yêu cầu Hình 5 */}
+                  <span className="inline-flex items-center px-3 py-0.5 rounded-full text-xs font-bold uppercase tracking-wider bg-white/15 text-white border border-white/25">
                     Đang chờ vào chỗ
                   </span>
-                  <span className="text-xs text-white/70 font-mono">
+                  <span className="text-xs text-white/80 font-mono">
                     {item.queueCode}
                   </span>
                 </div>
                 <h3 className="text-lg md:text-xl font-bold font-sora text-white tracking-tight mt-1">
                   Vị trí trong hàng đợi: #{item.position ?? 1}
                 </h3>
-                <p className="text-xs md:text-sm text-white/80 mt-0.5">
+                <p className="text-xs md:text-sm text-white/90 mt-0.5">
                   Tự động thông báo và cấp slot khi bãi đỗ giải phóng chỗ trống phù hợp.
                 </p>
               </div>
             </div>
 
-            <div className="bg-slate-800/90 border border-slate-700 rounded-xl p-2.5 px-4 text-center">
-              <span className="text-[11px] font-semibold text-white/70 block uppercase tracking-wider">
+            <div className="bg-slate-800/80 border border-slate-600 rounded-xl p-2.5 px-4 text-center">
+              <span className="text-[11px] font-semibold text-white/80 block uppercase tracking-wider">
                 Tốc độ giải phóng bãi
               </span>
               <span className="text-sm md:text-base font-bold text-white block mt-0.5">
-                {item.checkOutSpeedText ?? '~4.2 phút / 1 xe'}
+                {/* Bỏ .0 để số tự nhiên theo yêu cầu Hình 3 */}
+                {(item.checkOutSpeedText ?? '~4 phút / 1 xe').replace(/\.0\b/g, '')}
               </span>
             </div>
           </div>
@@ -195,28 +196,7 @@ export function ActiveQueueCard({
         )}
 
         {/* Facility & Assigned Location */}
-        <div className="space-y-2">
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="px-2.5 py-0.5 rounded-md text-xs font-bold bg-slate-100 text-slate-700">
-              BÃI ĐỖ XE
-            </span>
-            {item.vehiclePlate && (
-              <span className="px-2.5 py-0.5 rounded-md text-xs font-mono font-bold bg-slate-100 text-slate-800 border border-slate-200">
-                {item.vehiclePlate}
-              </span>
-            )}
-            {item.priorityLabel && (
-              <span className="px-2.5 py-0.5 rounded-md text-xs font-bold bg-blue-50 text-blue-700 border border-blue-200">
-                {item.priorityLabel}
-              </span>
-            )}
-            {item.berthCode && (
-              <span className="px-2.5 py-0.5 rounded-md text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 font-mono">
-                {item.berthCode}
-              </span>
-            )}
-          </div>
-
+        <div className="space-y-1.5">
           <h2 className="text-xl md:text-2xl font-bold font-sora text-slate-900">
             {item.parkingLotName}
           </h2>
@@ -227,33 +207,45 @@ export function ActiveQueueCard({
           </div>
         </div>
 
-        {/* Chi tiết phương tiện & làn điều phối (Hiển thị trực tiếp, gọn gàng) */}
-        <div className="p-3 sm:p-3.5 bg-slate-50/90 rounded-xl border border-slate-200/80 space-y-2.5">
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2.5 sm:gap-3 text-xs">
+        {/* Chi tiết phương tiện & làn điều phối (Chữ to, rõ ràng, toàn bộ màu đen theo yêu cầu Hình 4) */}
+        <div className="p-4 sm:p-5 bg-slate-50 rounded-xl border border-slate-200 space-y-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
             <div>
-              <span className="text-slate-400 uppercase font-medium block">Biển số đăng ký</span>
-              <strong className="text-sm font-mono text-slate-900 block mt-0.5">
+              <span className="text-xs sm:text-sm font-semibold uppercase tracking-wider text-slate-700 block">
+                Biển số đăng ký
+              </span>
+              <strong className="text-base sm:text-lg font-bold font-mono text-slate-900 block mt-1">
                 {item.vehiclePlate}
               </strong>
-              <span className="text-slate-500">{item.vehicleSpec}</span>
+              <span className="text-sm text-slate-900 block mt-0.5">
+                {item.vehicleSpec}
+              </span>
             </div>
 
             {item.gateName && (
               <div>
-                <span className="text-slate-400 uppercase font-medium block">Cổng & Làn barie</span>
-                <strong className="text-sm text-slate-900 block mt-0.5">
+                <span className="text-xs sm:text-sm font-semibold uppercase tracking-wider text-slate-700 block">
+                  Cổng & Làn barie
+                </span>
+                <strong className="text-base sm:text-lg font-bold text-slate-900 block mt-1">
                   {item.gateName}
                 </strong>
-                <span className="text-slate-500">Cổng kiểm soát tự động</span>
+                <span className="text-sm text-slate-900 block mt-0.5">
+                  Cổng kiểm soát tự động
+                </span>
               </div>
             )}
 
             <div>
-              <span className="text-slate-400 uppercase font-medium block">Khoảng cách & ETA</span>
-              <strong className="text-sm text-slate-900 block mt-0.5">
+              <span className="text-xs sm:text-sm font-semibold uppercase tracking-wider text-slate-700 block">
+                Khoảng cách & ETA
+              </span>
+              <strong className="text-base sm:text-lg font-bold text-slate-900 block mt-1">
                 {item.distanceKm} km (~{item.etaMinutes} phút)
               </strong>
-              <span className="text-emerald-700 font-medium">Hợp lệ trong bán kính bãi</span>
+              <span className="text-sm text-slate-900 font-medium block mt-0.5">
+                Hợp lệ trong bán kính bãi
+              </span>
             </div>
           </div>
         </div>

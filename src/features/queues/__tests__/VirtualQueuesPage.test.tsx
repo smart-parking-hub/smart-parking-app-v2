@@ -77,8 +77,6 @@ describe('SCR-018: VirtualQueuesPage (Hàng Đợi Ảo Thông Minh)', () => {
     expect(screen.getByText(/VQ-2026-8821/i)).toBeInTheDocument()
     expect(screen.getAllByText(/51D-894.12/i).length).toBeGreaterThanOrEqual(1)
     expect(screen.getByText(/Bãi Đỗ Xe Cảng Cát Lái - Phân khu Container 02/i)).toBeInTheDocument()
-    expect(screen.getByText(/Berth #B04 \(Cẩu chuyên dụng 40FT\)/i)).toBeInTheDocument()
-    expect(screen.getByText(/Ưu tiên Hàng Lạnh Reefer 380V/i)).toBeInTheDocument()
   })
 
   it('renders essential vehicle specifications, gate information and ETA cleanly without redundant external vehicle pipeline', async () => {
