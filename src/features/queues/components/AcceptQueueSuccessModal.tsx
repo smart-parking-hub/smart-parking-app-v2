@@ -49,7 +49,7 @@ export function AcceptQueueSuccessModal({
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="bg-white rounded-3xl max-w-xl w-full p-6 md:p-8 shadow-2xl border border-slate-200 text-center relative max-h-[90vh] overflow-y-auto"
+        className="bg-white rounded-3xl max-w-xl w-full p-6 md:p-8 shadow-2xl border border-slate-200 text-center relative max-h-[90vh] overflow-y-auto overflow-x-hidden"
       >
         {/* Nút đóng [X] với hover mượt mà */}
         <button
@@ -102,11 +102,11 @@ export function AcceptQueueSuccessModal({
             </div>
           )}
 
-          {/* Cảnh báo màu cam: Chữ to lên và không được xuống dòng theo yêu cầu */}
+          {/* Cảnh báo màu cam: Canh chỉnh hợp lý, xuống dòng tự nhiên không tạo thanh cuộn ngang */}
           <div className="pt-2 border-t border-slate-200">
-            <div className="flex items-center gap-2.5 text-sm md:text-base text-amber-900 bg-amber-50/90 p-3 rounded-xl border border-amber-200/80 whitespace-nowrap overflow-x-auto">
-              <Clock className="w-5 h-5 shrink-0 text-amber-600" />
-              <span>
+            <div className="flex items-start sm:items-center gap-2.5 text-sm md:text-base text-amber-900 bg-amber-50/90 p-3 sm:p-3.5 rounded-xl border border-amber-200/80">
+              <Clock className="w-5 h-5 shrink-0 text-amber-600 mt-0.5 sm:mt-0" />
+              <span className="leading-relaxed text-left">
                 Bạn có <strong>10 phút</strong> để hoàn tất cọc qua PayOS hoặc quét QR tại cổng kiểm soát.
               </span>
             </div>
