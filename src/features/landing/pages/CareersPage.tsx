@@ -22,7 +22,7 @@ export function CareersPage() {
   }
 
   return (
-    <div className="min-h-screen bg-white text-slate-800 flex flex-col font-inter selection:bg-[#F97316] selection:text-white">
+    <div className="min-h-screen bg-white text-slate-800 flex flex-col font-inter selection:bg-[#d95f00] selection:text-white">
       {/* Top Sticky Navbar */}
       <LandingNavbar />
 

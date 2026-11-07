@@ -29,7 +29,7 @@ export function InsightsHeroSection({
         {/* Eyebrow Tag */}
         <div className="flex flex-wrap items-center gap-3 mb-6">
           <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white border border-[#E2E8F0] font-mono text-xs uppercase tracking-widest text-slate-800 shadow-sm font-semibold">
-            <span className="w-2 h-2 rounded-full bg-[#F97316] animate-pulse"></span>
+            <span className="w-2 h-2 rounded-full bg-[#d95f00] animate-pulse"></span>
             BẢN TIN CHUYÊN NGÀNH · TRÍ TUỆ LOGISTICS 4.0
           </span>
           <span className="hidden md:inline-block font-mono text-xs text-slate-500 uppercase">
@@ -41,7 +41,7 @@ export function InsightsHeroSection({
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-end mb-10">
           <div className="lg:col-span-8">
             <h1 className="font-sora font-bold text-3xl md:text-4xl text-[#060D1A] tracking-tight leading-tight">
-              Phân Tích Bến Bãi, <span className="text-[#F97316]">Dữ Liệu Tải Trọng</span> & Dòng Chảy Vận Tải.
+              Phân Tích Bến Bãi, <span className="text-[#d95f00]">Dữ Liệu Tải Trọng</span> & Dòng Chảy Vận Tải.
             </h1>
           </div>
           <div className="lg:col-span-4">
@@ -92,7 +92,7 @@ export function InsightsHeroSection({
               value={searchQuery}
               onChange={(e) => onSearchChange(e.target.value)}
               placeholder="Tìm kiếm bài viết, mã bến, chỉ số..."
-              className="w-full bg-slate-50 border border-[#E2E8F0] text-[#060D1A] text-sm pl-10 pr-4 py-2.5 rounded-full outline-none placeholder:text-slate-400 focus:ring-2 focus:ring-[#F97316] focus:bg-white transition-all"
+              className="w-full bg-slate-50 border border-[#E2E8F0] text-[#060D1A] text-sm pl-10 pr-4 py-2.5 rounded-full outline-none placeholder:text-slate-400 focus:ring-2 focus:ring-[#d95f00] focus:bg-white transition-all"
             />
           </div>
         </div>

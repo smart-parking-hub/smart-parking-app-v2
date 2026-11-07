@@ -143,7 +143,7 @@ export function InsightsArticlesGridSection({
         {/* Section Header */}
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-10 pb-4 border-b border-[#E2E8F0]">
           <div>
-            <span className="font-mono text-xs text-[#F97316] uppercase tracking-wider font-semibold">
+            <span className="font-mono text-xs text-[#d95f00] uppercase tracking-wider font-semibold">
               CHUYÊN ĐỀ PHÂN TÍCH & HƯỚNG DẪN THỰC THI
             </span>
             <h2 className="font-sora font-bold text-2xl lg:text-3xl text-[#060D1A] tracking-tight mt-1">
@@ -182,11 +182,11 @@ export function InsightsArticlesGridSection({
                 <div className="p-6 flex flex-col flex-1 justify-between">
                   <div>
                     <div className="flex items-center gap-2 font-mono text-xs text-slate-500 mb-3">
-                      <Icon className="w-3.5 h-3.5 text-[#F97316] shrink-0" />
+                      <Icon className="w-3.5 h-3.5 text-[#d95f00] shrink-0" />
                       <span>{art.topic}</span>
                     </div>
 
-                    <h3 className="font-sora font-semibold text-lg text-[#060D1A] group-hover:text-[#F97316] transition-colors mb-3 leading-snug">
+                    <h3 className="font-sora font-semibold text-lg text-[#060D1A] group-hover:text-[#d95f00] transition-colors mb-3 leading-snug">
                       {art.title}
                     </h3>
 
@@ -198,7 +198,7 @@ export function InsightsArticlesGridSection({
                   <div className="pt-4 flex items-center justify-between border-t border-slate-100">
                     <a
                       href={`#${art.id}`}
-                      className="font-sora text-xs text-[#F97316] font-semibold group-hover:translate-x-1 transition-transform inline-flex items-center gap-1"
+                      className="font-sora text-xs text-[#d95f00] font-semibold group-hover:translate-x-1 transition-transform inline-flex items-center gap-1"
                     >
                       <span>Xem Phân Tích</span>
                       <ChevronRight className="w-4 h-4" />

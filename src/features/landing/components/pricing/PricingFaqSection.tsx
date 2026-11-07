@@ -38,7 +38,7 @@ export function PricingFaqSection() {
     <section className="w-full bg-[#EEF2F7] py-20 lg:py-24">
       <div className="max-w-[1000px] mx-auto px-6 lg:px-12">
         <div className="text-center mb-16">
-          <span className="font-inter text-xs text-[#F97316] font-bold uppercase tracking-wider">
+          <span className="font-inter text-xs text-[#d95f00] font-bold uppercase tracking-wider">
             HỖ TRỢ &amp; GIẢI ĐÁP
           </span>
           <h2 className="font-sora text-2xl sm:text-3xl lg:text-4xl font-bold text-[#0F172A] mt-2 mb-4 tracking-tight">
@@ -55,7 +55,7 @@ export function PricingFaqSection() {
               key={faq.id}
               className="group bg-white border border-[#D7DFE9] rounded-xl overflow-hidden transition-all shadow-xs"
             >
-              <summary className="w-full text-left px-6 py-5 flex items-center justify-between font-sora text-base sm:text-lg font-bold text-[#0F172A] hover:text-[#F97316] transition-colors cursor-pointer list-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-orange">
+              <summary className="w-full text-left px-6 py-5 flex items-center justify-between font-sora text-base sm:text-lg font-bold text-[#0F172A] hover:text-[#d95f00] transition-colors cursor-pointer list-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-orange">
                 <span>{faq.question}</span>
                 <ChevronDown
                   className="h-5 w-5 text-[#475569] group-open:rotate-180 transition-transform shrink-0 ml-4"

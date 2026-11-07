@@ -2,7 +2,7 @@ export function AboutRoadmapSection() {
   const milestones = [
     {
       year: '2024',
-      yearColor: 'text-[#F97316]',
+      yearColor: 'text-[#d95f00]',
       badge: 'ĐÃ HOÀN THÀNH',
       badgeClass: 'bg-slate-100 text-slate-600',
       title: 'Khởi Động & Thử Nghiệm Alpha',
@@ -24,7 +24,7 @@ export function AboutRoadmapSection() {
       year: '2026',
       yearColor: 'text-[#060D1A]',
       badge: 'GIAI ĐOẠN HIỆN TẠI',
-      badgeClass: 'bg-[#F97316] text-white',
+      badgeClass: 'bg-[#d95f00] text-white',
       title: 'Hợp Nhất 320+ Cụm Bãi',
       description:
         'Chạm mốc 320+ bãi và depot container. Kết nối API đồng bộ thời gian thực với hệ thống quản trị vận tải (TMS) của hơn 2,400 doanh nghiệp logistic hàng đầu.',
@@ -62,13 +62,13 @@ export function AboutRoadmapSection() {
               key={item.year}
               className={`flex flex-col bg-white p-6 rounded ${
                 item.isCurrent
-                  ? 'border-2 border-[#F97316] relative shadow-sm'
+                  ? 'border-2 border-[#d95f00] relative shadow-sm'
                   : 'border border-[#E2E8F0]'
               }`}
             >
               {item.isCurrent ? (
                 <>
-                  <div className="absolute -top-3 right-4 px-2 py-0.5 rounded bg-[#F97316] text-white font-mono text-[11px] font-semibold tracking-wider uppercase">
+                  <div className="absolute -top-3 right-4 px-2 py-0.5 rounded bg-[#d95f00] text-white font-mono text-[11px] font-semibold tracking-wider uppercase">
                     {item.badge}
                   </div>
                   <div className="flex items-center justify-between mb-4">

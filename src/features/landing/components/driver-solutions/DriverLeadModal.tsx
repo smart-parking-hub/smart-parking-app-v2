@@ -95,7 +95,7 @@ export function DriverLeadModal({
           </h4>
           <p className="font-inter text-sm text-slate-600 max-w-md mx-auto leading-relaxed">
             Hệ thống SmartTruckHub đã nhận thông tin. Mã voucher{' '}
-            <strong className="text-[#F97316] font-mono bg-orange-50 px-2 py-0.5 rounded border border-orange-200">
+            <strong className="text-[#d95f00] font-mono bg-orange-50 px-2 py-0.5 rounded border border-orange-200">
               STH-TAIXE-20
             </strong>{' '}
             đã được kích hoạt cho số điện thoại của bác tài.
@@ -103,7 +103,7 @@ export function DriverLeadModal({
 
           <div className="bg-slate-50 border border-slate-200 rounded-lg p-4 text-left text-xs text-slate-700 space-y-1">
             <div className="font-semibold text-slate-900 flex items-center gap-1.5">
-              <Sparkles className="h-4 w-4 text-[#F97316]" aria-hidden="true" />
+              <Sparkles className="h-4 w-4 text-[#d95f00]" aria-hidden="true" />
               <span>Quyền lợi ưu tiên:</span>
             </div>
             <p>• Miễn phí 100% thời gian chờ 15 phút tại cổng kiểm soát ALPR</p>
@@ -147,7 +147,7 @@ export function DriverLeadModal({
               type="text"
               placeholder="VD: Nguyễn Văn Nam"
               {...register('fullName')}
-              className={`w-full rounded-lg border px-3.5 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#F97316] ${
+              className={`w-full rounded-lg border px-3.5 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#d95f00] ${
                 errors.fullName ? 'border-red-500 bg-red-50/30' : 'border-slate-300 bg-white'
               }`}
             />
@@ -165,7 +165,7 @@ export function DriverLeadModal({
               type="tel"
               placeholder="VD: 0912345678"
               {...register('phone')}
-              className={`w-full rounded-lg border px-3.5 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#F97316] ${
+              className={`w-full rounded-lg border px-3.5 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#d95f00] ${
                 errors.phone ? 'border-red-500 bg-red-50/30' : 'border-slate-300 bg-white'
               }`}
             />
@@ -182,7 +182,7 @@ export function DriverLeadModal({
               <select
                 id="lead-vehicle"
                 {...register('vehicleType')}
-                className="w-full rounded-lg border border-slate-300 bg-white px-3.5 py-2.5 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#F97316]"
+                className="w-full rounded-lg border border-slate-300 bg-white px-3.5 py-2.5 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#d95f00]"
               >
                 <option value="container_40ft">Container 40ft (Đầu kéo)</option>
                 <option value="container_20ft">Container 20ft</option>
@@ -203,7 +203,7 @@ export function DriverLeadModal({
               <select
                 id="lead-destination"
                 {...register('destination')}
-                className="w-full rounded-lg border border-slate-300 bg-white px-3.5 py-2.5 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#F97316]"
+                className="w-full rounded-lg border border-slate-300 bg-white px-3.5 py-2.5 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#d95f00]"
               >
                 <option value="Cát Lái Hub Depot #02">Cát Lái Hub Depot #02 (TP. Thủ Đức)</option>
                 <option value="Cái Mép - Thị Vải Port">Cụm Bãi Cảng Cái Mép - Thị Vải</option>
@@ -226,7 +226,7 @@ export function DriverLeadModal({
               rows={2}
               placeholder="VD: Cần cắm điện lạnh 380V, giờ dự kiến vào bãi 22:30 đêm..."
               {...register('notes')}
-              className="w-full rounded-lg border border-slate-300 bg-white px-3.5 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#F97316]"
+              className="w-full rounded-lg border border-slate-300 bg-white px-3.5 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#d95f00]"
             />
           </div>
 

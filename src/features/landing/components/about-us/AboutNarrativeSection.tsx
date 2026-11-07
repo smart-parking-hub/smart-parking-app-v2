@@ -7,7 +7,7 @@ export function AboutNarrativeSection() {
         {/* Left Column: Ground Reality Narrative */}
         <div className="lg:col-span-6 flex flex-col">
           <div className="inline-flex items-center gap-2 mb-4">
-            <span className="w-1.5 h-6 bg-[#F97316] rounded-xs" />
+            <span className="w-1.5 h-6 bg-[#d95f00] rounded-xs" />
             <span className="font-mono text-xs text-[#64748B] uppercase tracking-widest font-semibold">
               BỐI CẢNH THỰC ĐỊA &amp; KHỞI NGUYÊN
             </span>
@@ -73,7 +73,7 @@ export function AboutNarrativeSection() {
 
             {/* Philosophy Overlay Quote */}
             <div className="p-8 bg-[#060D1A] text-white">
-              <Quote className="w-8 h-8 text-[#F97316] mb-4" aria-hidden="true" />
+              <Quote className="w-8 h-8 text-[#d95f00] mb-4" aria-hidden="true" />
               <p className="text-base sm:text-lg text-slate-200 leading-relaxed mb-6 italic">
                 &ldquo;Công nghệ logistics không nằm ở những khẩu hiệu xa vời, mà nằm ở 0.2 giây barie mở tự động và giấc ngủ an tâm của người tài xế trong cabin.&rdquo;
               </p>
@@ -82,12 +82,12 @@ export function AboutNarrativeSection() {
                   <div className="font-sora font-semibold text-white text-base">
                     Nguyễn Hoàng Nam
                   </div>
-                  <div className="font-mono text-xs text-[#F97316] font-medium">
+                  <div className="font-mono text-xs text-[#d95f00] font-medium">
                     Sáng lập viên &amp; Giám đốc Điều hành (CEO)
                   </div>
                 </div>
                 <div className="w-10 h-10 rounded bg-slate-800 border border-slate-700 flex items-center justify-center text-slate-400">
-                  <BadgeCheck className="w-5 h-5 text-[#F97316]" aria-hidden="true" />
+                  <BadgeCheck className="w-5 h-5 text-[#d95f00]" aria-hidden="true" />
                 </div>
               </div>
             </div>

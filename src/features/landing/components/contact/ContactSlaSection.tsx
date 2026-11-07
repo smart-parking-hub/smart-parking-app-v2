@@ -39,11 +39,11 @@ export function ContactSlaSection() {
                 key={idx}
                 className="flex items-start gap-4 p-5 rounded-xl bg-white border border-slate-200 shadow-sm hover:shadow-md transition-shadow"
               >
-                <div className="w-12 h-12 rounded-lg bg-orange-50 text-[#F97316] flex items-center justify-center shrink-0">
+                <div className="w-12 h-12 rounded-lg bg-orange-50 text-[#d95f00] flex items-center justify-center shrink-0">
                   <Icon className="w-6 h-6" />
                 </div>
                 <div>
-                  <div className="font-sora font-bold text-3xl text-[#F97316] tracking-tight leading-none mb-1.5">
+                  <div className="font-sora font-bold text-3xl text-[#d95f00] tracking-tight leading-none mb-1.5">
                     {item.metricValue}{' '}
                     {item.metricUnit && (
                       <span className="text-lg font-semibold text-slate-600">

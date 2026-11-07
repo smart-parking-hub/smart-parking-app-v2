@@ -10,7 +10,7 @@ export function ContactCtaBanner() {
   return (
     <section className="w-full bg-[#060D1A] py-16 text-white border-t border-slate-800">
       <div className="max-w-[1240px] mx-auto px-6 text-center">
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-900 border border-slate-800 text-[#F97316] font-mono text-xs uppercase tracking-wider mb-4 font-semibold">
+        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-900 border border-slate-800 text-[#d95f00] font-mono text-xs uppercase tracking-wider mb-4 font-semibold">
           <Rocket className="w-3.5 h-3.5" />
           <span>TRIỂN KHAI NHANH CHÓNG TRONG 48 GIỜ</span>
         </div>
@@ -26,7 +26,7 @@ export function ContactCtaBanner() {
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
           <a
             href="#enterpriseContactForm"
-            className="w-full sm:w-auto bg-[#F97316] hover:bg-[#EA580C] text-white font-sora font-semibold text-sm px-8 py-3.5 rounded-lg transition-colors flex items-center justify-center gap-2 shadow-lg"
+            className="w-full sm:w-auto bg-[#d95f00] hover:bg-[#b84e00] text-white font-sora font-semibold text-sm px-8 py-3.5 rounded-lg transition-colors flex items-center justify-center gap-2 shadow-lg"
           >
             <span>ĐĂNG KÝ KHẢO SÁT NGAY</span>
             <ArrowRight className="w-4 h-4" />
@@ -35,7 +35,7 @@ export function ContactCtaBanner() {
             href="tel:19006868"
             className="w-full sm:w-auto bg-slate-900/80 hover:bg-slate-900 text-white font-sora font-semibold text-sm px-8 py-3.5 rounded-lg border border-slate-700 transition-colors flex items-center justify-center gap-2"
           >
-            <Phone className="w-4 h-4 text-[#F97316]" />
+            <Phone className="w-4 h-4 text-[#d95f00]" />
             <span>GỌI HOTLINE 1900 6868</span>
           </a>
         </div>
@@ -43,7 +43,7 @@ export function ContactCtaBanner() {
         <div className="mt-8 pt-6 border-t border-slate-800/80 flex flex-wrap items-center justify-center gap-6 text-slate-400 font-inter text-xs">
           {perks.map((perk, idx) => (
             <span key={idx} className="flex items-center gap-1.5">
-              <Check className="w-3.5 h-3.5 text-[#F97316]" />
+              <Check className="w-3.5 h-3.5 text-[#d95f00]" />
               {perk}
             </span>
           ))}

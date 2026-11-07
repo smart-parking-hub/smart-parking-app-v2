@@ -17,7 +17,7 @@ export function InsightsNewsletterSection() {
         <div className="relative overflow-hidden bg-[#060D1A] text-white rounded-2xl p-8 md:p-12 lg:p-14 shadow-xl border border-slate-800">
           <div className="relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
             <div className="lg:col-span-7">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-800 border border-slate-700 font-mono text-xs uppercase text-[#F97316] mb-4 font-semibold">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-800 border border-slate-700 font-mono text-xs uppercase text-[#d95f00] mb-4 font-semibold">
                 <MailCheck className="w-3.5 h-3.5" />
                 <span>FRETRIX WEEKLY LOGISTICS INTELLIGENCE</span>
               </div>
@@ -41,11 +41,11 @@ export function InsightsNewsletterSection() {
                     aria-describedby="newsletter-feedback"
                     {...register('email')}
                     placeholder="Nhập email doanh nghiệp của bạn..."
-                    className="bg-slate-900 border border-slate-700 text-white font-inter text-sm px-4 py-3.5 rounded-lg flex-1 outline-none placeholder:text-slate-400 focus:ring-2 focus:ring-[#F97316] transition-all"
+                    className="bg-slate-900 border border-slate-700 text-white font-inter text-sm px-4 py-3.5 rounded-lg flex-1 outline-none placeholder:text-slate-400 focus:ring-2 focus:ring-[#d95f00] transition-all"
                   />
                   <button
                     type="submit"
-                    className="px-6 py-3.5 rounded-lg bg-[#F97316] hover:bg-[#EA580C] text-white font-sora text-xs font-bold transition-transform active:scale-95 whitespace-nowrap shadow-md"
+                    className="px-6 py-3.5 rounded-lg bg-[#d95f00] hover:bg-[#b84e00] text-white font-sora text-xs font-bold transition-transform active:scale-95 whitespace-nowrap shadow-md"
                   >
                     ĐĂNG KÝ BẢN TIN
                   </button>

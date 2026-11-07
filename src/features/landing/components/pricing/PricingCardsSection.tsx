@@ -32,7 +32,7 @@ export function PricingCardsSection({ billingType }: PricingCardsSectionProps) {
                   </span>
                   <span className="font-inter text-sm text-[#475569]">/ mãi mãi miễn phí</span>
                 </div>
-                <span className="font-inter text-xs text-[#F97316] font-medium block mt-1">
+                <span className="font-inter text-xs text-[#d95f00] font-medium block mt-1">
                   Không cần thẻ tín dụng, tải app dùng ngay
                 </span>
               </div>
@@ -40,31 +40,31 @@ export function PricingCardsSection({ billingType }: PricingCardsSectionProps) {
               {/* Checklist */}
               <ul className="space-y-4 mb-8">
                 <li className="flex items-start gap-3">
-                  <CheckCircle2 className="h-5 w-5 text-[#F97316] shrink-0 mt-0.5" aria-hidden="true" />
+                  <CheckCircle2 className="h-5 w-5 text-[#d95f00] shrink-0 mt-0.5" aria-hidden="true" />
                   <span className="font-inter text-sm text-[#0F172A]">
                     Tra cứu 320+ cụm bãi đỗ &amp; depot container toàn quốc
                   </span>
                 </li>
                 <li className="flex items-start gap-3">
-                  <CheckCircle2 className="h-5 w-5 text-[#F97316] shrink-0 mt-0.5" aria-hidden="true" />
+                  <CheckCircle2 className="h-5 w-5 text-[#d95f00] shrink-0 mt-0.5" aria-hidden="true" />
                   <span className="font-inter text-sm text-[#0F172A]">
                     Giữ chỗ trước 10 phút chống cướp lốt tại cảng biển
                   </span>
                 </li>
                 <li className="flex items-start gap-3">
-                  <CheckCircle2 className="h-5 w-5 text-[#F97316] shrink-0 mt-0.5" aria-hidden="true" />
+                  <CheckCircle2 className="h-5 w-5 text-[#d95f00] shrink-0 mt-0.5" aria-hidden="true" />
                   <span className="font-inter text-sm text-[#0F172A]">
                     Quét mã QR barie ALPR tự động mở trong 0.2 giây
                   </span>
                 </li>
                 <li className="flex items-start gap-3">
-                  <CheckCircle2 className="h-5 w-5 text-[#F97316] shrink-0 mt-0.5" aria-hidden="true" />
+                  <CheckCircle2 className="h-5 w-5 text-[#d95f00] shrink-0 mt-0.5" aria-hidden="true" />
                   <span className="font-inter text-sm text-[#0F172A]">
                     Xuất hóa đơn VAT điện tử từng chuyến gửi về công ty
                   </span>
                 </li>
                 <li className="flex items-start gap-3">
-                  <CheckCircle2 className="h-5 w-5 text-[#F97316] shrink-0 mt-0.5" aria-hidden="true" />
+                  <CheckCircle2 className="h-5 w-5 text-[#d95f00] shrink-0 mt-0.5" aria-hidden="true" />
                   <span className="font-inter text-sm text-[#0F172A]">
                     Miễn phí hoàn cọc 100% nếu hủy trước 60 phút
                   </span>
@@ -81,9 +81,9 @@ export function PricingCardsSection({ billingType }: PricingCardsSectionProps) {
           </div>
 
           {/* CARD 2 (HERO HIGHLIGHTED): ĐỘI XE & DOANH NGHIỆP 3PL */}
-          <div className="bg-[#0F172A] border-2 border-[#F97316] rounded-3xl p-8 flex flex-col justify-between shadow-2xl relative lg:-translate-y-4">
+          <div className="bg-[#0F172A] border-2 border-[#d95f00] rounded-3xl p-8 flex flex-col justify-between shadow-2xl relative lg:-translate-y-4">
             <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 w-max max-w-[90%] text-center">
-              <span className="bg-[#F97316] text-white font-inter text-xs uppercase tracking-wider px-4 py-1.5 rounded-full font-bold shadow-md inline-block">
+              <span className="bg-[#d95f00] text-white font-inter text-xs uppercase tracking-wider px-4 py-1.5 rounded-full font-bold shadow-md inline-block">
                 PHỔ BIẾN NHẤT CHO DOANH NGHIỆP VẬN TẢI
               </span>
             </div>
@@ -92,7 +92,7 @@ export function PricingCardsSection({ billingType }: PricingCardsSectionProps) {
                 <span className="font-inter text-xs px-3 py-1 bg-[#1E293B] text-[#D7DFE9] rounded font-semibold tracking-wide uppercase">
                   FLEET &amp; 3PL ENTERPRISE
                 </span>
-                <Truck className="h-6 w-6 text-[#F97316]" aria-hidden="true" />
+                <Truck className="h-6 w-6 text-[#d95f00]" aria-hidden="true" />
               </div>
               <h3 className="font-sora text-xl font-bold text-white mb-2">
                 Đội xe &amp; Doanh nghiệp 3PL
@@ -113,7 +113,7 @@ export function PricingCardsSection({ billingType }: PricingCardsSectionProps) {
                     / tháng / tài khoản điều phối
                   </span>
                 </div>
-                <span className="font-inter text-xs text-[#F97316] font-medium block mt-1">
+                <span className="font-inter text-xs text-[#d95f00] font-medium block mt-1">
                   Tiết kiệm 18% chi phí nhiên liệu &amp; chờ bãi
                 </span>
               </div>
@@ -121,37 +121,37 @@ export function PricingCardsSection({ billingType }: PricingCardsSectionProps) {
               {/* Checklist */}
               <ul className="space-y-4 mb-8">
                 <li className="flex items-start gap-3">
-                  <CheckCircle2 className="h-5 w-5 text-[#F97316] shrink-0 mt-0.5" aria-hidden="true" />
+                  <CheckCircle2 className="h-5 w-5 text-[#d95f00] shrink-0 mt-0.5" aria-hidden="true" />
                   <span className="font-inter text-sm text-white font-medium">
                     Mọi tính năng của gói Tài xế cá nhân
                   </span>
                 </li>
                 <li className="flex items-start gap-3">
-                  <CheckCircle2 className="h-5 w-5 text-[#F97316] shrink-0 mt-0.5" aria-hidden="true" />
+                  <CheckCircle2 className="h-5 w-5 text-[#d95f00] shrink-0 mt-0.5" aria-hidden="true" />
                   <span className="font-inter text-sm text-[#D7DFE9]">
                     Ví công nợ công ty tập trung (Tài xế không cần ứng tiền túi)
                   </span>
                 </li>
                 <li className="flex items-start gap-3">
-                  <CheckCircle2 className="h-5 w-5 text-[#F97316] shrink-0 mt-0.5" aria-hidden="true" />
+                  <CheckCircle2 className="h-5 w-5 text-[#d95f00] shrink-0 mt-0.5" aria-hidden="true" />
                   <span className="font-inter text-sm text-[#D7DFE9]">
                     Dashboard điều phối viên quản lý vị trí xe &amp; giờ vào/ra realtime
                   </span>
                 </li>
                 <li className="flex items-start gap-3">
-                  <CheckCircle2 className="h-5 w-5 text-[#F97316] shrink-0 mt-0.5" aria-hidden="true" />
+                  <CheckCircle2 className="h-5 w-5 text-[#d95f00] shrink-0 mt-0.5" aria-hidden="true" />
                   <span className="font-inter text-sm text-[#D7DFE9]">
                     Hóa đơn điện tử VAT tổng hợp cuối tháng, đối soát 1 chạm
                   </span>
                 </li>
                 <li className="flex items-start gap-3">
-                  <CheckCircle2 className="h-5 w-5 text-[#F97316] shrink-0 mt-0.5" aria-hidden="true" />
+                  <CheckCircle2 className="h-5 w-5 text-[#d95f00] shrink-0 mt-0.5" aria-hidden="true" />
                   <span className="font-inter text-sm text-[#D7DFE9]">
                     API kết nối hệ thống TMS / ERP doanh nghiệp vận tải
                   </span>
                 </li>
                 <li className="flex items-start gap-3">
-                  <CheckCircle2 className="h-5 w-5 text-[#F97316] shrink-0 mt-0.5" aria-hidden="true" />
+                  <CheckCircle2 className="h-5 w-5 text-[#d95f00] shrink-0 mt-0.5" aria-hidden="true" />
                   <span className="font-inter text-sm text-[#D7DFE9]">
                     Tổng đài ưu tiên &amp; đội ngũ hỗ trợ khẩn cấp 24/7 chuyên trách
                   </span>
@@ -159,7 +159,7 @@ export function PricingCardsSection({ billingType }: PricingCardsSectionProps) {
               </ul>
             </div>
             <a
-              className="w-full py-4 px-6 rounded-lg bg-[#F97316] hover:bg-[#EA580C] text-white font-sora font-semibold text-sm text-center transition-colors flex items-center justify-center gap-2 shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-orange"
+              className="w-full py-4 px-6 rounded-lg bg-[#d95f00] hover:bg-[#b84e00] text-white font-sora font-semibold text-sm text-center transition-colors flex items-center justify-center gap-2 shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-orange"
               href="#lien-he"
             >
               <span>ĐĂNG KÝ GÓI ĐỘI XE B2B</span>
@@ -188,7 +188,7 @@ export function PricingCardsSection({ billingType }: PricingCardsSectionProps) {
                   </span>
                   <span className="font-inter text-sm text-[#475569]">/ trên mỗi lượt xe thực tế</span>
                 </div>
-                <span className="font-inter text-xs text-[#F97316] font-medium block mt-1">
+                <span className="font-inter text-xs text-[#d95f00] font-medium block mt-1">
                   Không phát sinh doanh thu - Không thu phí sàn
                 </span>
               </div>
@@ -196,31 +196,31 @@ export function PricingCardsSection({ billingType }: PricingCardsSectionProps) {
               {/* Checklist */}
               <ul className="space-y-4 mb-8">
                 <li className="flex items-start gap-3">
-                  <CheckCircle2 className="h-5 w-5 text-[#F97316] shrink-0 mt-0.5" aria-hidden="true" />
+                  <CheckCircle2 className="h-5 w-5 text-[#d95f00] shrink-0 mt-0.5" aria-hidden="true" />
                   <span className="font-inter text-sm text-[#0F172A]">
                     Phần mềm quản trị SmartTruck Merchant Portal đa thiết bị
                   </span>
                 </li>
                 <li className="flex items-start gap-3">
-                  <CheckCircle2 className="h-5 w-5 text-[#F97316] shrink-0 mt-0.5" aria-hidden="true" />
+                  <CheckCircle2 className="h-5 w-5 text-[#d95f00] shrink-0 mt-0.5" aria-hidden="true" />
                   <span className="font-inter text-sm text-[#0F172A]">
                     Tích hợp camera ALPR nhận diện biển số &amp; mở barie 0.2s
                   </span>
                 </li>
                 <li className="flex items-start gap-3">
-                  <CheckCircle2 className="h-5 w-5 text-[#F97316] shrink-0 mt-0.5" aria-hidden="true" />
+                  <CheckCircle2 className="h-5 w-5 text-[#d95f00] shrink-0 mt-0.5" aria-hidden="true" />
                   <span className="font-inter text-sm text-[#0F172A]">
                     Thu tiền tự động qua PayOS VietQR, tiền về ví rút T+1
                   </span>
                 </li>
                 <li className="flex items-start gap-3">
-                  <CheckCircle2 className="h-5 w-5 text-[#F97316] shrink-0 mt-0.5" aria-hidden="true" />
+                  <CheckCircle2 className="h-5 w-5 text-[#d95f00] shrink-0 mt-0.5" aria-hidden="true" />
                   <span className="font-inter text-sm text-[#0F172A]">
                     Cấu hình ma trận giá linh hoạt (giờ, qua đêm, cao điểm)
                   </span>
                 </li>
                 <li className="flex items-start gap-3">
-                  <CheckCircle2 className="h-5 w-5 text-[#F97316] shrink-0 mt-0.5" aria-hidden="true" />
+                  <CheckCircle2 className="h-5 w-5 text-[#d95f00] shrink-0 mt-0.5" aria-hidden="true" />
                   <span className="font-inter text-sm text-[#0F172A]">
                     Tiếp cận mạng lưới 45,000+ tài xế container đang tìm chỗ đỗ
                   </span>

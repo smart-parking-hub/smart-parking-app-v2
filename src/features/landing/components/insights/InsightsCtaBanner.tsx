@@ -7,8 +7,8 @@ export function InsightsCtaBanner() {
       <div className="max-w-[1240px] mx-auto px-6">
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-8 p-10 md:p-12 rounded-2xl bg-slate-900/90 border border-slate-800">
           <div className="max-w-2xl">
-            <div className="inline-flex items-center gap-2 font-mono text-xs text-[#F97316] uppercase tracking-wider mb-3">
-              <Truck className="w-4 h-4 text-[#F97316]" />
+            <div className="inline-flex items-center gap-2 font-mono text-xs text-[#d95f00] uppercase tracking-wider mb-3">
+              <Truck className="w-4 h-4 text-[#d95f00]" />
               <span>HẠ TẦNG KẾT NỐI BẾN BÃI TOÀN QUỐC</span>
             </div>
 
@@ -25,7 +25,7 @@ export function InsightsCtaBanner() {
             <Link to="/" className="rounded-lg border border-brand-border px-7 py-3.5 text-sm font-semibold focus-visible:ring-2 focus-visible:ring-brand-orange">Về trang chủ</Link>
             <Link
               to="/driver-solutions"
-              className="px-7 py-3.5 rounded-lg bg-[#F97316] hover:bg-[#EA580C] text-white font-sora text-xs font-bold shadow-md transition-all active:scale-95 text-center"
+              className="px-7 py-3.5 rounded-lg bg-[#d95f00] hover:bg-[#b84e00] text-white font-sora text-xs font-bold shadow-md transition-all active:scale-95 text-center"
             >
               Tìm Bãi Đỗ Ngay
             </Link>

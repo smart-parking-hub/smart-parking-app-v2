@@ -11,7 +11,7 @@ export function PricingPage() {
   const [billingType, setBillingType] = useState<'turn' | 'month'>('turn')
 
   return (
-    <div className="min-h-screen bg-surface font-inter text-slate-800 antialiased selection:bg-[#F97316] selection:text-white">
+    <div className="min-h-screen bg-surface font-inter text-slate-800 antialiased selection:bg-[#d95f00] selection:text-white">
       {/* 1. Sticky Navigation Bar */}
       <LandingNavbar />
 

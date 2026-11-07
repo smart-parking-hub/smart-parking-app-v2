@@ -80,7 +80,7 @@ export function CareersJobListSection({ onApply }: CareersJobListSectionProps) {
       <div className="max-w-[1240px] mx-auto px-6">
         <div className="flex flex-col lg:flex-row lg:items-end justify-between mb-10 gap-6">
           <div>
-            <span className="font-sora text-xs uppercase tracking-wider text-[#F97316] font-bold">
+            <span className="font-sora text-xs uppercase tracking-wider text-[#d95f00] font-bold">
               CƠ HỘI NGHỀ NGHIỆP MỞ
             </span>
             <h2 className="font-sora text-2xl lg:text-3xl text-[#060D1A] font-bold mt-2 tracking-tight">
@@ -113,7 +113,7 @@ export function CareersJobListSection({ onApply }: CareersJobListSectionProps) {
           {filteredJobs.map((job) => (
             <div
               key={job.id}
-              className="job-card p-6 lg:p-8 rounded-xl bg-white border border-[#E2E8F0] hover:border-[#F97316] hover:shadow-md transition-all"
+              className="job-card p-6 lg:p-8 rounded-xl bg-white border border-[#E2E8F0] hover:border-[#d95f00] hover:shadow-md transition-all"
               data-category={job.category}
             >
               <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-6">
@@ -168,7 +168,7 @@ export function CareersJobListSection({ onApply }: CareersJobListSectionProps) {
                   <button
                     type="button"
                     onClick={() => onApply(job.title)}
-                    className="w-full lg:w-auto inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-lg border-2 border-[#F97316] bg-white hover:bg-[#F97316] text-[#F97316] hover:text-white font-sora text-xs font-bold transition-all shadow-sm group"
+                    className="w-full lg:w-auto inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-lg border-2 border-[#d95f00] bg-white hover:bg-[#d95f00] text-[#d95f00] hover:text-white font-sora text-xs font-bold transition-all shadow-sm group"
                   >
                     <span>ỨNG TUYỂN NGAY</span>
                     <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />

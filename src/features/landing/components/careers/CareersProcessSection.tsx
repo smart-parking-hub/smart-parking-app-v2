@@ -34,7 +34,7 @@ export function CareersProcessSection() {
     <section className="w-full bg-slate-100 py-20 border-b border-[#E2E8F0]">
       <div className="max-w-[1240px] mx-auto px-6">
         <div className="mb-14">
-          <span className="font-sora text-xs uppercase tracking-wider text-[#F97316] font-bold">
+          <span className="font-sora text-xs uppercase tracking-wider text-[#d95f00] font-bold">
             MINH BẠCH & TỐC ĐỘ
           </span>
           <h2 className="font-sora text-2xl lg:text-3xl text-[#060D1A] font-bold mt-2 tracking-tight">
@@ -46,14 +46,14 @@ export function CareersProcessSection() {
           {steps.map((step, idx) => (
             <div
               key={idx}
-              className="p-6 rounded-xl bg-white border border-[#E2E8F0] shadow-sm flex flex-col justify-between hover:border-[#F97316] transition-colors"
+              className="p-6 rounded-xl bg-white border border-[#E2E8F0] shadow-sm flex flex-col justify-between hover:border-[#d95f00] transition-colors"
             >
               <div>
                 <div className="flex items-center justify-between mb-6">
                   <span className="font-sora text-3xl font-extrabold text-[#060D1A]">
                     {step.num}
                   </span>
-                  <span className="w-8 h-1 rounded-full bg-[#F97316]"></span>
+                  <span className="w-8 h-1 rounded-full bg-[#d95f00]"></span>
                 </div>
                 <h4 className="font-sora text-base text-[#060D1A] mb-2 font-bold">
                   {step.title}
@@ -63,7 +63,7 @@ export function CareersProcessSection() {
                 </p>
               </div>
 
-              <div className="mt-6 pt-4 border-t border-slate-100 text-[#F97316] font-inter text-xs font-bold">
+              <div className="mt-6 pt-4 border-t border-slate-100 text-[#d95f00] font-inter text-xs font-bold">
                 {step.duration}
               </div>
             </div>
