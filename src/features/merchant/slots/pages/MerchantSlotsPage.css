@@ -1,0 +1,82 @@
+.merchant-slots { font-family: var(--font-body); font-size: 16px; line-height: 1.5; color: var(--color-text-primary); background: var(--color-surface-page); min-height: 100%; padding: 32px; }
+.merchant-slots * { box-sizing: border-box; }
+.merchant-slots :is(h1,h2,h3,p) { margin: 0; }
+.merchant-slots :is(button,input,a) { font: inherit; }
+.merchant-slots :is(button,a,input):focus-visible { outline: 3px solid var(--color-brand-primary); outline-offset: 4px; }
+.merchant-slots button { cursor: pointer; }
+.merchant-slots button:disabled { opacity: .45; cursor: default; }
+.slots-container { max-width: 1280px; margin: auto; display: flex; flex-direction: column; gap: 24px; }
+.slots-back { display: inline-flex; align-items: center; gap: 8px; font-size: 14px; color: var(--color-text-muted); margin-bottom: 24px; }
+.slots-title-row { display: flex; justify-content: space-between; align-items: center; gap: 24px; }
+.slots-eyebrow { color: var(--color-brand-orange-ink); font-size: 12px; letter-spacing: 1.6px; font-weight: 600; }
+.merchant-slots h1 { font: 700 clamp(24px,2.3vw,34px)/1.4 var(--font-heading); letter-spacing: -1.2px; margin: 8px 0 24px; }
+.merchant-slots h1 span { color: var(--color-brand-orange-ink); }
+.slots-title-row nav { display: flex; gap: 12px; flex-shrink: 0; }
+.slots-title-row nav a { display: inline-flex; align-items: center; gap: 8px; padding: 10px 14px; border: 1px solid var(--color-surface-border); background: var(--color-surface-card); border-radius: 8px; font-size: 14px; }
+.slots-lot { display: flex; align-items: center; gap: 12px; padding-left: 16px; border-left: 3px solid var(--color-brand-primary); }
+.slots-lot > svg { color: var(--color-brand-orange-ink); flex-shrink: 0; }
+.slots-lot strong { font-size: 18px; font-weight: 600; }
+.slots-lot p { font-size: 14px; color: var(--color-text-muted); margin-top: 3px; }
+.slots-lot-id { margin-left: auto; color: var(--color-text-muted); font-size: 14px; white-space: nowrap; }
+.slots-notice { display: flex; align-items: center; gap: 12px; color: var(--color-text-secondary); font-size: 14px; }
+.slots-notice > svg { flex-shrink: 0; color: var(--color-brand-orange-ink); }
+.slots-notice.is-locked { padding: 16px; border: 1px solid var(--color-status-warning-border); background: var(--color-status-warning-bg); border-radius: 10px; }
+.slots-overview { display: grid; grid-template-columns: 1.35fr 1fr 1fr 1fr; border: 1px solid var(--color-surface-border); border-radius: 14px; overflow: hidden; background: var(--color-surface-card); }
+.slots-utilization { padding: 24px; background: var(--color-brand-navy-light); color: var(--color-surface-card); }
+.slots-utilization > div:first-child { display: flex; justify-content: space-between; align-items: center; gap: 16px; }
+.slots-utilization strong { font: 600 30px/1.3 var(--font-heading); letter-spacing: -1px; font-variant-numeric: tabular-nums; }
+.slots-utilization small { font: 400 16px var(--font-body); margin-left: 2px; }
+.slots-utilization .slots-meter { background: var(--color-api-hover); margin: 18px 0 12px; }
+.slots-utilization p { font-size: 14px; color: var(--color-api-muted); }
+.slots-stat { padding: 24px; display: flex; flex-direction: column; border-right: 1px solid var(--color-surface-border); }
+.slots-stat:last-child { border-right: 0; }
+.slots-stat > span { color: var(--color-text-muted); font-size: 15px; }
+.slots-stat strong { font: 600 38px/1.3 var(--font-heading); letter-spacing: -1.5px; font-variant-numeric: tabular-nums; margin: 8px 0 4px; }
+.slots-stat small { color: var(--color-text-muted); font-size: 14px; }
+.slots-stat-available strong { color: var(--color-brand-orange-ink); }
+.slots-section-title { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin: 8px 0 20px; }
+.slots-section-title h2 { font: 600 20px/1.5 var(--font-heading); letter-spacing: -.6px; }
+.slots-section-title p { color: var(--color-text-muted); font-size: 15px; margin-top: 4px; }
+.slots-section-title > span { background: var(--color-surface-subtle); color: var(--color-text-secondary); padding: 6px 12px; border-radius: 6px; font-size: 14px; white-space: nowrap; }
+.slots-vehicles { border: 1px solid var(--color-surface-border); background: var(--color-surface-card); border-radius: 14px; overflow: hidden; }
+.slots-vehicle { display: grid; grid-template-columns: minmax(160px,1fr) minmax(160px,1fr) 178px; align-items: center; gap: 32px; padding: 24px; border-bottom: 1px solid var(--color-surface-border); }
+.slots-vehicle:last-child { border-bottom: 0; }
+.slots-vehicle-name { display: flex; gap: 14px; align-items: center; }
+.slots-vehicle-icon { width: 48px; height: 48px; border: 1px solid var(--color-surface-border); border-radius: 10px; display: grid; place-items: center; background: var(--color-surface-hover); color: var(--color-text-secondary); flex-shrink: 0; }
+.slots-vehicle-name h3 { font: 600 16px/1.5 var(--font-heading); letter-spacing: -.3px; }
+.slots-vehicle-name div > span { color: var(--color-text-muted); font-size: 14px; }
+.slots-vehicle-usage > div:first-child { display: flex; justify-content: space-between; gap: 8px; font-size: 14px; color: var(--color-text-muted); margin-bottom: 10px; }
+.slots-vehicle-usage strong { color: var(--color-text-secondary); font-weight: 600; margin-left: 4px; }
+.slots-meter { height: 6px; border-radius: 6px; background: var(--color-surface-subtle); overflow: hidden; }
+.slots-meter > span { display: block; height: 100%; background: var(--color-brand-primary); border-radius: inherit; transition: width 180ms ease; }
+.slots-capacity { display: flex; flex-direction: column; gap: 5px; }
+.slots-capacity label,.slots-capacity small { font-size: 13px; color: var(--color-text-muted); }
+.slots-capacity small { text-align: center; }
+.slots-stepper { display: flex; padding: 3px; border: 1px solid var(--color-surface-border); border-radius: 8px; background: var(--color-surface-hover); }
+.slots-stepper button { display: grid; place-items: center; width: 36px; height: 36px; border-radius: 5px; background: var(--color-surface-card); color: var(--color-text-secondary); flex-shrink: 0; }
+.slots-stepper button:hover:enabled { background: var(--color-brand-primary-subtle); color: var(--color-brand-orange-ink); }
+.slots-stepper input { width: 100%; min-width: 0; text-align: center; font-size: 18px; font-weight: 600; font-variant-numeric: tabular-nums; appearance: textfield; }
+.slots-stepper input::-webkit-inner-spin-button { appearance: none; }
+.slots-footer { display: flex; justify-content: space-between; gap: 20px; align-items: center; position: sticky; bottom: 0; z-index: 10; padding: 20px 0; border-top: 1px solid var(--color-surface-border); background: var(--color-surface-page); }
+.slots-footer strong { font-size: 15px; font-weight: 600; }
+.slots-footer p { font-size: 14px; color: var(--color-text-muted); margin-top: 3px; }
+.slots-footer-actions { display: flex; gap: 12px; }
+.slots-footer button,.slots-error button { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 12px 18px; border-radius: 8px; border: 1px solid var(--color-surface-border); background: var(--color-surface-card); font-size: 15px; font-weight: 600; white-space: nowrap; }
+.slots-footer .slots-save,.slots-error button { background: var(--color-brand-primary-active); color: var(--color-surface-card); border-color: var(--color-brand-primary-active); }
+.slots-empty,.slots-error { padding: 40px 24px; text-align: center; border: 1px dashed var(--color-surface-border); border-radius: 12px; }
+.slots-empty p,.slots-error p { color: var(--color-text-muted); margin: 8px 0 20px; }
+@media (max-width: 1100px) { .merchant-slots { padding: 24px; } .slots-title-row { align-items: flex-start; flex-direction: column; gap: 0; } .slots-title-row nav { margin-bottom: 24px; } .slots-overview { grid-template-columns: repeat(3,1fr); } .slots-utilization { grid-column: 1 / -1; } .slots-utilization .slots-meter { margin: 10px 0; } .slots-vehicle { gap: 20px; grid-template-columns: 1fr 170px; } .slots-vehicle-name { grid-column: 1 / -1; } }
+@media (max-width: 600px) { .merchant-slots { padding: 20px 16px; } .slots-container { gap: 20px; } .slots-lot-id { display: none; } .slots-lot { align-items: flex-start; padding-left: 12px; } .slots-stat { padding: 16px 10px; } .slots-stat > span { font-size: 13px; } .slots-stat strong { font-size: 28px; } .slots-stat small { font-size: 12px; } .slots-utilization { padding: 20px; } .slots-vehicle { padding: 20px 16px; grid-template-columns: minmax(0,1fr) 138px; gap: 16px; } .slots-vehicle-usage > div:first-child { flex-direction: column; gap: 4px; } .slots-section-title h2 { font-size: 18px; } .slots-footer { position: static; align-items: stretch; flex-direction: column; gap: 12px; padding: 16px 0; } .slots-footer-actions button { flex: 1; padding: 12px; } }
+
+.slots-add-type { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 16px 20px; margin-bottom: 16px; border: 1px solid var(--color-surface-border); background: var(--color-surface-card); border-radius: 12px; }
+.slots-add-type label { font-weight: 600; font-size: 15px; }
+.slots-add-type p { color: var(--color-text-muted); font-size: 14px; margin-top: 4px; }
+.slots-add-controls { display: flex; gap: 12px; }
+.slots-add-type select, .slots-add-type button { padding: 10px 12px; border: 1px solid var(--color-surface-border); border-radius: 8px; font: inherit; font-size: 15px; }
+.slots-add-type button { display: inline-flex; align-items: center; justify-content: center; gap: 8px; background: var(--color-brand-primary-active); color: var(--color-surface-card); white-space: nowrap; }
+.slots-add-type select:focus-visible { outline: 3px solid var(--color-brand-primary); outline-offset: 4px; }
+.slots-unsaved { display: block; color: var(--color-brand-orange-ink); font-size: 13px; }
+@media (max-width: 700px) { .slots-add-type { align-items: stretch; flex-direction: column; } .slots-add-controls { flex-wrap: wrap; } .slots-add-controls select { flex: 1; min-width: 120px; } }
+
+.slots-remove-type { display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 6px 8px; border-radius: 6px; color: var(--color-text-muted); font-size: 14px !important; }
+.slots-remove-type:hover:enabled { color: var(--color-status-danger); background: var(--color-status-danger-bg); }

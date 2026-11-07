@@ -1,9 +1,10 @@
-import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useState, useEffect, useRef } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { CheckCircle2, X } from 'lucide-react'
+import { ArrowLeft, ArrowUpRight, Check, CheckCircle2, Circle, ClipboardList, Image, Info, MapPin, Warehouse, X } from 'lucide-react'
+import './CreateMerchantParkingLotPage.css'
 import type {
   AiContentSegments,
   ParkingLotImageItem,
@@ -49,7 +50,7 @@ type CreateLotFormData = z.infer<typeof createLotFormSchema>
 export function CreateMerchantParkingLotPage() {
   const navigate = useNavigate()
 
-  // Wizard Step State: 0 (Info), 1 (Geo/Photos), 2 (Confirm)
+  // Steps: basic information and photos, map location, confirmation.
   const [currentStep, setCurrentStep] = useState(0)
   const [submitting, setSubmitting] = useState(false)
   const [createdParkingLotId, setCreatedParkingLotId] = useState<number>()
@@ -79,6 +80,11 @@ export function CreateMerchantParkingLotPage() {
   })
 
   const formValues = watch()
+  const imageUrls = useRef<ParkingLotImageItem[]>([])
+  useEffect(() => { imageUrls.current = images }, [images])
+  useEffect(() => () => {
+    imageUrls.current.forEach((image) => URL.revokeObjectURL(image.previewUrl))
+  }, [])
 
   // Load Draft from LocalStorage on mount if exists
   useEffect(() => {
@@ -107,7 +113,12 @@ export function CreateMerchantParkingLotPage() {
       aiContent: appliedAiContent || undefined,
       updatedAt: new Date().toISOString(),
     }
-    localStorage.setItem(DRAFT_STORAGE_KEY, JSON.stringify(draft))
+    try {
+      localStorage.setItem(DRAFT_STORAGE_KEY, JSON.stringify(draft))
+    } catch {
+      setToastMessage('Không thể lưu bản nháp. Vui lòng kiểm tra dung lượng hoặc quyền lưu trữ của trình duyệt.')
+      return
+    }
     setDraftSaved(true)
     setToastMessage('Đã lưu bản nháp hồ sơ đăng ký vào trình duyệt.')
     setTimeout(() => {
@@ -119,13 +130,13 @@ export function CreateMerchantParkingLotPage() {
   // Step Navigation Handlers
   const handleNextStep = async () => {
     if (currentStep === 0) {
-      const isValid = await trigger(['name', 'address'])
+      const isValid = await trigger(['name', 'address'], { shouldFocus: true })
       if (isValid) {
         setCurrentStep(1)
         window.scrollTo({ top: 0, behavior: 'smooth' })
       }
     } else if (currentStep === 1) {
-      const isValid = await trigger(['latitude', 'longitude'])
+      const isValid = await trigger(['latitude', 'longitude'], { shouldFocus: true })
       if (isValid) {
         setCurrentStep(2)
         window.scrollTo({ top: 0, behavior: 'smooth' })
@@ -202,6 +213,7 @@ export function CreateMerchantParkingLotPage() {
       if (filesToUpload.length > 0) {
         await uploadMerchantParkingLotImages(createdParkingLotId, filesToUpload)
       }
+      localStorage.removeItem(DRAFT_STORAGE_KEY)
       setToastMessage(`Đã upload bổ sung ${filesToUpload.length} ảnh kiểm định thành công.`)
       setTimeout(() => {
         navigate('/merchant/parking-lots')
@@ -214,119 +226,75 @@ export function CreateMerchantParkingLotPage() {
     }
   }
 
+  const checklist = [
+    { title: 'Tên và địa chỉ bãi đỗ', detail: 'Thông tin cơ bản để nhận diện bãi', complete: Boolean(formValues.name?.trim() && formValues.address?.trim()), icon: Warehouse },
+    { title: 'Hình ảnh thực tế', detail: images.length ? `${images.length} ảnh đã chọn` : 'Nên có ảnh toàn cảnh và cổng vào', complete: images.length > 0, icon: Image },
+    { title: 'Vị trí trên bản đồ', detail: 'Đặt ghim tại lối vào bãi đỗ', complete: Number.isFinite(formValues.latitude) && Number.isFinite(formValues.longitude), icon: MapPin },
+  ]
+  const stepDescriptions = ['Bắt đầu với thông tin cơ bản và hình ảnh thực tế của bãi đỗ.', 'Chọn vị trí chính xác để tài xế dễ dàng tìm đường đến bãi.', 'Kiểm tra lại thông tin trước khi gửi hồ sơ đến quản trị viên.']
+
   return (
-    <div className="w-full bg-[#f8f9ff] min-h-screen pb-16 font-inter text-[#0d1c2e]">
-      {/* Toast Notification Notification Pill */}
+    <div className="lot-registration">
       {toastMessage && (
-        <div className="fixed top-20 right-6 z-50 flex items-center gap-2.5 px-4 py-3 bg-[#0d1c2e] text-white rounded-xl shadow-xl border border-[#d95f00] animate-in fade-in slide-in-from-top-2">
-          <CheckCircle2 className="w-5 h-5 text-[#ffb690] shrink-0" />
-          <span className="text-xs sm:text-sm font-medium">{toastMessage}</span>
-          <button
-            type="button"
-            onClick={() => setToastMessage(null)}
-            className="text-slate-400 hover:text-white ml-2 p-1"
-          >
-            <X className="w-4 h-4" />
-          </button>
+        <div className="registration-toast" role="status">
+          <Info size={20} aria-hidden="true" />
+          <span>{toastMessage}</span>
+          <button type="button" onClick={() => setToastMessage(null)} aria-label="Đóng thông báo"><X size={18} /></button>
         </div>
       )}
-
-      <div className="w-full max-w-[960px] mx-auto px-4 sm:px-6 lg:px-8 py-6 lg:py-8 flex flex-col gap-8">
-        {/* Top Header Segment: Eyebrow + H1 + Stepper Progress */}
-        <header className="flex flex-col gap-6">
-          <div className="flex flex-col gap-2">
-            <div className="flex items-center gap-2 flex-wrap">
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md bg-[#341100] text-[#d95f00] font-mono text-[11px] font-bold tracking-wider uppercase border border-[#d95f00]/30">
-                <span className="w-1.5 h-1.5 rounded-full bg-[#d95f00]" />
-                QUY TRÌNH THẨM ĐỊNH MẶT BẰNG &amp; MỞ BẾN BÃI MỚI · MOD-04
-              </span>
-            </div>
-
-            <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-4 mt-1">
-              <div>
-                <h1 className="font-sora text-2xl sm:text-3xl lg:text-4xl text-[#0d1c2e] tracking-tight font-bold">
-                  Đăng Ký Bãi Đỗ Xe &amp; Depot Mới
-                </h1>
-                <p className="text-sm sm:text-base text-slate-600 mt-2 max-w-3xl leading-relaxed">
-                  Nhập thông tin bãi đỗ, chọn vị trí và tải ảnh thực tế của bạn. Kiểm tra hồ sơ trước khi gửi.
-                </p>
-              </div>
-
-              <div className="flex items-center gap-2 shrink-0">
-                <span className="px-3 py-1 bg-[#dce9ff] text-[#0d1c2e] text-xs font-mono font-bold rounded-lg border border-slate-200">
-                  BƯỚC {currentStep + 1} TRÊN 3
-                </span>
-
-              </div>
-            </div>
+      <div className="registration-container">
+        <Link className="registration-back-link" to="/merchant/parking-lots"><ArrowLeft size={16} />Bãi đỗ của tôi</Link>
+        <header className="registration-header">
+          <div>
+            <p className="registration-eyebrow"><span /> MỞ RỘNG MẠNG LƯỚI BÃI ĐỖ</p>
+            <h1>Đăng ký bãi đỗ mới<span aria-hidden="true">.</span></h1>
+            <p>Đưa bãi đỗ của bạn lên hệ thống, kết nối với nhiều tài xế hơn.</p>
           </div>
-
-          {/* Stepper Progress Bar */}
-          <CreateParkingLotStepper
-            currentStep={currentStep}
-            onStepClick={(step) => setCurrentStep(step)}
-          />
+          <div className="registration-header-note"><ClipboardList size={19} /><span>Hoàn thiện hồ sơ<br /><strong>trong 3 bước đơn giản</strong></span></div>
         </header>
-
-        {/* Main 2-Column Split Workspace */}
-        <form onSubmit={handleSubmit(onSubmitFinal)} className="w-full">
-          <div className="flex flex-col gap-6">
-            {/* Left Column: 65% (8/12) */}
-            <section className="w-full flex flex-col gap-6">
-              {/* STEP 0: Thông tin cơ bản */}
-              {currentStep === 0 && (
-                <>
-                  <CreateParkingLotBasicInfoCard
-                    register={register}
-                    errors={errors}
-                    aiContent={appliedAiContent}
-                    onClearAiContent={() => setAppliedAiContent(null)}
-                  />
-                  <CreateParkingLotPhotosCard
-                    images={images}
-                    onImagesChange={(newImgs) => setImages(newImgs)}
-                  />
-                </>
-              )}
-
-              {/* STEP 1: Vị trí GPS & Bản đồ */}
-              {currentStep === 1 && (
-                <CreateParkingLotGeoCard
-                  latitude={formValues.latitude}
-                  longitude={formValues.longitude}
-                  setValue={setValue}
-                  errors={errors}
-                />
-              )}
-
-              {/* STEP 2: Xác nhận hồ sơ & Gửi duyệt */}
-              {currentStep === 2 && (
-                <CreateParkingLotConfirmStep
-                  values={formValues}
-                  images={images}
-                  aiContent={appliedAiContent}
-                  uploadError={uploadError}
-                  createdParkingLotId={createdParkingLotId}
-                  onRetryUpload={handleRetryUpload}
-                  submitting={submitting}
-                />
-              )}
-
-              {/* Wizard Action Footer Bar */}
-              <CreateParkingLotActionFooter
-                currentStep={currentStep}
-                submitting={submitting}
-                onBack={handleBackStep}
-                onNext={handleNextStep}
-                onSubmit={handleSubmit(onSubmitFinal)}
-                onSaveDraft={handleSaveDraft}
-                draftSaved={draftSaved}
-              />
+        <CreateParkingLotStepper currentStep={currentStep} onStepClick={setCurrentStep} disabled={submitting} />
+        <div className="registration-workspace">
+          <form noValidate onSubmit={(event) => {
+            if (currentStep < 2) { event.preventDefault(); void handleNextStep() }
+            else { void handleSubmit(onSubmitFinal)(event) }
+          }}>
+            <div className="registration-step-heading">
+              <div><span className="registration-eyebrow">BƯỚC {currentStep + 1} TRÊN 3</span><h2>{['Giới thiệu bãi đỗ của bạn', 'Định vị bãi đỗ', 'Hồ sơ đã sẵn sàng?'][currentStep]}</h2></div>
+              <p>{stepDescriptions[currentStep]}</p>
+            </div>
+            <fieldset disabled={submitting} className="registration-form-fields">
+              <legend className="sr-only">{['Thông tin bãi đỗ', 'Vị trí bãi đỗ', 'Kiểm tra hồ sơ'][currentStep]}</legend>
+              {currentStep === 0 && <>
+                <CreateParkingLotBasicInfoCard register={register} errors={errors} aiContent={appliedAiContent} onClearAiContent={() => setAppliedAiContent(null)} />
+                <CreateParkingLotPhotosCard images={images} onImagesChange={setImages} />
+              </>}
+              {currentStep === 1 && <CreateParkingLotGeoCard latitude={formValues.latitude} longitude={formValues.longitude} setValue={setValue} errors={errors} />}
+              {currentStep === 2 && <CreateParkingLotConfirmStep values={formValues} images={images} aiContent={appliedAiContent} uploadError={uploadError} createdParkingLotId={createdParkingLotId} onRetryUpload={handleRetryUpload} submitting={submitting} />}
+            </fieldset>
+            <CreateParkingLotActionFooter currentStep={currentStep} submitting={submitting} onBack={handleBackStep} onNext={handleNextStep} onSubmit={handleSubmit(onSubmitFinal)} onSaveDraft={handleSaveDraft} draftSaved={draftSaved} />
+            <p className="registration-draft-hint">Bạn có thể lưu bản nháp và quay lại hoàn thiện sau. Ảnh cần được chọn lại khi mở lại trang.</p>
+          </form>
+          <aside className="registration-sidebar" aria-label="Hướng dẫn đăng ký">
+            <section className="registration-checklist">
+              <div className="registration-sidebar-title"><ClipboardList size={20} /><h2>Hồ sơ cần chuẩn bị</h2></div>
+              <p>Một vài thông tin để bắt đầu thuận lợi.</p>
+              <ul>{checklist.map((item) => <li key={item.title} data-complete={item.complete}>
+                <span className="registration-checklist-icon"><item.icon size={18} aria-hidden="true" /></span>
+                <div><strong>{item.title}</strong><span>{item.detail}</span></div>
+                {item.complete ? <CheckCircle2 size={18} className="registration-check-status" aria-label="Đã có thông tin" /> : <Circle size={17} className="registration-check-status" aria-label="Chưa có thông tin" />}
+              </li>)}</ul>
+              <div className="registration-checklist-bottom"><Check size={16} />Cập nhật theo thông tin bạn nhập</div>
             </section>
-
-
-          </div>
-        </form>
+            <section className="registration-guide">
+              <span className="registration-guide-label">MỘT CHÚT CHUẨN BỊ,</span>
+              <h2>Một khởi đầu<br />thuận lợi<span>.</span></h2>
+              <div className="registration-yard-mark" aria-hidden="true"><span /><span /><span /><span /><ArrowUpRight size={28} /></div>
+              <p>Thông tin rõ ràng và hình ảnh thực tế giúp quản trị viên có đủ cơ sở để xem xét hồ sơ của bạn.</p>
+              <div className="registration-guide-note"><Info size={17} /><span>Hồ sơ sẽ được gửi xét duyệt sau khi bạn xác nhận ở bước cuối.</span></div>
+            </section>
+            <div className="registration-tip"><Info size={18} /><p><strong>Chưa sẵn sàng gửi?</strong><br />Chọn “Lưu bản nháp” để lưu thông tin trên trình duyệt này.</p></div>
+          </aside>
+        </div>
       </div>
     </div>
   )

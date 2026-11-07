@@ -10,13 +10,18 @@ import {
   User,
   Menu,
   LogOut,
+  PanelLeftClose,
+  PanelLeftOpen,
 } from 'lucide-react'
+import { cn } from '@/shared/utils/cn'
 
 interface MerchantHeaderProps {
   onToggleMobileMenu?: () => void
+  sidebarCollapsed?: boolean
+  onToggleSidebar?: () => void
 }
 
-export function MerchantHeader({ onToggleMobileMenu }: MerchantHeaderProps) {
+export function MerchantHeader({ onToggleMobileMenu, sidebarCollapsed = false, onToggleSidebar }: MerchantHeaderProps) {
   const navigate = useNavigate()
   const { data: profile } = useQuery({
     queryKey: ['merchant-header-profile'],
@@ -24,9 +29,25 @@ export function MerchantHeader({ onToggleMobileMenu }: MerchantHeaderProps) {
     staleTime: 60000,
   })
   const location = useLocation()
+  const sidebarOffset = sidebarCollapsed ? 'lg:left-[76px]' : 'lg:left-[260px]'
+  const SidebarIcon = sidebarCollapsed ? PanelLeftOpen : PanelLeftClose
+  const sidebarToggle = (
+    <button
+      type="button"
+      onClick={onToggleSidebar}
+      className="hidden lg:inline-flex shrink-0 rounded-xl p-2 text-slate-600 hover:text-slate-900 hover:bg-slate-100 focus-visible:outline-2 focus-visible:outline-brand-orange"
+      aria-label={sidebarCollapsed ? 'Mở rộng menu' : 'Thu gọn menu'}
+      title={sidebarCollapsed ? 'Mở rộng menu' : 'Thu gọn menu'}
+      aria-expanded={!sidebarCollapsed}
+      aria-controls="merchant-sidebar"
+    >
+      <SidebarIcon className="w-5 h-5" aria-hidden="true" />
+    </button>
+  )
   if (location.pathname === '/merchant/profile') return (
-    <header className="fixed inset-x-0 top-0 z-40 flex h-16 items-center justify-between gap-4 border-b border-brand-border bg-white px-4 font-inter text-base lg:left-[260px] lg:px-8">
+    <header className={cn('fixed inset-x-0 top-0 z-40 flex h-16 items-center justify-between gap-4 border-b border-brand-border bg-white px-4 font-inter text-base lg:px-8 transition-[left] duration-300 motion-reduce:transition-none', sidebarOffset)}>
       <div className="flex min-w-0 items-center gap-3">
+        {sidebarToggle}
         <button type="button" onClick={onToggleMobileMenu} aria-label="Mở menu" className="rounded-lg p-2 lg:hidden focus-visible:outline-2 focus-visible:outline-brand-orange"><Menu size={22} /></button>
         <nav aria-label="Đường dẫn" className="flex flex-wrap items-center gap-2 text-brand-muted"><Link to="/merchant/dashboard" className="hover:text-brand-navy">Tổng quan</Link><span aria-hidden="true">/</span><span aria-current="page" className="font-semibold text-brand-navy">Hồ sơ chủ bãi</span></nav>
       </div>
@@ -35,9 +56,10 @@ export function MerchantHeader({ onToggleMobileMenu }: MerchantHeaderProps) {
   )
 
   return (
-    <header className="fixed top-0 left-0 lg:left-[260px] right-0 h-16 bg-white border-b border-slate-200/90 z-40 px-4 lg:px-6 flex items-center justify-between shadow-2xs">
+    <header className={cn('fixed top-0 left-0 right-0 h-16 bg-white border-b border-slate-200/90 z-40 px-4 lg:px-6 flex items-center justify-between shadow-2xs transition-[left] duration-300 motion-reduce:transition-none', sidebarOffset)}>
       {/* Left: Mobile Toggle & Breadcrumb & Yard Filter */}
       <div className="flex items-center gap-3 lg:gap-4 min-w-0">
+        {sidebarToggle}
         {/* Mobile menu button */}
         <button
           type="button"

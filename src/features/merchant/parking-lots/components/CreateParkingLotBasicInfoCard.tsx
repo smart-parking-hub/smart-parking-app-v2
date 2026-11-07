@@ -26,93 +26,46 @@ export function CreateParkingLotBasicInfoCard({
   onClearAiContent,
 }: CreateParkingLotBasicInfoCardProps) {
   return (
-    <div className="bg-white p-5 sm:p-6 lg:p-8 rounded-2xl shadow-2xs border border-slate-200/80 flex flex-col gap-6">
-      {/* Card Header */}
-      <div className="flex items-start justify-between pb-4 border-b border-slate-100">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-lg bg-[#eff4ff] flex items-center justify-center text-[#d95f00] shrink-0">
-            <Warehouse className="w-5 h-5" />
-          </div>
-          <div>
-            <h2 className="font-sora text-lg sm:text-xl text-[#0d1c2e] font-bold">
-              Khai Báo Định Danh &amp; Địa Chỉ Bãi Đỗ
-            </h2>
-            <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
-              Thông tin pháp lý chính thức để hiển thị trên cổng thông tin điều phối và hóa đơn vận tải.
-            </p>
-          </div>
+    <section className="registration-card" aria-labelledby="registration-info-heading">
+      <div className="registration-card-heading">
+        <span className="registration-section-icon"><Warehouse size={21} aria-hidden="true" /></span>
+        <div>
+          <h2 id="registration-info-heading">Thông tin bãi đỗ</h2>
+          <p>Giúp tài xế nhận diện và tìm đúng bãi đỗ của bạn.</p>
         </div>
-        <span className="hidden sm:inline-flex font-mono text-[11px] px-2.5 py-1 rounded-md bg-[#eff4ff] text-slate-700 font-semibold border border-slate-200">
-          FORM-SEC-01
-        </span>
+        <span className="registration-required-note"><span aria-hidden="true">*</span> Bắt buộc</span>
       </div>
-
-      {/* Form Fields */}
-      <div className="flex flex-col gap-5">
-        {/* Lot Name Field */}
-        <div className="flex flex-col gap-1.5">
-          <label htmlFor="lot-name-input" className="text-xs sm:text-sm font-semibold text-[#0d1c2e] flex items-center justify-between cursor-pointer">
-            <span>Tên Bãi Đỗ Khai Báo (Chính Thức)</span>
-            <span className="text-[#d95f00] font-mono text-[11px] font-bold">* Bắt buộc (Tối đa 150 ký tự)</span>
-          </label>
-          <div
-            className={`relative flex items-center bg-[#eff4ff] px-3.5 py-2.5 rounded-xl border transition-all ${
-              errors.name ? 'border-red-400 ring-2 ring-red-100' : 'border-slate-200/80 focus-within:border-[#0d1c2e] focus-within:ring-2 focus-within:ring-slate-200'
-            }`}
-          >
-            <Warehouse className="w-4 h-4 text-slate-500 mr-2.5 shrink-0" />
-            <input
-              id="lot-name-input"
-              type="text"
-              placeholder="Ví dụ: Depot Container Tân Cảng - Phú Hữu (Cơ Sở 2)"
-              maxLength={150}
-              {...register('name')}
-              className="w-full bg-transparent text-sm text-[#0d1c2e] font-medium placeholder:text-slate-400 focus:outline-none"
-            />
+      <div className="registration-fields">
+        <div className="registration-field">
+          <label htmlFor="lot-name-input">Tên bãi đỗ <span aria-hidden="true">*</span></label>
+          <div className="registration-input-wrap" data-invalid={Boolean(errors.name)}>
+            <Warehouse size={18} aria-hidden="true" />
+            <input id="lot-name-input" type="text" placeholder="Ví dụ: Bãi đỗ Tân Cảng – Phú Hữu" maxLength={150}
+              aria-required="true" aria-invalid={Boolean(errors.name)}
+              aria-describedby={errors.name ? 'lot-name-error' : 'lot-name-hint'}
+              {...register('name')} />
           </div>
-          {errors.name && (
-            <p className="text-xs text-red-600 font-medium flex items-center gap-1 mt-0.5">
-              <AlertCircle className="w-3.5 h-3.5 shrink-0" />
-              <span>{errors.name.message}</span>
-            </p>
-          )}
+          {errors.name ? <p id="lot-name-error" role="alert" className="registration-field-error"><AlertCircle size={15} />{errors.name.message}</p>
+            : <p id="lot-name-hint" className="registration-field-hint">Sử dụng tên chính thức, tối đa 150 ký tự.</p>}
         </div>
-
-        {/* Address Field */}
-        <div className="flex flex-col gap-1.5">
-          <label htmlFor="lot-address-input" className="text-xs sm:text-sm font-semibold text-[#0d1c2e] flex items-center justify-between cursor-pointer">
-            <span>Địa Chỉ Mặt Bằng / Trục Đường Tiếp Cận Hàng Hóa</span>
-            <span className="text-slate-500 font-mono text-[11px]">* Bắt buộc (Tối đa 255 ký tự)</span>
-          </label>
-          <div
-            className={`relative flex items-start bg-[#eff4ff] px-3.5 py-2.5 rounded-xl border transition-all ${
-              errors.address ? 'border-red-400 ring-2 ring-red-100' : 'border-slate-200/80 focus-within:border-[#0d1c2e] focus-within:ring-2 focus-within:ring-slate-200'
-            }`}
-          >
-            <Signpost className="w-4 h-4 text-slate-500 mr-2.5 mt-1 shrink-0" />
-            <textarea
-              id="lot-address-input"
-              rows={3}
-              placeholder="Ví dụ: Số 12 Đường Gò Cát, Phường Phú Hữu, TP. Thủ Đức, TP. Hồ Chí Minh (Cách vòng xoay Phú Hữu 1.5 km)"
-              maxLength={255}
-              {...register('address')}
-              className="w-full bg-transparent text-sm text-[#0d1c2e] font-normal placeholder:text-slate-400 focus:outline-none resize-none"
-            />
+        <div className="registration-field">
+          <label htmlFor="lot-address-input">Địa chỉ bãi đỗ <span aria-hidden="true">*</span></label>
+          <div className="registration-input-wrap registration-textarea-wrap" data-invalid={Boolean(errors.address)}>
+            <Signpost size={18} aria-hidden="true" />
+            <textarea id="lot-address-input" rows={3} placeholder="Số nhà, tên đường, phường/xã, tỉnh/thành phố"
+              maxLength={255} aria-required="true" aria-invalid={Boolean(errors.address)}
+              aria-describedby={errors.address ? 'lot-address-error' : 'lot-address-hint'}
+              {...register('address')} />
           </div>
-          {errors.address && (
-            <p className="text-xs text-red-600 font-medium flex items-center gap-1 mt-0.5">
-              <AlertCircle className="w-3.5 h-3.5 shrink-0" />
-              <span>{errors.address.message}</span>
-            </p>
-          )}
+          {errors.address ? <p id="lot-address-error" role="alert" className="registration-field-error"><AlertCircle size={15} />{errors.address.message}</p>
+            : <p id="lot-address-hint" className="registration-field-hint">Ghi rõ địa chỉ và lối vào bãi để tài xế dễ tìm. Tối đa 255 ký tự.</p>}
         </div>
-
         {/* Applied AI Content Preview Ribbon if any */}
         {aiContent && (
-          <div className="p-4 rounded-xl bg-[#0d1c2e] text-white border border-[#341100] flex flex-col gap-3">
+          <div className="p-4 rounded-xl bg-brand-navy-light text-white border border-brand-border flex flex-col gap-3">
             <div className="flex items-center justify-between border-b border-slate-700/60 pb-2">
-              <span className="font-mono text-xs font-bold text-[#ffb690] uppercase tracking-wider flex items-center gap-2">
-                <Sparkles className="w-4 h-4 text-[#d95f00]" />
+              <span className="font-mono text-xs font-bold text-brand-primary-border uppercase tracking-wider flex items-center gap-2">
+                <Sparkles className="w-4 h-4 text-brand-primary-ink" />
                 Nội dung AI Fretrix-Dispatch đã đồng bộ vào hồ sơ
               </span>
               <button
@@ -138,6 +91,6 @@ export function CreateParkingLotBasicInfoCard({
           </div>
         )}
       </div>
-    </div>
+    </section>
   )
 }

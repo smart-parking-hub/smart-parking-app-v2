@@ -1,9 +1,11 @@
 import { useState, useMemo, useEffect, useCallback } from 'react'
+import './MerchantSlotsPage.css'
 import { useParams } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { CheckCircle2, AlertCircle, X } from 'lucide-react'
 
 import {
+  vehicleNames,
   fetchMerchantLotSimpleInfo,
   fetchMerchantLotSlots,
   updateMerchantLotSlotsBulk,
@@ -11,6 +13,7 @@ import {
 import type {
   BulkSlotConfigRequest,
   SlotKpiMetrics,
+  SlotMatrixItem,
   VehicleType,
 } from '../types/merchantSlotsTypes'
 import {
@@ -18,13 +21,12 @@ import {
   MerchantSlotsInvariantBanner,
   MerchantSlotsKpiSection,
   MerchantSlotMatrixGrid,
-  MerchantSlotWeightCalculator,
-  MerchantSlotVirtualQueueCard,
-  MerchantSlotVisualContext,
   MerchantSlotsStickyFooter,
   MerchantSlotsSkeleton,
   ConfirmDecreaseModal,
 } from '../components'
+
+const emptySlots: SlotMatrixItem[] = []
 
 interface ToastState {
   id: number
@@ -34,24 +36,38 @@ interface ToastState {
 
 export function MerchantSlotsPage() {
   const { parkingLotId } = useParams<{ parkingLotId: string }>()
-  const lotId = Number(parkingLotId) || 1
+  const lotId = Number(parkingLotId)
+  const validLotId = Number.isSafeInteger(lotId) && lotId > 0
   const queryClient = useQueryClient()
 
   // 1. Fetch Lot Info & Slots Data
-  const { data: lotInfo, isLoading: loadingLot } = useQuery({
+  const { data: lotInfo, isLoading: loadingLot, isError: lotError, refetch: retryLot } = useQuery({
     queryKey: ['merchant-lot-simple', lotId],
     queryFn: () => fetchMerchantLotSimpleInfo(lotId),
     staleTime: 60000,
+    enabled: validLotId,
   })
 
-  const { data: slots = [], isLoading: loadingSlots } = useQuery({
+  const { data: serverSlots = emptySlots, isLoading: loadingSlots, isError: slotsError, refetch: retrySlots } = useQuery({
     queryKey: ['merchant-lot-slots', lotId],
     queryFn: () => fetchMerchantLotSlots(lotId),
     staleTime: 60000,
+    enabled: validLotId,
   })
 
   // 2. Drafts state for in-memory editing
   const [drafts, setDrafts] = useState<Record<VehicleType, number>>({} as Record<VehicleType, number>)
+  const [addedTypes, setAddedTypes] = useState<VehicleType[]>([])
+  const slots = useMemo(() => [
+    ...serverSlots,
+    ...addedTypes.filter((type) => !serverSlots.some((slot) => slot.vehicleType === type)).map((vehicleType) => ({
+      vehicleType,
+      typeNameVi: vehicleNames[vehicleType],
+      totalCapacity: 0,
+      availableCapacity: 0,
+      occupiedCapacity: 0,
+    })),
+  ], [serverSlots, addedTypes])
   const [confirmModalOpen, setConfirmModalOpen] = useState(false)
   const [toasts, setToasts] = useState<ToastState[]>([])
 
@@ -66,14 +82,12 @@ export function MerchantSlotsPage() {
 
   // Sync drafts when slots data is fetched
   useEffect(() => {
-    if (slots.length > 0) {
-      const initialDrafts: Record<VehicleType, number> = {} as Record<VehicleType, number>
-      slots.forEach((s) => {
-        initialDrafts[s.vehicleType] = s.totalCapacity
-      })
-      setDrafts(initialDrafts)
-    }
-  }, [slots])
+    const initialDrafts: Record<VehicleType, number> = {} as Record<VehicleType, number>
+    serverSlots.forEach((s) => {
+      initialDrafts[s.vehicleType] = s.totalCapacity
+    })
+    setDrafts(initialDrafts)
+  }, [serverSlots])
 
   // 3. Invariants & Dynamic KPIs Recalculation
   const metrics: SlotKpiMetrics = useMemo(() => {
@@ -100,27 +114,12 @@ export function MerchantSlotsPage() {
     }
   }, [slots, drafts])
 
-  // Surface Weight calculation
-  const calculatedWeightTonnage = useMemo(() => {
-    // Estimations: Container = 40T, Heavy = 28T, Light = 10T, Bus = 12T, Sedan = 2T
-    let tonnage = 0
-    slots.forEach((slot) => {
-      const occ = slot.occupiedCapacity
-      if (slot.vehicleType === 'CONTAINER') tonnage += occ * 40
-      else if (slot.vehicleType === 'HEAVY_TRUCK') tonnage += occ * 28
-      else if (slot.vehicleType === 'LIGHT_TRUCK') tonnage += occ * 10
-      else if (slot.vehicleType === 'BUS_COACH') tonnage += occ * 12
-      else tonnage += occ * 2
-    })
-    return Math.max(4120, tonnage)
-  }, [slots])
-
   // Check state changes & decrease
   const hasChanges = useMemo(() => {
-    return slots.some(
+    return addedTypes.length > 0 || slots.some(
       (slot) => (drafts[slot.vehicleType] ?? slot.totalCapacity) !== slot.totalCapacity,
     )
-  }, [slots, drafts])
+  }, [slots, drafts, addedTypes])
 
   const hasDecrease = useMemo(() => {
     return slots.some((slot) => {
@@ -139,14 +138,17 @@ export function MerchantSlotsPage() {
       updateMerchantLotSlotsBulk(lotId, payload),
     onSuccess: (updatedSlots) => {
       queryClient.setQueryData(['merchant-lot-slots', lotId], updatedSlots)
+      void queryClient.invalidateQueries({ queryKey: ['merchant-owned-parking-lots'] })
+      void queryClient.invalidateQueries({ queryKey: ['merchant-lot-detail', String(lotId)] })
       const newDrafts: Record<VehicleType, number> = {} as Record<VehicleType, number>
       updatedSlots.forEach((s) => {
         newDrafts[s.vehicleType] = s.totalCapacity
       })
       setDrafts(newDrafts)
+      setAddedTypes([])
       setConfirmModalOpen(false)
       showToast(
-        'Lưu cấu hình sức chứa thành công! Đã gửi PUT /api/v1/merchant/parking-lots/slots/bulk (200 OK)',
+        'Lưu cấu hình sức chứa thành công!',
       )
     },
     onError: (err: unknown) => {
@@ -166,7 +168,7 @@ export function MerchantSlotsPage() {
       showToast(
         `Ràng buộc bất biến: Không thể giảm sức chứa của ${
           currentSlot?.typeNameVi || vehicleType
-        } nhỏ hơn ${occupied} xe đang đỗ thực tế!`,
+        } nhỏ hơn ${occupied} chỗ đã sử dụng!`,
         true,
       )
       return
@@ -177,10 +179,11 @@ export function MerchantSlotsPage() {
 
   const handleResetToOrigin = () => {
     const originalDrafts: Record<VehicleType, number> = {} as Record<VehicleType, number>
-    slots.forEach((s) => {
+    serverSlots.forEach((s) => {
       originalDrafts[s.vehicleType] = s.totalCapacity
     })
     setDrafts(originalDrafts)
+    setAddedTypes([])
     showToast('Đã khôi phục ma trận sức chứa về thông số ban đầu.')
   }
 
@@ -195,7 +198,7 @@ export function MerchantSlotsPage() {
       const nextVal = drafts[slot.vehicleType] ?? slot.totalCapacity
       if (nextVal < slot.occupiedCapacity) {
         showToast(
-          `Khóa bất biến vi phạm: Loại xe ${slot.typeNameVi} có ${slot.occupiedCapacity} xe đang đỗ!`,
+          `Khóa bất biến vi phạm: Loại xe ${slot.typeNameVi} có ${slot.occupiedCapacity} chỗ đã sử dụng!`,
           true,
         )
         return
@@ -225,17 +228,21 @@ export function MerchantSlotsPage() {
     saveMutation.mutate(payload)
   }
 
+  if (!validLotId || lotError || slotsError) {
+    return <div className="merchant-slots"><div className="slots-error" role="alert"><AlertCircle size={28} /><h1>Không tải được dữ liệu bãi đỗ</h1><p>{!validLotId ? 'Mã bãi đỗ không hợp lệ.' : 'Vui lòng kiểm tra kết nối và thử lại.'}</p>{validLotId && <button type="button" onClick={() => { void retryLot(); void retrySlots() }}>Thử lại</button>}</div></div>
+  }
   if (loadingLot || loadingSlots) {
     return <MerchantSlotsSkeleton />
   }
 
   return (
-    <div className="w-full min-h-screen bg-[#f8f9ff] flex flex-col">
+    <div className="merchant-slots">
       {/* Toast floating notices */}
       <div className="fixed top-20 right-6 z-50 flex flex-col gap-2 pointer-events-none">
         {toasts.map((toast) => (
           <div
             key={toast.id}
+            role={toast.isError ? 'alert' : 'status'}
             className={`px-4 py-3 rounded-xl shadow-xl text-white text-xs font-semibold flex items-center gap-2.5 transition-all transform duration-300 pointer-events-auto border ${
               toast.isError
                 ? 'bg-[#ba1a1a] border-red-400 text-white'
@@ -250,6 +257,7 @@ export function MerchantSlotsPage() {
             <span>{toast.message}</span>
             <button
               type="button"
+              aria-label="Đóng thông báo"
               onClick={() => setToasts((prev) => prev.filter((t) => t.id !== toast.id))}
               className="ml-2 text-white/60 hover:text-white"
             >
@@ -260,7 +268,7 @@ export function MerchantSlotsPage() {
       </div>
 
       {/* Main Container */}
-      <div className="w-full max-w-[1280px] mx-auto px-4 lg:px-8 py-6 flex flex-col gap-6">
+      <div className="slots-container">
         {/* Section 1: Header & Quick Navigations */}
         {lotInfo && <MerchantSlotsHeader lotInfo={lotInfo} />}
 
@@ -270,41 +278,34 @@ export function MerchantSlotsPage() {
         {/* Section 2: Real-time Facility Capacity KPIs */}
         <MerchantSlotsKpiSection metrics={metrics} />
 
-        {/* Section 3: Slot Capacity Matrix - 5 Standard Vehicle Categories */}
+        {/* Vehicle categories configured for this lot */}
         <MerchantSlotMatrixGrid
           slots={slots}
           drafts={drafts}
+          onAddType={(type) => {
+            if (isLocked || saveMutation.isPending || slots.some((slot) => slot.vehicleType === type)) return
+            setAddedTypes((prev) => [...prev, type])
+            setDrafts((prev) => ({ ...prev, [type]: 0 }))
+          }}
+          onRemoveType={(type) => {
+            if (isLocked || saveMutation.isPending || !addedTypes.includes(type)) return
+            setAddedTypes((prev) => prev.filter((item) => item !== type))
+            setDrafts((prev) => {
+              const next = { ...prev }
+              delete next[type]
+              return next
+            })
+            requestAnimationFrame(() => document.getElementById('new-slot-vehicle')?.focus())
+          }}
           onChangeDraft={handleDraftChange}
           onViolation={(msg) => showToast(msg, true)}
           disabled={isLocked || saveMutation.isPending}
         />
 
-        {/* Section 4: Surface Weight Calculator & Real-time Queue Integration */}
-        <section className="grid grid-cols-1 lg:grid-cols-12 gap-4">
-          <div className="lg:col-span-8">
-            <MerchantSlotWeightCalculator
-              currentLoadedTonnage={calculatedWeightTonnage}
-              maxDesignTonnage={4800}
-              totalOccupied={metrics.totalOccupied}
-            />
-          </div>
-          <div className="lg:col-span-4">
-            <MerchantSlotVirtualQueueCard
-              isQueueActive={metrics.totalAvailable === 0}
-              activeVehicleTypeName="TRUCK_HEAVY"
-            />
-          </div>
-        </section>
-
-        {/* Section 5: Operational Visuals (Terminal Map & ALPR System) */}
-        <MerchantSlotVisualContext />
-
-        {/* Section 6: Bulk Save Sticky Action Dock */}
         <MerchantSlotsStickyFooter
           hasChanges={hasChanges}
           isSaving={saveMutation.isPending}
           isLocked={isLocked}
-          lotCode={lotInfo?.code || 'VN-SGN-CLG2-09'}
           onReset={handleResetToOrigin}
           onSave={handleSaveClick}
         />

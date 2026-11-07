@@ -1,7 +1,9 @@
+import { useEffect, useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useForm, useFieldArray } from 'react-hook-form'
 import { Link, useParams } from 'react-router-dom'
-import { MapPin, Warehouse, Loader2 } from 'lucide-react'
+import { MerchantLotNavigation } from '@/entities/parking-lot/components/MerchantLotNavigation'
+import { MapPin, Warehouse, Loader2, CheckCircle2, X } from 'lucide-react'
 import {
   type Lot,
   type Pricing,
@@ -51,27 +53,11 @@ export function MerchantLotPage({
         </Link>
       }
     >
-      <nav className="flex flex-wrap gap-2">
-        {(['detail', 'edit', 'slots', 'pricing'] as const).map((tab) => (
-          <Link
-            key={tab}
-            className={mode === tab ? button : secondary}
-            to={`/merchant/parking-lots/${id}${tab === 'detail' ? '' : `/${tab}`}`}
-          >
-            {
-              {
-                detail: 'Tổng quan',
-                edit: 'Hồ sơ',
-                slots: 'Sức chứa',
-                pricing: 'Biểu phí',
-              }[tab]
-            }
-          </Link>
-        ))}
-      </nav>
       <QueryState query={query}>
-        {(lot) =>
-          mode === 'detail' ? (
+        {(lot) => <>
+          <MerchantLotNavigation lotId={lot.id} status={lot.status} />
+          <p className="text-sm text-brand-muted"><strong className="text-brand-navy">{lot.name}</strong> · Bãi #{lot.id}</p>
+          {mode === 'detail' ? (
             <LotOverview lot={lot} />
           ) : mode === 'edit' ? (
             <LotEdit key={lot.id} lot={lot} />
@@ -79,8 +65,8 @@ export function MerchantLotPage({
             <SlotEditor key={lot.id} lot={lot} />
           ) : (
             <PricingEditor key={lot.id} lot={lot} />
-          )
-        }
+          )}
+        </>}
       </QueryState>
     </Workspace>
   )
@@ -298,6 +284,7 @@ function LotEdit({ lot }: { lot: Lot }) {
         <SaveState
           pending={mutation.isPending}
           success={mutation.isSuccess}
+          submittedAt={mutation.submittedAt}
           error={mutation.error}
           invalid={Object.keys(form.formState.errors).length > 0}
         />
@@ -391,6 +378,7 @@ function SlotEditor({ lot }: { lot: Lot }) {
         <SaveState
           pending={mutation.isPending}
           success={mutation.isSuccess}
+          submittedAt={mutation.submittedAt}
           error={mutation.error}
           invalid={Object.keys(form.formState.errors).length > 0}
         />
@@ -499,6 +487,7 @@ function PricingEditor({ lot }: { lot: Lot }) {
         <SaveState
           pending={mutation.isPending}
           success={mutation.isSuccess}
+          submittedAt={mutation.submittedAt}
           error={mutation.error}
           invalid={Object.keys(form.formState.errors).length > 0}
         />
@@ -510,19 +499,46 @@ function PricingEditor({ lot }: { lot: Lot }) {
 function SaveState({
   pending,
   success,
+  submittedAt,
   error,
   invalid,
 }: {
   pending: boolean
   success: boolean
+  submittedAt: number
   error: unknown
   invalid: boolean
 }) {
+  const [showSuccess, setShowSuccess] = useState(false)
+  useEffect(() => {
+    setShowSuccess(success && !pending)
+    if (!success || pending) return
+    const timeout = window.setTimeout(() => setShowSuccess(false), 4000)
+    return () => window.clearTimeout(timeout)
+  }, [success, pending, submittedAt])
+
   return (
     <div className="space-y-4 md:col-span-2">
       {invalid && <Notice error>Vui lòng kiểm tra các giá trị đã nhập.</Notice>}
       {Boolean(error) && <Notice error>{errorMessage(error)}</Notice>}
-      {success && <Notice>Đã lưu cấu hình thành công.</Notice>}
+      {showSuccess && (
+        <div
+          role="status"
+          aria-live="polite"
+          className="fixed top-20 right-4 left-4 sm:left-auto z-50 flex items-center gap-3 rounded-xl border border-status-success-border bg-surface-card px-4 py-3 text-text-primary shadow-lg sm:max-w-sm font-inter text-sm"
+        >
+          <CheckCircle2 className="h-5 w-5 shrink-0 text-status-success" aria-hidden="true" />
+          <span>Đã lưu cấu hình thành công.</span>
+          <button
+            type="button"
+            aria-label="Đóng thông báo thành công"
+            onClick={() => setShowSuccess(false)}
+            className="ml-2 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-text-muted hover:bg-surface-subtle focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-primary"
+          >
+            <X className="h-4 w-4" aria-hidden="true" />
+          </button>
+        </div>
+      )}
       <button
         className={`${button} flex items-center justify-center gap-2 disabled:cursor-not-allowed disabled:pointer-events-none`}
         disabled={pending}

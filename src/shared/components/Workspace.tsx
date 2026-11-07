@@ -189,16 +189,18 @@ export function Dialog({
     const element = ref.current
     const previous = document.activeElement
     if (element) {
-      element.setAttribute('open', '')
       if (typeof element.showModal === 'function') {
         element.showModal()
+      } else {
+        element.setAttribute('open', '')
       }
     }
     return () => {
       if (element) {
-        element.removeAttribute('open')
         if (typeof element.close === 'function') {
           element.close()
+        } else {
+          element.removeAttribute('open')
         }
       }
       if (previous instanceof HTMLElement) previous.focus()

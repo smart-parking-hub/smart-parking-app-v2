@@ -191,6 +191,10 @@ describe('GROUP 10 - Admin Parking Lots Moderation & Dashboard', () => {
           { reason: '' },
         )
       })
+      expect(await screen.findByRole('dialog', { name: 'Duyệt bãi thành công' })).toBeInTheDocument()
+      expect(screen.queryByRole('button', { name: 'Xác nhận quyết định' })).not.toBeInTheDocument()
+      await user.click(screen.getByRole('button', { name: 'Đã hiểu' }))
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
     })
 
     it('requires a reason when rejecting parking lot submission (validation error if empty)', async () => {
@@ -242,6 +246,7 @@ describe('GROUP 10 - Admin Parking Lots Moderation & Dashboard', () => {
           { reason: 'Hồ sơ thiếu chứng nhận phòng cháy chữa cháy PCCC' },
         )
       })
+      expect(await screen.findByRole('dialog', { name: 'Đã từ chối hồ sơ bãi' })).toBeInTheDocument()
     })
 
     it('requires a reason when requesting changes (Yêu cầu bổ sung)', async () => {
