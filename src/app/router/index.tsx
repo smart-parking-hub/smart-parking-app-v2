@@ -510,6 +510,10 @@ export const router = createBrowserRouter([
     element: <DriverSolutionsPage />,
   },
   {
+    path: '/solutions/drivers',
+    element: <DriverSolutionsPage />,
+  },
+  {
     path: '/giai-phap-tai-xe',
     element: <DriverSolutionsPage />,
   },
@@ -657,3 +661,33 @@ export const router = createBrowserRouter([
   },
   { path: '*', element: <AccessPage notFound /> },
 ])
+
+// Global router-level scroll restoration: resets scroll position to the top on every route transition
+if (typeof window !== 'undefined') {
+  router.subscribe((state) => {
+    if (state.historyAction === 'PUSH' || state.historyAction === 'REPLACE') {
+      try {
+        if (typeof window.scrollTo === 'function') {
+          window.scrollTo({ top: 0, left: 0, behavior: 'instant' })
+        }
+      } catch {
+        window.scrollTo(0, 0)
+      }
+      if (typeof document !== 'undefined') {
+        if (document.documentElement) {
+          document.documentElement.scrollTop = 0
+          document.documentElement.scrollLeft = 0
+        }
+        if (document.body) {
+          document.body.scrollTop = 0
+          document.body.scrollLeft = 0
+        }
+        const mainEl = document.getElementById('main-content') || document.querySelector('main')
+        if (mainEl) {
+          mainEl.scrollTop = 0
+          mainEl.scrollLeft = 0
+        }
+      }
+    }
+  })
+}

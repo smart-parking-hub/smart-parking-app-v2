@@ -120,7 +120,7 @@ export function QrCheckoutModal({
         <button
           type="button"
           onClick={onClose}
-          className="w-full h-11 rounded-xl bg-[#d95f00] hover:bg-[#b85000] text-white text-xs font-semibold transition-colors shadow-md cursor-pointer"
+          className="w-full h-11 rounded-xl bg-brand-primary hover:bg-brand-primary-hover text-white text-xs font-semibold transition-colors shadow-md cursor-pointer"
         >
           HOÀN TẤT &amp; ĐÓNG MÃ QR
         </button>

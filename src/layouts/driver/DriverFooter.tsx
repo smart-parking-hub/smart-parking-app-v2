@@ -41,7 +41,7 @@ export function DriverFooter() {
       {/* Sub-footer bottom bar */}
       <div className="bg-[#233144] py-3 border-t border-white/5">
         <div className="max-w-[1280px] mx-auto px-4 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-[#7c839b]">
-          <p>© 2025 SmartTruckHub Logistics Network. Toàn bộ quyền được bảo lưu.</p>
+          <p>© 2026 SmartTruckHub Logistics Network. Toàn bộ quyền được bảo lưu.</p>
           <div className="flex items-center gap-4">
             <Link to="/profile" className="hover:text-white transition-colors">
               Tài khoản
@@ -49,15 +49,12 @@ export function DriverFooter() {
             <Link to="/change-password" className="hover:text-white transition-colors">
               Đổi mật khẩu
             </Link>
-            <a
-              href="#terms"
-              className="hover:text-white transition-colors"
-              onClick={(e) => {
-                e.preventDefault()
-              }}
-            >
-              Điều khoản dịch vụ
-            </a>
+            <Link to="/about" className="hover:text-white transition-colors">
+              Về chúng tôi
+            </Link>
+            <Link to="/contact" className="hover:text-white transition-colors">
+              Hỗ trợ 24/7
+            </Link>
           </div>
         </div>
       </div>

@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from 'react'
+import { useState, useEffect, useRef, type FormEvent } from 'react'
 import { X, CheckCircle2, Mail, ExternalLink } from 'lucide-react'
 
 interface CareersApplyModalProps {
@@ -14,6 +14,15 @@ export function CareersApplyModal({ isOpen, jobTitle, onClose }: CareersApplyMod
   const [cvUrl, setCvUrl] = useState('')
   const [notes, setNotes] = useState('')
   const [isSuccess, setIsSuccess] = useState(false)
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  useEffect(() => {
+    return () => {
+      if (timerRef.current) {
+        clearTimeout(timerRef.current)
+      }
+    }
+  }, [])
 
   if (!isOpen) return null
 
@@ -41,7 +50,7 @@ ${fullName || 'Ứng viên'}`
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault()
     setIsSuccess(true)
-    setTimeout(() => {
+    timerRef.current = setTimeout(() => {
       setIsSuccess(false)
       setFullName('')
       setPhone('')

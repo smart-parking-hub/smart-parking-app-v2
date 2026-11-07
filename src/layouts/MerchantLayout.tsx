@@ -2,12 +2,14 @@ import { useState } from 'react'
 import { Outlet } from 'react-router-dom'
 import { MerchantSidebar } from './merchant/MerchantSidebar'
 import { MerchantHeader } from './merchant/MerchantHeader'
+import { ScrollToTop } from '@/shared/components/ScrollToTop'
 
 export function MerchantLayout() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
   return (
     <div className="min-h-screen bg-[#f8f9ff] text-[#0d1c2e] antialiased">
+      <ScrollToTop />
       {/* 260px Fixed Sidebar */}
       <MerchantSidebar
         mobileOpen={mobileMenuOpen}

@@ -32,7 +32,7 @@ export function SearchParkingEmptyState({
         <button
           type="button"
           onClick={onExpandRadius}
-          className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#d95f00] hover:bg-[#b85000] text-white text-xs sm:text-sm font-semibold transition-all shadow-md active:scale-[0.99] cursor-pointer"
+          className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-brand-primary hover:bg-brand-primary-hover text-white text-xs sm:text-sm font-semibold transition-all shadow-md active:scale-[0.99] cursor-pointer"
         >
           <Search className="w-4 h-4" />
           <span>Mở rộng bán kính (35km)</span>

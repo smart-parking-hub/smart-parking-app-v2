@@ -32,3 +32,11 @@ Object.defineProperty(globalThis, 'localStorage', {
   writable: true,
   configurable: true,
 })
+
+// Polyfill window.scrollTo and scrollIntoView in jsdom (default jsdom throws "Not implemented")
+if (typeof window !== 'undefined') {
+  window.scrollTo = () => {}
+  if (window.HTMLElement) {
+    window.HTMLElement.prototype.scrollIntoView = () => {}
+  }
+}

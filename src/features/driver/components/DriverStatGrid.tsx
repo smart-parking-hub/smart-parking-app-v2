@@ -109,7 +109,7 @@ export function DriverStatGrid({
             <button
               type="button"
               onClick={onOpenQr}
-              className="w-full py-2 px-3 rounded-lg bg-[#d95f00] hover:bg-[#b85000] text-white font-medium text-xs flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
+              className="w-full py-2 px-3 rounded-lg bg-brand-primary hover:bg-brand-primary-hover text-white font-medium text-xs flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
             >
               <QrCode className="w-3.5 h-3.5" />
               <span>Mở vé QR check-out</span>

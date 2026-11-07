@@ -41,7 +41,7 @@ export function DriverWelcomeBanner({
         <div className="flex flex-col sm:flex-row lg:flex-col gap-2 shrink-0 sm:w-auto lg:w-[220px]">
           <Link
             to="/parking"
-            className="w-full inline-flex items-center justify-center gap-2 h-10 px-4 rounded-lg bg-[#d95f00] hover:bg-[#b85000] text-white font-medium text-xs transition-colors cursor-pointer text-center"
+            className="w-full inline-flex items-center justify-center gap-2 h-10 px-4 rounded-lg bg-brand-primary hover:bg-brand-primary-hover text-white font-medium text-xs transition-colors cursor-pointer text-center"
           >
             <span>Tìm bãi đỗ gần nhất</span>
             <ArrowRight className="w-3.5 h-3.5" />
