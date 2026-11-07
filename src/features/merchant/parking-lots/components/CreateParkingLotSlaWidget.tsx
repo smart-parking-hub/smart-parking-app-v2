@@ -35,7 +35,7 @@ export function CreateParkingLotSlaWidget() {
               Quy trình cấp phép mở bán
             </span>
             <span className="mt-0.5 leading-relaxed text-slate-600">
-              Sau khi Admin phê duyệt (APPROVED), bạn mới được cấu hình Sức chứa Slot (SCR-032) và Biểu phí niêm yết (SCR-033) để mở bán chỗ trên bản đồ tài xế.
+              Sau khi Admin phê duyệt (APPROVED), bạn mới được cấu hình Sức chứa Slot và Biểu phí niêm yết để mở bán chỗ trên bản đồ tài xế.
             </span>
           </div>
         </div>

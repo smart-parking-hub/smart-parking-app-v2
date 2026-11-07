@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useForm } from 'react-hook-form'
 import { useSearchParams } from 'react-router-dom'
-import { Camera, ScanLine, ShieldCheck } from 'lucide-react'
+import { Camera, Loader2, ScanLine, ShieldCheck } from 'lucide-react'
 import type { Lot, Settlement } from '@/entities/operations'
 import {
   getData,
@@ -154,15 +154,15 @@ export function MerchantScannerPage() {
       description="Quét vé, đối chiếu bãi đỗ, xác nhận lượt vào và quyết toán lượt ra."
     >
       <div className="grid gap-6 xl:grid-cols-[1.6fr_1fr]">
-        <Panel className="!bg-brand-navy !text-white">
+        <Panel className="!bg-[#0a1120] !text-white border-slate-700/80 shadow-lg">
           <div className="mb-6 flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <ScanLine className="text-brand-orange" />
-              <h2 className="font-sora text-lg">Camera tại cổng</h2>
+              <ScanLine className="text-emerald-400" />
+              <h2 className="font-sora text-lg font-semibold tracking-tight">Camera tại cổng</h2>
             </div>
             <Badge value={camera ? 'CAMERA ĐANG BẬT' : 'CAMERA TẮT'} />
           </div>
-          <div className="relative flex aspect-video items-center justify-center overflow-hidden rounded-xl border border-slate-600 bg-black">
+          <div className="relative flex aspect-video items-center justify-center overflow-hidden rounded-xl border border-slate-700 bg-black shadow-inner">
             <video
               ref={video}
               muted
@@ -171,9 +171,9 @@ export function MerchantScannerPage() {
             />
             <div
               aria-hidden="true"
-              className="pointer-events-none absolute inset-[20%] rounded-xl border-2 border-brand-orange"
+              className="pointer-events-none absolute inset-[18%] rounded-xl border-2 border-emerald-400 shadow-[0_0_20px_rgba(52,211,153,0.35)] animate-pulse"
             />
-            {!camera && <Camera size={48} className="text-slate-500" />}
+            {!camera && <Camera size={48} className="text-slate-600" />}
           </div>
           <div className="mt-5 flex flex-wrap items-center justify-between gap-4">
             <p className="text-xs text-slate-300">
@@ -210,6 +210,7 @@ export function MerchantScannerPage() {
           <form
             className="space-y-5"
             onSubmit={form.handleSubmit((data) => {
+              if (scan.isPending) return
               setSuccess('')
               cash.reset()
               scan.mutate(data)
@@ -235,7 +236,8 @@ export function MerchantScannerPage() {
             {lots.isError && <Notice error>{errorMessage(lots.error)}</Notice>}
             <Field label="Mã đặt chỗ / Nội dung QR">
               <input
-                className={control}
+                className={`${control} font-mono uppercase tracking-wider font-semibold text-base`}
+                placeholder="VD: BK-2026-X89..."
                 autoComplete="off"
                 {...form.register('bookingCode', {
                   required: true,
@@ -247,14 +249,21 @@ export function MerchantScannerPage() {
               <Notice error>Chọn bãi và nhập mã vé hợp lệ.</Notice>
             )}
             <button
+              type="submit"
               disabled={scan.isPending || !lots.data}
-              className={`${button} w-full`}
+              aria-busy={scan.isPending}
+              className={`${button} w-full flex items-center justify-center gap-2`}
             >
-              {scan.isPending
-                ? 'Đang xác nhận…'
-                : mode === 'check-in'
-                  ? 'Xác nhận xe vào bãi'
-                  : 'Kiểm tra & quyết toán xe ra'}
+              {scan.isPending ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin shrink-0" />
+                  <span>Đang xác nhận…</span>
+                </>
+              ) : mode === 'check-in' ? (
+                'Xác nhận xe vào bãi'
+              ) : (
+                'Kiểm tra & quyết toán xe ra'
+              )}
             </button>
           </form>
           <div className="mt-6 flex gap-2 border-t border-brand-border pt-5 text-xs leading-relaxed text-brand-muted">
@@ -283,15 +292,15 @@ export function MerchantScannerPage() {
                 ['Tổng phí', money(scan.data.totalAmount)],
                 ['Cọc đã khấu trừ', money(scan.data.advanceDeposit)],
               ].map(([label, value]) => (
-                <div key={label} className="flex justify-between">
-                  <dt>{label}</dt>
-                  <dd className="font-semibold">{value}</dd>
+                <div key={label} className="flex justify-between text-sm">
+                  <dt className="text-brand-muted">{label}</dt>
+                  <dd className="font-semibold font-mono tabular-nums text-slate-900">{value}</dd>
                 </div>
               ))}
             </dl>
-            <div className="rounded-xl bg-brand-navy p-6 text-white">
-              <p className="text-xs">CÒN PHẢI THU</p>
-              <p className="mt-2 font-sora text-3xl">
+            <div className="rounded-xl bg-[#0a1120] p-6 text-white border border-slate-800 shadow-md">
+              <p className="text-xs font-bold uppercase tracking-wider text-slate-400">CÒN PHẢI THU</p>
+              <p className="mt-2 font-sora text-3xl font-extrabold text-amber-400 tabular-nums">
                 {money(scan.data.amountDue)}
               </p>
             </div>
@@ -299,12 +308,21 @@ export function MerchantScannerPage() {
             {scan.data.amountDue > 0 && (
               <button
                 disabled={cash.isPending || cash.isSuccess}
-                className={`${button} w-full`}
-                onClick={() => cash.mutate()}
+                aria-busy={cash.isPending}
+                className={`${button} w-full flex items-center justify-center gap-2`}
+                onClick={() => {
+                  if (cash.isPending || cash.isSuccess) return
+                  cash.mutate()
+                }}
               >
-                {cash.isPending
-                  ? 'Đang xác nhận…'
-                  : 'Đã nhận đủ tiền mặt · Hoàn tất lượt đỗ'}
+                {cash.isPending ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin shrink-0" />
+                    <span>Đang xác nhận…</span>
+                  </>
+                ) : (
+                  'Đã nhận đủ tiền mặt · Hoàn tất lượt đỗ'
+                )}
               </button>
             )}
             <p className="text-xs text-brand-muted">

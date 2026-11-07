@@ -10,11 +10,11 @@ export function InsightsFeaturedSection() {
             <div className="lg:col-span-7 p-8 md:p-12 lg:p-14 flex flex-col justify-between z-10">
               <div>
                 <div className="flex flex-wrap items-center gap-3 mb-6">
-                  <span className="px-3 py-1 bg-[#F97316] text-white text-xs rounded tracking-wider uppercase font-semibold">
+                  <span className="px-3 py-1 bg-[#d95f00] text-white text-xs rounded tracking-wider uppercase font-semibold">
                     BÁO CÁO THỰC THẦU · THÁNG 10/2026
                   </span>
                   <span className="inline-flex items-center gap-1.5 font-mono text-xs text-slate-300">
-                    <Clock className="w-4 h-4 text-[#F97316]" />
+                    <Clock className="w-4 h-4 text-[#d95f00]" />
                     Thời gian đọc: 6 phút
                   </span>
                   <span className="font-mono text-xs text-slate-400">• Mã: REP-2026-X04</span>
@@ -32,7 +32,7 @@ export function InsightsFeaturedSection() {
                 <div className="grid grid-cols-3 gap-4 p-4 rounded-xl bg-slate-900/80 border border-slate-800 mb-8 max-w-xl">
                   <div>
                     <div className="font-mono text-xs text-slate-400 uppercase">LÃNG PHÍ MÁY LẠNH</div>
-                    <div className="font-sora font-bold text-xl text-[#F97316] mt-1">3.8 L/giờ</div>
+                    <div className="font-sora font-bold text-xl text-[#d95f00] mt-1">3.8 L/giờ</div>
                   </div>
                   <div>
                     <div className="font-mono text-xs text-slate-400 uppercase">RỦI RO THIỆT HẠI</div>
@@ -40,7 +40,7 @@ export function InsightsFeaturedSection() {
                   </div>
                   <div>
                     <div className="font-mono text-xs text-slate-400 uppercase">TỶ LỆ LÃNG PHÍ</div>
-                    <div className="font-sora font-bold text-xl text-[#F97316] mt-1">4.2x</div>
+                    <div className="font-sora font-bold text-xl text-[#d95f00] mt-1">4.2x</div>
                   </div>
                 </div>
               </div>
@@ -48,7 +48,7 @@ export function InsightsFeaturedSection() {
               <div className="flex flex-wrap items-center gap-4">
                 <a
                   href="#doc-ban-phan-tich"
-                  className="inline-flex items-center gap-3 px-6 py-3.5 rounded-lg bg-[#F97316] hover:bg-[#EA580C] text-white font-sora text-xs font-bold transition-transform active:scale-95 shadow-md"
+                  className="inline-flex items-center gap-3 px-6 py-3.5 rounded-lg bg-[#d95f00] hover:bg-[#b84e00] text-white font-sora text-xs font-bold transition-transform active:scale-95 shadow-md"
                 >
                   <span>ĐỌC BẢN PHÂN TÍCH ĐẦY ĐỦ</span>
                   <ArrowRight className="w-4 h-4" />
@@ -69,7 +69,7 @@ export function InsightsFeaturedSection() {
               <div className="absolute inset-0 bg-gradient-to-t from-[#060D1A] via-[#060D1A]/30 to-transparent lg:bg-gradient-to-r lg:from-[#060D1A] lg:via-transparent lg:to-transparent"></div>
               <div className="absolute bottom-6 right-6 p-3 rounded-lg bg-[#060D1A]/90 backdrop-blur-md border border-slate-700">
                 <span className="font-mono text-xs text-white flex items-center gap-2">
-                  <MapPin className="w-4 h-4 text-[#F97316]" />
+                  <MapPin className="w-4 h-4 text-[#d95f00]" />
                   Bãi Đình Vũ, Hải Phòng · Báo Cáo Khảo Sát
                 </span>
               </div>

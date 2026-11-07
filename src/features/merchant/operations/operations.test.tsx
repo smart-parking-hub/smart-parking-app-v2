@@ -21,12 +21,14 @@ import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import type { ReactNode } from 'react'
 import { getData, sendData } from '@/shared/api/resources'
 import { MerchantScannerPage } from './ScannerPage'
+import { MerchantBookingsPage } from './BookingsPages'
 import { MerchantWithdrawalsPage } from './FinancePages'
 import { RequireRole, sessionRole } from '@/features/auth'
 import { DecisionDialog } from '@/features/admin'
 import { DisputesPage } from '@/features/disputes'
 import { vehicleTypes } from '@/entities/operations'
 import { MerchantLotPage } from './LotPages'
+import { PortalNotificationsPage } from '@/features/portal/AccountPages'
 
 vi.mock('@/shared/api/resources', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@/shared/api/resources')>()),
@@ -154,6 +156,41 @@ describe('Gate settlement contract', () => {
       ),
     )
   })
+  it('prevents duplicate submissions on cash settlement confirmation while mutation is pending', async () => {
+    let resolveCash!: (value: null) => void
+    const pendingCashPromise = new Promise<null>((resolve) => {
+      resolveCash = resolve
+    })
+    send
+      .mockResolvedValueOnce({
+        bookingCode: 'BK-002',
+        totalAmount: 100000,
+        advanceDeposit: 30000,
+        amountDue: 70000,
+        parkingMinutes: 120,
+        bookingStatus: 'AWAITING_FINAL_PAYMENT',
+      })
+      .mockReturnValueOnce(pendingCashPromise)
+    show(<MerchantScannerPage />, '/?code=BK-002&lot=12')
+    await screen.findByText('Bãi kiểm thử')
+    fireEvent.click(screen.getByRole('button', { name: 'XE RA' }))
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Kiểm tra & quyết toán xe ra' }),
+    )
+    expect(await screen.findByText('Quyết toán lượt đỗ')).toBeInTheDocument()
+    const confirmCashBtn = screen.getByRole('button', { name: /Đã nhận đủ tiền mặt/ })
+    fireEvent.click(confirmCashBtn)
+    await waitFor(() => expect(confirmCashBtn).toBeDisabled())
+    expect(confirmCashBtn).toHaveAttribute('aria-busy', 'true')
+    fireEvent.click(confirmCashBtn)
+    expect(send).toHaveBeenCalledTimes(2)
+    resolveCash(null)
+    await waitFor(() =>
+      expect(
+        screen.getByText('Đã xác nhận thu tiền mặt và trả chỗ thành công.'),
+      ).toBeInTheDocument(),
+    )
+  })
   it('surfaces backend errors without marking a vehicle admitted', async () => {
     send.mockRejectedValue(new Error('Vé đã hết hạn'))
     show(<MerchantScannerPage />, '/?code=BK-001&lot=12')
@@ -198,6 +235,84 @@ describe('Finance, disputes and lot configuration', () => {
       screen.getByRole('button', { name: '+ Yêu cầu rút tiền' }),
     ).toBeDisabled()
   })
+  it('disables withdrawal button with explanation when wallet balance < 50000', async () => {
+    get.mockImplementation(async (url) => {
+      if (url === '/api/v1/merchant/revenue') {
+        return {
+          currentWalletBalance: 20000,
+          totalNetRevenue: 20000,
+          minWithdrawalAmount: 50000,
+          totalGrossRevenue: 22000,
+          totalPlatformFee: 2000,
+          completedBookings: 1,
+        }
+      }
+      return page
+    })
+    show(<MerchantWithdrawalsPage />)
+    await screen.findByText('Số dư khả dụng')
+    const btn = await screen.findByRole('button', { name: '+ Yêu cầu rút tiền' })
+    expect(btn).toBeDisabled()
+    expect(btn).toHaveAttribute('title', expect.stringContaining('50.000'))
+    expect(await screen.findByText(/chưa đạt hạn mức tối thiểu/i)).toBeInTheDocument()
+  })
+  it('enables withdrawal button when wallet balance >= 50000 and opens dialog with quick select', async () => {
+    get.mockImplementation(async (url) => {
+      if (url === '/api/v1/merchant/revenue') {
+        return {
+          currentWalletBalance: 500000,
+          totalNetRevenue: 500000,
+          minWithdrawalAmount: 50000,
+          totalGrossRevenue: 550000,
+          totalPlatformFee: 50000,
+          completedBookings: 10,
+        }
+      }
+      if (url === '/api/v1/merchant/profile') {
+        return {
+          bankName: 'Vietcombank',
+          bankAccountNum: '0123456789',
+          fullName: 'NGUYEN VAN TEST',
+        }
+      }
+      return page
+    })
+    send.mockResolvedValue(null)
+    show(<MerchantWithdrawalsPage />)
+    await screen.findByText('Số dư khả dụng')
+    const btn = await screen.findByRole('button', { name: '+ Yêu cầu rút tiền' })
+    expect(btn).not.toBeDisabled()
+    fireEvent.click(btn)
+
+    expect(await screen.findByText('Tạo yêu cầu rút tiền')).toBeInTheDocument()
+    const minBtn = screen.getByRole('button', { name: /Tối thiểu/i })
+    fireEvent.click(minBtn)
+    expect(screen.getByLabelText('Số tiền rút (VND)')).toHaveValue(50000)
+
+    const maxBtn = screen.getByRole('button', { name: /Toàn bộ/i })
+    fireEvent.click(maxBtn)
+    expect(screen.getByLabelText('Số tiền rút (VND)')).toHaveValue(500000)
+
+    fireEvent.change(screen.getByLabelText('Ngân hàng nhận'), {
+      target: { value: 'Vietcombank' },
+    })
+    fireEvent.change(screen.getByLabelText('Số tài khoản thụ hưởng'), {
+      target: { value: '0123456789' },
+    })
+    fireEvent.change(screen.getByLabelText('Tên chủ tài khoản'), {
+      target: { value: 'NGUYEN VAN TEST' },
+    })
+
+    fireEvent.click(screen.getByRole('button', { name: 'Gửi yêu cầu phê duyệt' }))
+    await waitFor(() =>
+      expect(send).toHaveBeenCalledWith('post', '/api/v1/withdrawals', {
+        amount: 500000,
+        bankName: 'Vietcombank',
+        bankAccountNumber: '0123456789',
+        accountHolderName: 'NGUYEN VAN TEST',
+      }),
+    )
+  })
   it('renders a driver complaint list with an empty state', async () => {
     get.mockResolvedValue({ ...page, content: [], totalElements: 0 })
     show(<DisputesPage role="driver" />)
@@ -241,5 +356,135 @@ describe('Finance, disputes and lot configuration', () => {
         overtimePenaltyMultiplier: 1,
       })),
     })
+  })
+  it('enforces occupied invariant and right-aligned input in SlotEditor', async () => {
+    get.mockResolvedValue({
+      id: 12,
+      name: 'Bãi kiểm thử sức chứa',
+      status: 'APPROVED',
+      slots: [
+        { id: 1, vehicleType: 'CONTAINER', totalCapacity: 30, availableCapacity: 5 },
+      ],
+      pricingRules: [],
+    })
+    send.mockResolvedValue(null)
+    show(
+      <Routes>
+        <Route path="/lots/:id" element={<MerchantLotPage mode="slots" />} />
+      </Routes>,
+      '/lots/12',
+    )
+    await screen.findByText('Phân bổ chỗ đỗ')
+    expect(await screen.findByText(/Đang đỗ thực tế:/i)).toBeInTheDocument()
+    expect(screen.getByText('25')).toBeInTheDocument()
+    const containerInput = screen.getByLabelText(/Tổng sức chứa \(min: 25\)/i)
+    expect(containerInput).toHaveAttribute('min', '25')
+  })
+  it('prevents duplicate submissions in pricing editor while request is pending', async () => {
+    let resolveMutation!: (value: null) => void
+    const pendingPromise = new Promise<null>((resolve) => {
+      resolveMutation = resolve
+    })
+    get.mockResolvedValue({
+      id: 12,
+      name: 'Bãi',
+      status: 'APPROVED',
+      slots: [],
+      pricingRules: [],
+    })
+    send.mockReturnValue(pendingPromise)
+    show(
+      <Routes>
+        <Route path="/lots/:id" element={<MerchantLotPage mode="pricing" />} />
+      </Routes>,
+      '/lots/12',
+    )
+    await screen.findByText('Biểu phí cho 5 loại phương tiện')
+    const submitBtn = screen.getByRole('button', { name: 'Lưu thay đổi' })
+    fireEvent.click(submitBtn)
+    await waitFor(() => expect(submitBtn).toBeDisabled())
+    expect(submitBtn).toHaveTextContent(/Đang lưu/i)
+    fireEvent.click(submitBtn)
+    expect(send).toHaveBeenCalledTimes(1)
+    resolveMutation(null)
+    await waitFor(() =>
+      expect(screen.getByText('Đã lưu cấu hình thành công.')).toBeInTheDocument(),
+    )
+  })
+})
+
+describe('Merchant bookings dispatch and notifications center', () => {
+  it('filters merchant bookings by operational status and displays right-aligned deposit', async () => {
+    get.mockResolvedValue({
+      content: [
+        {
+          id: 101,
+          bookingCode: 'BK-101',
+          vehicleLicensePlate: '29A-12345',
+          parkingLotName: 'Bãi xe Trung Tâm',
+          expectedCheckInTime: '2026-11-06T10:00:00Z',
+          advanceDeposit: 50000,
+          status: 'PENDING_CHECKIN',
+        },
+        {
+          id: 102,
+          bookingCode: 'BK-102',
+          vehicleLicensePlate: '51B-99999',
+          parkingLotName: 'Bãi xe Miền Đông',
+          expectedCheckInTime: '2026-11-06T11:00:00Z',
+          advanceDeposit: 80000,
+          status: 'PARKING',
+        },
+      ],
+      totalPages: 1,
+      totalElements: 2,
+    })
+    show(<MerchantBookingsPage />)
+    expect(await screen.findByText('BK-101')).toBeInTheDocument()
+    expect(screen.getByText('BK-102')).toBeInTheDocument()
+
+    // Test status filter tabs
+    const parkingTab = screen.getByRole('tab', { name: /Đang đỗ xe/i })
+    fireEvent.click(parkingTab)
+    expect(screen.queryByText('BK-101')).not.toBeInTheDocument()
+    expect(screen.getByText('BK-102')).toBeInTheDocument()
+
+    // Switch back to All
+    const allTab = screen.getByRole('tab', { name: /Tất cả trạng thái/i })
+    fireEvent.click(allTab)
+    expect(screen.getByText('BK-101')).toBeInTheDocument()
+    expect(screen.getByText('BK-102')).toBeInTheDocument()
+  })
+
+  it('prevents double-click when marking all notifications as read', async () => {
+    let resolveRead!: (value: null) => void
+    const pendingReadPromise = new Promise<null>((resolve) => {
+      resolveRead = resolve
+    })
+    get.mockResolvedValue({
+      content: [
+        {
+          id: 1,
+          title: 'Booking mới',
+          content: 'Tài xế đã đặt chỗ thành công',
+          type: 'BOOKING',
+          readAt: null,
+          createdAt: '2026-11-06T09:00:00Z',
+        },
+      ],
+      totalPages: 1,
+      totalElements: 1,
+    })
+    send.mockReturnValue(pendingReadPromise)
+    show(<PortalNotificationsPage />)
+    expect(await screen.findByText('Trung tâm thông báo')).toBeInTheDocument()
+    const markAllBtn = screen.getByRole('button', { name: 'Đánh dấu tất cả đã đọc' })
+    fireEvent.click(markAllBtn)
+    await waitFor(() => expect(markAllBtn).toBeDisabled())
+    expect(markAllBtn).toHaveAttribute('aria-busy', 'true')
+    fireEvent.click(markAllBtn)
+    expect(send).toHaveBeenCalledTimes(1)
+    resolveRead(null)
+    await waitFor(() => expect(markAllBtn).not.toBeDisabled())
   })
 })

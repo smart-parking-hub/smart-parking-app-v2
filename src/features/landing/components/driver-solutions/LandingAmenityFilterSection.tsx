@@ -70,7 +70,7 @@ export function LandingAmenityFilterSection({
     if (onReserveClick) {
       onReserveClick()
     } else {
-      navigate('/parking')
+      navigate('/search')
     }
   }
 
@@ -78,19 +78,16 @@ export function LandingAmenityFilterSection({
     <section className="w-full bg-[#060D1A] py-24 px-6 text-white" id="bo-loc-tien-ich">
       <div className="max-w-[1240px] mx-auto">
         <div className="text-center max-w-3xl mx-auto mb-14">
-          <span className="font-inter text-xs font-bold tracking-widest text-[#F97316] uppercase bg-[#0F172A] border border-[#1E3A5F] px-3 py-1 rounded inline-block mb-3">
-            BỘ LỌC THỰC TẾ THEO NHU CẦU XE NẶNG
-          </span>
-          <h2 className="font-sora text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight text-white">
-            Tìm Bãi Có Đúng Tiện Ích Xe Bạn Cần.
+          <h2 className="font-sora text-3xl sm:text-4xl font-extrabold tracking-tight text-white leading-tight">
+            Tìm Bãi Có Đúng Tiện Ích Xe Bạn Cần
           </h2>
-          <p className="font-inter text-sm sm:text-base text-slate-300 mt-3">
+          <p className="font-inter text-base sm:text-lg text-slate-300 mt-4 leading-relaxed">
             Không phải bãi xe nào cũng có điện lạnh 380V hay trạm cân đạt chuẩn. Chọn đúng tiện ích trên màn hình để tiết kiệm hàng giờ di chuyển vô ích.
           </p>
         </div>
 
         {/* Amenity Toggle Pills */}
-        <div className="flex flex-wrap items-center justify-center gap-3 mb-10" id="amenitySelectors">
+        <div className="flex overflow-x-auto pb-2 scrollbar-none sm:flex-wrap sm:justify-center gap-3 mb-10" id="amenitySelectors">
           {amenities.map((item) => {
             const Icon = item.Icon
             const isActive = activeAmenityId === item.id
@@ -99,13 +96,13 @@ export function LandingAmenityFilterSection({
                 key={item.id}
                 type="button"
                 onClick={() => setActiveAmenityId(item.id)}
-                className={`amenity-btn px-4 py-2.5 rounded text-xs sm:text-sm font-inter font-semibold flex items-center gap-2 transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#F97316] ${
+                className={`amenity-btn px-5 py-3 rounded-xl text-sm font-inter font-semibold flex items-center gap-2.5 transition-all cursor-pointer shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-orange ${
                   isActive
-                    ? 'bg-[#F97316] text-white border border-[#F97316]'
-                    : 'bg-[#0F172A] text-slate-300 hover:text-white border border-[#1E3A5F]'
+                    ? 'bg-brand-orange text-[#060D1A] font-bold border-2 border-brand-orange'
+                    : 'bg-[#0B1528] text-slate-300 hover:text-white border border-slate-700/80'
                 }`}
               >
-                <Icon className="h-[18px] w-[18px]" aria-hidden="true" />
+                <Icon className="h-5 w-5" aria-hidden="true" />
                 <span>{item.label}</span>
               </button>
             )
@@ -114,23 +111,23 @@ export function LandingAmenityFilterSection({
 
         {/* Dynamic UI States: Loading / Error / Empty / Normal */}
         {isLoading ? (
-          <div className="bg-[#0F172A] border border-[#1E3A5F] rounded-lg p-6 lg:p-8 max-w-4xl mx-auto shadow-2xl space-y-6">
-            <div className="flex justify-between items-center pb-6 border-b border-[#1E3A5F]">
+          <div className="bg-[#0B1528] border border-slate-800 rounded-2xl p-6 lg:p-8 max-w-4xl mx-auto space-y-6">
+            <div className="flex justify-between items-center pb-6 border-b border-slate-800">
               <div className="space-y-3">
-                <Skeleton className="h-5 w-44 bg-[#1E293B]" />
-                <Skeleton className="h-8 w-72 bg-[#1E293B]" />
-                <Skeleton className="h-4 w-96 bg-[#1E293B]" />
+                <Skeleton className="h-5 w-44 bg-slate-800" />
+                <Skeleton className="h-8 w-72 bg-slate-800" />
+                <Skeleton className="h-4 w-96 bg-slate-800" />
               </div>
-              <Skeleton className="h-14 w-32 bg-[#1E293B]" />
+              <Skeleton className="h-14 w-32 bg-slate-800" />
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 py-6 border-b border-[#1E3A5F]">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 py-6 border-b border-slate-800">
               {[1, 2, 3, 4, 5, 6].map((i) => (
-                <Skeleton key={i} className="h-12 w-full bg-[#1E293B]" />
+                <Skeleton key={i} className="h-12 w-full bg-slate-800" />
               ))}
             </div>
             <div className="flex justify-between items-center pt-4">
-              <Skeleton className="h-6 w-56 bg-[#1E293B]" />
-              <Skeleton className="h-10 w-48 bg-[#1E293B]" />
+              <Skeleton className="h-6 w-56 bg-slate-800" />
+              <Skeleton className="h-10 w-48 bg-slate-800" />
             </div>
           </div>
         ) : isError ? (
@@ -155,7 +152,7 @@ export function LandingAmenityFilterSection({
             </Alert>
           </div>
         ) : depots && depots.length === 0 ? (
-          <div className="max-w-4xl mx-auto bg-[#0F172A] border border-[#1E3A5F] rounded-lg p-8">
+          <div className="max-w-4xl mx-auto bg-[#0B1528] border border-slate-800 rounded-2xl p-8">
             <EmptyState
               icon={AlertCircle}
               title="Chưa có bãi đỗ nào khớp với tiện ích đã chọn"

@@ -16,6 +16,7 @@ import {
 } from '@/shared/components/Workspace'
 export function MerchantBookingsPage() {
   const [page, setPage] = useState(0)
+  const [statusFilter, setStatusFilter] = useState<'ALL' | 'PENDING_CHECKIN' | 'PARKING' | 'COMPLETED'>('ALL')
   const query = useQuery({
     queryKey: ['merchant-bookings', page],
     queryFn: () =>
@@ -56,8 +57,40 @@ export function MerchantBookingsPage() {
                 },
               ]}
             />
+            <div className="flex flex-wrap items-center gap-2 mb-4" role="tablist" aria-label="Bộ lọc trạng thái">
+              {[
+                { id: 'ALL', label: 'Tất cả trạng thái', count: data.content.length },
+                { id: 'PENDING_CHECKIN', label: 'Chờ vào bãi', count: data.content.filter((r) => r.status === 'PENDING_CHECKIN').length },
+                { id: 'PARKING', label: 'Đang đỗ xe', count: data.content.filter((r) => r.status === 'PARKING').length },
+                { id: 'COMPLETED', label: 'Đã hoàn tất', count: data.content.filter((r) => r.status === 'COMPLETED').length },
+              ].map((tab) => (
+                <button
+                  key={tab.id}
+                  type="button"
+                  role="tab"
+                  aria-selected={statusFilter === tab.id}
+                  onClick={() => setStatusFilter(tab.id as typeof statusFilter)}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all inline-flex items-center gap-1.5 ${
+                    statusFilter === tab.id
+                      ? 'bg-brand-navy text-white shadow-sm ring-1 ring-brand-navy'
+                      : 'bg-white text-brand-muted hover:bg-slate-100 hover:text-brand-navy border border-brand-border'
+                  }`}
+                >
+                  <span>{tab.label}</span>
+                  <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-mono font-bold ${
+                    statusFilter === tab.id ? 'bg-slate-700 text-white' : 'bg-slate-100 text-slate-600'
+                  }`}>
+                    {tab.count}
+                  </span>
+                </button>
+              ))}
+            </div>
             <DataTable
-              rows={data.content}
+              rows={
+                statusFilter === 'ALL'
+                  ? data.content
+                  : data.content.filter((r) => r.status === statusFilter)
+              }
               searchText={(r) =>
                 `${r.bookingCode} ${r.vehicleLicensePlate} ${r.parkingLotName}`
               }
@@ -83,7 +116,15 @@ export function MerchantBookingsPage() {
                   label: 'Giờ đến dự kiến',
                   render: (r) => date(r.expectedCheckInTime),
                 },
-                { label: 'Tiền cọc', render: (r) => money(r.advanceDeposit) },
+                {
+                  label: 'Tiền cọc',
+                  align: 'right',
+                  render: (r) => (
+                    <span className="font-mono tabular-nums font-semibold text-slate-800">
+                      {money(r.advanceDeposit)}
+                    </span>
+                  ),
+                },
                 {
                   label: 'Trạng thái',
                   render: (r) => <Badge value={r.status} />,

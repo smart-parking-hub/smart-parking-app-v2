@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from 'react'
+import { useState, useEffect, useCallback, type FormEvent } from 'react'
 import { MessageSquare, X, CheckCircle2, AlertCircle, RefreshCw, KeyRound, PhoneCall } from 'lucide-react'
 import { sendSmsRecoveryOtpApi, verifySmsRecoveryOtpApi } from '../api/changePasswordApi'
 
@@ -22,10 +22,31 @@ export function SmsRecoveryModal({
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
 
+  const handleKeyDown = useCallback(
+    (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onClose()
+      }
+    },
+    [onClose]
+  )
+
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden'
+      window.addEventListener('keydown', handleKeyDown)
+    }
+    return () => {
+      document.body.style.overflow = ''
+      window.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [isOpen, handleKeyDown])
+
   if (!isOpen) return null
 
   const handleSendOtp = async (e: FormEvent) => {
     e.preventDefault()
+    if (loading) return
     setErrorMessage(null)
     setLoading(true)
     try {
@@ -41,6 +62,7 @@ export function SmsRecoveryModal({
 
   const handleVerifyOtp = async (e: FormEvent) => {
     e.preventDefault()
+    if (loading) return
     setErrorMessage(null)
 
     if (otp.length < 4) {
@@ -69,8 +91,17 @@ export function SmsRecoveryModal({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs">
-      <div className="bg-white rounded-2xl shadow-xl border border-slate-200 w-full max-w-md overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-150">
+    <div
+      onClick={onClose}
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs"
+    >
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="sms-recovery-modal-title"
+        onClick={(e) => e.stopPropagation()}
+        className="bg-white rounded-2xl shadow-xl border border-slate-200 w-full max-w-md overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-150"
+      >
         {/* Header */}
         <div className="p-5 border-b border-slate-100 flex items-center justify-between bg-slate-50">
           <div className="flex items-center gap-3">
@@ -78,7 +109,10 @@ export function SmsRecoveryModal({
               <MessageSquare className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="font-sora font-bold text-slate-900 text-base">
+              <h3
+                id="sms-recovery-modal-title"
+                className="font-sora font-bold text-slate-900 text-base"
+              >
                 Khôi Phục Mật Khẩu Qua SMS OTP
               </h3>
               <p className="text-xs text-slate-500 font-mono">XÁC THỰC 2 LỚP TÀI XẾ</p>
@@ -87,6 +121,7 @@ export function SmsRecoveryModal({
           <button
             type="button"
             onClick={onClose}
+            aria-label="Đóng"
             className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-200/60 transition-colors"
           >
             <X className="w-5 h-5" />
@@ -140,7 +175,8 @@ export function SmsRecoveryModal({
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full h-11 rounded-xl bg-orange-600 hover:bg-orange-700 text-white font-bold text-xs shadow-xs transition-colors flex items-center justify-center gap-2 cursor-pointer"
+                aria-busy={loading}
+                className="w-full h-11 rounded-xl bg-orange-600 hover:bg-orange-700 text-white font-bold text-xs shadow-xs transition-colors flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
               >
                 {loading ? <RefreshCw className="w-4 h-4 animate-spin" /> : 'Gửi Mã Xác Thực OTP'}
               </button>
@@ -192,7 +228,8 @@ export function SmsRecoveryModal({
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-2/3 h-11 rounded-xl bg-orange-600 hover:bg-orange-700 text-white font-bold text-xs shadow-xs transition-colors flex items-center justify-center gap-2 cursor-pointer"
+                  aria-busy={loading}
+                  className="w-2/3 h-11 rounded-xl bg-orange-600 hover:bg-orange-700 text-white font-bold text-xs shadow-xs transition-colors flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
                 >
                   {loading ? <RefreshCw className="w-4 h-4 animate-spin" /> : 'Xác Nhận Đặt Lại'}
                 </button>

@@ -73,4 +73,36 @@ export interface ReservationDetailState {
   settlementAtExitAmount: number
 }
 
-export type PaymentMethodType = 'WALLET' | 'ENTERPRISE'
+export type PaymentMethodType = 'PAYOS_VIETQR' | 'WALLET' | 'ENTERPRISE'
+
+export type BookingFlowStep = 'CONFIGURATION' | 'PAYOS_CHECKOUT' | 'SUCCESS'
+
+export interface BookingCreationResult {
+  bookingId: string
+  facilityId: number
+  facilityName: string
+  slotBerth: string
+  vehiclePlate: string
+  vehicleType: string
+  durationHours: number
+  totalAmount: number
+  depositAmount: number
+  depositPercentage: number
+  remainingAmount: number
+  holdExpiresAt: string
+  holdTtlSeconds: number
+  qrCodeData?: string
+  payOsCheckoutUrl?: string
+  paymentMethod: PaymentMethodType
+  createdAt: string
+  status: 'PENDING_PAYMENT' | 'HOLD_CONFIRMED' | 'ACTIVE' | 'EXPIRED'
+}
+
+export interface VirtualQueueTicketResult {
+  queueTicketId: string
+  facilityId: number
+  queuePosition: number
+  estimatedWaitMinutes: number
+  plateNumber: string
+  status: 'WAITING' | 'CALLED'
+}

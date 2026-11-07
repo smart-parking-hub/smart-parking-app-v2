@@ -29,7 +29,7 @@ export function AboutHeroSection() {
       <div className="max-w-[1240px] w-full flex flex-col items-start">
         {/* Eyebrow Pill */}
         <div className="inline-flex items-center gap-2.5 px-3.5 py-1.5 rounded bg-slate-900 border border-slate-700 mb-8">
-          <span className="w-2 h-2 rounded-full bg-[#F97316] motion-safe:animate-pulse" />
+          <span className="w-2 h-2 rounded-full bg-[#d95f00] motion-safe:animate-pulse" />
           <span className="font-mono text-xs text-slate-200 uppercase tracking-wider font-semibold">
             SỨ MỆNH SỐ HÓA HẠ TẦNG LOGISTICS · KHỞI TẠO NĂM 2024
           </span>
@@ -38,7 +38,7 @@ export function AboutHeroSection() {
         {/* Main Headline */}
         <h1 className="font-sora font-extrabold text-3xl sm:text-4xl lg:text-5xl max-w-4xl text-white tracking-tight mb-8 leading-tight">
           Chúng Tôi Xây Dựng Hạ Tầng Điểm Đỗ Cho Mọi{' '}
-          <span className="text-[#F97316]">Bánh Xe Container Lăn Bánh.</span>
+          <span className="text-[#d95f00]">Bánh Xe Container Lăn Bánh.</span>
         </h1>
 
         {/* Subtitle */}
@@ -49,7 +49,7 @@ export function AboutHeroSection() {
         {/* CTAs */}
         <div className="flex flex-wrap items-center gap-4 mb-20">
           <a
-            className="inline-flex items-center justify-center h-[52px] px-8 bg-[#F97316] hover:bg-[#EA580C] text-white font-semibold text-sm sm:text-base rounded transition-colors shadow-sm gap-2"
+            className="inline-flex items-center justify-center h-[52px] px-8 bg-[#d95f00] hover:bg-[#b84e00] text-white font-semibold text-sm sm:text-base rounded transition-colors shadow-sm gap-2"
             href="/company/contact"
           >
             GIA NHẬP MẠNG LƯỚI BÃI ĐỖ
@@ -71,7 +71,7 @@ export function AboutHeroSection() {
               className="flex flex-col bg-white p-6 rounded border border-[#E2E8F0] shadow-sm text-slate-800"
             >
               <div className="flex items-baseline gap-1 mb-2">
-                <span className="font-sora text-3xl font-bold text-[#F97316]">
+                <span className="font-sora text-3xl font-bold text-[#d95f00]">
                   {s.metric}
                 </span>
               </div>

@@ -1,10 +1,11 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, screen, waitFor } from '@testing-library/react'
+import { render, screen, waitFor, fireEvent } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { EditMerchantParkingLotPage } from '../pages/EditMerchantParkingLotPage'
 import * as api from '../api/merchantParkingLotApi'
+import type { MerchantParkingLotDetailData } from '../types/merchantParkingLotTypes'
 
 function renderPage(lotId = 1) {
   const queryClient = new QueryClient({
@@ -231,6 +232,31 @@ describe('SCR-031: EditMerchantParkingLotPage (Chỉnh sửa & Cập nhật hồ
     })
   })
 
+  it('closes history modal when pressing Escape key (TSK-P2-02 A11y)', async () => {
+    const user = userEvent.setup()
+    vi.spyOn(api, 'fetchMerchantParkingLotDetail').mockResolvedValueOnce({
+      ...api.fallbackMerchantLotDetailData,
+      id: 1,
+      status: 'CHANGES_REQUESTED',
+    })
+
+    renderPage(1)
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: /Xem Lịch Sử Thẩm Định/i })).toBeInTheDocument()
+    })
+
+    await user.click(screen.getByRole('button', { name: /Xem Lịch Sử Thẩm Định/i }))
+    expect(screen.getByText('Nhật Ký Thẩm Định Mặt Bằng')).toBeInTheDocument()
+
+    // Press Escape
+    fireEvent.keyDown(window, { key: 'Escape' })
+
+    await waitFor(() => {
+      expect(screen.queryByText('Nhật Ký Thẩm Định Mặt Bằng')).not.toBeInTheDocument()
+    })
+  })
+
   it('submits updated parking lot and triggers updateMerchantParkingLot API', async () => {
     const user = userEvent.setup()
     const updateSpy = vi.spyOn(api, 'updateMerchantParkingLot').mockResolvedValueOnce({
@@ -265,6 +291,40 @@ describe('SCR-031: EditMerchantParkingLotPage (Chỉnh sửa & Cập nhật hồ
           longitude: expect.any(Number),
         }),
       )
+    })
+  })
+
+  it('prevents duplicate submissions by disabling submit button while submitting (TSK-P2-01)', async () => {
+    const user = userEvent.setup()
+    let resolveUpdate!: (value: MerchantParkingLotDetailData) => void
+    vi.spyOn(api, 'updateMerchantParkingLot').mockImplementationOnce(
+      () =>
+        new Promise((resolve) => {
+          resolveUpdate = resolve
+        }),
+    )
+
+    vi.spyOn(api, 'fetchMerchantParkingLotDetail').mockResolvedValueOnce({
+      ...api.fallbackMerchantLotDetailData,
+      id: 1,
+      status: 'CHANGES_REQUESTED',
+    })
+
+    renderPage(1)
+
+    const submitBtn = await screen.findByRole('button', {
+      name: /GỬI LẠI HỒ SƠ KIỂM DUYỆT ADMIN/i,
+    })
+    await user.click(submitBtn)
+
+    // Button should be disabled with spinner
+    expect(screen.getByRole('button', { name: /ĐANG GỬI HỒ SƠ.../i })).toBeDisabled()
+
+    // Resolve update
+    resolveUpdate({
+      ...api.fallbackMerchantLotDetailData,
+      id: 1,
+      status: 'PENDING_APPROVAL',
     })
   })
 })

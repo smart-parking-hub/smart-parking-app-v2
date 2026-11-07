@@ -8,7 +8,7 @@ import { ApiCtaBanner } from '../components/api-docs/ApiCtaBanner'
 
 export function ApiDocsPage() {
   return (
-    <div className="min-h-screen bg-[#060D1A] text-slate-100 flex flex-col font-inter selection:bg-[#F97316] selection:text-white">
+    <div className="min-h-screen bg-[#060D1A] text-slate-100 flex flex-col font-inter selection:bg-[#d95f00] selection:text-white">
       {/* Top Navbar */}
       <LandingNavbar />
 

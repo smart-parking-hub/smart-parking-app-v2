@@ -40,7 +40,7 @@ export function AboutLeadershipSection() {
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-end justify-between mb-16 gap-4">
           <div>
-            <span className="font-mono text-xs text-[#F97316] uppercase tracking-widest block mb-2 font-semibold">
+            <span className="font-mono text-xs text-[#d95f00] uppercase tracking-widest block mb-2 font-semibold">
               ĐỘI NGŨ CHUYÊN GIA
             </span>
             <h2 className="font-sora font-bold text-2xl sm:text-3xl lg:text-4xl text-white tracking-tight">
@@ -72,7 +72,7 @@ export function AboutLeadershipSection() {
                     <h3 className="font-sora font-bold text-lg sm:text-xl text-white mb-1">
                       {leader.name}
                     </h3>
-                    <div className="font-mono text-xs text-[#F97316] uppercase tracking-wider mb-4 font-semibold">
+                    <div className="font-mono text-xs text-[#d95f00] uppercase tracking-wider mb-4 font-semibold">
                       {leader.role}
                     </div>
                     <p className="text-sm text-slate-300 leading-relaxed mb-6 font-normal">
@@ -80,7 +80,7 @@ export function AboutLeadershipSection() {
                     </p>
                   </div>
                   <div className="flex items-center gap-2 pt-4 border-t border-slate-800 text-xs text-slate-400 font-medium">
-                    <Icon className="w-4 h-4 text-[#F97316]" aria-hidden="true" />
+                    <Icon className="w-4 h-4 text-[#d95f00]" aria-hidden="true" />
                     <span>{leader.badge}</span>
                   </div>
                 </div>

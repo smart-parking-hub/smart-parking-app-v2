@@ -5,7 +5,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { getData, sendData, errorMessage } from '@/shared/api/resources'
 import { QueryState } from '@/shared/components/QueryState'
-import { Workspace, Panel, Field, Notice, control, button, secondary } from '@/shared/components/Workspace'
+import { Workspace, Panel, Field, Notice, control, secondary } from '@/shared/components/Workspace'
 interface Profile {
   fullName: string
   phone: string
@@ -58,7 +58,10 @@ function ProfileForm({ data }: { data: Profile }) {
       <Panel title="Thông tin cá nhân">
         <form
           className="space-y-5"
-          onSubmit={form.handleSubmit((values) => save.mutate(values))}
+          onSubmit={form.handleSubmit((values) => {
+            if (save.isPending) return
+            save.mutate(values)
+          })}
         >
           {(
             [
@@ -90,8 +93,13 @@ function ProfileForm({ data }: { data: Profile }) {
           ))}
           {save.isError && <Notice error>{errorMessage(save.error)}</Notice>}
           {save.isSuccess && <Notice>Đã lưu thông tin.</Notice>}
-          <button className={button} disabled={save.isPending}>
-            Lưu hồ sơ
+          <button
+            type="submit"
+            className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#d95f00] px-5 py-3 text-sm font-semibold text-white hover:bg-[#b84e00] active:bg-[#9e4300] transition-colors shadow-xs disabled:opacity-50 cursor-pointer"
+            disabled={save.isPending}
+            aria-busy={save.isPending}
+          >
+            {save.isPending ? 'Đang lưu…' : 'Lưu hồ sơ'}
           </button>
         </form>
       </Panel>
@@ -99,7 +107,10 @@ function ProfileForm({ data }: { data: Profile }) {
         <form
           noValidate
           className="space-y-5"
-          onSubmit={password.handleSubmit((values) => change.mutate(values))}
+          onSubmit={password.handleSubmit((values) => {
+            if (change.isPending) return
+            change.mutate(values)
+          })}
         >
           <Field label="Mật khẩu hiện tại">
             <input
@@ -129,8 +140,13 @@ function ProfileForm({ data }: { data: Profile }) {
             <Notice error>{errorMessage(change.error)}</Notice>
           )}
           {change.isSuccess && <Notice>Đã đổi mật khẩu thành công.</Notice>}
-          <button className={button} disabled={change.isPending}>
-            Cập nhật mật khẩu
+          <button
+            type="submit"
+            className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#d95f00] px-5 py-3 text-sm font-semibold text-white hover:bg-[#b84e00] active:bg-[#9e4300] transition-colors shadow-xs disabled:opacity-50 cursor-pointer"
+            disabled={change.isPending}
+            aria-busy={change.isPending}
+          >
+            {change.isPending ? 'Đang cập nhật…' : 'Cập nhật mật khẩu'}
           </button>
         </form>
       </Panel>

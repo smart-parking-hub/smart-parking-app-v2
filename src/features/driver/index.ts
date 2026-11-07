@@ -1,3 +1,4 @@
+// SCR-014: Driver Dashboard
 export { DriverDashboardPage } from './pages/DriverDashboardPage'
 export { DriverDashboardPage as DashboardHomePage } from './pages/DriverDashboardPage'
 
@@ -13,3 +14,57 @@ export { DashboardEmptyState } from './components/DashboardEmptyState'
 export { fetchDriverDashboardData, fallbackDashboardData } from './api/driverApi'
 export { useDriverDashboardStore } from './store/driverDashboardStore'
 export * from './types/driverTypes'
+
+// SCR-015: Parking Search
+export * from '../parking-search'
+
+// SCR-016: Parking Detail & Reservation Desk
+export * from '../parking-detail'
+
+// SCR-017: Driver Bookings & QR Ticket
+export {
+  MyBookingsPage,
+  BookingsCommandToolbar,
+  BookingCardItem,
+  BookingMasterList,
+  BookingDetailHeader,
+  BookingBentoStepper,
+  BookingQrTerminalPanel,
+  TariffAuditTable,
+  BookingActionCommands,
+  BookingDetailView,
+  CancelBookingModal,
+  ReviewBookingModal,
+  PayOsCheckoutModal,
+  BookingsSkeleton,
+  BookingsEmptyState,
+  BookingsErrorState,
+  useBookingStore,
+  getBookingStoreSnapshot,
+  cancelBookingSchema,
+  reviewBookingSchema,
+  bookingFilterSchema,
+  fetchMyBookings,
+  fallbackBookingsList,
+  cancelBookingApi,
+  submitReviewApi,
+  payBookingDepositApi,
+  payBookingFinalApi,
+  exportSvgToPng,
+} from '../bookings'
+
+export type {
+  BookingItemDto,
+  FilterStatusTab,
+  CancelBookingRequest,
+  ReviewBookingRequest,
+  CancelBookingFormData,
+  ReviewBookingFormData,
+  BookingFilterFormData,
+  BookingUIState,
+  BookingUIActions,
+  BookingStore,
+} from '../bookings'
+
+// Shared driver feature components
+export * from './components'

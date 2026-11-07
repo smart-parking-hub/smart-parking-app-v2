@@ -22,11 +22,11 @@ import {
   money,
   date,
   control,
-  button,
   secondary,
   type Column,
 } from '@/shared/components/Workspace'
 import { LotOverview } from '@/features/merchant/operations'
+
 interface User {
   id: number
   phone: string
@@ -39,6 +39,7 @@ interface User {
   bookingCount?: number
   disputeCount?: number
 }
+
 interface Transaction {
   id: number
   transactionCode: string
@@ -50,6 +51,7 @@ interface Transaction {
   merchantName: string
   createdAt: string
 }
+
 interface Audit {
   id: number
   actorUserId: number
@@ -60,6 +62,7 @@ interface Audit {
   result: string
   createdAt: string
 }
+
 interface Dashboard {
   totalUsers: number
   totalDrivers: number
@@ -71,12 +74,14 @@ interface Dashboard {
   openDisputes: number
   platformRevenue: number
 }
+
 export function AdminDashboardPage() {
   const query = useQuery({
     queryKey: ['admin-dashboard'],
     queryFn: () => getData<Dashboard>('/api/v1/admin/dashboard'),
     retry: false,
   })
+
   return (
     <Workspace
       title="Toàn cảnh vận hành"
@@ -106,17 +111,34 @@ export function AdminDashboardPage() {
                 ],
                 ['withdrawals', 'Yêu cầu rút tiền', data.pendingWithdrawals],
                 ['disputes', 'Tranh chấp đang mở', data.openDisputes],
-              ].map(([path, title, count]) => (
-                <Panel key={String(path)}>
-                  <p className="text-sm text-brand-muted">{title}</p>
-                  <p className="my-5 font-sora text-5xl font-semibold">
-                    {count}
-                  </p>
-                  <Link className={secondary} to={`/admin/${path}`}>
-                    Mở bàn xử lý →
-                  </Link>
-                </Panel>
-              ))}
+              ].map(([path, title, count]) => {
+                const isAlert = typeof count === 'number' && count > 0
+                return (
+                  <Panel key={String(path)}>
+                    <div className="flex items-center justify-between gap-2">
+                      <p className="text-sm font-medium text-brand-muted">{title}</p>
+                      {isAlert && (
+                        <span className="inline-flex items-center rounded-full bg-amber-50 px-2.5 py-0.5 text-xs font-semibold text-amber-800 border border-amber-200">
+                          Cần xử lý
+                        </span>
+                      )}
+                    </div>
+                    <p
+                      className={`my-5 font-sora text-5xl font-semibold tracking-tight ${
+                        isAlert ? 'text-[#d95f00]' : 'text-brand-navy'
+                      }`}
+                    >
+                      {count}
+                    </p>
+                    <Link
+                      className="inline-flex items-center justify-center gap-2 rounded-xl border border-brand-border bg-white px-4 py-2.5 text-sm font-semibold text-brand-navy hover:bg-brand-surface hover:text-[#d95f00] transition-colors"
+                      to={`/admin/${path}`}
+                    >
+                      Mở bàn xử lý →
+                    </Link>
+                  </Panel>
+                )
+              })}
             </div>
             <Panel title="Cộng đồng vận tải">
               <p className="text-sm text-brand-muted">
@@ -130,18 +152,21 @@ export function AdminDashboardPage() {
     </Workspace>
   )
 }
+
 function AdminList<T extends { id: number }>({
   title,
   path,
   columns,
   detailLink,
   actions,
+  renderMobileCard,
 }: {
   title: string
   path: string
   columns: Column<T>[]
   detailLink?: (r: T) => string
   actions?: (r: T) => React.ReactNode
+  renderMobileCard?: (r: T) => React.ReactNode
 }) {
   const [page, setPage] = useState(0)
   const query = useQuery({
@@ -149,6 +174,7 @@ function AdminList<T extends { id: number }>({
     queryFn: () => getData<Page<T>>(path, { page, size: 20 }),
     retry: false,
   })
+
   return (
     <Workspace title={title} eyebrow="ADMIN / OPERATIONS">
       <QueryState query={query}>
@@ -164,12 +190,14 @@ function AdminList<T extends { id: number }>({
                 : columns
             }
             detailLink={detailLink}
+            renderMobileCard={renderMobileCard}
           />
         )}
       </QueryState>
     </Workspace>
   )
 }
+
 export function AdminParkingLotsPage() {
   return (
     <AdminList<Lot>
@@ -177,14 +205,28 @@ export function AdminParkingLotsPage() {
       path="/api/v1/admin/parking-lots"
       detailLink={(r) => `/admin/parking-lots/${r.id}`}
       columns={[
-        { label: 'Bãi đỗ', render: (r) => r.name },
+        {
+          label: 'Bãi đỗ',
+          render: (r) => (
+            <span className="font-semibold text-brand-navy">{r.name}</span>
+          ),
+        },
         { label: 'Địa chỉ', render: (r) => r.address },
         { label: 'Chủ bãi', render: (r) => `#${r.merchantId}` },
         { label: 'Trạng thái', render: (r) => <Badge value={r.status} /> },
       ]}
+      actions={(r) => (
+        <Link
+          to={`/admin/parking-lots/${r.id}`}
+          className="inline-flex items-center gap-1.5 rounded-lg bg-[#d95f00] px-3.5 py-1.5 text-xs font-semibold text-white hover:bg-[#b84e00] active:bg-[#9e4300] transition-colors shadow-xs"
+        >
+          Thẩm định
+        </Link>
+      )}
     />
   )
 }
+
 export function AdminUsersPage() {
   return (
     <AdminList<User>
@@ -192,16 +234,47 @@ export function AdminUsersPage() {
       path="/api/v1/admin/users"
       detailLink={(r) => `/admin/users/${r.id}`}
       columns={[
-        { label: 'Tài khoản', render: (r) => `#${r.id}` },
-        { label: 'Điện thoại', render: (r) => r.phone },
-        { label: 'Email', render: (r) => r.email },
-        { label: 'Vai trò', render: (r) => r.role },
+        {
+          label: 'Tài khoản',
+          render: (r) => (
+            <div>
+              <Link
+                to={`/admin/users/${r.id}`}
+                className="font-semibold text-brand-navy hover:text-[#d95f00] transition-colors"
+              >
+                #{r.id} {r.fullName ? `· ${r.fullName}` : ''}
+              </Link>
+            </div>
+          ),
+        },
+        {
+          label: 'Điện thoại',
+          render: (r) => <span className="font-mono text-xs">{r.phone}</span>,
+        },
+        { label: 'Email', render: (r) => r.email || '—' },
+        { label: 'Vai trò', render: (r) => <Badge value={r.role} /> },
         { label: 'Trạng thái', render: (r) => <Badge value={r.status} /> },
-        { label: 'Ngày tham gia', render: (r) => date(r.createdAt) },
+        {
+          label: 'Ngày tham gia',
+          render: (r) => (
+            <span className="whitespace-nowrap text-xs text-brand-muted">
+              {date(r.createdAt)}
+            </span>
+          ),
+        },
       ]}
+      actions={(r) => (
+        <Link
+          to={`/admin/users/${r.id}`}
+          className="inline-flex items-center gap-1.5 rounded-lg border border-brand-border bg-white px-3 py-1.5 text-xs font-semibold text-brand-navy hover:bg-brand-surface hover:text-[#d95f00] transition-colors shadow-xs"
+        >
+          Quản trị
+        </Link>
+      )}
     />
   )
 }
+
 export function AdminAuditLogsPage() {
   return (
     <AdminList<Audit>
@@ -209,15 +282,73 @@ export function AdminAuditLogsPage() {
       path="/api/v1/admin/audit-logs"
       columns={[
         { label: 'Thời điểm', render: (r) => date(r.createdAt) },
-        { label: 'Người thao tác', render: (r) => `#${r.actorUserId}` },
-        { label: 'Hành động', render: (r) => r.action },
-        { label: 'Đối tượng', render: (r) => `${r.targetType} #${r.targetId}` },
-        { label: 'Chi tiết', render: (r) => r.detail },
-        { label: 'Kết quả', render: (r) => r.result },
+        {
+          label: 'Người thao tác',
+          render: (r) => (
+            <span className="font-mono text-xs font-semibold text-brand-navy">
+              Actor #{r.actorUserId}
+            </span>
+          ),
+        },
+        {
+          label: 'Hành động',
+          render: (r) => (
+            <span className="rounded-md bg-brand-surface px-2 py-0.5 font-mono text-xs font-semibold text-brand-navy">
+              {r.action}
+            </span>
+          ),
+        },
+        {
+          label: 'Đối tượng',
+          render: (r) => (
+            <span className="font-mono text-xs">
+              {r.targetType} #{r.targetId}
+            </span>
+          ),
+        },
+        {
+          label: 'Chi tiết',
+          render: (r) => (
+            <span className="text-xs line-clamp-2 max-w-sm" title={r.detail}>
+              {r.detail}
+            </span>
+          ),
+        },
+        { label: 'Kết quả', render: (r) => <Badge value={r.result} /> },
       ]}
+      renderMobileCard={(r) => (
+        <div className="rounded-xl border border-brand-border bg-white p-4 shadow-xs space-y-2.5">
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2">
+              <span className="font-mono text-xs font-bold text-brand-navy">
+                Actor #{r.actorUserId}
+              </span>
+              <span className="rounded-md bg-brand-surface px-2 py-0.5 font-mono text-[11px] font-semibold text-brand-navy">
+                {r.action}
+              </span>
+            </div>
+            <Badge value={r.result} />
+          </div>
+          <div className="text-xs text-brand-muted flex items-center justify-between">
+            <span>
+              Đối tượng:{' '}
+              <strong className="text-brand-navy font-mono font-medium">
+                {r.targetType} #{r.targetId}
+              </strong>
+            </span>
+            <span className="whitespace-nowrap">{date(r.createdAt)}</span>
+          </div>
+          {r.detail && (
+            <div className="rounded-lg bg-brand-surface/70 p-2.5 text-xs text-brand-navy leading-relaxed border border-brand-border/40">
+              {r.detail}
+            </div>
+          )}
+        </div>
+      )}
     />
   )
 }
+
 export function AdminTransactionsPage() {
   const [selected, setSelected] = useState<Transaction | null>(null)
   return (
@@ -226,46 +357,107 @@ export function AdminTransactionsPage() {
         title="Giám sát giao dịch"
         path="/api/v1/admin/transactions"
         columns={[
-          { label: 'Mã giao dịch', render: (r) => r.transactionCode },
-          { label: 'Booking', render: (r) => r.bookingCode },
-          { label: 'Số tiền', render: (r) => money(r.amount) },
-          { label: 'Loại', render: (r) => r.type },
+          {
+            label: 'Mã giao dịch',
+            render: (r) => (
+              <span className="font-mono text-xs font-semibold text-brand-navy">
+                {r.transactionCode}
+              </span>
+            ),
+          },
+          {
+            label: 'Booking',
+            render: (r) => (
+              <span className="font-mono text-xs text-brand-muted">
+                {r.bookingCode || '—'}
+              </span>
+            ),
+          },
+          {
+            label: 'Số tiền',
+            align: 'right',
+            render: (r) => (
+              <span className="font-sora font-semibold tabular-nums text-brand-navy">
+                {money(r.amount)}
+              </span>
+            ),
+          },
+          { label: 'Loại', render: (r) => <Badge value={r.type} /> },
           { label: 'Trạng thái', render: (r) => <Badge value={r.status} /> },
-          { label: 'Thời điểm', render: (r) => date(r.createdAt) },
+          {
+            label: 'Thời điểm',
+            render: (r) => (
+              <span className="whitespace-nowrap text-xs text-brand-muted">
+                {date(r.createdAt)}
+              </span>
+            ),
+          },
         ]}
         actions={(r) => (
-          <button className={secondary} onClick={() => setSelected(r)}>
+          <button
+            className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-brand-border bg-white px-3 py-1.5 text-xs font-semibold text-brand-navy hover:bg-brand-surface hover:text-[#d95f00] transition-colors cursor-pointer"
+            onClick={() => setSelected(r)}
+          >
             Đối soát
           </button>
         )}
       />
       {selected && (
-        <Dialog title="Chi tiết đối soát" onClose={() => setSelected(null)}>
-          <dl className="space-y-4">
-            {[
-              ['Mã giao dịch', selected.transactionCode],
-              ['Booking', selected.bookingCode],
-              ['Chủ bãi', selected.merchantName],
-              ['Cổng thanh toán', selected.gateway],
-              ['Số tiền', money(selected.amount)],
-              ['Trạng thái', selected.status],
-            ].map(([label, value]) => (
-              <div key={label} className="flex justify-between gap-4 text-sm">
-                <dt>{label}</dt>
-                <dd className="font-semibold">{value || '—'}</dd>
+        <Dialog
+          title="Chi tiết đối soát giao dịch"
+          onClose={() => setSelected(null)}
+        >
+          <div className="space-y-4">
+            <div className="flex items-center justify-between rounded-xl border border-brand-border bg-brand-surface p-4">
+              <div>
+                <p className="text-xs text-brand-muted">Số tiền giao dịch</p>
+                <p className="font-sora text-2xl font-bold tabular-nums text-[#d95f00]">
+                  {money(selected.amount)}
+                </p>
               </div>
-            ))}
-          </dl>
+              <Badge value={selected.status} />
+            </div>
+            <dl className="divide-y divide-brand-border/60 text-sm">
+              {[
+                ['Mã giao dịch', selected.transactionCode],
+                ['Mã đặt chỗ (Booking)', selected.bookingCode],
+                ['Chủ bãi thụ hưởng', selected.merchantName],
+                ['Cổng thanh toán', selected.gateway],
+                ['Loại giao dịch', selected.type],
+                ['Thời điểm tạo', date(selected.createdAt)],
+              ].map(([label, value]) => (
+                <div
+                  key={label}
+                  className="flex justify-between gap-4 pt-3 pb-1 text-sm"
+                >
+                  <dt className="text-brand-muted">{label}</dt>
+                  <dd className="font-semibold text-brand-navy">{value || '—'}</dd>
+                </div>
+              ))}
+            </dl>
+          </div>
         </Dialog>
       )}
     </>
   )
 }
+
 interface Decision {
   title: string
   path: string
   method?: 'put' | 'post'
+  action?: string
+  isOptionalReason?: boolean
+  withdrawalInfo?: {
+    id: number
+    amount: number
+    bankName?: string
+    maskedBankAccount?: string
+    accountHolderName?: string
+    merchantName?: string
+  }
 }
+
 export function DecisionDialog({
   decision,
   onClose,
@@ -275,9 +467,16 @@ export function DecisionDialog({
 }) {
   const cache = useQueryClient()
   const form = useForm<{ reason: string }>()
+  const isLotApproval =
+    Boolean(decision.isOptionalReason) ||
+    (decision.path.includes('/parking-lots/') &&
+      (decision.action === 'approve' || decision.path.endsWith('/approve')))
+
   const mutation = useMutation({
-    mutationFn: (data: { reason: string }) =>
-      sendData(decision.method || 'put', decision.path, data),
+    mutationFn: (data: { reason?: string }) =>
+      sendData(decision.method || 'put', decision.path, {
+        reason: data.reason?.trim() || '',
+      }),
     onSuccess: () => {
       void cache.invalidateQueries({ queryKey: ['admin-list'] })
       void cache.invalidateQueries({ queryKey: ['admin-detail'] })
@@ -285,6 +484,7 @@ export function DecisionDialog({
       onClose()
     },
   })
+
   return (
     <Dialog
       title={decision.title}
@@ -294,35 +494,111 @@ export function DecisionDialog({
     >
       <form
         className="space-y-5"
-        onSubmit={form.handleSubmit((data) => mutation.mutate(data))}
+        onSubmit={form.handleSubmit((data) => {
+          if (mutation.isPending) return
+          mutation.mutate(data)
+        })}
       >
         <Notice>
-          Kiểm tra hồ sơ trước khi xác nhận. Quyết định được lưu vào nhật ký hệ
-          thống.
+          {isLotApproval
+            ? 'Xác nhận phê duyệt hồ sơ bãi đỗ. Bãi sẽ được công bố và kích hoạt nhận đặt chỗ trên hệ thống.'
+            : 'Kiểm tra hồ sơ trước khi xác nhận. Quyết định được lưu vào nhật ký hệ thống.'}
         </Notice>
-        <Field label="Lý do / ghi chú quyết định">
+        {decision.withdrawalInfo && (
+          <div className="space-y-3 rounded-xl border border-brand-border bg-brand-surface p-4 text-sm">
+            <div className="flex items-center justify-between border-b border-brand-border/60 pb-2">
+              <span className="text-xs font-semibold uppercase tracking-wider text-brand-muted">
+                Lệnh rút tiền #{decision.withdrawalInfo.id}
+              </span>
+              <span className="font-sora text-lg font-bold tabular-nums text-[#d95f00]">
+                {money(decision.withdrawalInfo.amount)}
+              </span>
+            </div>
+            <div className="grid grid-cols-1 gap-2 text-xs sm:grid-cols-2">
+              <div>
+                <span className="text-brand-muted">Chủ bãi thụ hưởng:</span>
+                <p className="font-semibold text-brand-navy">
+                  {decision.withdrawalInfo.merchantName || '—'}
+                </p>
+              </div>
+              <div>
+                <span className="text-brand-muted">Ngân hàng:</span>
+                <p className="font-semibold text-brand-navy">
+                  {decision.withdrawalInfo.bankName || '—'}
+                </p>
+              </div>
+              <div>
+                <span className="text-brand-muted">Số tài khoản:</span>
+                <p className="font-mono font-semibold text-brand-navy">
+                  {decision.withdrawalInfo.maskedBankAccount || '—'}
+                </p>
+              </div>
+              <div>
+                <span className="text-brand-muted">Tên chủ tài khoản:</span>
+                <p className="font-semibold uppercase text-brand-navy">
+                  {decision.withdrawalInfo.accountHolderName || '—'}
+                </p>
+              </div>
+            </div>
+            <p className="text-[11px] italic text-brand-muted">
+              * Vui lòng kiểm tra kỹ số tài khoản và ngân hàng thụ hưởng trước khi bấm xác nhận chuyển tiền.
+            </p>
+          </div>
+        )}
+        <Field
+          label={
+            isLotApproval
+              ? 'Ghi chú phê duyệt (Tùy chọn)'
+              : 'Lý do / ghi chú quyết định'
+          }
+        >
           <textarea
             rows={5}
+            placeholder={
+              isLotApproval
+                ? 'Nhập ghi chú hoặc khuyến nghị cho chủ bãi (không bắt buộc)...'
+                : 'Nhập rõ lý do từ chối hoặc các điểm cần chỉnh sửa bổ sung...'
+            }
             className={control}
             {...form.register('reason', {
-              required: true,
-              validate: (value) => !!value.trim(),
+              required: !isLotApproval ? 'Nhập lý do quyết định.' : false,
+              validate: !isLotApproval
+                ? (value) => !!value?.trim() || 'Nhập lý do quyết định.'
+                : undefined,
             })}
           />
         </Field>
         {form.formState.errors.reason && (
-          <Notice error>Nhập lý do quyết định.</Notice>
+          <Notice error>
+            {form.formState.errors.reason.message || 'Nhập lý do quyết định.'}
+          </Notice>
         )}
         {mutation.isError && (
           <Notice error>{errorMessage(mutation.error)}</Notice>
         )}
-        <button disabled={mutation.isPending} className={button}>
-          {mutation.isPending ? 'Đang xử lý…' : 'Xác nhận quyết định'}
-        </button>
+        <div className="flex justify-end gap-3 pt-2">
+          <button
+            type="button"
+            disabled={mutation.isPending}
+            onClick={onClose}
+            className={secondary}
+          >
+            Hủy
+          </button>
+          <button
+            type="submit"
+            disabled={mutation.isPending}
+            aria-busy={mutation.isPending}
+            className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#d95f00] px-5 py-3 text-sm font-semibold text-white hover:bg-[#b84e00] active:bg-[#9e4300] transition-colors shadow-xs disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+          >
+            {mutation.isPending ? 'Đang xử lý…' : 'Xác nhận quyết định'}
+          </button>
+        </div>
       </form>
     </Dialog>
   )
 }
+
 export function AdminWithdrawalsPage() {
   const [decision, setDecision] = useState<Decision | null>(null)
   return (
@@ -331,16 +607,53 @@ export function AdminWithdrawalsPage() {
         title="Phê duyệt rút tiền"
         path="/api/v1/admin/withdrawals"
         columns={[
-          { label: 'Yêu cầu', render: (r) => `#${r.id}` },
-          { label: 'Chủ bãi', render: (r) => r.merchantName },
-          { label: 'Số tiền', render: (r) => money(r.amount) },
+          {
+            label: 'Yêu cầu',
+            render: (r) => (
+              <span className="font-mono text-xs font-semibold text-brand-navy">
+                #{r.id}
+              </span>
+            ),
+          },
+          {
+            label: 'Chủ bãi',
+            render: (r) => (
+              <span className="font-semibold text-brand-navy">
+                {r.merchantName}
+              </span>
+            ),
+          },
+          {
+            label: 'Số tiền',
+            align: 'right',
+            render: (r) => (
+              <span className="font-sora font-semibold tabular-nums text-brand-navy">
+                {money(r.amount)}
+              </span>
+            ),
+          },
           {
             label: 'Tài khoản nhận',
-            render: (r) =>
-              `${r.bankName || '—'} · ${r.maskedBankAccount || '—'} · ${r.accountHolderName || '—'}`,
+            render: (r) => (
+              <div className="text-xs">
+                <span className="font-semibold text-brand-navy">
+                  {r.bankName || '—'}
+                </span>
+                <p className="font-mono text-brand-muted">
+                  {r.maskedBankAccount || '—'} · {r.accountHolderName || '—'}
+                </p>
+              </div>
+            ),
           },
           { label: 'Trạng thái', render: (r) => <Badge value={r.status} /> },
-          { label: 'Phản hồi', render: (r) => r.decisionReason || '—' },
+          {
+            label: 'Phản hồi',
+            render: (r) => (
+              <span className="text-xs text-brand-muted">
+                {r.decisionReason || '—'}
+              </span>
+            ),
+          },
         ]}
         actions={(r) =>
           r.status === 'PENDING' ? (
@@ -351,11 +664,24 @@ export function AdminWithdrawalsPage() {
               ].map(([action, title]) => (
                 <button
                   key={action}
-                  className={secondary}
+                  className={
+                    action === 'approve'
+                      ? 'inline-flex items-center justify-center gap-2 rounded-xl bg-[#d95f00] px-3.5 py-2 text-xs font-semibold text-white hover:bg-[#b84e00] active:bg-[#9e4300] transition-colors shadow-xs cursor-pointer'
+                      : secondary
+                  }
                   onClick={() =>
                     setDecision({
                       title,
                       path: `/api/v1/admin/withdrawals/${r.id}/${action}`,
+                      action,
+                      withdrawalInfo: {
+                        id: r.id,
+                        amount: r.amount,
+                        bankName: r.bankName,
+                        maskedBankAccount: r.maskedBankAccount,
+                        accountHolderName: r.accountHolderName,
+                        merchantName: r.merchantName,
+                      },
                     })
                   }
                 >
@@ -374,6 +700,7 @@ export function AdminWithdrawalsPage() {
     </>
   )
 }
+
 export function AdminLotDetailPage() {
   const { id } = useParams()
   const [decision, setDecision] = useState<Decision | null>(null)
@@ -382,6 +709,7 @@ export function AdminLotDetailPage() {
     queryFn: () => getData<Lot>(`/api/v1/admin/parking-lots/${id}`),
     retry: false,
   })
+
   return (
     <Workspace
       title={`Thẩm định bãi #${id}`}
@@ -408,11 +736,16 @@ export function AdminLotDetailPage() {
                 ].map(([action, title]) => (
                   <button
                     key={action}
-                    className={action === 'approve' ? button : secondary}
+                    className={
+                      action === 'approve'
+                        ? 'inline-flex items-center justify-center gap-2 rounded-xl bg-[#d95f00] px-4 py-3 text-sm font-semibold text-white hover:bg-[#b84e00] active:bg-[#9e4300] transition-colors shadow-xs cursor-pointer'
+                        : secondary
+                    }
                     onClick={() =>
                       setDecision({
                         title,
                         path: `/api/v1/admin/parking-lots/${id}/${action}`,
+                        action,
                       })
                     }
                   >
@@ -430,6 +763,7 @@ export function AdminLotDetailPage() {
     </Workspace>
   )
 }
+
 export function AdminUserDetailPage() {
   const { id } = useParams()
   const [decision, setDecision] = useState<Decision | null>(null)
@@ -438,12 +772,13 @@ export function AdminUserDetailPage() {
     queryFn: () => getData<User>(`/api/v1/admin/users/${id}`),
     retry: false,
   })
+
   return (
     <Workspace
       title={`Hồ sơ người dùng #${id}`}
       actions={
         <Link className={secondary} to="/admin/users">
-          ← Người dùng
+          ← Danh sách người dùng
         </Link>
       }
     >
@@ -469,7 +804,9 @@ export function AdminUserDetailPage() {
                 ].map(([label, value]) => (
                   <div key={label}>
                     <dt className="text-brand-muted">{label}</dt>
-                    <dd className="mt-2">{value || '—'}</dd>
+                    <dd className="mt-2 font-medium text-brand-navy">
+                      {value || '—'}
+                    </dd>
                   </div>
                 ))}
               </dl>
@@ -485,11 +822,18 @@ export function AdminUserDetailPage() {
                 ].map(([action, title]) => (
                   <button
                     key={action}
-                    className={secondary}
+                    className={
+                      action === 'unban'
+                        ? 'inline-flex items-center justify-center gap-2 rounded-xl bg-[#d95f00] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[#b84e00] active:bg-[#9e4300] transition-colors shadow-xs cursor-pointer'
+                        : action === 'ban'
+                          ? 'inline-flex items-center justify-center gap-2 rounded-xl border border-red-200 bg-red-50 px-4 py-2.5 text-sm font-semibold text-red-700 hover:bg-red-100 transition-colors cursor-pointer'
+                          : secondary
+                    }
                     onClick={() =>
                       setDecision({
                         title,
                         path: `/api/v1/admin/users/${id}/${action}`,
+                        action,
                         method: action === 'warnings' ? 'post' : 'put',
                       })
                     }

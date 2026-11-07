@@ -39,7 +39,7 @@ export function MerchantLotCapacitySection({
           onClick={() => navigate(`/merchant/parking-lots/${lotId}/slots`)}
           className="inline-flex items-center gap-1 font-mono text-xs text-[#d95f00] hover:underline font-bold disabled:opacity-40 disabled:hover:no-underline cursor-pointer"
         >
-          <span>Cập nhật nhanh sức chứa (SCR-032)</span>
+          <span>Cập nhật nhanh sức chứa</span>
           <ArrowRight className="w-3.5 h-3.5" />
         </button>
       </div>

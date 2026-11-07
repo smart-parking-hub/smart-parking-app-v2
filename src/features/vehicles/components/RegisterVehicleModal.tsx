@@ -1,4 +1,4 @@
-import { useState, type FormEvent, type ChangeEvent } from 'react'
+import { useState, useEffect, type FormEvent, type ChangeEvent } from 'react'
 import {
   PlusCircle,
   Truck,
@@ -6,7 +6,7 @@ import {
   FileCheck,
   CheckCircle2,
   AlertCircle,
-  RefreshCw,
+  Loader2,
   X,
 } from 'lucide-react'
 import type { AddVehicleFormData, VehicleClassType } from '../types/vehicleTypes'
@@ -35,6 +35,22 @@ export function RegisterVehicleModal({
   const [formError, setFormError] = useState<string | null>(null)
   const [formSuccess, setFormSuccess] = useState(false)
 
+  useEffect(() => {
+    if (!isOpen) return
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && !isSubmitting) {
+        onClose()
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    const originalOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown)
+      document.body.style.overflow = originalOverflow
+    }
+  }, [isOpen, isSubmitting, onClose])
+
   if (!isOpen) return null
 
   const handlePlateChange = (e: ChangeEvent<HTMLInputElement>) => {
@@ -52,6 +68,7 @@ export function RegisterVehicleModal({
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
+    if (isSubmitting) return
     setFormError(null)
     setFormSuccess(false)
 
@@ -97,7 +114,12 @@ export function RegisterVehicleModal({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs">
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="register-vehicle-modal-title"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs"
+    >
       <div className="bg-white rounded-3xl shadow-2xl border border-slate-200/90 w-full max-w-[480px] max-h-[92vh] overflow-y-auto flex flex-col animate-in fade-in zoom-in-95 duration-150">
         {/* Header matching Image 2 */}
         <div className="p-6 border-b border-slate-100 flex items-start justify-between relative">
@@ -107,7 +129,7 @@ export function RegisterVehicleModal({
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h3 className="font-sora font-bold text-slate-900 text-lg leading-tight">
+                <h3 id="register-vehicle-modal-title" className="font-sora font-bold text-slate-900 text-lg leading-tight">
                   Khai Báo Hồ Sơ Vận Hành
                 </h3>
                 <span className="font-mono text-[11px] font-bold px-2 py-0.5 rounded bg-slate-100 text-slate-700 tracking-wider uppercase shrink-0">
@@ -153,6 +175,7 @@ export function RegisterVehicleModal({
             </label>
             <input
               id="modal-reg-plate"
+              name="licensePlate"
               type="text"
               required
               value={licensePlate}
@@ -172,6 +195,7 @@ export function RegisterVehicleModal({
             </label>
             <select
               id="modal-reg-class"
+              name="vehicleClass"
               value={vehicleClass}
               onChange={(e) => setVehicleClass(e.target.value as VehicleClassType)}
               className="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm font-medium text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500"
@@ -192,6 +216,7 @@ export function RegisterVehicleModal({
               </label>
               <input
                 id="modal-reg-curb"
+                name="curbWeightTon"
                 type="number"
                 step="0.1"
                 min="0"
@@ -207,6 +232,7 @@ export function RegisterVehicleModal({
               </label>
               <input
                 id="modal-reg-towing"
+                name="towingWeightTon"
                 type="number"
                 step="0.1"
                 min="0"
@@ -226,6 +252,7 @@ export function RegisterVehicleModal({
               </label>
               <input
                 id="modal-reg-brand"
+                name="brandModel"
                 type="text"
                 value={brandModel}
                 onChange={(e) => setBrandModel(e.target.value)}
@@ -239,6 +266,7 @@ export function RegisterVehicleModal({
               </label>
               <input
                 id="modal-reg-year"
+                name="manufactureYear"
                 type="number"
                 min="1990"
                 max="2030"
@@ -261,6 +289,7 @@ export function RegisterVehicleModal({
             >
               <input
                 id="modal-reg-doc"
+                name="registrationDoc"
                 type="file"
                 accept=".pdf,.png,.jpg,.jpeg"
                 onChange={handleFileUpload}
@@ -286,8 +315,10 @@ export function RegisterVehicleModal({
           </div>
 
           {/* 6. Default Vehicle Checkbox */}
-          <label className="flex items-start gap-3 cursor-pointer pt-1">
+          <label htmlFor="modal-reg-default" className="flex items-start gap-3 cursor-pointer pt-1">
             <input
+              id="modal-reg-default"
+              name="isDefault"
               type="checkbox"
               checked={isDefault}
               onChange={(e) => setIsDefault(e.target.checked)}
@@ -308,11 +339,12 @@ export function RegisterVehicleModal({
             <button
               type="submit"
               disabled={isSubmitting}
+              aria-busy={isSubmitting}
               className="w-full h-12 rounded-xl bg-orange-600 hover:bg-orange-700 active:scale-[0.99] text-white font-bold text-sm shadow-md shadow-orange-600/20 transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
             >
               {isSubmitting ? (
                 <>
-                  <RefreshCw className="w-5 h-5 animate-spin" />
+                  <Loader2 className="w-5 h-5 animate-spin" />
                   <span>Đang kết nối cổng ALPR...</span>
                 </>
               ) : (

@@ -1,11 +1,12 @@
 import { useEffect, useId, useRef, useState, type ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import { AlertCircle, ArrowLeft, ArrowRight, Search, X } from 'lucide-react'
+import { cn } from '@/shared/utils/cn'
 
 export const control =
-  'w-full rounded-xl border border-brand-border bg-white px-3 py-3 text-sm text-brand-navy outline-none focus:ring-2 focus:ring-brand-orange disabled:opacity-50'
+  'w-full rounded-xl border border-brand-border bg-white px-3 py-3 text-sm text-brand-navy outline-none focus:border-[#d95f00] focus:ring-2 focus:ring-[#d95f00] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d95f00] focus-visible:ring-offset-1 disabled:opacity-50 transition-colors'
 export const button =
-  'inline-flex items-center justify-center gap-2 rounded-xl bg-brand-orange px-4 py-3 text-sm font-semibold text-brand-navy hover:bg-brand-orange-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-orange disabled:opacity-50 disabled:cursor-not-allowed'
+  'inline-flex items-center justify-center gap-2 rounded-xl bg-[#d95f00] px-4 py-3 text-sm font-semibold text-white hover:bg-[#b84e00] active:bg-[#9e4300] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d95f00] focus-visible:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors shadow-xs'
 export const secondary =
   'inline-flex items-center justify-center gap-2 rounded-xl border border-brand-border bg-white px-4 py-3 text-sm font-semibold text-brand-navy hover:bg-brand-surface disabled:opacity-50'
 export const money = (value: unknown) =>
@@ -187,9 +188,19 @@ export function Dialog({
   useEffect(() => {
     const element = ref.current
     const previous = document.activeElement
-    element?.showModal()
+    if (element) {
+      element.setAttribute('open', '')
+      if (typeof element.showModal === 'function') {
+        element.showModal()
+      }
+    }
     return () => {
-      element?.close()
+      if (element) {
+        element.removeAttribute('open')
+        if (typeof element.close === 'function') {
+          element.close()
+        }
+      }
       if (previous instanceof HTMLElement) previous.focus()
     }
   }, [])
@@ -218,6 +229,7 @@ export function Dialog({
 export interface Column<T> {
   label: string
   render: (row: T) => ReactNode
+  align?: 'left' | 'center' | 'right'
 }
 export function DataTable<T extends { id: number }>({
   rows,
@@ -227,6 +239,7 @@ export function DataTable<T extends { id: number }>({
   totalPages,
   onPage,
   detailLink,
+  renderMobileCard,
 }: {
   rows: T[]
   columns: Column<T>[]
@@ -235,6 +248,7 @@ export function DataTable<T extends { id: number }>({
   totalPages?: number
   onPage?: (page: number) => void
   detailLink?: (row: T) => string
+  renderMobileCard?: (row: T) => ReactNode
 }) {
   const [search, setSearch] = useState('')
   const shown = searchText
@@ -263,13 +277,25 @@ export function DataTable<T extends { id: number }>({
           </label>
         )}
       </div>
-      <div className="overflow-x-auto">
+      {renderMobileCard && shown.length > 0 && (
+        <div className="space-y-3 md:hidden">
+          {shown.map((row) => (
+            <div key={row.id}>{renderMobileCard(row)}</div>
+          ))}
+        </div>
+      )}
+      <div className={cn('overflow-x-auto', renderMobileCard && shown.length > 0 && 'hidden md:block')}>
         <table className="w-full text-left text-sm">
           <thead className="border-y border-brand-border bg-brand-surface text-xs text-brand-muted">
             <tr>
               {columns.map((col) => (
                 <th
-                  className="whitespace-nowrap px-4 py-4"
+                  className={cn(
+                    'whitespace-nowrap px-4 py-4',
+                    col.align === 'right' && 'text-right',
+                    col.align === 'center' && 'text-center',
+                    (!col.align || col.align === 'left') && 'text-left'
+                  )}
                   key={col.label}
                   scope="col"
                 >
@@ -287,7 +313,14 @@ export function DataTable<T extends { id: number }>({
             {shown.map((row) => (
               <tr key={row.id} className="hover:bg-brand-surface/50">
                 {columns.map((col) => (
-                  <td className="max-w-md px-4 py-5" key={col.label}>
+                  <td
+                    className={cn(
+                      'max-w-md px-4 py-5',
+                      col.align === 'right' && 'text-right',
+                      col.align === 'center' && 'text-center'
+                    )}
+                    key={col.label}
+                  >
                     {col.render(row)}
                   </td>
                 ))}

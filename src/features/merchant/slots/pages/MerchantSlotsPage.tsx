@@ -184,7 +184,7 @@ export function MerchantSlotsPage() {
     showToast('Đã khôi phục ma trận sức chứa về thông số ban đầu.')
   }
 
-  const handleSaveClick = () => {
+  const handleSaveClick = () => { if (saveMutation.isPending) return
     if (isLocked) {
       showToast('Bãi đỗ đang bị khóa hoặc chưa được phê duyệt!', true)
       return
@@ -215,7 +215,7 @@ export function MerchantSlotsPage() {
     executeBulkSave()
   }
 
-  const executeBulkSave = () => {
+  const executeBulkSave = () => { if (saveMutation.isPending) return
     const payload: BulkSlotConfigRequest = {
       slots: slots.map((s) => ({
         vehicleType: s.vehicleType,

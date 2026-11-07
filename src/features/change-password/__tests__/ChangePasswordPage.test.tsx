@@ -70,7 +70,7 @@ describe('SCR-022 ChangePasswordPage (Đổi mật khẩu bảo mật tài xế)
     expect(screen.getByText('1900 6868')).toBeInTheDocument()
   })
 
-  it('opens NotificationSettingsModal when clicking Thiết lập thông báo hệ thống', async () => {
+  it('opens NotificationSettingsModal when clicking Thiết lập thông báo hệ thống and closes on Escape', async () => {
     renderPage()
 
     await waitFor(() => {
@@ -81,6 +81,12 @@ describe('SCR-022 ChangePasswordPage (Đổi mật khẩu bảo mật tài xế)
 
     expect(screen.getByText('Thiết Lập Thông Báo Hệ Thống')).toBeInTheDocument()
     expect(screen.getByText('KÊNH TRỰC BAN & ĐIỀU PHỐI BÃI')).toBeInTheDocument()
+
+    // Close via Escape
+    fireEvent.keyDown(window, { key: 'Escape' })
+    await waitFor(() => {
+      expect(screen.queryByText('Thiết Lập Thông Báo Hệ Thống')).not.toBeInTheDocument()
+    })
   })
 
   it('toggles password visibility on all 3 input fields', async () => {
@@ -258,7 +264,7 @@ describe('SCR-022 ChangePasswordPage (Đổi mật khẩu bảo mật tài xế)
     })
   })
 
-  it('opens SMS recovery modal when clicking "Quên mật khẩu hiện tại?" or "Khôi phục qua SMS OTP"', async () => {
+  it('opens SMS recovery modal when clicking "Quên mật khẩu hiện tại?" or "Khôi phục qua SMS OTP" and closes on Escape', async () => {
     renderPage()
 
     await waitFor(() => {
@@ -276,6 +282,12 @@ describe('SCR-022 ChangePasswordPage (Đổi mật khẩu bảo mật tài xế)
 
     await waitFor(() => {
       expect(screen.getByPlaceholderText('VD: 884920')).toBeInTheDocument()
+    })
+
+    // Close via Escape
+    fireEvent.keyDown(window, { key: 'Escape' })
+    await waitFor(() => {
+      expect(screen.queryByText('Khôi Phục Mật Khẩu Qua SMS OTP')).not.toBeInTheDocument()
     })
   })
 

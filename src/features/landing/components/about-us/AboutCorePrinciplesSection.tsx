@@ -37,15 +37,15 @@ export function AboutCorePrinciplesSection() {
   ]
 
   return (
-    <section className="w-full bg-[#EEF2F7] py-24 px-6 lg:px-12 flex justify-center border-b border-[#E2E8F0]">
+    <section className="w-full bg-brand-surface py-24 px-6 lg:px-12 flex justify-center border-b border-brand-border">
       <div className="max-w-[1240px] w-full flex flex-col">
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-end justify-between mb-16 gap-4">
           <div>
-            <span className="font-mono text-xs text-[#F97316] uppercase tracking-widest block mb-2 font-semibold">
+            <span className="font-mono text-xs text-brand-orange uppercase tracking-widest block mb-2 font-semibold">
               QUY CHUẨN VẬN HÀNH
             </span>
-            <h2 className="font-sora font-bold text-2xl sm:text-3xl lg:text-4xl text-[#060D1A] tracking-tight">
+            <h2 className="font-sora font-bold text-2xl sm:text-3xl lg:text-4xl text-brand-navy tracking-tight">
               4 Trụ Cột Giá Trị Cốt Lõi
             </h2>
           </div>
@@ -61,26 +61,26 @@ export function AboutCorePrinciplesSection() {
             return (
               <div
                 key={item.num}
-                className="p-8 rounded bg-white border border-[#E2E8F0] flex flex-col justify-between hover:border-slate-400 transition-colors shadow-sm"
+                className="p-8 rounded bg-white border border-brand-border flex flex-col justify-between hover:border-slate-400 transition-colors shadow-sm"
               >
                 <div>
                   <div className="flex items-center justify-between mb-6">
                     <span className="font-sora text-3xl text-slate-300 font-bold">
                       {item.num}
                     </span>
-                    <div className="w-12 h-12 rounded bg-[#EEF2F7] border border-[#E2E8F0] flex items-center justify-center text-[#F97316]">
+                    <div className="w-12 h-12 rounded bg-brand-surface border border-brand-border flex items-center justify-center text-brand-orange">
                       <Icon className="w-6 h-6" aria-hidden="true" />
                     </div>
                   </div>
-                  <h3 className="font-sora font-bold text-lg sm:text-xl text-[#060D1A] mb-3">
+                  <h3 className="font-sora font-bold text-lg sm:text-xl text-brand-navy mb-3">
                     {item.title}
                   </h3>
                   <p className="text-sm sm:text-base text-slate-600 leading-relaxed mb-6 font-normal">
                     {item.description}
                   </p>
                 </div>
-                <div className="flex items-center gap-2 pt-4 border-t border-[#E2E8F0] text-xs font-semibold text-slate-500 uppercase tracking-wider font-mono">
-                  <CheckCircle2 className="w-4 h-4 text-[#F97316] shrink-0" aria-hidden="true" />
+                <div className="flex items-center gap-2 pt-4 border-t border-brand-border text-xs font-semibold text-slate-500 uppercase tracking-wider font-mono">
+                  <CheckCircle2 className="w-4 h-4 text-brand-orange shrink-0" aria-hidden="true" />
                   <span>{item.footer}</span>
                 </div>
               </div>

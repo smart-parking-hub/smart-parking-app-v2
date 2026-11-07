@@ -41,7 +41,7 @@ export function CareersCultureSection() {
       <div className="max-w-[1240px] mx-auto px-6">
         <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-4">
           <div>
-            <span className="font-sora text-xs uppercase tracking-wider text-[#F97316] font-bold">
+            <span className="font-sora text-xs uppercase tracking-wider text-[#d95f00] font-bold">
               ĐẶC QUYỀN & MÔI TRƯỜNG
             </span>
             <h2 className="font-sora text-2xl lg:text-3xl text-[#060D1A] font-bold mt-2 tracking-tight">
@@ -63,10 +63,10 @@ export function CareersCultureSection() {
               >
                 <div>
                   <div className="flex items-center justify-between mb-6">
-                    <span className="font-sora text-xs font-bold text-[#F97316] tracking-wider">
+                    <span className="font-sora text-xs font-bold text-[#d95f00] tracking-wider">
                       {item.step}
                     </span>
-                    <Icon className="w-7 h-7 text-[#F97316]" />
+                    <Icon className="w-7 h-7 text-[#d95f00]" />
                   </div>
                   <h3 className="font-sora text-lg text-[#060D1A] mb-3 font-bold">
                     {item.title}

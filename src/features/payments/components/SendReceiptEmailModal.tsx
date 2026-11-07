@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { X, Send, Mail, CheckCircle2 } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { X, Send, Mail, CheckCircle2, Loader2 } from 'lucide-react'
 import type { PaymentTransactionItem } from '../types/paymentTypes'
 import { sendReceiptEmailApi } from '../api/paymentApi'
 
@@ -20,10 +20,37 @@ export function SendReceiptEmailModal({
   const [isSending, setIsSending] = useState(false)
   const [isSent, setIsSent] = useState(false)
 
+  // Sync defaultEmail when modal opens or item changes
+  useEffect(() => {
+    setEmail(defaultEmail)
+  }, [defaultEmail, isOpen])
+
+  // Escape key handler & body scroll lock
+  useEffect(() => {
+    if (!isOpen) return
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && !isSending) {
+        onClose()
+      }
+    }
+
+    const prevOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    window.addEventListener('keydown', handleKeyDown)
+
+    return () => {
+      document.body.style.overflow = prevOverflow
+      window.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [isOpen, isSending, onClose])
+
   if (!isOpen || !item) return null
 
   const handleSend = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (isSending) return
+
     setIsSending(true)
     try {
       await sendReceiptEmailApi(item.transactionCode, email)
@@ -83,10 +110,12 @@ export function SendReceiptEmailModal({
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1">
+            <label htmlFor="send-receipt-email-input" className="block text-xs font-semibold text-slate-700 mb-1">
               Email Kế Toán Nhận Tệp
             </label>
             <input
+              id="send-receipt-email-input"
+              name="receiptEmail"
               type="email"
               required
               value={email}
@@ -118,9 +147,10 @@ export function SendReceiptEmailModal({
             <button
               type="submit"
               disabled={isSending}
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs md:text-sm font-semibold text-white bg-orange-600 hover:bg-orange-700 transition-colors shadow-sm"
+              aria-busy={isSending}
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs md:text-sm font-semibold text-white bg-orange-600 hover:bg-orange-700 transition-colors shadow-sm disabled:opacity-50"
             >
-              <Send className="w-4 h-4" />
+              {isSending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
               <span>{isSending ? 'Đang gửi...' : 'Gửi Ngay'}</span>
             </button>
           </div>

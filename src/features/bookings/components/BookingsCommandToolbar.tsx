@@ -176,6 +176,9 @@ export function BookingsCommandToolbar({
           <div className="relative w-full lg:w-96">
             <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
             <input
+              id="bookings-search-input"
+              name="bookingSearch"
+              aria-label="Tìm theo mã BK, biển số xe, tên bãi đỗ"
               type="text"
               value={searchKeyword}
               onChange={(e) => onSearchChange(e.target.value)}

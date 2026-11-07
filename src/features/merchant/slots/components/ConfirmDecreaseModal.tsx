@@ -1,4 +1,5 @@
-import { AlertTriangle, ArrowRight, X } from 'lucide-react'
+import { useEffect } from 'react'
+import { AlertTriangle, ArrowRight, X, Loader2 } from 'lucide-react'
 import type { SlotMatrixItem, VehicleType } from '../types/merchantSlotsTypes'
 
 interface DecreasedSlotInfo {
@@ -25,6 +26,31 @@ export function ConfirmDecreaseModal({
   drafts,
   isSaving,
 }: ConfirmDecreaseModalProps) {
+  // A11y: Escape key listener
+  useEffect(() => {
+    if (!isOpen) return
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && !isSaving) {
+        onClose()
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [isOpen, isSaving, onClose])
+
+  // A11y: Lock body scroll while modal is active
+  useEffect(() => {
+    if (!isOpen) return
+
+    const originalOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => {
+      document.body.style.overflow = originalOverflow
+    }
+  }, [isOpen])
+
   if (!isOpen) return null
 
   const decreasedList: DecreasedSlotInfo[] = slots
@@ -40,7 +66,12 @@ export function ConfirmDecreaseModal({
     }))
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-xs animate-in fade-in duration-200">
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="confirm-decrease-modal-title"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-xs animate-in fade-in duration-200"
+    >
       <div className="bg-white rounded-2xl max-w-lg w-full p-6 shadow-xl border border-slate-200 flex flex-col gap-4">
         {/* Header */}
         <div className="flex items-center justify-between border-b border-slate-100 pb-3">
@@ -49,7 +80,10 @@ export function ConfirmDecreaseModal({
               <AlertTriangle className="w-5 h-5 text-amber-700" />
             </div>
             <div>
-              <h3 className="font-sora text-base font-bold text-slate-900">
+              <h3
+                id="confirm-decrease-modal-title"
+                className="font-sora text-base font-bold text-slate-900"
+              >
                 Xác nhận giảm sức chứa?
               </h3>
               <p className="text-xs text-slate-500">
@@ -61,7 +95,8 @@ export function ConfirmDecreaseModal({
             type="button"
             onClick={onClose}
             disabled={isSaving}
-            className="w-8 h-8 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 flex items-center justify-center"
+            aria-label="Đóng hộp thoại"
+            className="w-8 h-8 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 flex items-center justify-center disabled:pointer-events-none disabled:cursor-not-allowed cursor-pointer"
           >
             <X className="w-4 h-4" />
           </button>
@@ -101,17 +136,28 @@ export function ConfirmDecreaseModal({
             type="button"
             onClick={onClose}
             disabled={isSaving}
-            className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-100 transition-colors"
+            className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-100 transition-colors disabled:pointer-events-none disabled:cursor-not-allowed cursor-pointer"
           >
             Hủy bỏ
           </button>
           <button
             type="button"
-            onClick={onConfirm}
+            onClick={() => {
+              if (isSaving) return
+              onConfirm()
+            }}
             disabled={isSaving}
-            className="px-5 py-2 rounded-xl bg-[#d95f00] hover:bg-[#b84e00] text-white text-xs font-bold transition-colors shadow-xs"
+            aria-busy={isSaving}
+            className="px-5 py-2 rounded-xl bg-[#d95f00] hover:bg-[#b84e00] text-white text-xs font-bold transition-colors shadow-xs disabled:pointer-events-none disabled:cursor-not-allowed flex items-center gap-2 cursor-pointer"
           >
-            {isSaving ? 'Đang lưu cấu hình...' : 'Xác nhận & Lưu tất cả'}
+            {isSaving ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin" />
+                <span>Đang lưu cấu hình...</span>
+              </>
+            ) : (
+              <span>Xác nhận &amp; Lưu tất cả</span>
+            )}
           </button>
         </div>
       </div>

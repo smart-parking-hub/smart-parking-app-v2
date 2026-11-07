@@ -39,7 +39,7 @@ export function MerchantSlotsStickyFooter({
             type="button"
             onClick={onReset}
             disabled={!hasChanges || isSaving || isLocked}
-            className="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 transition-colors text-xs font-semibold flex items-center gap-1.5 shadow-xs disabled:opacity-40 disabled:hover:bg-slate-100 cursor-pointer"
+            className="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 transition-colors text-xs font-semibold flex items-center gap-1.5 shadow-xs disabled:opacity-40 disabled:hover:bg-slate-100 disabled:cursor-not-allowed disabled:pointer-events-none cursor-pointer"
           >
             <RotateCcw className="w-3.5 h-3.5" />
             <span>Khôi Phục Gốc (Hủy Thay Đổi)</span>
@@ -49,7 +49,8 @@ export function MerchantSlotsStickyFooter({
             type="button"
             onClick={onSave}
             disabled={isSaving || isLocked || !hasChanges}
-            className="px-6 py-2.5 rounded-xl bg-[#d95f00] hover:bg-[#b84e00] text-white transition-colors text-xs font-bold flex items-center gap-2 shadow-sm disabled:opacity-45 disabled:hover:bg-[#d95f00] cursor-pointer"
+            aria-busy={isSaving}
+            className="px-6 py-2.5 rounded-xl bg-[#d95f00] hover:bg-[#b84e00] text-white transition-colors text-xs font-bold flex items-center gap-2 shadow-sm disabled:opacity-45 disabled:hover:bg-[#d95f00] disabled:cursor-not-allowed disabled:pointer-events-none cursor-pointer"
           >
             {isSaving ? (
               <>

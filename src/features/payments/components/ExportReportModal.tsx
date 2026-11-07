@@ -1,11 +1,19 @@
 import { useState, useEffect } from 'react'
-import { X, Download, FileSpreadsheet, FileText, CheckCircle2 } from 'lucide-react'
+import { X, Download, FileSpreadsheet, FileText, CheckCircle2, Loader2 } from 'lucide-react'
+import type { PaymentTransactionItem } from '../types/paymentTypes'
+import {
+  generateCsvContent,
+  getFormattedDateForFilename,
+  downloadFile,
+  type CsvColumn,
+} from '@/shared/utils/exportToCsvUtil'
 
 interface ExportReportModalProps {
   isOpen: boolean
   onClose: () => void
   totalRecords: number
   totalAmountText: string
+  transactions?: PaymentTransactionItem[]
 }
 
 export function ExportReportModal({
@@ -13,10 +21,31 @@ export function ExportReportModal({
   onClose,
   totalRecords,
   totalAmountText,
+  transactions = [],
 }: ExportReportModalProps) {
   const [format, setFormat] = useState<'EXCEL' | 'PDF'>('EXCEL')
   const [isExporting, setIsExporting] = useState(false)
   const [isSuccess, setIsSuccess] = useState(false)
+
+  // Escape key handler & body scroll lock
+  useEffect(() => {
+    if (!isOpen) return
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && !isExporting) {
+        onClose()
+      }
+    }
+
+    const prevOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    window.addEventListener('keydown', handleKeyDown)
+
+    return () => {
+      document.body.style.overflow = prevOverflow
+      window.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [isOpen, isExporting, onClose])
 
   useEffect(() => {
     let t1: NodeJS.Timeout | undefined
@@ -40,6 +69,40 @@ export function ExportReportModal({
   if (!isOpen) return null
 
   const handleExport = () => {
+    if (isExporting) return
+
+    try {
+      const dateStr = getFormattedDateForFilename()
+      const ext = format === 'EXCEL' ? 'csv' : 'txt'
+      const filename = `SaoKe_CuocPhi_${dateStr}.${ext}`
+
+      const columns: CsvColumn<PaymentTransactionItem>[] = [
+        { header: 'Mã Giao Dịch', accessor: 'transactionCode' },
+        { header: 'Mã Đặt Chỗ', accessor: 'bookingCode' },
+        { header: 'Thời Gian', accessor: 'createdAtText' },
+        { header: 'Phương Thức', accessor: 'paymentMethodLabel' },
+        { header: 'Bãi Đỗ Xe', accessor: 'parkingLotName' },
+        { header: 'Biển Số Xe', accessor: 'vehiclePlate' },
+        { header: 'Quy Cách Xe', accessor: 'vehicleSpec' },
+        { header: 'Phân Loại', accessor: 'categoryLabel' },
+        { header: 'Số Tiền (VNĐ)', accessor: (r) => r.amount },
+        { header: 'Thuế VAT (VNĐ)', accessor: (r) => r.vatAmount },
+        { header: 'Trạng Thái', accessor: 'statusLabel' },
+        { header: 'Mã Hóa Đơn VAT', accessor: (r) => r.vatLookupCode ?? '' },
+        { header: 'Mã CQT', accessor: (r) => r.taxAuthorityCode ?? '' },
+        { header: 'Đơn Vị Thụ Hưởng', accessor: (r) => r.beneficiaryName ?? '' },
+      ]
+
+      const content = generateCsvContent(transactions, columns)
+      downloadFile(
+        content,
+        filename,
+        format === 'EXCEL' ? 'text/csv;charset=utf-8;' : 'text/plain;charset=utf-8;'
+      )
+    } catch (err) {
+      console.error('Lỗi khi xuất tệp sao kê chi phí:', err)
+    }
+
     setIsExporting(true)
   }
 
@@ -146,9 +209,10 @@ export function ExportReportModal({
             type="button"
             onClick={handleExport}
             disabled={isExporting}
-            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs md:text-sm font-semibold text-white bg-orange-600 hover:bg-orange-700 transition-colors shadow-sm"
+            aria-busy={isExporting}
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs md:text-sm font-semibold text-white bg-orange-600 hover:bg-orange-700 transition-colors shadow-sm disabled:opacity-50"
           >
-            <Download className="w-4 h-4" />
+            {isExporting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
             <span>{isExporting ? 'Đang tạo tệp...' : `Tải tệp ${format}`}</span>
           </button>
         </div>

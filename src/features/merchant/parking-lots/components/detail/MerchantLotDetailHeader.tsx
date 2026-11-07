@@ -119,7 +119,7 @@ export function MerchantLotDetailHeader({
             className="inline-flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl bg-[#e6eeff] text-[#0d1c2e] hover:bg-[#d5e3fc] disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-semibold text-xs lg:text-sm cursor-pointer shadow-2xs"
           >
             <Edit3 className="w-4 h-4 text-slate-700" />
-            <span>Chỉnh Sửa Hồ Sơ (SCR-031)</span>
+            <span>Chỉnh Sửa Hồ Sơ Bãi</span>
           </button>
 
           <button
@@ -134,7 +134,7 @@ export function MerchantLotDetailHeader({
             className="inline-flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl bg-[#ffdbca]/40 text-[#d95f00] hover:bg-[#ffdbca]/70 disabled:opacity-40 disabled:cursor-not-allowed transition-colors font-semibold text-xs lg:text-sm cursor-pointer border border-[#d95f00]/30 shadow-2xs"
           >
             <Sliders className="w-4 h-4 text-[#d95f00]" />
-            <span>Cấu Hình Slot (SCR-032)</span>
+            <span>Cấu Hình Sức Chứa Slot</span>
           </button>
 
           <button
@@ -149,7 +149,7 @@ export function MerchantLotDetailHeader({
             className="inline-flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl bg-[#ffdbca]/40 text-[#d95f00] hover:bg-[#ffdbca]/70 disabled:opacity-40 disabled:cursor-not-allowed transition-colors font-semibold text-xs lg:text-sm cursor-pointer border border-[#d95f00]/30 shadow-2xs"
           >
             <DollarSign className="w-4 h-4 text-[#d95f00]" />
-            <span>Cấu Hình Bảng Giá (SCR-033)</span>
+            <span>Biểu Phí Niêm Yết</span>
           </button>
 
           <button
@@ -158,7 +158,7 @@ export function MerchantLotDetailHeader({
             className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#d95f00] text-white hover:bg-[#b84e00] transition-all font-bold text-xs lg:text-sm shadow-sm cursor-pointer"
           >
             <QrCode className="w-4 h-4 text-white" />
-            <span className="tracking-wide">MỞ QUÉT QR BARIE (SCR-036)</span>
+            <span className="tracking-wide">TRẠM QUÉT QR BARIE</span>
           </button>
         </div>
       </div>

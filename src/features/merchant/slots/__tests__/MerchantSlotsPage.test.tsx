@@ -72,9 +72,9 @@ describe('SCR-032: MerchantSlotsPage (Cấu hình sức chứa bãi đỗ theo l
     expect(screen.getByText(/Bãi Đỗ Xe & Trạm Container Tân Cảng/i)).toBeInTheDocument()
 
     // 3 Quick navigations
-    expect(screen.getByText(/Về Chi Tiết Bãi \(SCR-030\)/i)).toBeInTheDocument()
-    expect(screen.getByText(/Mở Quét Barie \(SCR-036\)/i)).toBeInTheDocument()
-    expect(screen.getByText(/Bảng Giá \(SCR-033\)/i)).toBeInTheDocument()
+    expect(screen.getByText(/Về Chi Tiết Bãi/i)).toBeInTheDocument()
+    expect(screen.getByText(/Trạm Quét QR Barie/i)).toBeInTheDocument()
+    expect(screen.getByText(/Biểu Phí Niêm Yết/i)).toBeInTheDocument()
 
     // Invariant protection banner
     expect(
@@ -91,7 +91,7 @@ describe('SCR-032: MerchantSlotsPage (Cấu hình sức chứa bãi đỗ theo l
     expect(screen.getByText(/Xe Tải Nặng 3-4 Chân & Đầu Kéo Bobtail/i)).toBeInTheDocument()
     expect(screen.getByText(/Xe Tải Trung & Nhẹ/i)).toBeInTheDocument()
     expect(screen.getByText(/Xe Khách & Xe Đưa Đón Chuyên Dụng/i)).toBeInTheDocument()
-    expect(screen.getByText(/Xe Ô Tô Con & Xe Hỗ Trợ Kỹ Thuật/i)).toBeInTheDocument()
+    expect(screen.getByText(/Xe Ô Tô Con & Xe Hỗ TrỢ Kỹ Thuật/i)).toBeInTheDocument()
 
     // Surface Weight Calculator
     expect(screen.getByText(/TCVN 4054:2005/i)).toBeInTheDocument()
@@ -203,6 +203,87 @@ describe('SCR-032: MerchantSlotsPage (Cấu hình sức chứa bãi đỗ theo l
     expect(saveBtn).not.toBeDisabled()
     await user.click(saveBtn)
 
+    await waitFor(() => {
+      expect(
+        screen.getByText(/Lưu cấu hình sức chứa thành công!/i),
+      ).toBeInTheDocument()
+    })
+  })
+
+  it('FN-032-07: Mở ConfirmDecreaseModal khi giảm sức chứa, đóng modal bằng phím Escape và khóa cuộn trang nền (TSK-P2-02 A11y)', async () => {
+    const user = userEvent.setup()
+    renderPage(1)
+
+    await waitFor(() => {
+      expect(screen.getByText(/Cấu Hình Sức Chứa Bãi Đỗ/i)).toBeInTheDocument()
+    })
+
+    // Container: đang có 30, occupied 28. Bấm giảm 1 slot xuống 29 (hợp lệ >= 28)
+    const decreaseContainerBtn = screen.getByRole('button', {
+      name: /Giảm sức chứa Container 40FT/i,
+    })
+    await user.click(decreaseContainerBtn)
+
+    // Bấm nút Lưu cấu hình hàng loạt -> kích hoạt Modal xác nhận vì có giảm sức chứa
+    const saveBtn = screen.getByRole('button', {
+      name: /LƯU CẤU HÌNH SỨC CHỨA HÀNG LOẠT/i,
+    })
+    await user.click(saveBtn)
+
+    // Modal hiển thị chuẩn A11y
+    const modal = await screen.findByRole('dialog')
+    expect(modal).toHaveAttribute('aria-modal', 'true')
+    expect(screen.getByText('Xác nhận giảm sức chứa?')).toBeInTheDocument()
+    expect(document.body.style.overflow).toBe('hidden')
+
+    // Nhấn phím Escape để đóng modal
+    fireEvent.keyDown(window, { key: 'Escape' })
+
+    await waitFor(() => {
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+    })
+    expect(document.body.style.overflow).toBe('')
+  })
+
+  it('FN-032-08: Ngăn chặn gửi 2 request trùng lặp (double-click) khi đang lưu cấu hình hàng loạt (TSK-P2-01)', async () => {
+    let resolveMutation!: (value: typeof api.fallbackSlotMatrix) => void
+    const pendingPromise = new Promise<typeof api.fallbackSlotMatrix>((resolve) => {
+      resolveMutation = resolve
+    })
+    vi.spyOn(api, 'updateMerchantLotSlotsBulk').mockReturnValue(pendingPromise)
+
+    const user = userEvent.setup()
+    renderPage(1)
+
+    await waitFor(() => {
+      expect(screen.getByText(/Cấu Hình Sức Chứa Bãi Đỗ/i)).toBeInTheDocument()
+    })
+
+    // Tăng sức chứa 1 loại xe
+    const increaseBtn = screen.getByRole('button', {
+      name: /Tăng sức chứa Container 40FT/i,
+    })
+    await user.click(increaseBtn)
+
+    const saveBtn = screen.getByRole('button', {
+      name: /LƯU CẤU HÌNH SỨC CHỨA HÀNG LOẠT/i,
+    })
+    expect(saveBtn).not.toBeDisabled()
+
+    // Click lần 1
+    await user.click(saveBtn)
+
+    // Khi mutation đang in-flight: nút phải bị disabled kèm aria-busy và không thể click tiếp
+    expect(saveBtn).toBeDisabled()
+    expect(saveBtn).toHaveAttribute('aria-busy', 'true')
+    expect(api.updateMerchantLotSlotsBulk).toHaveBeenCalledTimes(1)
+
+    // Click lần 2 khi đang pending
+    await user.click(saveBtn)
+    expect(api.updateMerchantLotSlotsBulk).toHaveBeenCalledTimes(1)
+
+    // Resolve mutation
+    resolveMutation(api.fallbackSlotMatrix)
     await waitFor(() => {
       expect(
         screen.getByText(/Lưu cấu hình sức chứa thành công!/i),

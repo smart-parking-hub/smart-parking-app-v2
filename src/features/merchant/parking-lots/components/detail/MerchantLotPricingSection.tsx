@@ -47,7 +47,7 @@ export function MerchantLotPricingSection({
           onClick={() => navigate(`/merchant/parking-lots/${lotId}/pricing`)}
           className="inline-flex items-center gap-1 font-mono text-xs text-[#d95f00] hover:underline font-bold disabled:opacity-40 disabled:hover:no-underline cursor-pointer"
         >
-          <span>Điều chỉnh bảng giá (SCR-033)</span>
+          <span>Điều chỉnh bảng giá</span>
           <ArrowRight className="w-3.5 h-3.5" />
         </button>
       </div>

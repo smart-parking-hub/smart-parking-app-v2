@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useForm, useFieldArray } from 'react-hook-form'
 import { Link, useParams } from 'react-router-dom'
-import { MapPin, Warehouse } from 'lucide-react'
+import { MapPin, Warehouse, Loader2 } from 'lucide-react'
 import {
   type Lot,
   type Pricing,
@@ -23,6 +23,7 @@ import {
   secondary,
   money,
 } from '@/shared/components/Workspace'
+
 export function MerchantLotPage({
   mode = 'detail',
 }: {
@@ -177,20 +178,24 @@ export function LotOverview({ lot, showMap = false }: { lot: Lot; showMap?: bool
       </Panel>}
       <Panel title="Biểu phí hiện hành">
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm">
+          <table className="w-full text-sm">
             <thead>
-              <tr>
-                {[
-                  'Loại xe',
-                  'Giá giờ',
-                  'Hệ số cao điểm',
-                  'Khung cao điểm',
-                  'Hệ số quá giờ',
-                ].map((v) => (
-                  <th scope="col" key={v} className="p-3 text-brand-muted">
-                    {v}
-                  </th>
-                ))}
+              <tr className="border-b border-brand-border">
+                <th scope="col" className="p-3 text-left text-brand-muted">
+                  Loại xe
+                </th>
+                <th scope="col" className="p-3 text-right text-brand-muted">
+                  Giá giờ
+                </th>
+                <th scope="col" className="p-3 text-right text-brand-muted">
+                  Hệ số cao điểm
+                </th>
+                <th scope="col" className="p-3 text-center text-brand-muted">
+                  Khung cao điểm
+                </th>
+                <th scope="col" className="p-3 text-right text-brand-muted">
+                  Hệ số quá giờ
+                </th>
               </tr>
             </thead>
             <tbody>
@@ -199,17 +204,21 @@ export function LotOverview({ lot, showMap = false }: { lot: Lot; showMap?: bool
                   (p) => p.vehicleType === type,
                 )
                 return (
-                  <tr className="border-t border-brand-border" key={type}>
-                    <td className="p-3">{vehicleLabels[type]}</td>
-                    <td>
+                  <tr className="border-t border-brand-border hover:bg-white/5 transition-colors" key={type}>
+                    <td className="p-3 font-medium text-left">{vehicleLabels[type]}</td>
+                    <td className="p-3 text-right font-mono tabular-nums font-semibold">
                       {price ? money(price.basePricePerHour) : 'Chưa cấu hình'}
                     </td>
-                    <td>{price?.surgeMultiplier ?? '—'}</td>
-                    <td>
+                    <td className="p-3 text-right font-mono tabular-nums">
+                      {price?.surgeMultiplier != null ? `${price.surgeMultiplier}x` : '—'}
+                    </td>
+                    <td className="p-3 text-center font-mono">
                       {price?.surgeStartTime || '—'} –{' '}
                       {price?.surgeEndTime || '—'}
                     </td>
-                    <td>{price?.overtimePenaltyMultiplier ?? '—'}</td>
+                    <td className="p-3 text-right font-mono tabular-nums">
+                      {price?.overtimePenaltyMultiplier != null ? `${price.overtimePenaltyMultiplier}x` : '—'}
+                    </td>
                   </tr>
                 )
               })}
@@ -220,6 +229,7 @@ export function LotOverview({ lot, showMap = false }: { lot: Lot; showMap?: bool
     </>
   )
 }
+
 function LotEdit({ lot }: { lot: Lot }) {
   const cache = useQueryClient()
   const form = useForm<{
@@ -243,14 +253,15 @@ function LotEdit({ lot }: { lot: Lot }) {
   return (
     <Panel title="Thông tin cơ sở">
       <form
-        onSubmit={form.handleSubmit((data) =>
+        onSubmit={form.handleSubmit((data) => {
+          if (mutation.isPending) return
           mutation.mutate({
             name: data.name,
             address: data.address,
             latitude: data.latitude,
             longitude: data.longitude,
-          }),
-        )}
+          })
+        })}
         className="grid gap-5 md:grid-cols-2"
       >
         {(['name', 'address', 'latitude', 'longitude'] as const).map((key) => (
@@ -294,6 +305,7 @@ function LotEdit({ lot }: { lot: Lot }) {
     </Panel>
   )
 }
+
 function SlotEditor({ lot }: { lot: Lot }) {
   const cache = useQueryClient()
   const form = useForm<{
@@ -330,30 +342,52 @@ function SlotEditor({ lot }: { lot: Lot }) {
     <Panel title="Phân bổ chỗ đỗ">
       <form
         className="space-y-5"
-        onSubmit={form.handleSubmit((data) => mutation.mutate(data))}
+        onSubmit={form.handleSubmit((data) => {
+          if (mutation.isPending) return
+          mutation.mutate(data)
+        })}
       >
-        {vehicleTypes.map((type, i) => (
-          <div
-            key={type}
-            className="grid items-center gap-4 border-b border-brand-border pb-5 sm:grid-cols-[1fr_180px]"
-          >
-            <span className="font-medium">{vehicleLabels[type]}</span>
-            <Field label="Tổng sức chứa">
-              <input
-                className={control}
-                type="number"
-                min="0"
-                step="1"
-                {...form.register(`slots.${i}.totalCapacity`, {
-                  required: true,
-                  min: 0,
-                  valueAsNumber: true,
-                  validate: Number.isInteger,
-                })}
-              />
-            </Field>
-          </div>
-        ))}
+        {vehicleTypes.map((type, i) => {
+          const currentSlot = lot.slots?.find((row) => row.vehicleType === type)
+          const occupied = currentSlot
+            ? Math.max(0, currentSlot.totalCapacity - currentSlot.availableCapacity)
+            : 0
+
+          return (
+            <div
+              key={type}
+              className="grid items-center gap-4 border-b border-brand-border pb-5 sm:grid-cols-[1fr_220px]"
+            >
+              <div>
+                <span className="font-medium">{vehicleLabels[type]}</span>
+                {occupied > 0 && (
+                  <p className="text-xs text-brand-muted mt-0.5">
+                    Đang đỗ thực tế: <strong className="text-brand-orange">{occupied}</strong> xe (Khóa tối thiểu: {occupied})
+                  </p>
+                )}
+              </div>
+              <Field
+                label={`Tổng sức chứa (${occupied > 0 ? `min: ${occupied}` : 'chỗ'})`}
+              >
+                <input
+                  className={`${control} text-right font-mono tabular-nums`}
+                  type="number"
+                  min={occupied}
+                  step="1"
+                  {...form.register(`slots.${i}.totalCapacity`, {
+                    required: true,
+                    min: {
+                      value: occupied,
+                      message: `Không thể nhỏ hơn ${occupied} xe đang đỗ thực tế!`,
+                    },
+                    valueAsNumber: true,
+                    validate: Number.isInteger,
+                  })}
+                />
+              </Field>
+            </div>
+          )
+        })}
         <SaveState
           pending={mutation.isPending}
           success={mutation.isSuccess}
@@ -364,6 +398,7 @@ function SlotEditor({ lot }: { lot: Lot }) {
     </Panel>
   )
 }
+
 function PricingEditor({ lot }: { lot: Lot }) {
   const cache = useQueryClient()
   const form = useForm<{ pricingRules: Pricing[] }>({
@@ -401,17 +436,20 @@ function PricingEditor({ lot }: { lot: Lot }) {
     <Panel title="Biểu phí cho 5 loại phương tiện">
       <form
         className="space-y-6"
-        onSubmit={form.handleSubmit((data) => mutation.mutate(data))}
+        onSubmit={form.handleSubmit((data) => {
+          if (mutation.isPending) return
+          mutation.mutate(data)
+        })}
       >
         {fields.map((field, i) => (
           <fieldset
             key={field.id}
-            className="rounded-xl border border-brand-border p-4"
+            className="rounded-xl border border-brand-border p-4 bg-white/2"
           >
             <legend className="px-2 font-sora font-semibold">
               {vehicleLabels[field.vehicleType]}
             </legend>
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+            <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
               {(
                 [
                   'basePricePerHour',
@@ -437,7 +475,7 @@ function PricingEditor({ lot }: { lot: Lot }) {
                   >
                     <input
                       type={time ? 'time' : 'number'}
-                      className={control}
+                      className={`${control} ${time ? 'text-center font-mono' : 'text-right font-mono tabular-nums'}`}
                       step={time ? undefined : '.01'}
                       {...form.register(
                         `pricingRules.${i}.${key}`,
@@ -468,6 +506,7 @@ function PricingEditor({ lot }: { lot: Lot }) {
     </Panel>
   )
 }
+
 function SaveState({
   pending,
   success,
@@ -484,8 +523,19 @@ function SaveState({
       {invalid && <Notice error>Vui lòng kiểm tra các giá trị đã nhập.</Notice>}
       {Boolean(error) && <Notice error>{errorMessage(error)}</Notice>}
       {success && <Notice>Đã lưu cấu hình thành công.</Notice>}
-      <button className={button} disabled={pending}>
-        {pending ? 'Đang lưu…' : 'Lưu thay đổi'}
+      <button
+        className={`${button} flex items-center justify-center gap-2 disabled:cursor-not-allowed disabled:pointer-events-none`}
+        disabled={pending}
+        aria-busy={pending}
+      >
+        {pending ? (
+          <>
+            <Loader2 className="w-4 h-4 animate-spin shrink-0" />
+            <span>Đang lưu…</span>
+          </>
+        ) : (
+          'Lưu thay đổi'
+        )}
       </button>
     </div>
   )

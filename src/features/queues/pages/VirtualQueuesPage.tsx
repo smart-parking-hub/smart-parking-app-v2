@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
 import { Plus, Radio, Sparkles } from 'lucide-react'
+import { EmptyState } from '@/shared/components/EmptyState'
 import type { QueueTab, ActiveQueueItem } from '../types/queueTypes'
 import {
   fetchMyActiveQueue,
@@ -169,34 +170,31 @@ export function VirtualQueuesPage() {
               onToggleStatusDemo={handleToggleDemoStatus}
             />
           ) : (
-            <div className="bg-white rounded-2xl border border-slate-200 p-8 md:p-12 text-center shadow-xs">
-              <div className="w-16 h-16 rounded-2xl bg-orange-50 text-orange-600 border border-orange-200 flex items-center justify-center mx-auto mb-4">
-                <Radio className="w-8 h-8" />
-              </div>
-              <h3 className="text-xl font-bold font-sora text-slate-900 mb-2">
-                Bạn chưa có lượt xếp hàng nào đang hoạt động
-              </h3>
-              <p className="text-sm text-slate-600 max-w-md mx-auto mb-6">
-                Khi các bãi xe trọng điểm kín chỗ, bạn có thể tham gia hàng đợi ảo để tự động giữ lốt mà không cần đậu xe nối đuôi lấn chiếm lề đường.
-              </p>
-              <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
-                <Link
-                  to="/parking"
-                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-orange-600 hover:bg-orange-700 text-white font-semibold text-sm transition-colors shadow-sm"
-                >
-                  <Plus className="w-4 h-4" />
-                  <span>Tìm bãi & Đăng ký hàng đợi</span>
-                </Link>
-                <button
-                  type="button"
-                  onClick={handleRestoreDefaultQueue}
-                  className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-sm transition-colors"
-                >
-                  <Sparkles className="w-4 h-4 text-orange-500" />
-                  <span>Kích hoạt mẫu giả lập để trải nghiệm</span>
-                </button>
-              </div>
-            </div>
+            <EmptyState
+              icon={Radio}
+              title="Bạn chưa có lượt xếp hàng nào đang hoạt động"
+              description="Khi các bãi xe trọng điểm kín chỗ, bạn có thể tham gia hàng đợi ảo để tự động giữ lốt mà không cần đậu xe nối đuôi lấn chiếm lề đường."
+              variant="card"
+              action={
+                <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+                  <Link
+                    to="/parking"
+                    className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-orange-600 hover:bg-orange-700 text-white font-semibold text-sm transition-colors shadow-sm"
+                  >
+                    <Plus className="w-4 h-4" />
+                    <span>Tìm bãi xe khác</span>
+                  </Link>
+                  <button
+                    type="button"
+                    onClick={handleRestoreDefaultQueue}
+                    className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-sm transition-colors"
+                  >
+                    <Sparkles className="w-4 h-4 text-orange-500" />
+                    <span>Kích hoạt mẫu giả lập để trải nghiệm</span>
+                  </button>
+                </div>
+              }
+            />
           )}
         </section>
       ) : (

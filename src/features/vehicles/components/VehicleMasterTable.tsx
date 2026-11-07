@@ -44,9 +44,9 @@ export function VehicleMasterTable({
 
       {/* Master Table Card - Perfectly fits full width with ZERO horizontal scroll */}
       <div className="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden w-full">
-        <div className="w-full overflow-hidden">
-          <table className="w-full text-left border-collapse table-fixed">
-            <thead>
+        <div className="w-full overflow-x-auto sm:overflow-hidden p-2 sm:p-0">
+          <table className="w-full text-left border-collapse sm:table-fixed">
+            <thead className="hidden sm:table-header-group">
               <tr className="bg-slate-50/90 text-slate-600 font-mono text-[11px] uppercase tracking-wider border-b border-slate-200">
                 <th className="py-3 px-3.5 font-semibold w-[27%]">
                   Phương Tiện / Biển Số
@@ -68,10 +68,10 @@ export function VehicleMasterTable({
                 </th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100">
+            <tbody className="divide-y divide-slate-100 block sm:table-row-group">
               {vehicles.length === 0 ? (
-                <tr>
-                  <td colSpan={6} className="py-16 text-center text-slate-500">
+                <tr className="block sm:table-row">
+                  <td colSpan={6} className="block sm:table-cell py-16 text-center text-slate-500">
                     <p className="font-semibold text-base text-slate-700">Không tìm thấy phương tiện nào</p>
                     <p className="text-sm text-slate-400 mt-1.5">
                       Thử điều chỉnh từ khóa tìm kiếm hoặc đăng ký phương tiện mới vào danh mục.
@@ -91,15 +91,15 @@ export function VehicleMasterTable({
                 vehicles.map((v) => (
                   <tr
                     key={v.id}
-                    className="hover:bg-slate-50/90 transition-colors group cursor-pointer"
+                    className="flex flex-col sm:table-row p-4 sm:p-0 border sm:border-0 border-slate-200/90 rounded-2xl sm:rounded-none mb-3 sm:mb-0 hover:bg-slate-50/90 transition-colors group cursor-pointer bg-white sm:bg-transparent shadow-xs sm:shadow-none"
                     onClick={() => onViewDossier(v)}
                     title="Bấm để xem hồ sơ kỹ thuật chi tiết"
                   >
                     {/* 1. Plate & Brand */}
-                    <td className="py-3.5 px-3.5 align-middle">
+                    <td className="block sm:table-cell py-2 sm:py-3.5 px-0 sm:px-3.5 align-middle border-b sm:border-0 border-slate-100 pb-2 sm:pb-3.5">
                       <div className="flex flex-col gap-0.5">
                         <div className="flex items-center gap-1.5 flex-wrap">
-                          <span className="font-mono text-base font-bold text-slate-900 tracking-tight">
+                          <span className="font-mono text-lg sm:text-base font-bold text-slate-900 tracking-tight">
                             {v.licensePlate}
                           </span>
                           {v.isDefault ? (
@@ -123,7 +123,10 @@ export function VehicleMasterTable({
                     </td>
 
                     {/* 2. Specs */}
-                    <td className="py-3.5 px-3 align-middle">
+                    <td className="block sm:table-cell py-1.5 sm:py-3.5 px-0 sm:px-3 align-middle">
+                      <span className="sm:hidden text-[10px] font-mono font-semibold text-slate-400 block uppercase">
+                        Quy cách:
+                      </span>
                       <div className="flex flex-col gap-0.5">
                         <span className="font-bold text-slate-900 text-xs md:text-sm truncate">
                           {v.specDetails}
@@ -137,7 +140,10 @@ export function VehicleMasterTable({
                     </td>
 
                     {/* 3. Axle Tonnage */}
-                    <td className="py-3.5 px-3 align-middle font-mono">
+                    <td className="block sm:table-cell py-1.5 sm:py-3.5 px-0 sm:px-3 align-middle font-mono">
+                      <span className="sm:hidden text-[10px] font-mono font-semibold text-slate-400 block uppercase">
+                        Tải trọng:
+                      </span>
                       <div className="flex flex-col gap-0.5">
                         <span className="font-bold text-orange-600 text-xs md:text-sm">
                           {v.towingWeightTon} Tấn
@@ -149,7 +155,10 @@ export function VehicleMasterTable({
                     </td>
 
                     {/* 4. Inspection Expiry */}
-                    <td className="py-3.5 px-3 align-middle font-mono">
+                    <td className="block sm:table-cell py-1.5 sm:py-3.5 px-0 sm:px-3 align-middle font-mono">
+                      <span className="sm:hidden text-[10px] font-mono font-semibold text-slate-400 block uppercase">
+                        Hạn kiểm định:
+                      </span>
                       <div className="flex flex-col gap-0.5">
                         <span className="bg-slate-900 text-white text-[11px] font-semibold px-2 py-0.5 rounded w-max">
                           {v.inspectionExpiryDate}
@@ -161,7 +170,10 @@ export function VehicleMasterTable({
                     </td>
 
                     {/* 5. Barie ALPR Gateway */}
-                    <td className="py-3.5 px-2 align-middle text-center">
+                    <td className="block sm:table-cell py-1.5 sm:py-3.5 px-0 sm:px-2 align-middle text-left sm:text-center">
+                      <span className="sm:hidden text-[10px] font-mono font-semibold text-slate-400 block uppercase mb-1">
+                        Cổng ALPR:
+                      </span>
                       <div
                         className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200/80 px-2 py-0.5 rounded-full"
                         title="Barie ALPR nhận diện tự động"
@@ -173,15 +185,15 @@ export function VehicleMasterTable({
 
                     {/* 6. Action buttons */}
                     <td
-                      className="py-3.5 px-3.5 align-middle text-right"
+                      className="block sm:table-cell py-2.5 sm:py-3.5 px-0 sm:px-3.5 align-middle text-left sm:text-right border-t sm:border-0 border-slate-100 pt-3 sm:pt-3.5 mt-2 sm:mt-0"
                       onClick={(e) => e.stopPropagation()}
                     >
-                      <div className="flex items-center justify-end gap-1">
+                      <div className="flex items-center justify-between sm:justify-end gap-1.5 sm:gap-1 flex-wrap">
                         {!v.isDefault && (
                           <button
                             type="button"
                             onClick={() => onSetDefault(v.id)}
-                            className="px-1.5 py-1 rounded bg-slate-100 hover:bg-slate-200 text-slate-800 text-[10px] font-bold whitespace-nowrap transition-colors cursor-pointer"
+                            className="px-2.5 py-1.5 sm:px-1.5 sm:py-1 rounded bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs sm:text-[10px] font-bold whitespace-nowrap transition-colors cursor-pointer min-h-[44px] sm:min-h-0 flex items-center justify-center"
                             title="Đặt làm phương tiện mặc định"
                           >
                             Chọn mặc định
@@ -190,7 +202,7 @@ export function VehicleMasterTable({
                         <button
                           type="button"
                           onClick={() => onViewDossier(v)}
-                          className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-600 hover:text-slate-900 transition-colors cursor-pointer"
+                          className="p-2.5 sm:p-1.5 rounded-lg hover:bg-slate-100 text-slate-600 hover:text-slate-900 transition-colors cursor-pointer min-h-[44px] min-w-[44px] sm:min-h-0 sm:min-w-0 flex items-center justify-center"
                           title="Xem hồ sơ kiểm định"
                         >
                           <Eye className="w-4 h-4" />
@@ -198,7 +210,7 @@ export function VehicleMasterTable({
                         <button
                           type="button"
                           onClick={() => onEdit(v)}
-                          className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-600 hover:text-slate-900 transition-colors cursor-pointer"
+                          className="p-2.5 sm:p-1.5 rounded-lg hover:bg-slate-100 text-slate-600 hover:text-slate-900 transition-colors cursor-pointer min-h-[44px] min-w-[44px] sm:min-h-0 sm:min-w-0 flex items-center justify-center"
                           title="Chỉnh sửa xe"
                         >
                           <Edit className="w-4 h-4" />
@@ -207,7 +219,7 @@ export function VehicleMasterTable({
                           type="button"
                           disabled={v.isDefault}
                           onClick={() => onDelete(v)}
-                          className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
+                          className={`p-2.5 sm:p-1.5 rounded-lg transition-colors cursor-pointer min-h-[44px] min-w-[44px] sm:min-h-0 sm:min-w-0 flex items-center justify-center ${
                             v.isDefault
                               ? 'opacity-20 cursor-not-allowed text-slate-300'
                               : 'hover:bg-rose-50 text-slate-600 hover:text-rose-600'

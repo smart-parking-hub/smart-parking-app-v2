@@ -101,7 +101,7 @@ describe('SCR-029: CreateMerchantParkingLotPage (Tạo bãi đỗ mới)', () =>
     const user = userEvent.setup()
     renderCreateMerchantParkingLot()
 
-    // Click Next button to go to Step 1
+    // Move to Step 1
     const nextBtn = screen.getByRole('button', { name: /TIẾP TỤC: VỊ TRÍ & BẢN ĐỒ/i })
     await user.click(nextBtn)
 
@@ -123,20 +123,24 @@ describe('SCR-029: CreateMerchantParkingLotPage (Tạo bãi đỗ mới)', () =>
     const user = userEvent.setup()
     renderCreateMerchantParkingLot()
 
-    // Step 0 -> Step 1
+    // Move to Step 1
     await user.click(screen.getByRole('button', { name: /TIẾP TỤC: VỊ TRÍ & BẢN ĐỒ/i }))
 
+    // Move to Step 2
     await waitFor(() => {
       expect(screen.getByText(/BƯỚC 2 TRÊN 3/i)).toBeInTheDocument()
     })
-
-    // Step 1 -> Step 2
     await user.click(screen.getByRole('button', { name: /TIẾP TỤC: XÁC NHẬN HỒ SƠ & GỬI DUYỆT/i }))
 
     await waitFor(() => {
       expect(screen.getByText(/BƯỚC 3 TRÊN 3/i)).toBeInTheDocument()
-      expect(screen.getByText(/Xác Nhận Toàn Bộ Hồ Sơ Bãi Đỗ/i)).toBeInTheDocument()
     })
+
+    // Confirm Step elements
+    expect(screen.getByText(/Xác Nhận Toàn Bộ Hồ Sơ Bãi Đỗ/i)).toBeInTheDocument()
+    expect(screen.getByText(/Tên Bãi Đỗ Khai Báo/i)).toBeInTheDocument()
+    expect(screen.getByText(/Địa Chỉ Mặt Bằng/i)).toBeInTheDocument()
+    expect(screen.getByText(/Tọa Độ Vị Trí \(WGS-84\)/i)).toBeInTheDocument()
 
     // Confirmation details
     expect(screen.getByText(/PENDING_APPROVAL \(CHỜ PHÊ DUYỆT\)/i)).toBeInTheDocument()
@@ -201,6 +205,46 @@ describe('SCR-029: CreateMerchantParkingLotPage (Tạo bãi đỗ mới)', () =>
           longitude: expect.any(Number),
         }),
       )
+    })
+  })
+
+  it('prevents duplicate submissions by disabling submit button while submitting (TSK-P2-01)', async () => {
+    const user = userEvent.setup()
+    let resolvePost: (value: unknown) => void = () => {}
+    vi.mocked(apiClient.post).mockImplementationOnce(
+      () =>
+        new Promise((resolve) => {
+          resolvePost = resolve
+        }),
+    )
+
+    renderCreateMerchantParkingLot()
+
+    // Move to Step 1
+    await user.click(screen.getByRole('button', { name: /TIẾP TỤC: VỊ TRÍ & BẢN ĐỒ/i }))
+
+    // Move to Step 2
+    await waitFor(() => {
+      expect(screen.getByText(/BƯỚC 2 TRÊN 3/i)).toBeInTheDocument()
+    })
+    await user.click(screen.getByRole('button', { name: /TIẾP TỤC: XÁC NHẬN HỒ SƠ & GỬI DUYỆT/i }))
+
+    // Confirm Submission
+    const submitBtn = await screen.findByRole('button', { name: /XÁC NHẬN TẠO BÃI ĐỖ MỚI/i })
+    await user.click(submitBtn)
+
+    // Button transitions to spinner & disabled
+    expect(screen.getByRole('button', { name: /ĐANG KHỞI TẠO HỒ SƠ.../i })).toBeDisabled()
+
+    // Resolve API
+    resolvePost({
+      data: {
+        data: {
+          id: 101,
+          name: 'Depot Container Tân Cảng - Phú Hữu (Cơ Sở 2)',
+          status: 'PENDING_APPROVAL',
+        },
+      },
     })
   })
 })

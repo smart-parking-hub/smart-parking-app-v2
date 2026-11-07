@@ -25,23 +25,23 @@ const DRAFT_STORAGE_KEY = 'merchant_lot_registration_draft'
 // Zod Validation Schema matching Backend CreateParkingLotRequest
 const createLotFormSchema = z.object({
   name: z
-    .string()
-    .trim()
-    .min(1, 'Tên bãi đỗ không được để trống')
-    .max(150, 'Tên bãi đỗ không được vượt quá 150 ký tự'),
+  .string()
+  .trim()
+  .min(1, 'Tên bãi đỗ không được để trống')
+  .max(150, 'Tên bãi đỗ không được vượt quá 150 ký tự'),
   address: z
-    .string()
-    .trim()
-    .min(1, 'Địa chỉ bãi đỗ không được để trống')
-    .max(255, 'Địa chỉ không được vượt quá 255 ký tự'),
+  .string()
+  .trim()
+  .min(1, 'Địa chỉ bãi đỗ không được để trống')
+  .max(255, 'Địa chỉ không được vượt quá 255 ký tự'),
   latitude: z
-    .number({ invalid_type_error: 'Vui lòng nhập vĩ độ hợp lệ' })
-    .min(-90, 'Vĩ độ phải từ -90 đến 90')
-    .max(90, 'Vĩ độ phải từ -90 đến 90'),
+  .number({ invalid_type_error: 'Vui lòng nhập vĩ độ hợp lệ' })
+  .min(-90, 'Vĩ độ phải từ -90 đến 90')
+  .max(90, 'Vĩ độ phải từ -90 đến 90'),
   longitude: z
-    .number({ invalid_type_error: 'Vui lòng nhập kinh độ hợp lệ' })
-    .min(-180, 'Kinh độ phải từ -180 đến 180')
-    .max(180, 'Kinh độ phải từ -180 đến 180'),
+  .number({ invalid_type_error: 'Vui lòng nhập kinh độ hợp lệ' })
+  .min(-180, 'Kinh độ phải từ -180 đến 180')
+  .max(180, 'Kinh độ phải từ -180 đến 180'),
 })
 
 type CreateLotFormData = z.infer<typeof createLotFormSchema>
@@ -144,6 +144,7 @@ export function CreateMerchantParkingLotPage() {
 
   // Two-Phase Final Submission Handler
   const onSubmitFinal = async (data: CreateLotFormData) => {
+    if (submitting) return
     setSubmitting(true)
     setUploadError(undefined)
 
@@ -192,7 +193,7 @@ export function CreateMerchantParkingLotPage() {
 
   // Retry Upload Handler in case of Phase 2 failure
   const handleRetryUpload = async () => {
-    if (!createdParkingLotId) return
+    if (!createdParkingLotId || submitting) return
     setSubmitting(true)
     setUploadError(undefined)
 
@@ -234,6 +235,12 @@ export function CreateMerchantParkingLotPage() {
         {/* Top Header Segment: Eyebrow + H1 + Stepper Progress */}
         <header className="flex flex-col gap-6">
           <div className="flex flex-col gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md bg-[#341100] text-[#d95f00] font-mono text-[11px] font-bold tracking-wider uppercase border border-[#d95f00]/30">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#d95f00]" />
+                QUY TRÌNH THẨM ĐỊNH MẶT BẰNG &amp; MỞ BẾN BÃI MỚI · MOD-04
+              </span>
+            </div>
 
             <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-4 mt-1">
               <div>

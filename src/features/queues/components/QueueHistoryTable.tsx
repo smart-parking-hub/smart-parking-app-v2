@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import { Search, ExternalLink, Calendar, Truck, Clock } from 'lucide-react'
+import { EmptyState } from '@/shared/components/EmptyState'
 import type { QueueHistoryItem, QueueStatus } from '../types/queueTypes'
 
 interface QueueHistoryTableProps {
@@ -147,13 +148,20 @@ export function QueueHistoryTable({ items }: QueueHistoryTableProps) {
           <tbody className="divide-y divide-slate-100">
             {filteredItems.length === 0 ? (
               <tr>
-                <td colSpan={7} className="py-12 text-center text-slate-500">
-                  <div className="max-w-xs mx-auto space-y-2">
-                    <p className="font-semibold text-slate-700">Không tìm thấy lượt xếp hàng nào</p>
-                    <p className="text-xs text-slate-400">
-                      Thử điều chỉnh bộ lọc tìm kiếm hoặc quay lại sau.
-                    </p>
-                  </div>
+                <td colSpan={7} className="py-8 px-4 text-center">
+                  <EmptyState
+                    variant="dashed"
+                    title="Không tìm thấy lượt xếp hàng nào"
+                    description="Thử điều chỉnh bộ lọc tìm kiếm hoặc quay lại sau."
+                    action={
+                      <Link
+                        to="/search"
+                        className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-orange-600 hover:bg-orange-700 text-white text-xs font-semibold transition-colors"
+                      >
+                        Tìm bãi xe khác
+                      </Link>
+                    }
+                  />
                 </td>
               </tr>
             ) : (

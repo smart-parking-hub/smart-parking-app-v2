@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { Loader2 } from 'lucide-react'
 import {
   getData,
   sendData,
@@ -13,7 +14,6 @@ import {
   Badge,
   DataTable,
   date,
-  button,
   secondary,
 } from '@/shared/components/Workspace'
 interface Notification {
@@ -48,11 +48,22 @@ export function PortalNotificationsPage() {
       description="Các cập nhật liên quan đến tài khoản và hoạt động vận hành."
       actions={
         <button
-          className={button}
+          className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#d95f00] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[#b84e00] active:bg-[#9e4300] transition-colors shadow-xs disabled:opacity-50 cursor-pointer"
           disabled={read.isPending}
-          onClick={() => read.mutate(undefined)}
+          aria-busy={read.isPending}
+          onClick={() => {
+            if (read.isPending) return
+            read.mutate(undefined)
+          }}
         >
-          Đánh dấu tất cả đã đọc
+          {read.isPending && read.variables === undefined ? (
+            <>
+              <Loader2 className="h-4 w-4 animate-spin shrink-0" />
+              <span>Đang xử lý…</span>
+            </>
+          ) : (
+            'Đánh dấu tất cả đã đọc'
+          )}
         </button>
       }
     >
@@ -68,9 +79,18 @@ export function PortalNotificationsPage() {
               {
                 label: 'Thông báo',
                 render: (r) => (
-                  <div>
-                    <p className="font-semibold">{r.title}</p>
-                    <p className="mt-2 max-w-xl whitespace-pre-wrap text-brand-muted">
+                  <div className="relative pl-3">
+                    {!r.readAt && (
+                      <span
+                        className="absolute left-0 top-1.5 h-2 w-2 rounded-full bg-blue-600 ring-2 ring-blue-100"
+                        title="Chưa đọc"
+                        aria-label="Chưa đọc"
+                      />
+                    )}
+                    <p className={`font-semibold ${!r.readAt ? 'text-slate-900' : 'text-slate-700'}`}>
+                      {r.title}
+                    </p>
+                    <p className="mt-1.5 max-w-xl whitespace-pre-wrap text-brand-muted text-xs leading-relaxed">
                       {r.content}
                     </p>
                   </div>
@@ -85,10 +105,17 @@ export function PortalNotificationsPage() {
                   ) : (
                     <button
                       disabled={read.isPending}
-                      className={secondary}
-                      onClick={() => read.mutate(r.id)}
+                      aria-busy={read.isPending}
+                      className={`${secondary} inline-flex items-center gap-1.5`}
+                      onClick={() => {
+                        if (read.isPending) return
+                        read.mutate(r.id)
+                      }}
                     >
-                      Đánh dấu đã đọc
+                      {read.isPending && read.variables === r.id && (
+                        <Loader2 className="h-3.5 w-3.5 animate-spin shrink-0" />
+                      )}
+                      <span>Đánh dấu đã đọc</span>
                     </button>
                   ),
               },

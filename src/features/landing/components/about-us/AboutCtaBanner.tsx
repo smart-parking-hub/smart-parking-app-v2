@@ -5,7 +5,7 @@ export function AboutCtaBanner() {
     <section className="w-full bg-[#060D1A] text-white py-20 px-6 lg:px-12 flex justify-center border-t border-slate-800">
       <div className="max-w-[1240px] w-full flex flex-col lg:flex-row items-start lg:items-center justify-between gap-10">
         <div className="flex flex-col max-w-2xl">
-          <span className="font-mono text-xs text-[#F97316] uppercase tracking-widest block mb-3 font-semibold">
+          <span className="font-mono text-xs text-[#d95f00] uppercase tracking-widest block mb-3 font-semibold">
             HỢP TÁC CHIẾN LƯỢC
           </span>
           <h2 className="font-sora font-bold text-2xl sm:text-3xl text-white tracking-tight mb-4 leading-tight">
@@ -17,7 +17,7 @@ export function AboutCtaBanner() {
         </div>
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 shrink-0 w-full lg:w-auto">
           <a
-            className="inline-flex items-center justify-center h-[52px] px-8 bg-[#F97316] hover:bg-[#EA580C] text-white font-semibold text-sm sm:text-base rounded transition-colors gap-2 shadow-sm text-center"
+            className="inline-flex items-center justify-center h-[52px] px-8 bg-[#d95f00] hover:bg-[#b84e00] text-white font-semibold text-sm sm:text-base rounded transition-colors gap-2 shadow-sm text-center"
             href="/company/contact"
           >
             LIÊN HỆ ĐỐI TÁC CHIẾN LƯỢC

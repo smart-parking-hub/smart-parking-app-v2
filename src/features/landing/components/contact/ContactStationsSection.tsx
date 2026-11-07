@@ -44,7 +44,7 @@ export function ContactStationsSection() {
         {/* Section Header */}
         <div className="flex flex-col md:flex-row md:items-end justify-between mb-10 gap-4">
           <div>
-            <span className="font-mono text-xs text-[#F97316] uppercase tracking-wider font-semibold">
+            <span className="font-mono text-xs text-[#d95f00] uppercase tracking-wider font-semibold">
               TỌA ĐỘ VẬN HÀNH THỰC ĐỊA
             </span>
             <h2 className="font-sora font-bold text-2xl lg:text-3xl text-[#0F172A] mt-1">
@@ -70,8 +70,8 @@ export function ContactStationsSection() {
               {/* Overlay Dispatch Status */}
               <div className="absolute top-4 left-4 bg-[#060D1A]/90 backdrop-blur-md p-3.5 rounded-lg text-white shadow-md border border-slate-700">
                 <div className="flex items-center gap-2 mb-1">
-                  <span className="w-2.5 h-2.5 rounded-full bg-[#F97316] animate-ping"></span>
-                  <span className="font-mono text-xs uppercase font-bold text-[#F97316]">
+                  <span className="w-2.5 h-2.5 rounded-full bg-[#d95f00] animate-ping"></span>
+                  <span className="font-mono text-xs uppercase font-bold text-[#d95f00]">
                     HỆ THỐNG GIÁM SÁT REALTIME
                   </span>
                 </div>
@@ -83,7 +83,7 @@ export function ContactStationsSection() {
               {/* Map Pointer Overlay Badges */}
               <div className="absolute bottom-4 right-4 bg-white/95 backdrop-blur-md px-3.5 py-2 rounded-lg text-slate-800 shadow-md flex items-center gap-3 border border-slate-200">
                 <span className="flex items-center gap-1.5 font-mono text-xs font-semibold">
-                  <span className="w-2.5 h-2.5 rounded bg-[#F97316]"></span> Cảng Cát Lái (98% Slot)
+                  <span className="w-2.5 h-2.5 rounded bg-[#d95f00]"></span> Cảng Cát Lái (98% Slot)
                 </span>
                 <span className="flex items-center gap-1.5 font-mono text-xs font-semibold text-slate-600">
                   <span className="w-2.5 h-2.5 rounded bg-slate-400"></span> Đình Vũ (82% Slot)
@@ -94,7 +94,7 @@ export function ContactStationsSection() {
             {/* Bottom Coordinates Bar */}
             <div className="p-4 bg-white flex flex-wrap items-center justify-between gap-2 text-slate-500 font-mono text-xs border-t border-slate-100">
               <span>GPS VĂN PHÒNG ĐIỀU HÀNH TRUNG TÂM: 10.7932° N, 106.7218° E</span>
-              <span className="text-[#F97316] font-semibold">TẦN SỐ VẬN HÀNH KÊNH KHẨN: CH-16 LOGISTICS</span>
+              <span className="text-[#d95f00] font-semibold">TẦN SỐ VẬN HÀNH KÊNH KHẨN: CH-16 LOGISTICS</span>
             </div>
           </div>
 
@@ -103,7 +103,7 @@ export function ContactStationsSection() {
             {stations.map((st) => (
               <div
                 key={st.num}
-                className="p-3.5 bg-white border border-slate-200 rounded-lg shadow-sm flex items-center justify-between hover:border-[#F97316] transition-colors"
+                className="p-3.5 bg-white border border-slate-200 rounded-lg shadow-sm flex items-center justify-between hover:border-[#d95f00] transition-colors"
               >
                 <div className="flex items-center gap-3">
                   <div className="w-9 h-9 rounded bg-[#0F172A] text-white flex items-center justify-center font-sora text-xs font-bold shrink-0">
@@ -118,7 +118,7 @@ export function ContactStationsSection() {
                     </div>
                   </div>
                 </div>
-                <span className="font-sora text-xs bg-orange-50 text-[#F97316] border border-orange-200 px-2.5 py-1 rounded font-bold shrink-0 ml-2">
+                <span className="font-sora text-xs bg-orange-50 text-[#d95f00] border border-orange-200 px-2.5 py-1 rounded font-bold shrink-0 ml-2">
                   {st.trucks}
                 </span>
               </div>

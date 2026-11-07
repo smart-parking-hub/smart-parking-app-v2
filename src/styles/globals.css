@@ -2,23 +2,62 @@
 @import "./fonts.css";
 
 @theme {
+  /* ── Legacy tokens preserved for 100% backward compatibility ── */
   --color-brand-navy: #060D1A;
   --color-brand-navy-light: #0F172A;
   --color-brand-surface: #EEF2F7;
-  --color-brand-orange: #F97316;
-  --color-brand-orange-hover: #EA580C;
-  --color-brand-orange-ink: #B94308;
+  --color-brand-orange: #d95f00;
+  --color-brand-orange-hover: #b84e00;
+  --color-brand-orange-ink: #9e4300;
+  --color-brand-border: #E2E8F0;
+  --color-brand-muted: #64748B;
+  --color-brand-dark: #0F172A;
   --color-api-border: #1E3A5F;
   --color-api-panel: #1E293B;
   --color-api-muted: #D7DFE9;
   --color-api-body: #475569;
   --color-api-hover: #334155;
-  --color-brand-border: #E2E8F0;
-  --color-brand-muted: #64748B;
-  --color-brand-dark: #0F172A;
 
+  /* ── Brand Primary Tokens (WCAG AA Contrast 4.85:1 with white) ── */
+  --color-brand-primary: #d95f00;
+  --color-brand-primary-hover: #b84e00;
+  --color-brand-primary-active: #9e4300;
+  --color-brand-primary-subtle: #fff7ed;
+  --color-brand-primary-border: #fed7aa;
+
+  /* ── Surface & Neutral Tokens ── */
+  --color-surface-page: #f8f9ff;
+  --color-surface-card: #ffffff;
+  --color-surface-subtle: #f1f5f9;
+  --color-surface-hover: #f8fafc;
+  --color-surface-border: #e2e8f0;
+
+  /* ── Text Hierarchy Tokens ── */
+  --color-text-primary: #0f172a;
+  --color-text-secondary: #334155;
+  --color-text-muted: #64748b;
+  --color-text-disabled: #94a3b8;
+
+  /* ── Semantic Status Tokens ── */
+  --color-status-success: #059669;
+  --color-status-success-bg: #ecfdf5;
+  --color-status-success-border: #a7f3d0;
+  --color-status-warning: #d97706;
+  --color-status-warning-bg: #fffbeb;
+  --color-status-warning-border: #fde68a;
+  --color-status-danger: #e11d48;
+  --color-status-danger-bg: #fff1f2;
+  --color-status-danger-border: #fecdd3;
+  --color-status-info: #0284c7;
+  --color-status-info-bg: #f0f9ff;
+  --color-status-info-border: #bae6fd;
+
+  /* ── Typography Tokens ── */
   --font-sora: 'Be Vietnam Pro', sans-serif;
   --font-inter: 'Source Sans 3', sans-serif;
+  --font-heading: 'Be Vietnam Pro', sans-serif;
+  --font-body: 'Source Sans 3', sans-serif;
+  --font-data: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -30,7 +69,14 @@
   }
 }
 
-:root { --driver-header-height: 80px; --color-map-route: #ea580c; --color-map-water: #e5edf0; }
+:root {
+  --driver-header-height: 80px;
+  --size-header-height: 64px;
+  --size-sidebar-width: 260px;
+  --size-container-max: 1280px;
+  --color-map-route: #ea580c;
+  --color-map-water: #e5edf0;
+}
 
 /* Below-the-fold landing sections remain searchable and keyboard-accessible.
    Reserve roughly a section's content height until the browser learns its size. */

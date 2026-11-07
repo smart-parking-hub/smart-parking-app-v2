@@ -4,7 +4,6 @@ export function LandingPainPointsSection() {
   const painPoints = [
     {
       id: '01',
-      fearNumber: 'Nỗi sợ #01',
       title: 'Bị Phạt Dừng Đỗ Sai Quy Định',
       problem:
         'Đỗ lề đường chờ giờ cấm tải dễ bị phạt nặng, tước bằng lái và gián đoạn hợp đồng vận chuyển của chủ hàng.',
@@ -15,7 +14,6 @@ export function LandingPainPointsSection() {
     },
     {
       id: '02',
-      fearNumber: 'Nỗi sợ #02',
       title: 'Rút Trộm Dầu & Mất Hàng Ban Đêm',
       problem:
         'Nằm chờ ca đêm ở khu công nghiệp vắng vẻ luôn tiềm ẩn nguy cơ bị cạy thùng container, cắt chì và rút trộm bình dầu.',
@@ -26,7 +24,6 @@ export function LandingPainPointsSection() {
     },
     {
       id: '03',
-      fearNumber: 'Nỗi sợ #03',
       title: 'Nghỉ Ngơi Tạm Bợ Thiếu Tiện Nghi',
       problem:
         'Ngủ lại trên cabin nóng bức, thiếu nước sạch, không có chỗ sạc điện làm suy giảm thể lực và an toàn khi cầm lái.',
@@ -37,7 +34,6 @@ export function LandingPainPointsSection() {
     },
     {
       id: '04',
-      fearNumber: 'Nỗi sợ #04',
       title: 'Chặt Chém Giá Vé & Tranh Chấp',
       problem:
         'Thu tiền mặt tùy hứng vào ban đêm, không biên lai hóa đơn gây mâu thuẫn và thất thoát tiền tạm ứng của tài xế.',
@@ -53,45 +49,39 @@ export function LandingPainPointsSection() {
       <div className="max-w-[1240px] mx-auto">
         {/* Section Header */}
         <div className="flex flex-col items-center text-center mb-16">
-          <span className="font-inter text-xs font-bold tracking-widest text-[#F97316] uppercase bg-white border border-[#D7DFE9] px-3 py-1 rounded mb-3">
-            NHỮNG NỖI LO THƯỜNG TRỰC CỦA TÀI XẾ CONTAINER
-          </span>
-          <h2 className="font-sora text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight text-[#0F172A] max-w-2xl">
-            Được Thiết Kế Bởi Những Người Thấu Hiểu Bác Tài.
+          <h2 className="font-sora text-2xl sm:text-3xl lg:text-4xl font-extrabold tracking-tight text-[#0F172A] max-w-2xl leading-tight">
+            Được Thiết Kế Bởi Những Người Thấu Hiểu Bác Tài
           </h2>
-          <p className="font-inter text-sm sm:text-base text-[#475569] mt-3 max-w-xl">
+          <p className="font-inter text-base sm:text-lg text-slate-600 mt-4 max-w-xl leading-relaxed">
             Chúng tôi xóa bỏ hoàn toàn áp lực rủi ro đường dài với hạ tầng lưu đỗ được kiểm chuẩn pháp lý và giám sát thời gian thực.
           </p>
         </div>
 
-        {/* Bento Grid (4 Cards, Structural 1px Borders) */}
+        {/* Bento Grid (4 Cards) */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {painPoints.map((item) => {
             const Icon = item.Icon
             return (
               <div
                 key={item.id}
-                className="bg-white border border-[#D7DFE9] rounded-lg p-6 flex flex-col justify-between hover:border-[#1E3A5F] transition-colors"
+                className="bg-white border border-slate-200/80 rounded-2xl p-7 flex flex-col justify-between hover:border-slate-400 transition-colors"
               >
                 <div>
-                  <div className="w-10 h-10 rounded bg-[#EEF2F7] border border-[#D7DFE9] flex items-center justify-center text-[#F97316] mb-5">
-                    <Icon className="h-6 w-6 text-[#F97316]" aria-hidden="true" />
+                  <div className="flex items-center gap-3 mb-4 text-[#9A3412]">
+                    <Icon className="h-6 w-6 text-[#9A3412]" aria-hidden="true" />
+                    <h3 className="font-sora text-lg font-bold text-[#0F172A]">
+                      {item.title}
+                    </h3>
                   </div>
-                  <div className="text-xs font-inter font-semibold uppercase tracking-wider text-[#475569] mb-1">
-                    {item.fearNumber}
-                  </div>
-                  <h3 className="font-sora text-lg font-bold text-[#0F172A] mb-3">
-                    {item.title}
-                  </h3>
-                  <p className="font-inter text-sm text-[#475569] leading-relaxed mb-6">
+                  <p className="font-inter text-base text-slate-600 leading-relaxed mb-6">
                     {item.problem}
                   </p>
                 </div>
-                <div className="pt-4 border-t border-[#D7DFE9]">
-                  <div className="text-[11px] font-inter uppercase font-bold text-[#F97316] tracking-wider mb-1">
+                <div className="pt-4 bg-slate-50/80 rounded-xl p-4">
+                  <div className="text-sm font-inter font-bold text-[#9A3412] mb-1.5">
                     {item.solutionTitle}
                   </div>
-                  <div className="font-inter text-xs text-[#0F172A] font-medium leading-relaxed">
+                  <div className="font-inter text-sm text-[#0F172A] leading-relaxed">
                     {item.solution}
                   </div>
                 </div>

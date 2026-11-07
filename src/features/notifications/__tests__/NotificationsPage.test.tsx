@@ -16,7 +16,7 @@ vi.mock('react-router-dom', async () => {
 
 describe('SCR-025: NotificationsPage (Trung Tâm Thông Báo Driver Ops)', () => {
   beforeEach(() => {
-    vi.clearAllMocks()
+    vi.clearAllMocks(); localStorage.clear()
     window.HTMLElement.prototype.scrollIntoView = vi.fn()
     vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {})
     if (!window.URL.createObjectURL) {
@@ -232,6 +232,12 @@ describe('SCR-025: NotificationsPage (Trung Tâm Thông Báo Driver Ops)', () =>
     await user.click(webPushBtn)
 
     expect(screen.getByText('ĐÃ KÍCH HOẠT PUSH 24/7')).toBeInTheDocument()
+    expect(localStorage.getItem('driver_web_push_enabled')).toBe('true')
+
+    // Click again to toggle off (Acceptance Criteria 2)
+    await user.click(screen.getByRole('button', { name: /ĐÃ KÍCH HOẠT PUSH 24\/7/i }))
+    expect(screen.getByText('BẬT THÔNG BÁO ĐẨY WEB PUSH 24/7')).toBeInTheDocument()
+    expect(localStorage.getItem('driver_web_push_enabled')).toBe('false')
   })
 
   it('toggles notification channels in the sidebar', async () => {

@@ -53,7 +53,9 @@ describe('SCR-010 user journey', () => {
     expect(localStorage.getItem('access_token')).toBe(jwt)
     expect(localStorage.getItem('remembered_phone')).toBe('0909128374')
     expect(await screen.findByRole('status')).toHaveTextContent('Đăng nhập thành công.')
-    expect(screen.getByTestId('location')).toHaveTextContent(role === 'DRIVER' ? '/dashboard' : `/${role.toLowerCase()}/dashboard`)
+    await waitFor(() => {
+      expect(screen.getByTestId('location')).toHaveTextContent(role === 'DRIVER' ? '/dashboard' : `/${role.toLowerCase()}/dashboard`)
+    })
   })
   it('locks fields and prevents a second submission while pending', async () => {
     vi.spyOn(apiClient, 'request').mockImplementation(() => new Promise(() => {}))

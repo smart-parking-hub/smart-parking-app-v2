@@ -1,4 +1,4 @@
-import { Banknote, TrafficCone, Coins, ShieldCheck } from 'lucide-react'
+import { Banknote, TrafficCone, Coins, ShieldCheck, CheckCircle2 } from 'lucide-react'
 
 export function OwnerPainPointsSection() {
   const painPoints = [
@@ -41,48 +41,49 @@ export function OwnerPainPointsSection() {
   ]
 
   return (
-    <section className="w-full bg-[#EEF2F7] py-24 px-6 text-[#0F172A]">
+    <section className="w-full bg-slate-50/70 py-16 px-6 text-slate-900 border-b border-slate-200/80">
       <div className="max-w-[1240px] mx-auto">
         {/* Section Header */}
-        <div className="flex flex-col items-center text-center mb-16">
-          <span className="font-inter text-xs font-bold tracking-widest text-brand-orange uppercase bg-white border border-[#D7DFE9] px-3.5 py-1.5 rounded mb-3">
+        <div className="flex flex-col items-center text-center mb-12">
+          <div className="font-inter text-xs font-semibold text-slate-500 uppercase tracking-normal mb-2">
             SO SÁNH HIỆU QUẢ VẬN HÀNH THỰC TẾ
-          </span>
-          <h2 className="font-sora text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight text-[#0F172A] max-w-2xl">
+          </div>
+          <h2 className="font-sora text-lg sm:text-2xl lg:text-3xl font-bold tracking-tight text-slate-900 max-w-2xl">
             4 Lỗ Hổng Khiến Chủ Bãi Thất Thoát Hàng Trăm Triệu Mỗi Năm.
           </h2>
-          <p className="font-inter text-sm sm:text-base text-slate-600 mt-3 max-w-xl">
+          <p className="font-inter text-sm sm:text-base text-slate-600 mt-2.5 max-w-xl">
             Thay thế hoàn toàn quy trình ghi sổ tay thủ công bằng nền tảng kiểm soát xe tải nặng
             chuẩn hóa, minh bạch dòng tiền từng phút đỗ.
           </p>
         </div>
 
-        {/* Bento Grid: 4 Comparison Cards (Fretrix Clean Architecture) */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        {/* 4 Comparison Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 items-stretch">
           {painPoints.map((item) => {
             const Icon = item.icon
             return (
               <div
                 key={item.id}
-                className="bg-white border border-[#D7DFE9] rounded-2xl p-6 flex flex-col justify-between hover:border-[#1E3A5F] transition-all hover:shadow-md"
+                className="bg-white border border-slate-200/90 rounded-2xl p-6 flex flex-col justify-between hover:border-slate-300 transition-colors shadow-xs"
               >
                 <div>
-                  <div className="w-10 h-10 rounded-lg bg-[#EEF2F7] border border-[#D7DFE9] flex items-center justify-center text-brand-orange mb-5">
+                  <div className="mb-4">
                     <Icon className="h-6 w-6 text-brand-orange" aria-hidden="true" />
                   </div>
-                  <div className="text-xs font-inter font-semibold uppercase tracking-wider text-slate-500 mb-1">
+                  <div className="text-xs font-inter font-medium text-slate-500 mb-1">
                     Lỗ hổng #{item.id}
                   </div>
-                  <h3 className="font-sora text-lg font-bold text-[#0F172A] mb-3">{item.title}</h3>
+                  <h3 className="font-sora text-base sm:text-lg font-bold text-slate-900 mb-2.5">{item.title}</h3>
                   <p className="font-inter text-sm text-slate-600 leading-relaxed mb-6">
                     {item.description}
                   </p>
                 </div>
-                <div className="pt-4 border-t border-[#D7DFE9]">
-                  <div className="text-[11px] font-inter uppercase font-bold text-brand-orange tracking-wider mb-1">
-                    Giải pháp SmartTruckHub
+                <div className="pt-4 border-t border-slate-100">
+                  <div className="text-xs font-inter font-semibold text-slate-900 mb-1 flex items-center gap-1.5">
+                    <CheckCircle2 className="h-3.5 w-3.5 text-brand-orange shrink-0" aria-hidden="true" />
+                    <span>Giải pháp SmartTruckHub</span>
                   </div>
-                  <div className="font-inter text-xs text-[#0F172A] font-medium leading-relaxed">
+                  <div className="font-inter text-xs text-slate-600 font-medium leading-relaxed">
                     {item.solution}
                   </div>
                 </div>
