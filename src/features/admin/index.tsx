@@ -22,11 +22,11 @@ import {
   money,
   date,
   control,
-  button,
   secondary,
   type Column,
 } from '@/shared/components/Workspace'
 import { LotOverview } from '@/features/merchant/operations'
+
 interface User {
   id: number
   phone: string
@@ -39,6 +39,7 @@ interface User {
   bookingCount?: number
   disputeCount?: number
 }
+
 interface Transaction {
   id: number
   transactionCode: string
@@ -50,6 +51,7 @@ interface Transaction {
   merchantName: string
   createdAt: string
 }
+
 interface Audit {
   id: number
   actorUserId: number
@@ -60,6 +62,7 @@ interface Audit {
   result: string
   createdAt: string
 }
+
 interface Dashboard {
   totalUsers: number
   totalDrivers: number
@@ -71,12 +74,14 @@ interface Dashboard {
   openDisputes: number
   platformRevenue: number
 }
+
 export function AdminDashboardPage() {
   const query = useQuery({
     queryKey: ['admin-dashboard'],
     queryFn: () => getData<Dashboard>('/api/v1/admin/dashboard'),
     retry: false,
   })
+
   return (
     <Workspace
       title="Toàn cảnh vận hành"
@@ -106,17 +111,34 @@ export function AdminDashboardPage() {
                 ],
                 ['withdrawals', 'Yêu cầu rút tiền', data.pendingWithdrawals],
                 ['disputes', 'Tranh chấp đang mở', data.openDisputes],
-              ].map(([path, title, count]) => (
-                <Panel key={String(path)}>
-                  <p className="text-sm text-brand-muted">{title}</p>
-                  <p className="my-5 font-sora text-5xl font-semibold">
-                    {count}
-                  </p>
-                  <Link className={secondary} to={`/admin/${path}`}>
-                    Mở bàn xử lý →
-                  </Link>
-                </Panel>
-              ))}
+              ].map(([path, title, count]) => {
+                const isAlert = typeof count === 'number' && count > 0
+                return (
+                  <Panel key={String(path)}>
+                    <div className="flex items-center justify-between gap-2">
+                      <p className="text-sm font-medium text-brand-muted">{title}</p>
+                      {isAlert && (
+                        <span className="inline-flex items-center rounded-full bg-amber-50 px-2.5 py-0.5 text-xs font-semibold text-amber-800 border border-amber-200">
+                          Cần xử lý
+                        </span>
+                      )}
+                    </div>
+                    <p
+                      className={`my-5 font-sora text-5xl font-semibold tracking-tight ${
+                        isAlert ? 'text-[#d95f00]' : 'text-brand-navy'
+                      }`}
+                    >
+                      {count}
+                    </p>
+                    <Link
+                      className="inline-flex items-center justify-center gap-2 rounded-xl border border-brand-border bg-white px-4 py-2.5 text-sm font-semibold text-brand-navy hover:bg-brand-surface hover:text-[#d95f00] transition-colors"
+                      to={`/admin/${path}`}
+                    >
+                      Mở bàn xử lý →
+                    </Link>
+                  </Panel>
+                )
+              })}
             </div>
             <Panel title="Cộng đồng vận tải">
               <p className="text-sm text-brand-muted">
@@ -130,6 +152,7 @@ export function AdminDashboardPage() {
     </Workspace>
   )
 }
+
 function AdminList<T extends { id: number }>({
   title,
   path,
@@ -149,6 +172,7 @@ function AdminList<T extends { id: number }>({
     queryFn: () => getData<Page<T>>(path, { page, size: 20 }),
     retry: false,
   })
+
   return (
     <Workspace title={title} eyebrow="ADMIN / OPERATIONS">
       <QueryState query={query}>
@@ -170,6 +194,7 @@ function AdminList<T extends { id: number }>({
     </Workspace>
   )
 }
+
 export function AdminParkingLotsPage() {
   return (
     <AdminList<Lot>
@@ -177,14 +202,28 @@ export function AdminParkingLotsPage() {
       path="/api/v1/admin/parking-lots"
       detailLink={(r) => `/admin/parking-lots/${r.id}`}
       columns={[
-        { label: 'Bãi đỗ', render: (r) => r.name },
+        {
+          label: 'Bãi đỗ',
+          render: (r) => (
+            <span className="font-semibold text-brand-navy">{r.name}</span>
+          ),
+        },
         { label: 'Địa chỉ', render: (r) => r.address },
         { label: 'Chủ bãi', render: (r) => `#${r.merchantId}` },
         { label: 'Trạng thái', render: (r) => <Badge value={r.status} /> },
       ]}
+      actions={(r) => (
+        <Link
+          to={`/admin/parking-lots/${r.id}`}
+          className="inline-flex items-center gap-1.5 rounded-lg bg-[#d95f00] px-3.5 py-1.5 text-xs font-semibold text-white hover:bg-[#b84e00] active:bg-[#9e4300] transition-colors shadow-xs"
+        >
+          Thẩm định
+        </Link>
+      )}
     />
   )
 }
+
 export function AdminUsersPage() {
   return (
     <AdminList<User>
@@ -202,6 +241,7 @@ export function AdminUsersPage() {
     />
   )
 }
+
 export function AdminAuditLogsPage() {
   return (
     <AdminList<Audit>
@@ -218,6 +258,7 @@ export function AdminAuditLogsPage() {
     />
   )
 }
+
 export function AdminTransactionsPage() {
   const [selected, setSelected] = useState<Transaction | null>(null)
   return (
@@ -261,11 +302,15 @@ export function AdminTransactionsPage() {
     </>
   )
 }
+
 interface Decision {
   title: string
   path: string
   method?: 'put' | 'post'
+  action?: string
+  isOptionalReason?: boolean
 }
+
 export function DecisionDialog({
   decision,
   onClose,
@@ -275,9 +320,16 @@ export function DecisionDialog({
 }) {
   const cache = useQueryClient()
   const form = useForm<{ reason: string }>()
+  const isLotApproval =
+    Boolean(decision.isOptionalReason) ||
+    (decision.path.includes('/parking-lots/') &&
+      (decision.action === 'approve' || decision.path.endsWith('/approve')))
+
   const mutation = useMutation({
-    mutationFn: (data: { reason: string }) =>
-      sendData(decision.method || 'put', decision.path, data),
+    mutationFn: (data: { reason?: string }) =>
+      sendData(decision.method || 'put', decision.path, {
+        reason: data.reason?.trim() || '',
+      }),
     onSuccess: () => {
       void cache.invalidateQueries({ queryKey: ['admin-list'] })
       void cache.invalidateQueries({ queryKey: ['admin-detail'] })
@@ -285,6 +337,7 @@ export function DecisionDialog({
       onClose()
     },
   })
+
   return (
     <Dialog
       title={decision.title}
@@ -294,35 +347,70 @@ export function DecisionDialog({
     >
       <form
         className="space-y-5"
-        onSubmit={form.handleSubmit((data) => mutation.mutate(data))}
+        onSubmit={form.handleSubmit((data) => {
+          if (mutation.isPending) return
+          mutation.mutate(data)
+        })}
       >
         <Notice>
-          Kiểm tra hồ sơ trước khi xác nhận. Quyết định được lưu vào nhật ký hệ
-          thống.
+          {isLotApproval
+            ? 'Xác nhận phê duyệt hồ sơ bãi đỗ. Bãi sẽ được công bố và kích hoạt nhận đặt chỗ trên hệ thống.'
+            : 'Kiểm tra hồ sơ trước khi xác nhận. Quyết định được lưu vào nhật ký hệ thống.'}
         </Notice>
-        <Field label="Lý do / ghi chú quyết định">
+        <Field
+          label={
+            isLotApproval
+              ? 'Ghi chú phê duyệt (Tùy chọn)'
+              : 'Lý do / ghi chú quyết định'
+          }
+        >
           <textarea
             rows={5}
+            placeholder={
+              isLotApproval
+                ? 'Nhập ghi chú hoặc khuyến nghị cho chủ bãi (không bắt buộc)...'
+                : 'Nhập rõ lý do từ chối hoặc các điểm cần chỉnh sửa bổ sung...'
+            }
             className={control}
             {...form.register('reason', {
-              required: true,
-              validate: (value) => !!value.trim(),
+              required: !isLotApproval ? 'Nhập lý do quyết định.' : false,
+              validate: !isLotApproval
+                ? (value) => !!value?.trim() || 'Nhập lý do quyết định.'
+                : undefined,
             })}
           />
         </Field>
         {form.formState.errors.reason && (
-          <Notice error>Nhập lý do quyết định.</Notice>
+          <Notice error>
+            {form.formState.errors.reason.message || 'Nhập lý do quyết định.'}
+          </Notice>
         )}
         {mutation.isError && (
           <Notice error>{errorMessage(mutation.error)}</Notice>
         )}
-        <button disabled={mutation.isPending} className={button}>
-          {mutation.isPending ? 'Đang xử lý…' : 'Xác nhận quyết định'}
-        </button>
+        <div className="flex justify-end gap-3 pt-2">
+          <button
+            type="button"
+            disabled={mutation.isPending}
+            onClick={onClose}
+            className={secondary}
+          >
+            Hủy
+          </button>
+          <button
+            type="submit"
+            disabled={mutation.isPending}
+            aria-busy={mutation.isPending}
+            className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#d95f00] px-5 py-3 text-sm font-semibold text-white hover:bg-[#b84e00] active:bg-[#9e4300] transition-colors shadow-xs disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+          >
+            {mutation.isPending ? 'Đang xử lý…' : 'Xác nhận quyết định'}
+          </button>
+        </div>
       </form>
     </Dialog>
   )
 }
+
 export function AdminWithdrawalsPage() {
   const [decision, setDecision] = useState<Decision | null>(null)
   return (
@@ -351,11 +439,16 @@ export function AdminWithdrawalsPage() {
               ].map(([action, title]) => (
                 <button
                   key={action}
-                  className={secondary}
+                  className={
+                    action === 'approve'
+                      ? 'inline-flex items-center justify-center gap-2 rounded-xl bg-[#d95f00] px-3.5 py-2 text-xs font-semibold text-white hover:bg-[#b84e00] active:bg-[#9e4300] transition-colors shadow-xs cursor-pointer'
+                      : secondary
+                  }
                   onClick={() =>
                     setDecision({
                       title,
                       path: `/api/v1/admin/withdrawals/${r.id}/${action}`,
+                      action,
                     })
                   }
                 >
@@ -374,6 +467,7 @@ export function AdminWithdrawalsPage() {
     </>
   )
 }
+
 export function AdminLotDetailPage() {
   const { id } = useParams()
   const [decision, setDecision] = useState<Decision | null>(null)
@@ -382,6 +476,7 @@ export function AdminLotDetailPage() {
     queryFn: () => getData<Lot>(`/api/v1/admin/parking-lots/${id}`),
     retry: false,
   })
+
   return (
     <Workspace
       title={`Thẩm định bãi #${id}`}
@@ -408,11 +503,16 @@ export function AdminLotDetailPage() {
                 ].map(([action, title]) => (
                   <button
                     key={action}
-                    className={action === 'approve' ? button : secondary}
+                    className={
+                      action === 'approve'
+                        ? 'inline-flex items-center justify-center gap-2 rounded-xl bg-[#d95f00] px-4 py-3 text-sm font-semibold text-white hover:bg-[#b84e00] active:bg-[#9e4300] transition-colors shadow-xs cursor-pointer'
+                        : secondary
+                    }
                     onClick={() =>
                       setDecision({
                         title,
                         path: `/api/v1/admin/parking-lots/${id}/${action}`,
+                        action,
                       })
                     }
                   >
@@ -430,6 +530,7 @@ export function AdminLotDetailPage() {
     </Workspace>
   )
 }
+
 export function AdminUserDetailPage() {
   const { id } = useParams()
   const [decision, setDecision] = useState<Decision | null>(null)
@@ -438,6 +539,7 @@ export function AdminUserDetailPage() {
     queryFn: () => getData<User>(`/api/v1/admin/users/${id}`),
     retry: false,
   })
+
   return (
     <Workspace
       title={`Hồ sơ người dùng #${id}`}
@@ -490,6 +592,7 @@ export function AdminUserDetailPage() {
                       setDecision({
                         title,
                         path: `/api/v1/admin/users/${id}/${action}`,
+                        action,
                         method: action === 'warnings' ? 'post' : 'put',
                       })
                     }

@@ -3,7 +3,7 @@ import { useState } from 'react'
 import { NavLink, Outlet, useNavigate } from 'react-router-dom'
 import { useQueryClient } from '@tanstack/react-query'
 import { ShieldCheck, Menu, X, LogOut } from 'lucide-react'
-import { button } from '@/shared/components/Workspace'
+
 const items = [
   ['dashboard', 'Tổng quan'],
   ['parking-lots', 'Kiểm duyệt bãi'],
@@ -15,10 +15,12 @@ const items = [
   ['notifications', 'Thông báo'],
   ['profile', 'Hồ sơ quản trị'],
 ]
+
 export function AdminLayout() {
   const [open, setOpen] = useState(false)
   const navigate = useNavigate()
   const cache = useQueryClient()
+
   return (
     <div className="min-h-screen bg-brand-surface font-inter">
       <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-slate-700 bg-brand-navy px-5 text-white lg:pl-72">
@@ -29,11 +31,11 @@ export function AdminLayout() {
         >
           {open ? <X /> : <Menu />}
         </button>
-        <p className="font-mono text-xs tracking-widest">
+        <p className="font-mono text-xs tracking-widest text-slate-300">
           ADMIN / COMMAND CENTER
         </p>
         <button
-          className={button}
+          className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#d95f00] px-4 py-2.5 text-xs sm:text-sm font-semibold text-white hover:bg-[#b84e00] active:bg-[#9e4300] transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#d95f00] cursor-pointer shadow-xs"
           onClick={() => {
             clearSession()
             localStorage.removeItem('smart-truck-parking.auth')
@@ -42,7 +44,7 @@ export function AdminLayout() {
           }}
         >
           <LogOut size={16} />
-          Đăng xuất
+          <span>Đăng xuất</span>
         </button>
       </header>
       {open && (
@@ -57,10 +59,10 @@ export function AdminLayout() {
       >
         <NavLink
           to="/admin/dashboard"
-          className="mb-8 flex items-center gap-3 py-3 font-sora font-bold"
+          className="mb-8 flex items-center gap-3 py-3 font-sora font-bold text-white hover:text-orange-300 transition-colors"
         >
-          <ShieldCheck className="text-brand-orange" />
-          SMARTTRUCK HUB
+          <ShieldCheck className="text-[#d95f00]" />
+          <span>SMARTTRUCK HUB</span>
         </NavLink>
         <nav aria-label="Quản trị" className="flex-1 space-y-2 overflow-y-auto">
           {items.map(([path, label]) => (
@@ -69,7 +71,11 @@ export function AdminLayout() {
               key={path}
               to={`/admin/${path}`}
               className={({ isActive }) =>
-                `block rounded-xl px-4 py-3 text-sm ${isActive ? 'bg-brand-orange font-semibold text-brand-navy' : 'text-slate-300 hover:bg-slate-800'}`
+                `block rounded-xl px-4 py-3 text-sm transition-colors ${
+                  isActive
+                    ? 'bg-[#d95f00] font-semibold text-white shadow-xs'
+                    : 'text-slate-300 hover:bg-slate-800 hover:text-white'
+                }`
               }
             >
               {label}
