@@ -78,7 +78,7 @@ describe('SCR-018: DriverQueuesPage Export & Integration Verification', () => {
 
     await waitFor(() => {
       expect(
-        screen.getByRole('heading', { name: /Nhận Slot Đỗ Xe Thành Công!/i })
+        screen.getByRole('heading', { name: /Đã Có Chỗ Đỗ Xe!|Nhận Slot Đỗ Xe Thành Công!/i })
       ).toBeInTheDocument()
     })
 

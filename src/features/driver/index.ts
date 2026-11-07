@@ -77,6 +77,7 @@ export {
   QueueRegulationsSection,
   LeaveQueueConfirmModal,
   AcceptQueueSuccessModal,
+  DeclineSlotConfirmModal,
   QueueSkeleton,
   useQueueStore,
   getQueueStoreSnapshot,

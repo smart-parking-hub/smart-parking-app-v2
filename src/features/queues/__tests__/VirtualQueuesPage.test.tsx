@@ -108,7 +108,7 @@ describe('SCR-018: VirtualQueuesPage (Hàng Đợi Ảo Thông Minh)', () => {
     await waitFor(() => {
       expect(
         screen.getByRole('heading', {
-          name: /Nhận Slot Đỗ Xe Thành Công!/i,
+          name: /Đã Có Chỗ Đỗ Xe!|Nhận Slot Đỗ Xe Thành Công!/i,
         })
       ).toBeInTheDocument()
     })
@@ -117,13 +117,24 @@ describe('SCR-018: VirtualQueuesPage (Hàng Đợi Ảo Thông Minh)', () => {
     expect(screen.getByText(/Xem vé QR & Thanh toán cọc/i)).toBeInTheDocument()
   })
 
-  it('handles declining slot and updates active queue', async () => {
+  it('handles declining slot with confirmation modal and updates active queue', async () => {
     renderWithProviders(<VirtualQueuesPage />)
 
     const declineButton = screen.getByRole('button', {
-      name: /Từ chối nhường lượt/i,
+      name: /^Từ chối$/i,
     })
     fireEvent.click(declineButton)
+
+    // Modal xác nhận nhường lượt mở ra
+    expect(
+      screen.getByRole('heading', { name: /Xác Nhận Nhường Lượt\?/i })
+    ).toBeInTheDocument()
+
+    // Bấm xác nhận nhường lượt trong modal
+    const confirmDeclineBtn = screen.getByRole('button', {
+      name: /Xác nhận nhường lượt/i,
+    })
+    fireEvent.click(confirmDeclineBtn)
 
     await waitFor(() => {
       expect(screen.getByText(/Đang chờ vào chỗ/i)).toBeInTheDocument()
@@ -251,7 +262,7 @@ describe('SCR-018: VirtualQueuesPage (Hàng Đợi Ảo Thông Minh)', () => {
     fireEvent.click(acceptButton)
 
     await waitFor(() => {
-      expect(screen.getByRole('heading', { name: /Nhận Slot Đỗ Xe Thành Công!/i })).toBeInTheDocument()
+      expect(screen.getByRole('heading', { name: /Đã Có Chỗ Đỗ Xe!|Nhận Slot Đỗ Xe Thành Công!/i })).toBeInTheDocument()
     })
 
     // 1. Close via [X] button or bottom close button
@@ -261,31 +272,31 @@ describe('SCR-018: VirtualQueuesPage (Hàng Đợi Ảo Thông Minh)', () => {
     // Test close via Escape key
     fireEvent.keyDown(window, { key: 'Escape' })
     await waitFor(() => {
-      expect(screen.queryByRole('heading', { name: /Nhận Slot Đỗ Xe Thành Công!/i })).not.toBeInTheDocument()
+      expect(screen.queryByRole('heading', { name: /Đã Có Chỗ Đỗ Xe!|Nhận Slot Đỗ Xe Thành Công!/i })).not.toBeInTheDocument()
     })
 
     // Reopen and test close via [X] button
     fireEvent.click(acceptButton)
     await waitFor(() => {
-      expect(screen.getByRole('heading', { name: /Nhận Slot Đỗ Xe Thành Công!/i })).toBeInTheDocument()
+      expect(screen.getByRole('heading', { name: /Đã Có Chỗ Đỗ Xe!|Nhận Slot Đỗ Xe Thành Công!/i })).toBeInTheDocument()
     })
 
     const [xBtn] = screen.getAllByRole('button', { name: 'Đóng' })
     fireEvent.click(xBtn)
     await waitFor(() => {
-      expect(screen.queryByRole('heading', { name: /Nhận Slot Đỗ Xe Thành Công!/i })).not.toBeInTheDocument()
+      expect(screen.queryByRole('heading', { name: /Đã Có Chỗ Đỗ Xe!|Nhận Slot Đỗ Xe Thành Công!/i })).not.toBeInTheDocument()
     })
 
     // Reopen and test backdrop click
     fireEvent.click(acceptButton)
     await waitFor(() => {
-      expect(screen.getByRole('heading', { name: /Nhận Slot Đỗ Xe Thành Công!/i })).toBeInTheDocument()
+      expect(screen.getByRole('heading', { name: /Đã Có Chỗ Đỗ Xe!|Nhận Slot Đỗ Xe Thành Công!/i })).toBeInTheDocument()
     })
 
     const dialogOverlay = screen.getByRole('dialog')
     fireEvent.click(dialogOverlay)
     await waitFor(() => {
-      expect(screen.queryByRole('heading', { name: /Nhận Slot Đỗ Xe Thành Công!/i })).not.toBeInTheDocument()
+      expect(screen.queryByRole('heading', { name: /Đã Có Chỗ Đỗ Xe!|Nhận Slot Đỗ Xe Thành Công!/i })).not.toBeInTheDocument()
     })
   })
 

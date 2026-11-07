@@ -1,5 +1,5 @@
 import { useEffect } from 'react'
-import { CheckCircle2, Ticket, ArrowRight, ShieldCheck, Clock, X } from 'lucide-react'
+import { Ticket, ArrowRight, ShieldCheck, Clock, X } from 'lucide-react'
 import { Link } from 'react-router-dom'
 
 interface AcceptQueueSuccessModalProps {
@@ -49,27 +49,22 @@ export function AcceptQueueSuccessModal({
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="bg-white rounded-2xl max-w-lg w-full p-6 md:p-8 shadow-2xl border border-slate-200 text-center relative"
+        className="bg-white rounded-3xl max-w-xl w-full p-6 md:p-8 shadow-2xl border border-slate-200 text-center relative max-h-[90vh] overflow-y-auto"
       >
+        {/* Nút đóng [X] với hover mượt mà */}
         <button
           type="button"
           onClick={onClose}
           aria-label="Đóng"
-          className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 p-1.5 rounded-lg hover:bg-slate-100 transition-colors"
+          className="absolute top-5 right-5 text-slate-400 hover:text-slate-700 p-2 rounded-xl hover:bg-slate-100 transition-all cursor-pointer active:scale-95"
         >
           <X className="w-5 h-5" />
         </button>
 
-        <div className="w-16 h-16 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto mb-4 border border-emerald-200 ring-8 ring-emerald-50">
-          <CheckCircle2 className="w-8 h-8" />
-        </div>
-
-        <h3 id="accept-queue-modal-title" className="text-xl md:text-2xl font-bold font-sora text-slate-900 mb-1">
-          Nhận Slot Đỗ Xe Thành Công!
+        {/* Tiêu đề: Đã bỏ logo và đổi tên theo yêu cầu */}
+        <h3 id="accept-queue-modal-title" className="text-xl md:text-2xl font-bold font-sora text-slate-900 mb-5 pt-1">
+          Đã Có Chỗ Đỗ Xe!
         </h3>
-        <p className="text-sm text-slate-600 mb-6">
-          Hệ thống đã tự động chuyển đổi lượt xếp hàng thành đơn đặt chỗ hợp lệ.
-        </p>
 
         {/* Booking Dossier Card */}
         <div className="bg-slate-50 border border-slate-200 rounded-2xl p-5 text-left mb-6 space-y-3">
@@ -101,17 +96,20 @@ export function AcceptQueueSuccessModal({
               <span className="text-xs text-slate-500 uppercase tracking-wider block font-medium">
                 Vị trí ô đỗ chỉ định (Berth)
               </span>
-              <span className="text-sm font-mono font-bold text-orange-600">
+              <span className="text-sm font-mono font-bold text-brand-primary">
                 {berthCode}
               </span>
             </div>
           )}
 
-          <div className="pt-2 border-t border-slate-200 flex items-center gap-2 text-xs text-amber-700 bg-amber-50/70 p-2.5 rounded-xl border-amber-200">
-            <Clock className="w-4 h-4 shrink-0 text-amber-600" />
-            <span>
-              Bạn có <strong>10 phút</strong> để hoàn tất cọc qua PayOS hoặc quét QR tại cổng kiểm soát.
-            </span>
+          {/* Cảnh báo màu cam: Chữ to lên và không được xuống dòng theo yêu cầu */}
+          <div className="pt-2 border-t border-slate-200">
+            <div className="flex items-center gap-2.5 text-sm md:text-base text-amber-900 bg-amber-50/90 p-3 rounded-xl border border-amber-200/80 whitespace-nowrap overflow-x-auto">
+              <Clock className="w-5 h-5 shrink-0 text-amber-600" />
+              <span>
+                Bạn có <strong>10 phút</strong> để hoàn tất cọc qua PayOS hoặc quét QR tại cổng kiểm soát.
+              </span>
+            </div>
           </div>
         </div>
 
@@ -120,13 +118,13 @@ export function AcceptQueueSuccessModal({
           <button
             type="button"
             onClick={onClose}
-            className="w-full sm:w-auto px-5 py-2.5 rounded-xl text-sm font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 transition-colors"
+            className="w-full sm:w-auto px-6 py-2.5 rounded-xl text-sm md:text-base font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 hover:text-slate-900 border border-slate-200/80 shadow-2xs transition-all duration-150 cursor-pointer active:scale-95"
           >
             Đóng
           </button>
           <Link
             to="/bookings"
-            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl text-sm font-semibold text-white bg-orange-600 hover:bg-orange-700 transition-colors shadow-sm shadow-orange-600/20"
+            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl text-sm md:text-base font-semibold text-white bg-brand-primary hover:bg-brand-primary-hover transition-colors shadow-sm cursor-pointer active:scale-95"
           >
             <Ticket className="w-4 h-4" />
             <span>Xem vé QR & Thanh toán cọc</span>

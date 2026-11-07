@@ -10,6 +10,7 @@ import {
   Zap,
 } from 'lucide-react'
 import type { ActiveQueueItem } from '../types/queueTypes'
+import { DeclineSlotConfirmModal } from './DeclineSlotConfirmModal'
 
 interface ActiveQueueCardProps {
   item: ActiveQueueItem
@@ -26,6 +27,9 @@ export function ActiveQueueCard({
   onDecline,
   onToggleStatusDemo,
 }: ActiveQueueCardProps) {
+  // Modal xác nhận nhường lượt
+  const [isDeclineModalOpen, setIsDeclineModalOpen] = useState(false)
+
   // 15-minute countdown timer state
   const [secondsRemaining, setSecondsRemaining] = useState<number>(() => {
     return item.holdSecondsRemaining ?? (item.status === 'NOTIFIED' ? 540 : 0)
@@ -266,11 +270,11 @@ export function ActiveQueueCard({
 
                 <button
                   type="button"
-                  onClick={onDecline}
+                  onClick={() => setIsDeclineModalOpen(true)}
                   className="h-11 px-4 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold transition-colors cursor-pointer inline-flex items-center justify-center gap-2"
                 >
                   <XCircle className="w-4 h-4 text-slate-500" />
-                  <span>Từ chối nhường lượt</span>
+                  <span>Từ chối</span>
                 </button>
               </>
             ) : (
@@ -325,6 +329,16 @@ export function ActiveQueueCard({
           </p>
         </div>
       </div>
+
+      {/* Modal xác nhận nhường lượt */}
+      <DeclineSlotConfirmModal
+        isOpen={isDeclineModalOpen}
+        onClose={() => setIsDeclineModalOpen(false)}
+        onConfirm={onDecline}
+        queueCode={item.queueCode}
+        parkingLotName={item.parkingLotName}
+        berthCode={item.berthCode}
+      />
     </article>
   )
 }

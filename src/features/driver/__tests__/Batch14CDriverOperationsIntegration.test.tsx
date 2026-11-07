@@ -208,12 +208,12 @@ describe('BATCH-14C: Driver Operations Integration (SCR-018 to SCR-024)', () => 
     // AcceptQueueSuccessModal opens
     const successModal = await screen.findByRole('dialog')
     expect(successModal).toBeInTheDocument()
-    expect(screen.getByText(/Nhận Slot Đỗ Xe Thành Công!/i)).toBeInTheDocument()
+    expect(screen.getByText(/Đã Có Chỗ Đỗ Xe!|Nhận Slot Đỗ Xe Thành Công!/i)).toBeInTheDocument()
 
     // Test Escape key dismissal (TSK-P2-02 A11y requirement)
     fireEvent.keyDown(window, { key: 'Escape', code: 'Escape' })
     await waitFor(() => {
-      expect(screen.queryByText(/Nhận Slot Đỗ Xe Thành Công!/i)).not.toBeInTheDocument()
+      expect(screen.queryByText(/Đã Có Chỗ Đỗ Xe!|Nhận Slot Đỗ Xe Thành Công!/i)).not.toBeInTheDocument()
     })
   })
 
