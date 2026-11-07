@@ -239,6 +239,7 @@ export function DataTable<T extends { id: number }>({
   totalPages,
   onPage,
   detailLink,
+  renderMobileCard,
 }: {
   rows: T[]
   columns: Column<T>[]
@@ -247,6 +248,7 @@ export function DataTable<T extends { id: number }>({
   totalPages?: number
   onPage?: (page: number) => void
   detailLink?: (row: T) => string
+  renderMobileCard?: (row: T) => ReactNode
 }) {
   const [search, setSearch] = useState('')
   const shown = searchText
@@ -275,7 +277,14 @@ export function DataTable<T extends { id: number }>({
           </label>
         )}
       </div>
-      <div className="overflow-x-auto">
+      {renderMobileCard && shown.length > 0 && (
+        <div className="space-y-3 md:hidden">
+          {shown.map((row) => (
+            <div key={row.id}>{renderMobileCard(row)}</div>
+          ))}
+        </div>
+      )}
+      <div className={cn('overflow-x-auto', renderMobileCard && shown.length > 0 && 'hidden md:block')}>
         <table className="w-full text-left text-sm">
           <thead className="border-y border-brand-border bg-brand-surface text-xs text-brand-muted">
             <tr>

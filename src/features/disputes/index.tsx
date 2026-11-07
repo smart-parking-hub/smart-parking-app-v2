@@ -18,7 +18,6 @@ import {
   Notice,
   Dialog,
   Field,
-  button,
   control,
   date,
   secondary,
@@ -60,7 +59,10 @@ export function DisputesPage({
             ← Danh sách
           </Link>
         ) : role === 'driver' ? (
-          <button className={button} onClick={() => setOpen(true)}>
+          <button
+            className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#d95f00] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[#b84e00] active:bg-[#9e4300] transition-colors shadow-xs cursor-pointer"
+            onClick={() => setOpen(true)}
+          >
             + Gửi khiếu nại
           </button>
         ) : undefined
@@ -154,7 +156,7 @@ function DisputeDetail({ data, admin }: { data: Dispute; admin: boolean }) {
           </dl>
           {admin && data.status !== 'RESOLVED' && (
             <button
-              className={`${button} mt-6 w-full`}
+              className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#d95f00] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[#b84e00] active:bg-[#9e4300] transition-colors shadow-xs cursor-pointer mt-6 w-full"
               onClick={() => setResolve(true)}
             >
               Ghi nhận phán quyết
@@ -209,7 +211,10 @@ function CreateDispute({
     >
       <form
         className="space-y-5"
-        onSubmit={form.handleSubmit((data) => mutation.mutate(data))}
+        onSubmit={form.handleSubmit((data) => {
+          if (mutation.isPending) return
+          mutation.mutate(data)
+        })}
       >
         <Field label="ID Booking">
           <input
@@ -244,9 +249,24 @@ function CreateDispute({
         {mutation.isError && (
           <Notice error>{errorMessage(mutation.error)}</Notice>
         )}
-        <button className={button} disabled={mutation.isPending}>
-          {mutation.isPending ? 'Đang gửi…' : 'Gửi khiếu nại'}
-        </button>
+        <div className="flex justify-end gap-3 pt-2">
+          <button
+            type="button"
+            className={secondary}
+            disabled={mutation.isPending}
+            onClick={onClose}
+          >
+            Hủy
+          </button>
+          <button
+            type="submit"
+            className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#d95f00] px-5 py-3 text-sm font-semibold text-white hover:bg-[#b84e00] active:bg-[#9e4300] transition-colors shadow-xs disabled:opacity-50 cursor-pointer"
+            disabled={mutation.isPending}
+            aria-busy={mutation.isPending}
+          >
+            {mutation.isPending ? 'Đang gửi…' : 'Gửi khiếu nại'}
+          </button>
+        </div>
       </form>
     </Dialog>
   )
@@ -271,7 +291,10 @@ function ResolveDispute({ id, onClose }: { id: number; onClose: () => void }) {
     >
       <form
         className="space-y-5"
-        onSubmit={form.handleSubmit((data) => mutation.mutate(data))}
+        onSubmit={form.handleSubmit((data) => {
+          if (mutation.isPending) return
+          mutation.mutate(data)
+        })}
       >
         <Notice>
           Ghi rõ kết luận và phương án hỗ trợ. Việc ghi nhận này không tự thực
@@ -281,6 +304,7 @@ function ResolveDispute({ id, onClose }: { id: number; onClose: () => void }) {
           <textarea
             className={control}
             rows={6}
+            placeholder="Nhập phán quyết và giải pháp xử lý tranh chấp..."
             {...form.register('resolution', {
               required: true,
               validate: (value) => !!value.trim(),
@@ -293,9 +317,24 @@ function ResolveDispute({ id, onClose }: { id: number; onClose: () => void }) {
         {mutation.isError && (
           <Notice error>{errorMessage(mutation.error)}</Notice>
         )}
-        <button disabled={mutation.isPending} className={button}>
-          Xác nhận phán quyết
-        </button>
+        <div className="flex justify-end gap-3 pt-2">
+          <button
+            type="button"
+            className={secondary}
+            disabled={mutation.isPending}
+            onClick={onClose}
+          >
+            Hủy
+          </button>
+          <button
+            type="submit"
+            disabled={mutation.isPending}
+            aria-busy={mutation.isPending}
+            className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#d95f00] px-5 py-3 text-sm font-semibold text-white hover:bg-[#b84e00] active:bg-[#9e4300] transition-colors shadow-xs disabled:opacity-50 cursor-pointer"
+          >
+            {mutation.isPending ? 'Đang ban hành phán quyết…' : 'Xác nhận phán quyết'}
+          </button>
+        </div>
       </form>
     </Dialog>
   )

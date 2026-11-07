@@ -159,12 +159,14 @@ function AdminList<T extends { id: number }>({
   columns,
   detailLink,
   actions,
+  renderMobileCard,
 }: {
   title: string
   path: string
   columns: Column<T>[]
   detailLink?: (r: T) => string
   actions?: (r: T) => React.ReactNode
+  renderMobileCard?: (r: T) => React.ReactNode
 }) {
   const [page, setPage] = useState(0)
   const query = useQuery({
@@ -188,6 +190,7 @@ function AdminList<T extends { id: number }>({
                 : columns
             }
             detailLink={detailLink}
+            renderMobileCard={renderMobileCard}
           />
         )}
       </QueryState>
@@ -279,12 +282,69 @@ export function AdminAuditLogsPage() {
       path="/api/v1/admin/audit-logs"
       columns={[
         { label: 'Thời điểm', render: (r) => date(r.createdAt) },
-        { label: 'Người thao tác', render: (r) => `#${r.actorUserId}` },
-        { label: 'Hành động', render: (r) => r.action },
-        { label: 'Đối tượng', render: (r) => `${r.targetType} #${r.targetId}` },
-        { label: 'Chi tiết', render: (r) => r.detail },
-        { label: 'Kết quả', render: (r) => r.result },
+        {
+          label: 'Người thao tác',
+          render: (r) => (
+            <span className="font-mono text-xs font-semibold text-brand-navy">
+              Actor #{r.actorUserId}
+            </span>
+          ),
+        },
+        {
+          label: 'Hành động',
+          render: (r) => (
+            <span className="rounded-md bg-brand-surface px-2 py-0.5 font-mono text-xs font-semibold text-brand-navy">
+              {r.action}
+            </span>
+          ),
+        },
+        {
+          label: 'Đối tượng',
+          render: (r) => (
+            <span className="font-mono text-xs">
+              {r.targetType} #{r.targetId}
+            </span>
+          ),
+        },
+        {
+          label: 'Chi tiết',
+          render: (r) => (
+            <span className="text-xs line-clamp-2 max-w-sm" title={r.detail}>
+              {r.detail}
+            </span>
+          ),
+        },
+        { label: 'Kết quả', render: (r) => <Badge value={r.result} /> },
       ]}
+      renderMobileCard={(r) => (
+        <div className="rounded-xl border border-brand-border bg-white p-4 shadow-xs space-y-2.5">
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2">
+              <span className="font-mono text-xs font-bold text-brand-navy">
+                Actor #{r.actorUserId}
+              </span>
+              <span className="rounded-md bg-brand-surface px-2 py-0.5 font-mono text-[11px] font-semibold text-brand-navy">
+                {r.action}
+              </span>
+            </div>
+            <Badge value={r.result} />
+          </div>
+          <div className="text-xs text-brand-muted flex items-center justify-between">
+            <span>
+              Đối tượng:{' '}
+              <strong className="text-brand-navy font-mono font-medium">
+                {r.targetType} #{r.targetId}
+              </strong>
+            </span>
+            <span className="whitespace-nowrap">{date(r.createdAt)}</span>
+          </div>
+          {r.detail && (
+            <div className="rounded-lg bg-brand-surface/70 p-2.5 text-xs text-brand-navy leading-relaxed border border-brand-border/40">
+              {r.detail}
+            </div>
+          )}
+        </div>
+      )}
     />
   )
 }
