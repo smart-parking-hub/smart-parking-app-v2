@@ -18,8 +18,8 @@ export function QueueCommandToolbar({
   telemetry,
 }: QueueCommandToolbarProps) {
   return (
-    <div className="bg-white rounded-2xl border border-slate-200/90 shadow-sm p-5 md:p-6 mb-6">
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+    <div className="bg-white rounded-2xl border border-slate-200/90 shadow-sm p-4 md:p-5 mb-5">
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
         {/* Left: Eyebrow, Title & Clean Description */}
         <div className="space-y-1.5">
           <div className="flex items-center gap-2">
@@ -41,11 +41,11 @@ export function QueueCommandToolbar({
           </p>
         </div>
 
-        {/* Right: Outbound CTA */}
+        {/* Right: Outbound CTA matching user brand primary button specification */}
         <div className="flex items-center gap-3">
           <Link
             to="/parking"
-            className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-orange-600 hover:bg-orange-700 text-white font-semibold text-sm transition-colors shadow-sm shadow-orange-600/20 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 cursor-pointer"
+            className="h-11 px-5 rounded-xl bg-brand-primary hover:bg-brand-primary-hover text-white text-xs font-semibold transition-colors shadow-md cursor-pointer inline-flex items-center justify-center gap-2"
           >
             <Plus className="w-4 h-4" />
             <span>Tìm bãi & Đăng ký</span>
@@ -53,8 +53,8 @@ export function QueueCommandToolbar({
         </div>
       </div>
 
-      {/* Bottom Segmented Controls */}
-      <div className="mt-6 pt-5 border-t border-slate-100 flex items-center justify-between gap-4">
+      {/* Bottom Segmented Controls (Tightened separator) */}
+      <div className="mt-3.5 pt-3 border-t border-slate-100 flex items-center justify-between gap-3">
         <div className="inline-flex p-1 bg-slate-100/80 rounded-xl border border-slate-200" role="tablist">
           <button
             type="button"

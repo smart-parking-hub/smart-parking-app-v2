@@ -123,36 +123,36 @@ export function ActiveQueueCard({
           </div>
         </div>
       ) : (
-        <div className="bg-slate-900 text-white p-5 md:p-6">
+        <div className="bg-gradient-to-r from-orange-950 via-slate-900 to-black text-white p-5 md:p-6 border-b border-orange-500/20">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div className="flex items-start gap-3">
-              <span className="p-2.5 rounded-xl bg-blue-500/10 border border-blue-500/20 shrink-0">
-                <span className="w-6 h-6 flex items-center justify-center font-bold text-blue-400 font-sora">
+              <span className="p-2.5 rounded-xl bg-orange-500/20 border border-orange-500/40 shrink-0">
+                <span className="w-6 h-6 flex items-center justify-center font-bold text-white font-sora">
                   #{item.position ?? 1}
                 </span>
               </span>
               <div>
                 <div className="flex items-center gap-2">
-                  {/* Status Badge: Đang chờ vào chỗ (Theo đúng yêu cầu người dùng) */}
-                  <span className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full text-xs font-bold uppercase tracking-wider bg-blue-500/20 text-blue-300 border border-blue-400/30">
-                    <span className="w-2 h-2 rounded-full bg-blue-400 animate-pulse" />
+                  {/* Status Badge: Đang chờ vào chỗ (Tone Cam Đen & Màu Trắng) */}
+                  <span className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full text-xs font-bold uppercase tracking-wider bg-orange-500/20 text-white border border-orange-400/40">
+                    <span className="w-2 h-2 rounded-full bg-orange-400 animate-pulse" />
                     Đang chờ vào chỗ
                   </span>
-                  <span className="text-xs text-slate-400 font-mono">
+                  <span className="text-xs text-white/80 font-mono">
                     {item.queueCode}
                   </span>
                 </div>
-                <h3 className="text-xl md:text-2xl font-bold font-sora tracking-tight mt-1">
+                <h3 className="text-xl md:text-2xl font-bold font-sora text-white tracking-tight mt-1">
                   Vị trí trong hàng đợi: #{item.position ?? 1}
                 </h3>
                 <p className="text-sm text-slate-300 mt-0.5">
-                  Phía trước bạn có {item.peopleAhead ?? 0} xe • Thời gian chờ ước tính ~{item.estimatedWaitMinutes ?? 10} phút
+                  Tự động thông báo và cấp slot khi bãi đỗ giải phóng chỗ trống phù hợp.
                 </p>
               </div>
             </div>
 
-            <div className="bg-white/5 border border-white/10 rounded-2xl p-3 px-5 text-center">
-              <span className="text-[11px] font-medium text-slate-400 block uppercase">
+            <div className="bg-white/10 border border-white/20 rounded-2xl p-3 px-5 text-center">
+              <span className="text-[11px] font-semibold text-orange-200 block uppercase tracking-wider">
                 Tốc độ giải phóng bãi
               </span>
               <span className="text-base font-bold text-white block mt-0.5">
@@ -165,30 +165,34 @@ export function ActiveQueueCard({
 
       {/* ── CARD BODY ── */}
       <div className="p-5 md:p-7 space-y-6">
-        {/* Glanceable Metrics (3 chỉ số chính đập vào mắt) */}
+        {/* Glanceable Metrics (Gọn gàng, độ tương phản cao, loại bỏ thông tin lặp) */}
         {!isNotified && (
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 bg-slate-50 border border-slate-200/80 rounded-2xl p-4">
-            <div className="text-center p-2 border-b sm:border-b-0 sm:border-r border-slate-200">
-              <span className="text-xs font-medium text-slate-500 block uppercase">Vị trí của bạn</span>
-              <span className="text-3xl font-extrabold font-sora text-blue-600 block mt-0.5">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-3 bg-slate-50 border border-slate-200/90 rounded-2xl p-3 sm:p-4">
+            <div className="text-center py-2 sm:py-2.5 border-b sm:border-b-0 sm:border-r border-slate-200">
+              <span className="text-xs font-bold text-slate-500 uppercase tracking-wider block">
+                Vị trí của bạn
+              </span>
+              <span className="text-3xl font-extrabold font-sora text-brand-primary block mt-0.5">
                 #{item.position ?? 1}
               </span>
             </div>
 
-            <div className="text-center p-2 border-b sm:border-b-0 sm:border-r border-slate-200">
-              <span className="text-xs font-medium text-slate-500 block uppercase">Xe phía trước</span>
+            <div className="text-center py-2 sm:py-2.5 border-b sm:border-b-0 sm:border-r border-slate-200">
+              <span className="text-xs font-bold text-slate-500 uppercase tracking-wider block">
+                Xe phía trước
+              </span>
               <span className="text-2xl font-bold font-sora text-slate-800 block mt-1">
                 {item.peopleAhead ?? 0} xe
               </span>
-              <span className="text-[11px] text-slate-500">{item.peopleAhead ?? 0} tài xế phía trước</span>
             </div>
 
-            <div className="text-center p-2">
-              <span className="text-xs font-medium text-slate-500 block uppercase">Ước tính có chỗ</span>
-              <span className="text-2xl font-bold font-sora text-orange-600 block mt-1">
+            <div className="text-center py-2 sm:py-2.5">
+              <span className="text-xs font-bold text-slate-500 uppercase tracking-wider block">
+                Ước tính có chỗ
+              </span>
+              <span className="text-2xl font-bold font-sora text-brand-primary block mt-1">
                 ~{item.estimatedWaitMinutes ?? 15} phút
               </span>
-              <span className="text-[11px] text-slate-500">Dựa trên tốc độ checkout</span>
             </div>
           </div>
         )}
@@ -270,16 +274,16 @@ export function ActiveQueueCard({
                 <button
                   type="button"
                   onClick={onAccept}
-                  className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-orange-600 hover:bg-orange-700 text-white font-bold text-sm transition-all shadow-md shadow-orange-600/20 focus:ring-2 focus:ring-orange-500 focus:outline-none cursor-pointer"
+                  className="h-11 px-6 rounded-xl bg-brand-primary hover:bg-brand-primary-hover text-white text-xs font-semibold transition-colors shadow-md cursor-pointer inline-flex items-center justify-center gap-2"
                 >
-                  <CheckCircle2 className="w-5 h-5" />
+                  <CheckCircle2 className="w-4 h-4" />
                   <span>Nhận Slot & Tạo Booking Ngay</span>
                 </button>
 
                 <button
                   type="button"
                   onClick={onDecline}
-                  className="inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-sm transition-colors cursor-pointer"
+                  className="h-11 px-4 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold transition-colors cursor-pointer inline-flex items-center justify-center gap-2"
                 >
                   <XCircle className="w-4 h-4 text-slate-500" />
                   <span>Từ chối nhường lượt</span>
@@ -291,16 +295,16 @@ export function ActiveQueueCard({
                   href={`https://maps.google.com/?q=${encodeURIComponent(item.parkingLotAddress)}`}
                   target="_blank"
                   rel="noreferrer"
-                  className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-semibold text-sm transition-colors cursor-pointer"
+                  className="h-11 px-5 rounded-xl bg-brand-primary hover:bg-brand-primary-hover text-white text-xs font-semibold transition-colors shadow-md cursor-pointer inline-flex items-center justify-center gap-2"
                 >
-                  <Navigation className="w-4 h-4 text-orange-400" />
+                  <Navigation className="w-4 h-4 text-white" />
                   <span>Chỉ đường tới cổng bãi</span>
                 </a>
 
                 <button
                   type="button"
                   onClick={onLeave}
-                  className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 font-semibold text-sm transition-colors cursor-pointer"
+                  className="h-11 px-4 rounded-xl text-xs font-semibold text-rose-600 hover:text-rose-700 hover:bg-rose-50 border border-rose-200 transition-colors cursor-pointer inline-flex items-center justify-center gap-2"
                 >
                   <Trash2 className="w-4 h-4" />
                   <span>Rời hàng đợi</span>
