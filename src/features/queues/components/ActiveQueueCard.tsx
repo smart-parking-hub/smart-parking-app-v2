@@ -7,7 +7,6 @@ import {
   Navigation,
   Trash2,
   AlertCircle,
-  Sparkles,
   Zap,
   ChevronDown,
   ChevronUp,
@@ -82,27 +81,22 @@ export function ActiveQueueCard({
       {isNotified ? (
         <div className="bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 text-white p-5 md:p-6 relative overflow-hidden">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <div className="flex items-start gap-3">
-              <span className="p-2.5 rounded-xl bg-white/10 backdrop-blur-xs border border-white/20 shrink-0">
-                <Sparkles className="w-6 h-6 text-emerald-200 animate-pulse" />
-              </span>
-              <div>
-                <div className="flex items-center gap-2">
-                  <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-bold uppercase tracking-wider bg-white/20 text-white">
-                    <span className="w-2 h-2 rounded-full bg-white animate-ping" />
-                    Đã Có Slot Trống
-                  </span>
-                  <span className="text-xs text-emerald-100 font-mono">
-                    {item.queueCode}
-                  </span>
-                </div>
-                <h3 className="text-xl md:text-2xl font-bold font-sora tracking-tight mt-1">
-                  Đã Đến Lượt Của Bạn!
-                </h3>
-                <p className="text-sm text-emerald-100 mt-0.5">
-                  Bãi đỗ đã dành một slot phù hợp cho phương tiện của bạn. Vui lòng xác nhận nhận slot trước khi hết hạn giữ chỗ.
-                </p>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-bold uppercase tracking-wider bg-white/20 text-white">
+                  <span className="w-2 h-2 rounded-full bg-white animate-ping" />
+                  Đã Có Slot Trống
+                </span>
+                <span className="text-xs text-emerald-100 font-mono">
+                  {item.queueCode}
+                </span>
               </div>
+              <h3 className="text-xl md:text-2xl font-bold font-sora tracking-tight mt-1">
+                Đã Đến Lượt Của Bạn!
+              </h3>
+              <p className="text-sm text-emerald-100 mt-0.5">
+                Bãi đỗ đã dành một slot phù hợp cho phương tiện của bạn. Vui lòng xác nhận nhận slot trước khi hết hạn giữ chỗ.
+              </p>
             </div>
 
             {/* Live Countdown Badge */}

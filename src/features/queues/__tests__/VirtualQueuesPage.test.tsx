@@ -49,7 +49,7 @@ describe('SCR-018: VirtualQueuesPage (Hàng Đợi Ảo Thông Minh)', () => {
     })
   })
 
-  it('renders command toolbar, eyebrow, telemetry chips, and tab controls', async () => {
+  it('renders command toolbar, eyebrow, and tab controls', async () => {
     renderWithProviders(<VirtualQueuesPage />)
 
     expect(
@@ -62,11 +62,10 @@ describe('SCR-018: VirtualQueuesPage (Hàng Đợi Ảo Thông Minh)', () => {
       })
     ).toBeInTheDocument()
     expect(screen.getByText(/Radar 5km Active/i)).toBeInTheDocument()
-    expect(screen.getByText(/18 xe đang chờ • ~4.2p\/xe/i)).toBeInTheDocument()
 
     // 2 Segmented tabs
     expect(screen.getByRole('tab', { name: /Đang hoạt động/i })).toBeInTheDocument()
-    expect(screen.getByRole('tab', { name: /Lịch sử xếp hàng/i })).toBeInTheDocument()
+    expect(screen.getByRole('tab', { name: /Lịch sử giữ chỗ|Lịch sử xếp hàng/i })).toBeInTheDocument()
   })
 
   it('renders active queue card with NOTIFIED state, vehicle plate and hold countdown timer', async () => {
@@ -171,13 +170,13 @@ describe('SCR-018: VirtualQueuesPage (Hàng Đợi Ảo Thông Minh)', () => {
     renderWithProviders(<VirtualQueuesPage />)
 
     const historyTab = screen.getByRole('tab', {
-      name: /Lịch sử xếp hàng/i,
+      name: /Lịch sử giữ chỗ|Lịch sử xếp hàng/i,
     })
     fireEvent.click(historyTab)
 
     expect(
       screen.getByRole('heading', {
-        name: /Lịch Sử Lượt Xếp Hàng Ảo/i,
+        name: /Lịch Sử Giữ Chỗ|Lịch Sử Lượt Xếp Hàng Ảo/i,
       })
     ).toBeInTheDocument()
 
@@ -186,11 +185,11 @@ describe('SCR-018: VirtualQueuesPage (Hàng Đợi Ảo Thông Minh)', () => {
     expect(screen.getByText(/VQ-2026-7420/i)).toBeInTheDocument()
   })
 
-  it('filters history table by keyword and status', async () => {
+  it('filters history table by keyword and status, and opens detail modal', async () => {
     renderWithProviders(<VirtualQueuesPage />)
 
     // Switch to history tab
-    fireEvent.click(screen.getByRole('tab', { name: /Lịch sử xếp hàng/i }))
+    fireEvent.click(screen.getByRole('tab', { name: /Lịch sử giữ chỗ|Lịch sử xếp hàng/i }))
 
     // Search input
     const searchInput = screen.getByPlaceholderText(/Tìm theo mã, bãi xe, biển số\.\.\./i)
@@ -208,6 +207,20 @@ describe('SCR-018: VirtualQueuesPage (Hàng Đợi Ảo Thông Minh)', () => {
 
     expect(screen.getByText(/VQ-2026-7810/i)).toBeInTheDocument()
     expect(screen.queryByText(/VQ-2026-7650/i)).not.toBeInTheDocument()
+
+    // Click [Chi tiết] button to open QueueHistoryDetailModal
+    const detailButtons = screen.getAllByRole('button', { name: /Chi tiết/i })
+    expect(detailButtons.length).toBeGreaterThanOrEqual(1)
+    fireEvent.click(detailButtons[0])
+
+    expect(screen.getByRole('heading', { name: /Chi Tiết Lượt Giữ Chỗ/i })).toBeInTheDocument()
+    expect(screen.getByText(/Bãi Đỗ Xe Điều Phối/i)).toBeInTheDocument()
+
+    // Close modal via Escape
+    fireEvent.keyDown(window, { key: 'Escape', code: 'Escape' })
+    await waitFor(() => {
+      expect(screen.queryByText(/Bãi Đỗ Xe Điều Phối/i)).not.toBeInTheDocument()
+    })
   })
 
   it('renders the 4 operational regulations cards', async () => {
@@ -303,13 +316,13 @@ describe('SCR-018: VirtualQueuesPage (Hàng Đợi Ảo Thông Minh)', () => {
     expect(findOtherLotsBtn).toBeInTheDocument()
 
     // Switch to history tab and test search with 0 matches
-    const historyTab = screen.getByRole('tab', { name: /Lịch sử xếp hàng/i })
+    const historyTab = screen.getByRole('tab', { name: /Lịch sử giữ chỗ|Lịch sử xếp hàng/i })
     fireEvent.click(historyTab)
 
     const searchInput = screen.getByPlaceholderText(/Tìm theo mã, bãi xe, biển số\.\.\./i)
     fireEvent.change(searchInput, { target: { value: 'ZERO_MATCH_XYZ_12345' } })
 
-    expect(screen.getByText(/Không tìm thấy lượt xếp hàng nào/i)).toBeInTheDocument()
+    expect(screen.getByText(/Không tìm thấy lượt giữ chỗ|Không tìm thấy lượt xếp hàng/i)).toBeInTheDocument()
     const historyEmptyCta = screen.getAllByRole('link', { name: /Tìm bãi xe khác/i })
     expect(historyEmptyCta.length).toBeGreaterThanOrEqual(1)
   })

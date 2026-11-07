@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { Radio, Plus, Sparkles, Activity } from 'lucide-react'
+import { Radio, Plus } from 'lucide-react'
 import type { QueueTab, QueueTelemetryData } from '../types/queueTypes'
 
 interface QueueCommandToolbarProps {
@@ -34,28 +34,18 @@ export function QueueCommandToolbar({
           </div>
 
           <h1 className="text-2xl md:text-3xl font-bold font-sora text-slate-900 tracking-tight">
-            Lượt Chờ Vào Bãi (Virtual Queues)
+            Lượt Chờ Vào Bãi
           </h1>
           <p className="text-sm md:text-base text-slate-600 max-w-2xl">
             Theo dõi số thứ tự thực tế và nhận thông báo ngay khi bãi đỗ giải phóng chỗ trống phù hợp cho phương tiện của bạn.
           </p>
         </div>
 
-        {/* Right: Quick metric & Outbound CTA */}
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
-          <div className="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2">
-            <Activity className="w-4 h-4 text-slate-500 shrink-0" />
-            <div className="text-xs">
-              <div className="text-slate-500 font-medium">Toàn hệ thống</div>
-              <div className="font-semibold text-slate-800">
-                {telemetry.processingCount} xe đang chờ • ~{telemetry.avgReleaseMinutes}p/xe
-              </div>
-            </div>
-          </div>
-
+        {/* Right: Outbound CTA */}
+        <div className="flex items-center gap-3">
           <Link
             to="/parking"
-            className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-orange-600 hover:bg-orange-700 text-white font-semibold text-sm transition-colors shadow-sm shadow-orange-600/20 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 cursor-pointer"
+            className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-orange-600 hover:bg-orange-700 text-white font-semibold text-sm transition-colors shadow-sm shadow-orange-600/20 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 cursor-pointer"
           >
             <Plus className="w-4 h-4" />
             <span>Tìm bãi & Đăng ký</span>
@@ -74,10 +64,14 @@ export function QueueCommandToolbar({
             className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all cursor-pointer ${
               activeTab === 'ACTIVE'
                 ? 'bg-white text-slate-900 shadow-sm'
-                : 'text-slate-600 hover:text-slate-900'
+                : 'text-slate-600 hover:bg-slate-200/60 hover:text-slate-900'
             }`}
           >
-            <Sparkles className={`w-4 h-4 ${activeTab === 'ACTIVE' ? 'text-orange-500' : 'text-slate-400'}`} />
+            <span
+              className={`w-2 h-2 rounded-full ${
+                activeTab === 'ACTIVE' ? 'bg-orange-500 animate-pulse' : 'bg-slate-400'
+              }`}
+            />
             <span>Đang hoạt động</span>
             <span
               className={`px-2 py-0.5 rounded-full text-xs font-bold ${
@@ -98,10 +92,10 @@ export function QueueCommandToolbar({
             className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all cursor-pointer ${
               activeTab === 'HISTORY'
                 ? 'bg-white text-slate-900 shadow-sm'
-                : 'text-slate-600 hover:text-slate-900'
+                : 'text-slate-600 hover:bg-slate-200/60 hover:text-slate-900'
             }`}
           >
-            <span>Lịch sử xếp hàng</span>
+            <span>Lịch sử giữ chỗ</span>
             <span
               className={`px-2 py-0.5 rounded-full text-xs font-bold ${
                 activeTab === 'HISTORY'

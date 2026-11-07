@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
-import { Plus, Radio, Sparkles, RefreshCw } from 'lucide-react'
+import { Plus, Radio, RefreshCw } from 'lucide-react'
 import { EmptyState } from '@/shared/components/EmptyState'
 import { Alert } from '@/shared/components/Alert'
 import { Toast } from '@/shared/components/Toast'
@@ -260,8 +260,8 @@ export function VirtualQueuesPage() {
                     onClick={handleRestoreDefaultQueue}
                     className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-sm transition-colors cursor-pointer"
                   >
-                    <Sparkles className="w-4 h-4 text-orange-500" />
-                    <span>Kích hoạt mẫu giả lập để trải nghiệm</span>
+                    <RefreshCw className="w-4 h-4 text-slate-600" />
+                    <span>Khôi phục dữ liệu mẫu</span>
                   </button>
                 </div>
               }
@@ -269,7 +269,7 @@ export function VirtualQueuesPage() {
           )}
         </section>
       ) : (
-        <section aria-label="Lịch sử xếp hàng">
+        <section aria-label="Lịch sử giữ chỗ">
           <QueueHistoryTable items={queueHistory} />
         </section>
       )}
