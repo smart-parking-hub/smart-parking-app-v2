@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react'
 import { Link } from 'react-router-dom'
-import { Search, ExternalLink, Calendar, Truck, Clock, Eye, CheckCircle2, XCircle, AlertTriangle } from 'lucide-react'
+import { Search, ExternalLink, Truck, Clock, Eye, CheckCircle2, XCircle, AlertTriangle } from 'lucide-react'
 import { EmptyState } from '@/shared/components/EmptyState'
 import type { QueueHistoryItem, QueueStatus } from '../types/queueTypes'
 import { QueueHistoryDetailModal } from './QueueHistoryDetailModal'
@@ -172,40 +172,30 @@ export function QueueHistoryTable({ items }: QueueHistoryTableProps) {
               ) : (
                 filteredItems.map((item) => (
                   <tr key={item.id} className="hover:bg-slate-50/80 transition-colors">
-                    {/* Mã Giữ Chỗ & Ngày giờ */}
-                    <td className="py-4.5 px-5 md:px-6">
+                    {/* Mã Giữ Chỗ (Chỉ hiển thị thông tin cơ bản, xem chi tiết trong modal) */}
+                    <td className="py-4 px-5 md:px-6">
                       <span className="font-mono font-bold text-slate-900 text-sm md:text-base block whitespace-nowrap">
                         {item.queueCode}
-                      </span>
-                      <span className="text-xs text-slate-500 flex items-center gap-1 mt-1 whitespace-nowrap">
-                        <Calendar className="w-3.5 h-3.5 text-slate-400" />
-                        {item.registeredAtText}
                       </span>
                     </td>
 
                     {/* Bãi Đỗ Xe */}
-                    <td className="py-4.5 px-5 max-w-sm">
+                    <td className="py-4 px-5 max-w-sm">
                       <span className="font-semibold text-slate-900 text-sm md:text-base block line-clamp-1">
                         {item.parkingLotName}
-                      </span>
-                      <span className="text-xs text-slate-500 block line-clamp-1 mt-0.5">
-                        {item.parkingLotAddress}
                       </span>
                     </td>
 
                     {/* Phương Tiện */}
-                    <td className="py-4.5 px-5">
+                    <td className="py-4 px-5">
                       <span className="font-mono font-bold text-slate-900 text-sm md:text-base px-2.5 py-1 rounded-lg bg-slate-100 border border-slate-200/80 inline-flex items-center gap-1.5 whitespace-nowrap shadow-2xs">
                         <Truck className="w-4 h-4 text-slate-500 shrink-0" />
                         {item.vehiclePlate}
                       </span>
-                      <span className="text-xs text-slate-500 block mt-1 whitespace-nowrap">
-                        {item.vehicleSpec}
-                      </span>
                     </td>
 
                     {/* Thời Gian Chờ */}
-                    <td className="py-4.5 px-5">
+                    <td className="py-4 px-5">
                       <span className="flex items-center gap-1.5 text-slate-700 font-medium text-sm whitespace-nowrap">
                         <Clock className="w-4 h-4 text-slate-400" />
                         {item.waitTimeText}
@@ -213,12 +203,12 @@ export function QueueHistoryTable({ items }: QueueHistoryTableProps) {
                     </td>
 
                     {/* Trạng Thái */}
-                    <td className="py-4.5 px-5">
+                    <td className="py-4 px-5">
                       {renderStatusBadge(item.status)}
                     </td>
 
                     {/* Thao Tác (Xem chi tiết & link vé QR) */}
-                    <td className="py-4.5 px-5 md:px-6 text-right whitespace-nowrap">
+                    <td className="py-4 px-5 md:px-6 text-right whitespace-nowrap">
                       <div className="flex items-center justify-end gap-2">
                         <button
                           type="button"
