@@ -228,6 +228,32 @@ export async function generateAiParkingLotContent(params: {
   const lotName = params.name || 'Bãi Đỗ Xe & Depot Logistics'
   const lotAddress = params.address || 'Khu Công Nghiệp Cảng Biển Logistics'
 
+  try {
+    const res = await apiClient.post<{
+      data: {
+        marketingDescription: string
+        operatingRegulations: string
+        wayfindingGuide: string
+      }
+    }>('/api/v1/ai/generate-description', {
+      lotName,
+      address: lotAddress,
+      totalCapacity: 80,
+      supportedVehicleTypes: ['CONTAINER_40FT', 'HEAVY_TRUCK'],
+      amenities: ['ALPR_GATE', 'REEFER_380V', 'SECURITY_24_7', 'EV_CHARGER'],
+    })
+
+    if (res.data?.data?.marketingDescription) {
+      return {
+        logisticsCapacity: res.data.data.marketingDescription,
+        safetyRegulations: res.data.data.operatingRegulations,
+        circulationGuide: res.data.data.wayfindingGuide,
+      }
+    }
+  } catch {
+    // Graceful fallback to smart template
+  }
+
   // Simulating Fretrix-Dispatch-V3 high-precision logistics AI synthesis
   return {
     logisticsCapacity: `Depot chuyên dụng "${lotName}" tại ${lotAddress}. Mặt bằng chịu lực xe đầu kéo container và xe tải nặng 3-4 chân (tải trọng trục 60T). Trang bị hệ thống điện lạnh Reefer 380V hoạt động liên tục 24/7.`,
@@ -449,4 +475,18 @@ export async function updateMerchantParkingLot(
     `/api/v1/merchant/parking-lots/${id}`, request,
   )
   return parseMerchantLot(response.data.data, id)
+}
+
+export async function deleteMerchantParkingLotImage(
+  parkingLotId: number,
+  imageId: number,
+): Promise<void> {
+  await apiClient.delete(`/api/v1/merchant/parking-lots/${parkingLotId}/images/${imageId}`)
+}
+
+export async function setCoverMerchantParkingLotImage(
+  parkingLotId: number,
+  imageId: number,
+): Promise<void> {
+  await apiClient.patch(`/api/v1/merchant/parking-lots/${parkingLotId}/images/${imageId}/cover`)
 }

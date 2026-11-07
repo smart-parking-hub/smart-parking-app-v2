@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import {
   Truck,
@@ -44,6 +45,16 @@ const NAV_ITEMS: NavItem[] = [
 export function MerchantSidebar({ mobileOpen = false, onCloseMobile, collapsed = false }: MerchantSidebarProps) {
   const location = useLocation()
 
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && mobileOpen && onCloseMobile) {
+        onCloseMobile()
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [mobileOpen, onCloseMobile])
+
   const isCurrentActive = (item: NavItem) => {
     if (item.exact) {
       return (
@@ -60,6 +71,7 @@ export function MerchantSidebar({ mobileOpen = false, onCloseMobile, collapsed =
       {/* Mobile Backdrop */}
       {mobileOpen && (
         <div
+          role="presentation"
           className="fixed inset-0 bg-black/60 backdrop-blur-xs z-40 lg:hidden"
           onClick={onCloseMobile}
           aria-hidden="true"

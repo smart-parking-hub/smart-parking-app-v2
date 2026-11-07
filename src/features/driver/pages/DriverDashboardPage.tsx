@@ -111,7 +111,7 @@ export function DriverDashboardPage() {
               type="button"
               onClick={() => void refetch()}
               disabled={isRefetching}
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-[#d95f00] hover:bg-[#b85000] text-white font-medium text-xs transition-colors cursor-pointer disabled:opacity-50"
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-brand-primary hover:bg-brand-primary-hover text-white font-medium text-xs transition-colors cursor-pointer disabled:opacity-50"
             >
               <RefreshCw className={`w-4 h-4 ${isRefetching ? 'animate-spin' : ''}`} />
               <span>{isRefetching ? 'Đang thử lại...' : 'Thử lại (Tải lại dữ liệu)'}</span>

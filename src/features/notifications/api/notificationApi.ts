@@ -1,4 +1,4 @@
-import axios from 'axios'
+import { apiClient } from '@/shared/api/client'
 import type {
   NotificationItemDto,
   DriverNotificationStats,
@@ -204,7 +204,7 @@ export async function fetchNotificationsApi(params?: {
   size?: number
 }): Promise<{ items: NotificationItemDto[]; total: number; unreadCount: number }> {
   try {
-    const res = await axios.get(API_BASE, { params })
+    const res = await apiClient.get(API_BASE, { params })
     if (res.data?.data?.content) {
       return {
         items: res.data.data.content,
@@ -231,7 +231,7 @@ export async function fetchNotificationsApi(params?: {
 
 export async function fetchUnreadCountApi(): Promise<number> {
   try {
-    const res = await axios.get(`${API_BASE}/unread-count`)
+    const res = await apiClient.get(`${API_BASE}/unread-count`)
     if (typeof res.data?.data === 'number') {
       return res.data.data
     }
@@ -243,7 +243,7 @@ export async function fetchUnreadCountApi(): Promise<number> {
 
 export async function markAsReadApi(id: number): Promise<void> {
   try {
-    await axios.post(`${API_BASE}/${id}/read`)
+    await apiClient.put(`${API_BASE}/${id}/read`)
   } catch {
     // simulated local success
   }
@@ -251,7 +251,7 @@ export async function markAsReadApi(id: number): Promise<void> {
 
 export async function markAllAsReadApi(): Promise<void> {
   try {
-    await axios.post(`${API_BASE}/read-all`)
+    await apiClient.put(`${API_BASE}/read-all`)
   } catch {
     // simulated local success
   }

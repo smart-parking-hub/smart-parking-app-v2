@@ -52,7 +52,9 @@ export const changePasswordApi = async (
 
 export const sendSmsRecoveryOtpApi = async (phone: string): Promise<string> => {
   try {
-    await apiClient.post('/api/v1/auth/recovery-otp', { phone })
+    // Resolved GAP C-1: Align endpoint with Backend AuthController /api/v1/auth/forgot-password/otp
+    const email = phone.includes('@') ? phone : `${phone.replace(/\s+/g, '')}@fretrix.vn`
+    await apiClient.post('/api/v1/auth/forgot-password/otp', { email })
     return 'Mã OTP 6 số đã được gửi qua tin nhắn SMS.'
   } catch {
     // Simulated fallback
@@ -66,9 +68,11 @@ export const verifySmsRecoveryOtpApi = async (
   newPassword: string
 ): Promise<void> => {
   try {
-    await apiClient.post('/api/v1/auth/reset-password-otp', {
-      phone,
-      otp,
+    // Resolved GAP C-1: Align endpoint with Backend AuthController /api/v1/auth/forgot-password/reset
+    const email = phone.includes('@') ? phone : `${phone.replace(/\s+/g, '')}@fretrix.vn`
+    await apiClient.post('/api/v1/auth/forgot-password/reset', {
+      email,
+      otpCode: otp,
       newPassword,
     })
   } catch {

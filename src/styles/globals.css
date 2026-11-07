@@ -2,7 +2,7 @@
 @import "./fonts.css";
 
 @theme {
-  /* ── Legacy tokens preserved for 100% backward compatibility ── */
+  /* ── 1. Legacy & Backward Compatibility Tokens (100% Preserved) ── */
   --color-brand-navy: #060D1A;
   --color-brand-navy-light: #0F172A;
   --color-brand-surface: #EEF2F7;
@@ -18,27 +18,49 @@
   --color-api-body: #475569;
   --color-api-hover: #334155;
 
-  /* ── Brand Primary Tokens (WCAG AA Contrast 4.85:1 with white) ── */
+  /* ── 2. Brand Core & Accent Tokens (WCAG AA Contrast 4.85:1 with white) ── */
   --color-brand-primary: #d95f00;
   --color-brand-primary-hover: #b84e00;
   --color-brand-primary-active: #9e4300;
   --color-brand-primary-subtle: #fff7ed;
   --color-brand-primary-border: #fed7aa;
+  --color-brand-secondary: #060D1A;
+  --color-brand-accent: #0284c7;
 
-  /* ── Surface & Neutral Tokens ── */
+  /* ── 3. Merchant Domain Specific Palette (Stitch Preserved) ── */
+  --color-merchant-navy: #0d1c2e;
+  --color-merchant-muted: #455f87;
+  --color-merchant-card-dark: #131b2e;
+  --color-merchant-surface-subtle: #eff4ff;
+
+  /* ── 4. Surface & Canvas Tokens ── */
+  --color-background: #f8f9ff;
+  --color-surface: #ffffff;
+  --color-surface-elevated: #ffffff;
+  --color-surface-muted: #f1f5f9;
+  --color-surface-brand-subtle: #fff7ed;
   --color-surface-page: #f8f9ff;
   --color-surface-card: #ffffff;
   --color-surface-subtle: #f1f5f9;
   --color-surface-hover: #f8fafc;
   --color-surface-border: #e2e8f0;
 
-  /* ── Text Hierarchy Tokens ── */
+  /* ── 5. Text Hierarchy Tokens ── */
   --color-text-primary: #0f172a;
   --color-text-secondary: #334155;
   --color-text-muted: #64748b;
   --color-text-disabled: #94a3b8;
+  --color-text-merchant: #0d1c2e;
+  --color-text-inverse: #ffffff;
+  --color-text-link: #d95f00;
 
-  /* ── Semantic Status Tokens ── */
+  /* ── 6. Border & Focus Tokens ── */
+  --color-border-default: #e2e8f0;
+  --color-border-subtle: #f1f5f9;
+  --color-border-strong: #cbd5e1;
+  --color-border-focus: #d95f00;
+
+  /* ── 7. Semantic Status Tokens ── */
   --color-status-success: #059669;
   --color-status-success-bg: #ecfdf5;
   --color-status-success-border: #a7f3d0;
@@ -52,12 +74,47 @@
   --color-status-info-bg: #f0f9ff;
   --color-status-info-border: #bae6fd;
 
-  /* ── Typography Tokens ── */
+  /* ── 8. Typography Tokens & Stacks ── */
   --font-sora: 'Be Vietnam Pro', sans-serif;
   --font-inter: 'Source Sans 3', sans-serif;
   --font-heading: 'Be Vietnam Pro', sans-serif;
   --font-body: 'Source Sans 3', sans-serif;
   --font-data: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+
+  /* Micro-Typography Scale */
+  --text-2xs: 0.6875rem;
+  --text-2xs--line-height: 0.9375rem;
+  --text-3xs: 0.625rem;
+  --text-3xs--line-height: 0.8125rem;
+
+  /* ── 9. Spacing & Container Scale Extensions ── */
+  --space-1-5: 0.375rem;
+  --container-marketing: 1240px;
+  --container-app: 1280px;
+
+  /* ── 10. Motion & Transition Timing Tokens ── */
+  --ease-standard: cubic-bezier(0.2, 0, 0, 1);
+  --ease-emphasized-in: cubic-bezier(0.05, 0.7, 0.1, 1);
+  --ease-emphasized-out: cubic-bezier(0.3, 0, 0.8, 0.15);
+  --duration-instant: 100ms;
+  --duration-fast: 150ms;
+  --duration-normal: 200ms;
+  --duration-slow: 300ms;
+  --duration-deliberate: 500ms;
+
+  /* ── 11. Z-Index Layer Hierarchy ── */
+  --z-negative: -1;
+  --z-base: 0;
+  --z-raised: 10;
+  --z-sticky: 20;
+  --z-dropdown: 30;
+  --z-fixed-header: 40;
+  --z-drawer: 50;
+  --z-modal-backdrop: 60;
+  --z-modal: 70;
+  --z-popover: 80;
+  --z-toast: 90;
+  --z-tooltip: 100;
 }
 
 @media (prefers-reduced-motion: reduce) {

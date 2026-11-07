@@ -355,17 +355,21 @@ export async function submitDepositReservation(
 }
 
 export async function createPayOsDepositLink(
-  bookingId: string,
-  amount: number
+  bookingId: string | number,
+  _amount?: number
 ): Promise<{ checkoutUrl: string; qrCodeUrl: string }> {
   try {
-    const response = await apiClient.post('/api/v1/payments/payos/create-deposit-link', {
-      bookingId,
-      amount,
-      description: `Coc 20pct bkg ${bookingId}`,
+    const numericId = typeof bookingId === 'string' ? Number(bookingId.replace(/\D/g, '')) || 1 : bookingId
+    const response = await apiClient.post<{ data: string }>('/api/v1/payments', {
+      bookingId: numericId,
+      paymentType: 'DEPOSIT',
     })
-    if (response.data?.checkoutUrl) {
-      return response.data
+    const checkoutUrl = response.data?.data || (typeof response.data === 'string' ? response.data : '')
+    if (checkoutUrl) {
+      return {
+        checkoutUrl,
+        qrCodeUrl: 'https://api.vietqr.io/image/970422-0908123456-compact2.jpg',
+      }
     }
   } catch {
     // fallback

@@ -6,6 +6,7 @@ import {
   XCircle,
   ArrowLeft,
   RotateCw,
+  Compass,
 } from 'lucide-react'
 
 interface CancelActionBarProps {
@@ -27,6 +28,25 @@ export function CancelActionBar({
 }: CancelActionBarProps) {
   return (
     <div className="flex flex-col gap-3 bg-white p-6 sm:p-7 rounded-2xl border border-slate-200 shadow-xs">
+      {/* Expired Notification Banner */}
+      {isExpired && (
+        <div
+          role="status"
+          className="p-4 bg-amber-50 border border-amber-200 text-amber-900 rounded-xl text-xs sm:text-sm font-sans flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3"
+        >
+          <div className="flex items-center gap-2 font-medium">
+            <span className="w-2 h-2 rounded-full bg-amber-500 shrink-0" />
+            <span>Thời gian giữ chỗ tạm thời đã hết hạn. Vui lòng quay lại danh sách bãi xe để chọn vị trí mới.</span>
+          </div>
+          <Link
+            to="/parking"
+            className="shrink-0 font-bold text-amber-900 underline hover:text-brand-orange transition-colors"
+          >
+            Tìm bãi khác →
+          </Link>
+        </div>
+      )}
+
       {/* Primary Action Button (Big Orange) */}
       <button
         type="button"
@@ -52,8 +72,8 @@ export function CancelActionBar({
         )}
       </button>
 
-      {/* Secondary & Utility Actions Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+      {/* Secondary & Safe Exit Actions Grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
         {/* Sandbox Testing */}
         <button
           type="button"
@@ -76,9 +96,20 @@ export function CancelActionBar({
           <span>HỦY ĐẶT &amp; TRẢ SLOT VỀ HÀNG ĐỢI</span>
         </button>
 
+        {/* Safe Exit: Return to Parking Search */}
+        <Link
+          to="/parking"
+          id="btn-back-parking"
+          className="h-11 bg-brand-orange hover:bg-brand-orange-hover text-[#060D1A] rounded-xl font-mono text-xs font-bold flex items-center justify-center gap-2 transition-colors shadow-xs px-3"
+        >
+          <Compass className="w-4 h-4 text-[#060D1A]" />
+          <span>QUAY LẠI DANH SÁCH BÃI XE</span>
+        </Link>
+
         {/* Return to Bookings */}
         <Link
           to="/bookings"
+          id="btn-back-bookings"
           className="h-11 bg-slate-900 hover:bg-slate-800 text-white rounded-xl font-mono text-xs font-bold flex items-center justify-center gap-2 transition-colors shadow-xs px-3"
         >
           <ArrowLeft className="w-4 h-4 text-slate-300" />
