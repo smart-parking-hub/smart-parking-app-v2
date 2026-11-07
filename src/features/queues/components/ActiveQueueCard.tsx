@@ -76,8 +76,8 @@ export function ActiveQueueCard({
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
               <div className="flex items-center gap-2">
-                {/* Bỏ chấm tròn theo yêu cầu Hình 5 */}
-                <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-orange-100 text-orange-800 border border-orange-200">
+                {/* Bỏ chấm tròn theo yêu cầu Hình 5, padding rộng rãi */}
+                <span className="inline-flex items-center px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider bg-orange-100 text-orange-800 border border-orange-200">
                   Đã Có Slot Trống
                 </span>
                 <span className="text-xs text-slate-500 font-mono font-semibold">
@@ -127,16 +127,17 @@ export function ActiveQueueCard({
         <div className="bg-slate-100 text-slate-900 p-4 md:p-5 border-b border-slate-200">
           {/* Nền xám chữ đen theo yêu cầu */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <div className="flex items-start gap-3">
-              <span className="p-2 rounded-xl bg-white border border-slate-200 shadow-2xs shrink-0">
+            {/* Căn giữa theo chiều dọc cho thẻ số thứ tự */}
+            <div className="flex items-center gap-3.5">
+              <span className="p-2.5 rounded-2xl bg-white border border-slate-200 shadow-2xs shrink-0">
                 <span className="w-6 h-6 flex items-center justify-center font-bold text-slate-900 font-sora text-lg">
                   #{item.position ?? 1}
                 </span>
               </span>
               <div>
                 <div className="flex items-center gap-2">
-                  {/* Bỏ chấm tròn, chữ đen trên nền xám */}
-                  <span className="inline-flex items-center px-3 py-0.5 rounded-full text-xs font-bold uppercase tracking-wider bg-white text-slate-800 border border-slate-300 shadow-2xs">
+                  {/* Thẻ mở rộng to và rộng hơn, giữ nguyên cỡ chữ */}
+                  <span className="inline-flex items-center px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider bg-white text-slate-800 border border-slate-300 shadow-2xs">
                     Đang chờ vào chỗ
                   </span>
                   <span className="text-xs text-slate-500 font-mono font-semibold">
