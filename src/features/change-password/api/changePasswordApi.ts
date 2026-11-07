@@ -50,25 +50,27 @@ export const changePasswordApi = async (
   })
 }
 
-export const sendSmsRecoveryOtpApi = async (phone: string): Promise<string> => {
+export const sendSmsRecoveryOtpApi = async (identifier: string): Promise<string> => {
   try {
-    await apiClient.post('/api/v1/auth/recovery-otp', { phone })
-    return 'Mã OTP 6 số đã được gửi qua tin nhắn SMS.'
+    const email = identifier.includes('@') ? identifier : `${identifier}@smartparking.vn`
+    await apiClient.post('/api/v1/auth/forgot-password/otp', { email })
+    return 'Mã OTP 6 số đã được gửi qua email/tin nhắn bảo mật.'
   } catch {
     // Simulated fallback
-    return 'Mã xác nhận bảo mật đã gửi về SĐT tài xế.'
+    return 'Mã xác nhận bảo mật đã gửi về SĐT/Email tài xế.'
   }
 }
 
 export const verifySmsRecoveryOtpApi = async (
-  phone: string,
+  identifier: string,
   otp: string,
   newPassword: string
 ): Promise<void> => {
   try {
-    await apiClient.post('/api/v1/auth/reset-password-otp', {
-      phone,
-      otp,
+    const email = identifier.includes('@') ? identifier : `${identifier}@smartparking.vn`
+    await apiClient.post('/api/v1/auth/forgot-password/reset', {
+      email,
+      otpCode: otp,
       newPassword,
     })
   } catch {
