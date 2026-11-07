@@ -17,9 +17,6 @@ interface MerchantParkingLotsFilterBarProps {
 
 const SORT_OPTIONS: SelectOption[] = [
   { value: 'createdAt,desc', label: 'Mới tạo gần đây' },
-  { value: 'capacity,desc', label: 'Năng lực sức chứa cao nhất' },
-  { value: 'rating,desc', label: 'Đánh giá cao nhất' },
-  { value: 'revenue,desc', label: 'Doanh thu tháng cao nhất' },
   { value: 'name,asc', label: 'Tên A–Z' },
   { value: 'name,desc', label: 'Tên Z–A' },
 ]
@@ -54,7 +51,7 @@ export function MerchantParkingLotsFilterBar({
             type="text"
             value={keyword}
             onChange={(e) => onKeywordChange(e.target.value)}
-            placeholder="Tìm theo tên bãi, mã bãi, địa chỉ (Cát Lái, Sóng Thần, Phú Hữu)..."
+            placeholder="Tìm theo tên bãi, địa chỉ..."
             className="w-full pl-10 pr-4 py-2 bg-[#eff4ff] text-[#0d1c2e] text-xs sm:text-sm rounded-xl border border-transparent focus:border-[#d95f00]/40 focus:bg-white focus:outline-none transition-all placeholder:text-slate-400 font-normal"
             aria-label="Tìm kiếm bãi đỗ"
           />

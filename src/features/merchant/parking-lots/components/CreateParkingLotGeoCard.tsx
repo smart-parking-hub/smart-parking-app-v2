@@ -50,13 +50,7 @@ export function CreateParkingLotGeoCard({
         setLocating(false)
       },
       () => {
-        // Fallback realistic logistics port coordinates if permission denied
-        const fallbackLat = 10.785421
-        const fallbackLng = 106.804152
-        setValue('latitude', fallbackLat, { shouldValidate: true })
-        setValue('longitude', fallbackLng, { shouldValidate: true })
-        setAccuracy(1.2)
-        setGeoFeedback('Đã đặt vị trí theo tọa độ thực địa Cụm Cảng Phú Hữu.')
+        setGeoFeedback('Không lấy được vị trí. Hãy cấp quyền định vị, nhập tọa độ hoặc chọn trên bản đồ.')
         setLocating(false)
       },
       { enableHighAccuracy: true, timeout: 8000 },
@@ -113,7 +107,7 @@ export function CreateParkingLotGeoCard({
               value={isNaN(latitude) ? '' : latitude}
               onChange={(e) => {
                 const val = parseFloat(e.target.value)
-                setValue('latitude', isNaN(val) ? 0 : Number(val.toFixed(7)), { shouldValidate: true })
+                setValue('latitude', isNaN(val) ? Number.NaN : Number(val.toFixed(7)), { shouldValidate: true })
               }}
               className="w-full bg-transparent font-mono text-sm font-bold text-[#0d1c2e] focus:outline-none"
             />
@@ -150,7 +144,7 @@ export function CreateParkingLotGeoCard({
               value={isNaN(longitude) ? '' : longitude}
               onChange={(e) => {
                 const val = parseFloat(e.target.value)
-                setValue('longitude', isNaN(val) ? 0 : Number(val.toFixed(7)), { shouldValidate: true })
+                setValue('longitude', isNaN(val) ? Number.NaN : Number(val.toFixed(7)), { shouldValidate: true })
               }}
               className="w-full bg-transparent font-mono text-sm font-bold text-[#0d1c2e] focus:outline-none"
             />

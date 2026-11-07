@@ -88,19 +88,18 @@ export const fallbackDashboardData: DashboardSummaryData = {
 }
 
 export async function fetchDriverDashboardData(): Promise<DashboardSummaryData> {
-  try {
     const [vehiclesRes, bookingsRes] = await Promise.all([
-      apiClient.get<PageResponse<VehicleDto>>('/v1/vehicles', {
+      apiClient.get<{data:PageResponse<VehicleDto>}>('/api/v1/vehicles', {
         params: { page: 0, size: 10 },
       }),
-      apiClient.get<PageResponse<BookingDto>>('/v1/bookings', {
+      apiClient.get<{data:PageResponse<BookingDto & {vehiclePlate?:string;advanceDeposit?:number;totalAmount?:number}>}>('/api/v1/bookings', {
         params: { page: 0, size: 20 },
       }),
     ])
 
-    const vehicleTotal = vehiclesRes.data?.totalElements ?? 0
-    const bookingTotal = bookingsRes.data?.totalElements ?? 0
-    const rawBookings = bookingsRes.data?.content ?? []
+    const vehicleTotal = vehiclesRes.data.data?.totalElements ?? 0
+    const bookingTotal = bookingsRes.data.data?.totalElements ?? 0
+    const rawBookings = (bookingsRes.data.data?.content ?? []).map(b=>({...b,vehicleLicensePlate:b.vehiclePlate??b.vehicleLicensePlate,depositAmount:b.advanceDeposit,totalPrice:b.totalAmount,remainingAmount:b.totalAmount == null ? undefined : Math.max(0,b.totalAmount-(b.advanceDeposit??0))}))
 
     // If user has zero vehicles and zero bookings, trigger real empty state
     if (vehicleTotal === 0 && bookingTotal === 0 && rawBookings.length === 0) {
@@ -124,11 +123,7 @@ export async function fetchDriverDashboardData(): Promise<DashboardSummaryData> 
 
     // Priority active booking or newest booking
     const activeBooking =
-      activeBookings[0] ||
-      [...rawBookings].sort(
-        (a, b) =>
-          new Date(b.expectedCheckInTime).getTime() - new Date(a.expectedCheckInTime).getTime(),
-      )[0]
+      activeBookings[0]
 
     // Completed or recent bookings (take top 3)
     const recentBookings = rawBookings
@@ -136,8 +131,8 @@ export async function fetchDriverDashboardData(): Promise<DashboardSummaryData> 
       .slice(0, 3)
 
     return {
-      driverName: activeBooking?.driverName || localStorage.getItem('smart-truck-parking.driver_name') || fallbackDashboardData.driverName,
-      driverPhone: activeBooking?.driverPhone || fallbackDashboardData.driverPhone,
+      driverName: activeBooking?.driverName || localStorage.getItem('smart-truck-parking.driver_name') || 'Tài xế',
+      driverPhone: activeBooking?.driverPhone || '',
       vehicleTotal,
       bookingTotal,
       activeCount,
@@ -146,8 +141,4 @@ export async function fetchDriverDashboardData(): Promise<DashboardSummaryData> 
       recentBookings,
       isEmptyState: false,
     }
-  } catch {
-    // Graceful fallback to Stitch showcase data when backend microservice is offline or unreachable
-    return fallbackDashboardData
-  }
 }

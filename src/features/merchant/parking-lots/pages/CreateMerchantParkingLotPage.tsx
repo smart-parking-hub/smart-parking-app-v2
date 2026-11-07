@@ -12,15 +12,12 @@ import type {
 import {
   createMerchantParkingLot,
   uploadMerchantParkingLotImages,
-  generateAiParkingLotContent,
 } from '../api/merchantParkingLotApi'
 import { CreateParkingLotStepper } from '../components/CreateParkingLotStepper'
 import { CreateParkingLotBasicInfoCard } from '../components/CreateParkingLotBasicInfoCard'
 import { CreateParkingLotGeoCard } from '../components/CreateParkingLotGeoCard'
 import { CreateParkingLotPhotosCard } from '../components/CreateParkingLotPhotosCard'
 import { CreateParkingLotConfirmStep } from '../components/CreateParkingLotConfirmStep'
-import { CreateParkingLotAiWidget } from '../components/CreateParkingLotAiWidget'
-import { CreateParkingLotSlaWidget } from '../components/CreateParkingLotSlaWidget'
 import { CreateParkingLotActionFooter } from '../components/CreateParkingLotActionFooter'
 
 const DRAFT_STORAGE_KEY = 'merchant_lot_registration_draft'
@@ -49,15 +46,6 @@ const createLotFormSchema = z.object({
 
 type CreateLotFormData = z.infer<typeof createLotFormSchema>
 
-const initialAiContent: AiContentSegments = {
-  logisticsCapacity:
-    'Depot chuyên dụng tiếp nhận đầu kéo container và xe tải nặng 3-4 chân, mặt bãi đầm nén bê tông cốt thép tải trọng trục 60T, hệ thống cắm điện lạnh Reefer 380V hoạt động liên tục 24/7.',
-  safetyRegulations:
-    'Nghiêm cấm sang chiết dầu trong khuôn viên depot. Bãi trang bị sẵn 08 họng trụ cứu hỏa D65 đấu nối nguồn nước áp lực cao cùng xe chữa cháy cơ động túc trực bảo vệ hàng hóa.',
-  circulationGuide:
-    'Tài xế đi từ đường Vành Đai 2 rẽ vào Gò Cát, duy trì vận tốc < 10km/h khi qua cổng nhận diện ALPR để camera quét biển số và mở barie tự động.',
-}
-
 export function CreateMerchantParkingLotPage() {
   const navigate = useNavigate()
 
@@ -70,33 +58,9 @@ export function CreateMerchantParkingLotPage() {
   const [draftSaved, setDraftSaved] = useState(false)
 
   // AI Assistant State
-  const [aiContent, setAiContent] = useState<AiContentSegments>(initialAiContent)
   const [appliedAiContent, setAppliedAiContent] = useState<AiContentSegments | null>(null)
 
-  // Inspection Photos State (Pre-filled with mockup items for authentic presentation)
-  const [images, setImages] = useState<ParkingLotImageItem[]>([
-    {
-      name: 'GATE-ENTRANCE-IMG01.JPG',
-      previewUrl:
-        'https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?auto=format&fit=crop&w=800&q=80',
-      sizeBytes: 2.4 * 1024 * 1024,
-      isCover: true,
-    },
-    {
-      name: 'YARD-PAVEMENT-60T.PNG',
-      previewUrl:
-        'https://images.unsplash.com/photo-1578575437130-527eed3abbec?auto=format&fit=crop&w=800&q=80',
-      sizeBytes: 3.8 * 1024 * 1024,
-      isCover: false,
-    },
-    {
-      name: 'REEFER-PLUG-ARRAY.WEBP',
-      previewUrl:
-        'https://images.unsplash.com/photo-1519003722824-194d4455a60c?auto=format&fit=crop&w=800&q=80',
-      sizeBytes: 1.9 * 1024 * 1024,
-      isCover: false,
-    },
-  ])
+  const [images, setImages] = useState<ParkingLotImageItem[]>([])
 
   // React Hook Form Configuration
   const {
@@ -109,10 +73,8 @@ export function CreateMerchantParkingLotPage() {
   } = useForm<CreateLotFormData>({
     resolver: zodResolver(createLotFormSchema),
     defaultValues: {
-      name: 'Depot Container Tân Cảng - Phú Hữu (Cơ Sở 2)',
-      address: 'Đường Gò Cát, Phường Phú Hữu, TP. Thủ Đức, TP. Hồ Chí Minh (Cách vòng xoay Phú Hữu 1.5 km)',
-      latitude: 10.785421,
-      longitude: 106.804152,
+      name: '',
+      address: '',
     },
   })
 
@@ -178,23 +140,6 @@ export function CreateMerchantParkingLotPage() {
       setCurrentStep((prev) => prev - 1)
       window.scrollTo({ top: 0, behavior: 'smooth' })
     }
-  }
-
-  // AI Content Generator Handlers
-  const handleGenerateNewAiContent = async () => {
-    const newContent = await generateAiParkingLotContent({
-      name: formValues.name,
-      address: formValues.address,
-    })
-    setAiContent(newContent)
-  }
-
-  const handleApplyAiContent = (content: AiContentSegments) => {
-    setAppliedAiContent(content)
-    setToastMessage('Đã tích hợp nội dung trợ lý AI vào hồ sơ thẩm định bến bãi.')
-    setTimeout(() => {
-      setToastMessage(null)
-    }, 3500)
   }
 
   // Two-Phase Final Submission Handler
@@ -285,17 +230,10 @@ export function CreateMerchantParkingLotPage() {
         </div>
       )}
 
-      <div className="w-full max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-8 py-6 lg:py-8 flex flex-col gap-8">
+      <div className="w-full max-w-[960px] mx-auto px-4 sm:px-6 lg:px-8 py-6 lg:py-8 flex flex-col gap-8">
         {/* Top Header Segment: Eyebrow + H1 + Stepper Progress */}
         <header className="flex flex-col gap-6">
           <div className="flex flex-col gap-2">
-            <div className="flex items-center gap-2 flex-wrap">
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md bg-[#341100] text-[#d95f00] font-mono text-[11px] font-bold tracking-wider uppercase border border-[#d95f00]/30">
-                <span className="w-1.5 h-1.5 rounded-full bg-[#d95f00]" />
-                QUY TRÌNH THẨM ĐỊNH MẶT BẰNG &amp; MỞ BẾN BÃI MỚI · MOD-04
-              </span>
-              <span className="text-slate-500 text-xs font-mono">| FORM-REF: SCR-029-EXP</span>
-            </div>
 
             <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-4 mt-1">
               <div>
@@ -303,7 +241,7 @@ export function CreateMerchantParkingLotPage() {
                   Đăng Ký Bãi Đỗ Xe &amp; Depot Mới
                 </h1>
                 <p className="text-sm sm:text-base text-slate-600 mt-2 max-w-3xl leading-relaxed">
-                  Khai báo thông số kỹ thuật, tọa độ ranh giới GPS và hình ảnh kiểm định PCCC để chuyển Hội đồng Quản trị Hệ thống (Admin) thẩm định cấp phép trực tuyến.
+                  Nhập thông tin bãi đỗ, chọn vị trí và tải ảnh thực tế của bạn. Kiểm tra hồ sơ trước khi gửi.
                 </p>
               </div>
 
@@ -311,9 +249,7 @@ export function CreateMerchantParkingLotPage() {
                 <span className="px-3 py-1 bg-[#dce9ff] text-[#0d1c2e] text-xs font-mono font-bold rounded-lg border border-slate-200">
                   BƯỚC {currentStep + 1} TRÊN 3
                 </span>
-                <span className="text-[#d95f00] font-mono text-xs font-bold">
-                  HOÀN TẤT {currentStep === 0 ? '35%' : currentStep === 1 ? '65%' : '95%'}
-                </span>
+
               </div>
             </div>
           </div>
@@ -327,9 +263,9 @@ export function CreateMerchantParkingLotPage() {
 
         {/* Main 2-Column Split Workspace */}
         <form onSubmit={handleSubmit(onSubmitFinal)} className="w-full">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+          <div className="flex flex-col gap-6">
             {/* Left Column: 65% (8/12) */}
-            <section className="lg:col-span-8 flex flex-col gap-6">
+            <section className="w-full flex flex-col gap-6">
               {/* STEP 0: Thông tin cơ bản */}
               {currentStep === 0 && (
                 <>
@@ -381,19 +317,7 @@ export function CreateMerchantParkingLotPage() {
               />
             </section>
 
-            {/* Right Column: 35% (4/12) */}
-            <aside className="lg:col-span-4 flex flex-col gap-6 sticky top-24">
-              {/* Widget 1: AI Copilot Assistant */}
-              <CreateParkingLotAiWidget
-                currentAiContent={aiContent}
-                onGenerateNewAiContent={handleGenerateNewAiContent}
-                onApplyAiContent={handleApplyAiContent}
-                isApplied={Boolean(appliedAiContent)}
-              />
 
-              {/* Widget 2: Admin SLA & Audit Notice */}
-              <CreateParkingLotSlaWidget />
-            </aside>
           </div>
         </form>
       </div>

@@ -84,7 +84,7 @@ export function MerchantLotPage({
     </Workspace>
   )
 }
-export function LotOverview({ lot }: { lot: Lot }) {
+export function LotOverview({ lot, showMap = false }: { lot: Lot; showMap?: boolean }) {
   const slots = lot.slots || []
   return (
     <>
@@ -163,6 +163,18 @@ export function LotOverview({ lot }: { lot: Lot }) {
           </a>
         </Panel>
       </div>
+      {showMap && <Panel title="Vị trí bãi đỗ">
+        <p className="mb-4 text-sm text-brand-muted">{lot.address}</p>
+        {Number.isFinite(lot.latitude) && Number.isFinite(lot.longitude) && Math.abs(lot.latitude) <= 90 && Math.abs(lot.longitude) <= 180 ? (
+          <iframe
+            title={`Bản đồ vị trí ${lot.name}`}
+            className="h-80 w-full rounded-xl border-0 sm:h-96"
+            src={`https://www.google.com/maps?q=${encodeURIComponent(`${lot.latitude},${lot.longitude}`)}&z=16&output=embed`}
+            referrerPolicy="no-referrer-when-downgrade"
+            allowFullScreen
+          />
+        ) : <Notice>Chưa có tọa độ hợp lệ để hiển thị vị trí bãi trên bản đồ.</Notice>}
+      </Panel>}
       <Panel title="Biểu phí hiện hành">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-sm">

@@ -20,6 +20,7 @@ function setup(path = '/login') {
     <Route path="/dashboard" element={<RequireRole role="DRIVER"><h1>Driver dashboard</h1></RequireRole>} />
     <Route path="/merchant/dashboard" element={<RequireRole role="MERCHANT"><h1>Merchant dashboard</h1></RequireRole>} />
     <Route path="/admin/dashboard" element={<RequireRole role="ADMIN"><h1>Admin dashboard</h1></RequireRole>} />
+    <Route path="/parking" element={<RequireRole role="DRIVER"><h1>Parking map</h1></RequireRole>} />
     <Route path="/403" element={<h1>Forbidden</h1>} />
   </Routes></MemoryRouter></QueryClientProvider></Provider>)
   return { store, cache }
@@ -115,6 +116,20 @@ describe('SCR-010 user journey', () => {
     await screen.findByText('Driver dashboard')
     await screen.findByLabelText('Số điện thoại')
     expect(store.getState().auth.role).toBeNull()
+  })
+
+  it('keeps the requested map destination while the session hydrates after login', async () => {
+    vi.spyOn(apiClient,'request').mockResolvedValue({data:{data:{token:token('DRIVER'),role:'DRIVER'}}})
+    setup('/login?next=%2Fparking'); await fill()
+    fireEvent.click(screen.getByRole('button',{name:/^Đăng nhập$/}))
+    expect(await screen.findByText('Parking map')).toBeInTheDocument()
+    await waitFor(()=>expect(screen.getByTestId('location')).toHaveTextContent('/parking'))
+    expect(screen.queryByText('Driver dashboard')).not.toBeInTheDocument()
+  })
+  it('honors a safe map destination for an already authenticated driver', async () => {
+    localStorage.setItem('access_token',token('DRIVER'))
+    setup('/login?next=%2Fparking')
+    expect(await screen.findByText('Parking map')).toBeInTheDocument()
   })
 
 })

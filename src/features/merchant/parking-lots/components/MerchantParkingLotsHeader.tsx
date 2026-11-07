@@ -3,9 +3,10 @@ import { Download, PlusCircle } from 'lucide-react'
 
 interface MerchantParkingLotsHeaderProps {
   onOpenExportModal: () => void
+  exportDisabled?: boolean
 }
 
-export function MerchantParkingLotsHeader({ onOpenExportModal }: MerchantParkingLotsHeaderProps) {
+export function MerchantParkingLotsHeader({ onOpenExportModal, exportDisabled }: MerchantParkingLotsHeaderProps) {
   const navigate = useNavigate()
 
   return (
@@ -30,10 +31,11 @@ export function MerchantParkingLotsHeader({ onOpenExportModal }: MerchantParking
           <button
             type="button"
             onClick={onOpenExportModal}
-            className="flex items-center gap-2 px-4 py-2.5 bg-[#eff4ff] text-[#0d1c2e] hover:bg-[#d5e3fc] transition-colors text-xs lg:text-sm font-semibold rounded-xl border border-slate-200/70 shadow-2xs cursor-pointer"
+            disabled={exportDisabled}
+            className="flex items-center gap-2 px-4 py-2.5 bg-[#eff4ff] text-[#0d1c2e] hover:bg-[#d5e3fc] transition-colors text-xs lg:text-sm font-semibold rounded-xl border border-slate-200/70 shadow-2xs cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <Download className="w-4 h-4 text-slate-600" />
-            <span>Xuất Báo Cáo Mặt Bằng</span>
+            <span>Xuất CSV trang hiện tại</span>
           </button>
 
           <button

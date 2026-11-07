@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import { statusLabels } from '@/features/booking-flow'
 import {
   Truck,
   MapPin,
@@ -65,7 +66,7 @@ export function ActiveTripCard({ booking, onOpenQr }: ActiveTripCardProps) {
         <div className="flex items-center gap-2">
           <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-orange-100/80 text-[#9c3f00] text-xs font-semibold tracking-wide border border-orange-200/60">
             <span className="w-2 h-2 rounded-full bg-[#d95f00] animate-pulse" />
-            ĐANG ĐỖ TẠI BÃI (PARKING)
+            {statusLabels[booking.status]}
           </span>
           <span className="font-mono text-xs text-slate-700 bg-white border border-slate-200 px-2.5 py-1 rounded-md font-medium">
             MÃ ĐƠN: {booking.bookingCode}

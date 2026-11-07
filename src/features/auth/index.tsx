@@ -1,3 +1,6 @@
+import type { AuthFields } from './model/authFields'
+import { BankField } from './components/BankField'
+import { requestEmailOtp } from './api/emailOtp'
 import { LoginPage } from './pages/LoginPage'
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
@@ -19,19 +22,9 @@ export { LoginPage } from './pages/LoginPage'
 export function AuthPage({ mode }: { mode: 'login' | 'register' | 'forgot' }) {
   return mode === 'login' ? <LoginPage /> : <LegacyAuthPage mode={mode} />
 }
-interface AuthFields {
-  phone: string
-  password: string
-  email: string
-  fullName: string
-  citizenId: string
-  otpCode: string
-  newPassword: string
-  role: 'DRIVER' | 'MERCHANT'
-}
 function LegacyAuthPage({ mode }: { mode: 'login' | 'register' | 'forgot' }) {
   const form = useForm<AuthFields>({ defaultValues: { role: 'DRIVER' } })
-  const [sent, setSent] = useState(false)
+  const email = (form.watch('email') ?? '').trim().toLowerCase()
   const [countdown, setCountdown] = useState(0)
   useEffect(() => {
     if (!countdown) return
@@ -46,35 +39,31 @@ function LegacyAuthPage({ mode }: { mode: 'login' | 'register' | 'forgot' }) {
         : 'Khôi phục quyền truy cập.'
   const otp = useMutation({
     mutationFn: async () => {
-      const key = mode === 'register' ? 'phone' : 'email'
-      if (!(await form.trigger(key)))
-        throw new Error('Kiểm tra thông tin nhận OTP.')
-      return sendData<{ expiresInSeconds: number }>(
-        'post',
-        `/api/v1/auth/${mode === 'register' ? 'otp/send' : 'forgot-password/otp'}`,
-        { [key]: form.getValues(key) },
-      )
+      if (!(await form.trigger('email')))
+        throw new Error('Nhập email hợp lệ để nhận mã.')
+      return requestEmailOtp(mode === 'register' ? 'register' : 'forgot', form.getValues('email').trim().toLowerCase())
     },
     onSuccess: (data) => {
-      setSent(true)
-      setCountdown(Math.max(1, data.expiresInSeconds || 60))
+      setCountdown(Math.max(1, data.resendAfterSeconds || 60))
     },
   })
+  const sent = otp.isSuccess && otp.data.email === email
   const submit = useMutation({
     mutationFn: async (data: AuthFields) => {
       if (mode === 'register')
         await sendData('post', '/api/v1/auth/register', {
           phone: data.phone,
           password: data.password,
-          email: data.email,
+          email: data.email.trim().toLowerCase(),
           role: data.role,
           fullName: data.fullName,
           citizenId: data.citizenId,
+          ...(data.role === 'MERCHANT' ? { bankName: data.bankName, bankAccountNum: data.bankAccountNum } : {}),
           otpCode: data.otpCode,
         })
       else
         await sendData('post', '/api/v1/auth/forgot-password/reset', {
-          email: data.email,
+          email: data.email.trim().toLowerCase(),
           otpCode: data.otpCode,
           newPassword: data.newPassword,
         })
@@ -124,7 +113,7 @@ function LegacyAuthPage({ mode }: { mode: 'login' | 'register' | 'forgot' }) {
           className="flex items-center gap-3 font-sora text-xl font-bold"
         >
           <Truck className="text-brand-orange" />
-          SMARTTRUCK HUB
+          Smart Parking Hub
         </Link>
         <div className="py-12 lg:py-24">
           <p className="mb-6 font-mono text-xs tracking-[.3em] text-brand-orange">
@@ -147,28 +136,35 @@ function LegacyAuthPage({ mode }: { mode: 'login' | 'register' | 'forgot' }) {
       </aside>
       <section className="flex items-center justify-center px-6 py-12 md:px-14 md:py-16 xl:px-20 2xl:px-28">
         <div
-          className={`w-full ${mode === 'register' ? 'max-w-[680px]' : 'max-w-[600px]'}`}
+          className={`w-full ${submit.isSuccess ? 'max-w-[520px]' : mode === 'register' ? 'max-w-[680px]' : 'max-w-[600px]'}`}
         >
+          {!submit.isSuccess && <>
           <h1 className="font-sora text-3xl font-semibold leading-snug tracking-tight text-brand-navy xl:text-4xl">
             {title}
           </h1>
           <p className="mb-10 mt-4 text-base leading-7 text-brand-muted">
             {mode === 'login'
               ? 'Đăng nhập để tiếp tục công việc của bạn.'
-              : 'Thông tin được xác thực bởi hệ thống SmartTruck Hub.'}
+              : 'Xác thực email để bảo vệ tài khoản của bạn.'}
           </p>
+          </>}
           {submit.isSuccess && mode !== 'login' ? (
             <AuthSuccess mode={mode} />
           ) : (
             <form
+              noValidate
               className="space-y-6 [&_input]:min-h-14 [&_input]:text-base [&_select]:min-h-14 [&_label]:gap-3 [&_label]:text-base"
               onSubmit={form.handleSubmit((data) => submit.mutate(data))}
             >
               {mode !== 'forgot' &&
-                input('phone', 'Số điện thoại', 'tel', {
+                <div className="space-y-2">{input('phone', 'Số điện thoại', 'tel', {
                   pattern: /^(0|\+84)[35789][0-9]{8}$/,
-                })}
-              {mode !== 'login' && input('email', 'Email', 'email')}
+                })}<p className="text-sm text-brand-muted">Dùng để đăng nhập. Bước này chưa xác thực số điện thoại.</p></div>}
+              {mode !== 'login' && input('email', 'Email nhận mã xác thực', 'email', {
+                pattern: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+                maxLength: 100,
+                setValueAs: (value: string) => value.trim(),
+              })}
               {mode === 'register' && (
                 <>
                   <Field label="Bạn tham gia với vai trò">
@@ -178,6 +174,10 @@ function LegacyAuthPage({ mode }: { mode: 'login' | 'register' | 'forgot' }) {
                     </select>
                   </Field>
                   {input('fullName', 'Họ và tên', 'text', { maxLength: 100 })}
+                  {form.watch('role') === 'MERCHANT' && <>
+                    <BankField control={form.control} disabled={submit.isPending} />
+                    {input('bankAccountNum', 'Số tài khoản ngân hàng', 'text', { pattern: /^\d{6,30}$/ })}
+                  </>}
                   {input('citizenId', 'CCCD / CMND', 'text', {
                     required: false,
                     pattern: /^$|^(?:[0-9]{9}|[0-9]{12})$/,
@@ -193,23 +193,39 @@ function LegacyAuthPage({ mode }: { mode: 'login' | 'register' | 'forgot' }) {
                 <>
                   <button
                     type="button"
-                    disabled={otp.isPending || countdown > 0}
+                    disabled={otp.isPending || submit.isPending || countdown > 0}
                     className={secondary}
                     onClick={() => otp.mutate()}
                   >
-                    {countdown ? `Gửi lại sau ${countdown}s` : 'Gửi mã OTP'}
+                    {otp.isPending ? 'Đang gửi email…' : countdown ? `Gửi lại sau ${countdown}s` : 'Gửi mã qua email'}
                   </button>
                   {sent && (
-                    <Notice>
-                      Yêu cầu OTP đã được gửi. Kiểm tra kênh nhận mã của bạn.
-                    </Notice>
+                    <div
+                      role="status"
+                      aria-live="polite"
+                      className="flex items-start gap-3 rounded-xl border border-brand-orange/25 border-l-4 border-l-brand-orange bg-brand-orange/5 p-4 text-brand-navy"
+                    >
+                      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brand-orange text-white">
+                        <Check size={20} strokeWidth={2.5} aria-hidden="true" />
+                      </span>
+                      <div className="min-w-0">
+                        <p className="font-sora text-sm font-semibold leading-5">
+                          {mode === 'forgot' ? 'Kiểm tra hộp thư của bạn' : 'Mã xác thực đã được gửi'}
+                        </p>
+                        <p className="mt-1 text-sm leading-5 text-brand-muted">
+                          {mode === 'forgot' ? 'Nếu email đã đăng ký, bạn sẽ nhận được mã. ' : <>Gửi đến <strong className="break-all font-medium text-brand-navy">{otp.data?.email}</strong>. </>}
+                          Mã gồm 6 số, có hiệu lực 5 phút. Kiểm tra cả thư rác.
+                        </p>
+                      </div>
+                    </div>
                   )}
-                  {input('otpCode', 'Mã OTP 6 chữ số', 'text', {
+                  {input('otpCode', 'Mã xác thực email (6 số)', 'text', {
                     pattern: /^\d{6}$/,
                   })}
                   {mode === 'forgot' &&
                     input('newPassword', 'Mật khẩu mới', 'password', {
                       minLength: 6,
+                      maxLength: 50,
                     })}
                 </>
               )}
@@ -234,13 +250,13 @@ function LegacyAuthPage({ mode }: { mode: 'login' | 'register' | 'forgot' }) {
               </button>
             </form>
           )}
-          <nav className="mt-7 flex flex-wrap gap-5 text-sm text-brand-muted">
+          {!submit.isSuccess && <nav className="mt-7 flex flex-wrap gap-5 text-sm text-brand-muted">
             {mode !== 'login' && <Link to="/login">Đăng nhập</Link>}
             {mode !== 'register' && <Link to="/register">Tạo tài khoản</Link>}
             {mode !== 'forgot' && (
               <Link to="/forgot-password">Quên mật khẩu?</Link>
             )}
-          </nav>
+          </nav>}
         </div>
       </section>
     </main>
@@ -254,30 +270,31 @@ export function AuthSuccess({
   return (
     <section
       role="status"
-      className="rounded-3xl border border-brand-border bg-white p-7 shadow-sm sm:p-10"
+      aria-live="polite"
+      className="overflow-hidden rounded-2xl border border-brand-border border-t-4 border-t-brand-orange bg-white p-6 font-inter sm:p-8"
     >
-      <div className="mb-7 flex h-14 w-14 items-center justify-center rounded-2xl bg-brand-navy text-brand-orange">
-        <Check size={28} strokeWidth={2.5} />
+      <div className="mb-6 flex items-center gap-3">
+        <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-brand-orange/10 text-brand-navy">
+          <Check size={24} strokeWidth={2.5} aria-hidden="true" />
+        </span>
+        <p className="text-sm font-semibold text-brand-navy">
+          {mode === 'register' ? 'Tài khoản đã sẵn sàng' : 'Mật khẩu đã cập nhật'}
+        </p>
       </div>
-      <p className="mb-3 text-xs font-semibold tracking-[.18em] text-brand-muted">
+      <h1 className="font-sora text-2xl font-semibold leading-snug tracking-tight text-brand-navy sm:text-3xl">
+        {mode === 'register' ? 'Đăng ký thành công' : 'Đặt lại mật khẩu thành công'}
+      </h1>
+      <p className="mt-3 text-base leading-6 text-brand-muted">
         {mode === 'register'
-          ? 'TÀI KHOẢN ĐÃ SẴN SÀNG'
-          : 'BẢO MẬT ĐÃ ĐƯỢC CẬP NHẬT'}
-      </p>
-      <h2 className="font-sora text-2xl font-semibold leading-relaxed text-brand-navy">
-        {mode === 'register' ? 'Đăng ký thành công!' : 'Đã đặt lại mật khẩu.'}
-      </h2>
-      <p className="mb-8 mt-3 max-w-md text-base leading-7 text-brand-muted">
-        {mode === 'register'
-          ? 'Chào mừng bạn đến với SmartTruck Hub. Đăng nhập để tìm điểm đỗ và bắt đầu hành trình của mình.'
-          : 'Bạn có thể đăng nhập bằng mật khẩu mới để tiếp tục sử dụng tài khoản.'}
+          ? 'Đăng nhập để bắt đầu tìm và đặt chỗ đỗ xe.'
+          : 'Đăng nhập bằng mật khẩu mới để tiếp tục.'}
       </p>
       <Link
-        className={`${button} min-h-14 w-full sm:w-auto sm:min-w-64`}
+        className={`${button} mt-7 min-h-12 w-full text-base`}
         to="/login"
       >
-        Đến trang đăng nhập
-        <ArrowUpRight size={20} />
+        Đăng nhập
+        <ArrowUpRight size={18} aria-hidden="true" />
       </Link>
     </section>
   )

@@ -9,6 +9,7 @@ import { fallbackParkingLots } from '../api/parkingSearchApi'
 vi.mock('@/shared/api/client', () => ({
   apiClient: {
     get: vi.fn(),
+    request: vi.fn(),
   },
 }))
 vi.mock('../components/InteractiveMapCanvas', () => ({
@@ -38,8 +39,10 @@ function renderWithProviders(
 
 describe('SCR-015: Interactive Parking Search & Map (Bản đồ tìm kiếm bãi đỗ)', () => {
   beforeEach(() => {
+    HTMLDialogElement.prototype.showModal = function(){ this.setAttribute('open','') };
+    HTMLDialogElement.prototype.close = function(){ this.removeAttribute('open') };
     vi.clearAllMocks()
-    vi.mocked(apiClient.get).mockResolvedValue({
+    vi.mocked(apiClient.get).mockImplementation(async url => String(url).match(/parking-lots\/\d+$/) ? {data:{data:{id:1,name:'Bãi API',address:'Địa chỉ',status:'APPROVED',slots:[],pricingRules:[]}}} : String(url).includes('/vehicles') ? {data:{data:{content:[{id:3,licensePlate:'51C-TEST',vehicleType:'CONTAINER',status:'ACTIVE'}]}}} : {
       data: {
         content: fallbackParkingLots,
         totalElements: fallbackParkingLots.length,
@@ -101,41 +104,18 @@ describe('SCR-015: Interactive Parking Search & Map (Bản đồ tìm kiếm bã
     expect(screen.queryByText(/Lưu lượng xe 85%/i)).not.toBeInTheDocument()
   })
 
-  it('interactively opens and confirms Quick Booking Drawer for 10-minute hold', async () => {
+  it('opens the server-backed booking flow without claiming a hold before submission', async () => {
     renderWithProviders(<SearchParkingPage />)
-
-    await waitFor(() => {
-      expect(screen.getAllByText(/ĐẶT GIỮ CHỖ 10P/i).length).toBeGreaterThan(0)
-    })
-
-    // Click quick book on first yard card
-    const quickBookBtn = screen.getAllByText(/ĐẶT GIỮ CHỖ 10P/i)[0]
-    fireEvent.click(quickBookBtn)
-
-    // Drawer should open with details
-    expect(
-      screen.getByText(/Đặt giữ chỗ khẩn cấp \(10 Phút\)/i),
-    ).toBeInTheDocument()
-    expect(
-      screen.getByText(/Bãi sẽ khóa slot vật lý ngay sau khi bạn xác nhận/i),
-    ).toBeInTheDocument()
-    expect(screen.getByText(/Thời gian giữ chỗ: 10 phút./i)).toBeInTheDocument()
-    expect(
-      screen.getByDisplayValue(
-        /51D-894.12 · Rơ-moóc 40FT \(Tài xế: Trần Quốc Tuấn\)/i,
-      ),
-    ).toBeInTheDocument()
-
-    // Confirm booking
-    const confirmBtn = screen.getByText(/XÁC NHẬN GIỮ CHỖ/i)
-    fireEvent.click(confirmBtn)
-
-    // Success confirmation screen
-    expect(screen.getByText(/Giữ Chỗ Thành Công!/i)).toBeInTheDocument()
+    const buttons = await screen.findAllByText(/ĐẶT CHỖ · CỌC 20%/i)
+    fireEvent.click(buttons[0])
+    expect(screen.getByRole('dialog')).toBeInTheDocument()
+    expect(screen.getByText('Đặt chỗ và thanh toán cọc')).toBeInTheDocument()
+    expect(screen.queryByText('Giữ Chỗ Thành Công!')).not.toBeInTheDocument()
+    expect(apiClient.request).not.toHaveBeenCalled()
   })
 
   it('displays empty state when no parking lots match criteria and allows expanding radius', async () => {
-    vi.mocked(apiClient.get).mockResolvedValueOnce({
+    vi.mocked(apiClient.get).mockImplementation(async url => String(url).includes('/vehicles') ? {data:{data:{content:[]}}} : {
       data: {
         content: [],
         totalElements: 0,
@@ -164,9 +144,7 @@ describe('SCR-015: Interactive Parking Search & Map (Bản đồ tìm kiếm bã
   })
 
   it('displays error alert with ERR_GEO_DISPATCH_TIMEOUT when server request fails', async () => {
-    vi.mocked(apiClient.get).mockRejectedValueOnce(
-      new Error('Network connection timeout'),
-    )
+    vi.mocked(apiClient.get).mockImplementation(async url => {if(String(url).includes('/vehicles'))return {data:{data:{content:[]}}};throw new Error('Network connection timeout')})
 
     renderWithProviders(<SearchParkingPage />)
 

@@ -1,231 +1,64 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, screen, fireEvent, waitFor } from '@testing-library/react'
-import { MemoryRouter } from 'react-router-dom'
+import { beforeEach, afterEach, it, expect, vi } from 'vitest'
+import { render, screen, cleanup } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { MemoryRouter } from 'react-router-dom'
 import { apiClient } from '@/shared/api/client'
-import { DriverPaymentsPage } from '../pages/DriverPaymentsPage'
-import { fallbackTransactions } from '../api/paymentApi'
-
-vi.mock('@/shared/api/client', () => ({
-  apiClient: {
-    get: vi.fn(),
-    post: vi.fn(),
-  },
-}))
-
-function renderWithProviders(ui: React.ReactElement, initialEntries = ['/payments']) {
-  const queryClient = new QueryClient({
-    defaultOptions: {
-      queries: {
-        retry: false,
-      },
-    },
-  })
-
-  return render(
-    <QueryClientProvider client={queryClient}>
-      <MemoryRouter initialEntries={initialEntries}>{ui}</MemoryRouter>
-    </QueryClientProvider>
-  )
+vi.mock('@/shared/api/client', () => ({ apiClient: { get: vi.fn(), request: vi.fn(), delete: vi.fn() } }))
+afterEach(cleanup)
+function mount(ui: React.ReactNode) {
+ const cache = new QueryClient({defaultOptions:{queries:{retry:false},mutations:{retry:false}}})
+ render(<QueryClientProvider client={cache}><MemoryRouter>{ui}</MemoryRouter></QueryClientProvider>)
+ return cache
 }
+const page = (content: unknown[], currentPage=0, totalPages=1, totalElements=content.length) => ({data:{data:{content,currentPage,totalPages,totalElements}}})
+import { DriverPaymentsPage } from '../pages/DriverPaymentsPage'
+const transaction = {id:71,bookingId:21,parkingLotId:31,gateway:'DEMO',transactionCode:'TX-API-71',orderCode:211,amount:15000,type:'DEPOSIT',status:'SUCCESS',createdAt:'2026-11-07T10:00:00'}
+beforeEach(()=>{vi.clearAllMocks();vi.mocked(apiClient.get).mockResolvedValue(page([transaction]))})
+it('shows no payments and no invented VAT or refunds for a new account',async()=>{
+ vi.mocked(apiClient.get).mockResolvedValue(page([],0,0));mount(<DriverPaymentsPage/>);
+ expect(await screen.findByText('Bạn chưa có giao dịch thanh toán nào.')).toBeInTheDocument()
+ expect(screen.queryByText(/3.420.000|400.000|18 HĐ|CQT ACTIVE|TXN-2026/)).not.toBeInTheDocument()
+ expect(apiClient.get).toHaveBeenCalledWith('/api/v1/payments',{params:{page:0,size:20,sort:'id,desc'}})
+})
+it('shows actual gateway, amount, booking ID and timestamp without fabricated VAT/bank/vehicle fields',async()=>{
+ mount(<DriverPaymentsPage/>);expect(await screen.findByText('TX-API-71')).toBeInTheDocument()
+ expect(screen.getByText('Demo (thử nghiệm)')).toBeInTheDocument();expect(screen.getByText('Booking #21')).toBeInTheDocument()
+ expect(screen.getByText(/7\/11\/2026/)).toBeInTheDocument()
+ expect(screen.queryByText(/PDF VAT|51D-894|ĐỒNG BỘ THỜI GIAN THỰC/)).not.toBeInTheDocument()
+})
+it('only sums successful non-refund transactions on the current page',async()=>{
+ vi.mocked(apiClient.get).mockResolvedValue(page([transaction,{...transaction,id:72,transactionCode:'PENDING',amount:900000,status:'PENDING'},{...transaction,id:73,transactionCode:'REFUND',amount:5000,type:'REFUND'},{...transaction,id:74,transactionCode:'REVIEW',amount:700000,status:'REQUIRES_REVIEW'}]))
+ mount(<DriverPaymentsPage/>);await screen.findByText('TX-API-71')
+ const label=screen.getByText('Đã thanh toán trên trang này');expect(label.parentElement).toHaveTextContent(/15[.\s]000/)
+ expect(label.parentElement).not.toHaveTextContent(/900[.\s]000|700[.\s]000/)
+ await userEvent.selectOptions(screen.getByLabelText('Trạng thái trong trang hiện tại'),'REQUIRES_REVIEW')
+ expect(screen.getByText('REVIEW')).toBeInTheDocument();expect(screen.queryByText('TX-API-71')).not.toBeInTheDocument()
+})
+it('shows reconciliation details from the selected server transaction',async()=>{
+ vi.mocked(apiClient.get).mockResolvedValue(page([{...transaction,status:'REQUIRES_REVIEW'}]));mount(<DriverPaymentsPage/>);await screen.findByText('TX-API-71')
+ await userEvent.click(screen.getByRole('button',{name:'Chi tiết giao dịch TX-API-71'}))
+ expect(screen.getByText(/Giao dịch đang cần đối soát/)).toBeInTheDocument();expect(screen.getByText('#31')).toBeInTheDocument()
+})
+it.each([401,500])('reports HTTP %s instead of showing synthetic transactions',async code=>{
+ vi.mocked(apiClient.get).mockRejectedValue(new Error(`API ${code}`));mount(<DriverPaymentsPage/>);
+ expect(await screen.findByRole('alert')).toHaveTextContent(`API ${code}`);expect(screen.queryByText('TX-API-71')).not.toBeInTheDocument()
+ vi.mocked(apiClient.get).mockResolvedValue(page([]));await userEvent.click(screen.getByText('Thử lại'));expect(await screen.findByText(/Bạn chưa có giao dịch/)).toBeInTheDocument()
+})
+it('uses server pagination and scopes search and totals to the displayed page',async()=>{
+ vi.mocked(apiClient.get).mockImplementation(async(_url,config)=>Number((config?.params as {page?:number} | undefined)?.page)===1?page([{...transaction,id:72,transactionCode:'TX-PAGE2',amount:25000}],1,2,21):page([transaction],0,2,21))
+ mount(<DriverPaymentsPage/>);await screen.findByText('TX-API-71');await userEvent.click(screen.getByText('Trang sau'))
+ expect(await screen.findByText('TX-PAGE2')).toBeInTheDocument();expect(screen.queryByText('TX-API-71')).not.toBeInTheDocument()
+ await userEvent.type(screen.getByLabelText('Tìm trong trang hiện tại'),'absent')
+ expect(screen.getByText('Không có giao dịch phù hợp trong trang này.')).toBeInTheDocument()
+})
+it('displays a pending loader until the API responds',()=>{
+ vi.mocked(apiClient.get).mockImplementation(()=>new Promise(()=>{}));mount(<DriverPaymentsPage/>);
+ expect(screen.getByRole('status')).toHaveTextContent('Đang tải giao dịch');expect(screen.queryByText('TX-API-71')).not.toBeInTheDocument()
+})
 
-describe('SCR-019: DriverPaymentsPage (Lịch sử thanh toán & Hóa đơn VAT)', () => {
-  beforeEach(() => {
-    vi.clearAllMocks()
-    vi.mocked(apiClient.get).mockResolvedValue({
-      data: {
-        data: {
-          content: fallbackTransactions,
-          totalElements: fallbackTransactions.length,
-          totalPages: 1,
-        },
-      },
-    })
-  })
-
-  it('renders command header, TT78 ticker, title, and action CTA buttons', async () => {
-    renderWithProviders(<DriverPaymentsPage />)
-
-    expect(
-      screen.getByText(/KẾT NỐI TỔNG CỤC THUẾ \(HĐĐT TT78\):/i)
-    ).toBeInTheDocument()
-    expect(
-      screen.getByRole('heading', {
-        level: 1,
-        name: /Lịch Sử Thanh Toán & Hóa Đơn VAT/i,
-      })
-    ).toBeInTheDocument()
-    expect(screen.getByText(/VTP-VN-51C-LOGISTICS/i)).toBeInTheDocument()
-    expect(screen.getAllByText(/0301489271/i).length).toBeGreaterThanOrEqual(1)
-
-    // Action buttons
-    expect(
-      screen.getByRole('button', { name: /CẤU HÌNH XUẤT HÓA ĐƠN CÔNG TY/i })
-    ).toBeInTheDocument()
-    expect(
-      screen.getByRole('button', { name: /XUẤT BÁO CÁO EXCEL \/ PDF ➞/i })
-    ).toBeInTheDocument()
-  })
-
-  it('renders 4 Bento financial metrics tiles', async () => {
-    renderWithProviders(<DriverPaymentsPage />)
-
-    expect(screen.getByText(/TỔNG CHI PHÍ THÁNG NÀY/i)).toBeInTheDocument()
-    expect(screen.getByText(/3.420.000/i)).toBeInTheDocument()
-    expect(screen.getByText(/18 lượt đỗ container/i)).toBeInTheDocument()
-
-    expect(screen.getByText(/TIỀN CỌC ĐÃ HOÀN TRẢ/i)).toBeInTheDocument()
-    expect(screen.getByText(/400.000/i)).toBeInTheDocument()
-
-    expect(screen.getByText(/PHẠT QUÁ GIỜ PHÁT SINH/i)).toBeInTheDocument()
-    expect(screen.getByText(/CHUẨN GIỜ/i)).toBeInTheDocument()
-
-    expect(screen.getByText(/HĐĐT VAT ĐÃ ĐỒNG BỘ/i)).toBeInTheDocument()
-    expect(screen.getByText(/\/ 18 HĐ/i)).toBeInTheDocument()
-  })
-
-  it('renders filter toolbar with search input and segmented category tags', async () => {
-    renderWithProviders(<DriverPaymentsPage />)
-
-    expect(
-      screen.getByPlaceholderText(/Tra cứu: Mã giao dịch PayOS, Mã Booking/i)
-    ).toBeInTheDocument()
-    expect(screen.getByText(/Tháng 02\/2026 \(01\/02 - 28\/02\)/i)).toBeInTheDocument()
-
-    // Segmented filters
-    expect(screen.getByRole('button', { name: /Tất cả \(8\)/i })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /Tiền cọc giữ slot/i })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /Quyết toán khoản cuối/i })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /Hoàn cọc/i })).toBeInTheDocument()
-  })
-
-  it('renders master transaction table with transaction codes, fees, and PDF buttons', async () => {
-    renderWithProviders(<DriverPaymentsPage />)
-
-    expect(screen.getByText(/Bảng Kê Chi Tiết Giao Dịch PayOS & Tiền Bãi/i)).toBeInTheDocument()
-    expect(screen.getByText(/8 BẢN GHI ĐỐI SOÁT/i)).toBeInTheDocument()
-
-    expect(screen.getAllByText('TXN-2026-9040').length).toBeGreaterThanOrEqual(1)
-    expect(screen.getByText('REF-2026-1102')).toBeInTheDocument()
-    expect(screen.getByText('TXN-2026-9032')).toBeInTheDocument()
-    expect(screen.getByText('TXN-2026-8874')).toBeInTheDocument()
-
-    // Check PDF VAT buttons
-    expect(screen.getAllByRole('button', { name: /PDF VAT/i }).length).toBeGreaterThanOrEqual(1)
-  })
-
-  it('renders receipt inspector panel for selected transaction with cost breakdown', async () => {
-    renderWithProviders(<DriverPaymentsPage />)
-
-    expect(screen.getByTestId('receipt-inspector-panel')).toBeInTheDocument()
-    expect(screen.getByText(/BIÊN LAI ĐIỆN TỬ CHÍNH THỨC/i)).toBeInTheDocument()
-    expect(screen.getByText(/Chi Tiết Thanh Toán #TXN-2026-9040/i)).toBeInTheDocument()
-    expect(screen.getByText(/Berth 114 \(Reefer Hookup 380V\) - Gate 2/i)).toBeInTheDocument()
-
-    // Breakdown lines
-    expect(screen.getByText(/Phí lưu bãi Container Reefer \(12 giờ\)/i)).toBeInTheDocument()
-    expect(
-      screen.getByText(/Phụ thu cấp điện lạnh chuyên dụng \(Shore Power 3-Phase\)/i)
-    ).toBeInTheDocument()
-    expect(screen.getByText(/Thuế Giá Trị Gia Tăng \(VAT 8%\)/i)).toBeInTheDocument()
-    expect(screen.getByText(/TỔNG CỘNG THANH TOÁN \(ĐÃ VAT\)/i)).toBeInTheDocument()
-  })
-
-  it('updates receipt inspector when selecting another transaction row', async () => {
-    renderWithProviders(<DriverPaymentsPage />)
-
-    const rowRefund = screen.getByText('REF-2026-1102')
-    fireEvent.click(rowRefund)
-
-    await waitFor(() => {
-      expect(
-        screen.getByText(/Chi Tiết Thanh Toán #REF-2026-1102/i)
-      ).toBeInTheDocument()
-      expect(screen.getByText(/TỔNG TIỀN HOÀN TRẢ/i)).toBeInTheDocument()
-    })
-  })
-
-  it('filters transaction list by keyword', async () => {
-    renderWithProviders(<DriverPaymentsPage />)
-
-    const searchInput = screen.getByPlaceholderText(/Tra cứu: Mã giao dịch PayOS, Mã Booking/i)
-    fireEvent.change(searchInput, { target: { value: 'Sóng Thần' } })
-
-    expect(screen.getByText('TXN-2026-8874')).toBeInTheDocument()
-    expect(screen.queryByText('TXN-2026-8519')).not.toBeInTheDocument()
-  })
-
-  it('filters transaction list by category tag', async () => {
-    renderWithProviders(<DriverPaymentsPage />)
-
-    const refundCategoryBtn = screen.getByRole('button', { name: /Hoàn cọc \(2\)/i })
-    fireEvent.click(refundCategoryBtn)
-
-    expect(screen.getByText('REF-2026-1102')).toBeInTheDocument()
-    expect(screen.queryByText('TXN-2026-9040')).not.toBeInTheDocument()
-  })
-
-  it('opens and saves company invoice configuration modal', async () => {
-    renderWithProviders(<DriverPaymentsPage />)
-
-    const openConfigBtn = screen.getByRole('button', {
-      name: /CẤU HÌNH XUẤT HÓA ĐƠN CÔNG TY/i,
-    })
-    fireEvent.click(openConfigBtn)
-
-    expect(
-      screen.getByRole('heading', { name: /Cấu Hình Hóa Đơn Doanh Nghiệp/i })
-    ).toBeInTheDocument()
-
-    const submitBtn = screen.getByRole('button', { name: /Lưu Cấu Hình/i })
-    fireEvent.click(submitBtn)
-
-    await waitFor(() => {
-      expect(
-        screen.getByText(/Đã lưu cấu hình doanh nghiệp thành công!/i)
-      ).toBeInTheDocument()
-    })
-  })
-
-  it('opens export report modal and simulates report download', async () => {
-    renderWithProviders(<DriverPaymentsPage />)
-
-    const exportBtn = screen.getByRole('button', {
-      name: /XUẤT BÁO CÁO EXCEL \/ PDF ➞/i,
-    })
-    fireEvent.click(exportBtn)
-
-    expect(
-      screen.getByRole('heading', { name: /Xuất Báo Cáo Sổ Cái Chi Phí/i })
-    ).toBeInTheDocument()
-
-    const downloadExcelBtn = screen.getByRole('button', { name: /Tải tệp EXCEL/i })
-    fireEvent.click(downloadExcelBtn)
-
-    await waitFor(() => {
-      expect(
-        screen.getByText(/Tệp báo cáo đã được tải xuống máy!/i)
-      ).toBeInTheDocument()
-    })
-  })
-
-  it('opens send receipt email modal and simulates email dispatch', async () => {
-    renderWithProviders(<DriverPaymentsPage />)
-
-    const sendEmailBtn = screen.getByRole('button', {
-      name: /GỬI QUA EMAIL KẾ TOÁN/i,
-    })
-    fireEvent.click(sendEmailBtn)
-
-    expect(
-      screen.getByRole('heading', { name: /Gửi Biên Lai \/ HĐĐT Qua Email/i })
-    ).toBeInTheDocument()
-
-    const confirmSendBtn = screen.getByRole('button', { name: /Gửi Ngay/i })
-    fireEvent.click(confirmSendBtn)
-
-    await waitFor(() => {
-      expect(screen.getByText(/Đã gửi email thành công!/i)).toBeInTheDocument()
-    })
-  })
+it('rejects a malformed amount rather than claiming a zero-value payment',async()=>{
+ vi.mocked(apiClient.get).mockResolvedValue(page([{...transaction,amount:null}]))
+ mount(<DriverPaymentsPage/>);expect(await screen.findByRole('alert')).toBeInTheDocument()
+ expect(screen.queryByText('TX-API-71')).not.toBeInTheDocument()
 })

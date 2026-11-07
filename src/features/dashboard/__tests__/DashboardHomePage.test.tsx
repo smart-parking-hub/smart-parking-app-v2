@@ -35,27 +35,27 @@ describe('SCR-014: Driver Dashboard Home (Tổng quan Tài xế)', () => {
     vi.mocked(apiClient.get).mockImplementation((url: string) => {
       if (url.includes('vehicles')) {
         return Promise.resolve({
-          data: {
+          data: {data: {
             content: [],
             totalElements: 3,
             totalPages: 1,
             size: 10,
             number: 0,
-          },
+          }},
         })
       }
       if (url.includes('bookings')) {
         return Promise.resolve({
-          data: {
+          data: {data: {
             content: [
               fallbackDashboardData.activeBooking!,
               ...fallbackDashboardData.recentBookings,
-            ],
+            ].map(b=>({...b,vehiclePlate:b.vehicleLicensePlate,advanceDeposit:b.depositAmount,totalAmount:b.totalPrice})),
             totalElements: 48,
             totalPages: 3,
             size: 20,
             number: 0,
-          },
+          }},
         })
       }
       return Promise.reject(new Error('Not found'))

@@ -1,3 +1,5 @@
+> Log cleanup 2026-11-07: generated `.log` attachments referenced below were removed at the user's request. Historical results remain recorded here; they do not represent the latest verification.
+
 # Báo cáo bàn giao và hướng dẫn push FE + BE
 
 Ngày: 05/11/2026 · Task: SCR-010 / SP-S2-FE-010
@@ -62,7 +64,7 @@ git add -- src/app/providers/AuthSession.tsx src/app/providers/index.tsx src/app
 git add -- src/layouts/AdminLayout.tsx src/layouts/driver/DriverHeader.tsx src/layouts/merchant/MerchantHeader.tsx
 git add -- src/features/merchant/operations/operations.test.tsx src/features/profile/components/NotificationSettingsModal.tsx
 git add -- docs/09-audit/scr-010-login-record.md docs/09-audit/scr-010-handoff-and-push.md
-git add -- docs/09-audit/scr-010-build.log docs/09-audit/scr-010-tests.log docs/09-audit/scr-010-e2e.log docs/09-audit/scr-010-desktop.png docs/09-audit/scr-010-mobile.png
+git add -- docs/09-audit/scr-010-desktop.png docs/09-audit/scr-010-mobile.png
 ```
 
 Ba file có thay đổi trộn nhiều task phải stage từng hunk. Chỉ chọn phần SCR-010 và phần sửa test provider/chờ lazy load, không chọn nội dung SCR-005:

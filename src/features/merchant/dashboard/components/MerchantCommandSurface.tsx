@@ -13,7 +13,7 @@ export function MerchantCommandSurface() {
             <div className="flex flex-wrap items-center gap-2">
               <span className="inline-block w-2 h-2 rounded-full bg-[#d95f00] animate-pulse" />
               <span className="font-mono text-xs text-[#d95f00] tracking-wider uppercase font-bold">
-                TỔNG QUAN VẬN HÀNH BẾN BÃI · CẬP NHẬT REALTIME 10S
+                TỔNG QUAN VẬN HÀNH BẾN BÃI
               </span>
               <span className="hidden sm:inline text-slate-300">|</span>
               <span className="font-mono text-xs text-[#45464d] font-semibold">
@@ -26,8 +26,7 @@ export function MerchantCommandSurface() {
             </h1>
 
             <p className="text-xs lg:text-sm text-[#45464d] max-w-3xl m-0 leading-relaxed">
-              Giám sát trực tiếp 03 cụm bãi đỗ thương mại: Cát Lái Gate 2, ICD Sóng Thần 2, Depot
-              Phú Hữu. Đồng bộ cảm biến tải trọng và hệ thống camera quét biển số tự động ALPR.
+              Theo dõi doanh thu, số dư ví và đặt chỗ tại các bãi đỗ của bạn.
             </p>
           </div>
 

@@ -394,7 +394,7 @@ export function AdminLotDetailPage() {
       <QueryState query={query}>
         {(lot) => (
           <>
-            <LotOverview lot={lot} />
+            <LotOverview lot={lot} showMap />
             <Panel title="Quyết định kiểm duyệt">
               <p className="mb-5 text-sm text-brand-muted">
                 Chủ bãi: {lot.merchantName || `#${lot.merchantId}`} ·{' '}

@@ -35,27 +35,27 @@ describe('SCR-014: Driver Dashboard Home (Tổng quan Tài xế)', () => {
     vi.mocked(apiClient.get).mockImplementation((url: string) => {
       if (url.includes('vehicles')) {
         return Promise.resolve({
-          data: {
+          data: {data: {
             content: [],
             totalElements: 3,
             totalPages: 1,
             size: 10,
             number: 0,
-          },
+          }},
         })
       }
       if (url.includes('bookings')) {
         return Promise.resolve({
-          data: {
+          data: {data: {
             content: [
               driverApi.fallbackDashboardData.activeBooking!,
               ...driverApi.fallbackDashboardData.recentBookings,
-            ],
+            ].map(b=>({...b,vehiclePlate:b.vehicleLicensePlate,advanceDeposit:b.depositAmount,totalAmount:b.totalPrice})),
             totalElements: 48,
             totalPages: 3,
             size: 20,
             number: 0,
-          },
+          }},
         })
       }
       return Promise.reject(new Error('Not found'))
@@ -147,24 +147,24 @@ describe('SCR-014: Driver Dashboard Home (Tổng quan Tài xế)', () => {
     vi.mocked(apiClient.get).mockImplementation((url: string) => {
       if (url.includes('vehicles')) {
         return Promise.resolve({
-          data: {
+          data: {data: {
             content: [],
             totalElements: 0,
             totalPages: 0,
             size: 10,
             number: 0,
-          },
+          }},
         })
       }
       if (url.includes('bookings')) {
         return Promise.resolve({
-          data: {
+          data: {data: {
             content: [],
             totalElements: 0,
             totalPages: 0,
             size: 20,
             number: 0,
-          },
+          }},
         })
       }
       return Promise.reject(new Error('Not found'))
@@ -180,18 +180,11 @@ describe('SCR-014: Driver Dashboard Home (Tổng quan Tài xế)', () => {
     expect(screen.getByText(/Tìm Bãi Đỗ Xe & Bảng Giá/i)).toBeInTheDocument()
   })
 
-  it('falls back gracefully to Stitch showcase data when backend API is offline', async () => {
-    vi.mocked(apiClient.get).mockRejectedValue(new Error('Network error / connection refused'))
-
+  it('shows an API error instead of sample parking activity when offline', async () => {
+    vi.mocked(apiClient.get).mockRejectedValue(new Error('Network error'))
     renderWithProviders(<DriverDashboardPage />)
-
-    await waitFor(() => {
-      expect(screen.getByText(/Xin Chào,/i)).toBeInTheDocument()
-      expect(screen.getByText(/Bác Tài Trần Quốc Tuấn/i)).toBeInTheDocument()
-    })
-
-    expect(screen.getByText(/03 Đầu Kéo/i)).toBeInTheDocument()
-    expect(screen.getByText(/48 Lượt/i)).toBeInTheDocument()
+    expect(await screen.findByRole('alert')).toHaveTextContent('Không thể tải dữ liệu')
+    expect(screen.queryByText(/48 Lượt/i)).not.toBeInTheDocument()
   })
 
   it('renders Error State and allows retrying when fetchDriverDashboardData throws', async () => {

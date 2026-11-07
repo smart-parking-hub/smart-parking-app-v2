@@ -1,5 +1,20 @@
 # Screen Implementation Record: SCR-026 Merchant Operations Dashboard
 
+> Correction — last_verified: 2026-11-07; owner: frontend maintainers.
+> Previous visual verification below describes the prototype and does not prove live API integration.
+> The dashboard now reads authenticated API envelopes (`data.data`) for revenue, owned lots and bookings.
+> It displays total net revenue (not monthly revenue), wallet balance and server-provided page totals.
+> Demo revenue, yards, plates, SVG chart, camera feeds and header identity are no longer rendered on this route.
+> Empty API results show empty states; failures/malformed payloads show a retryable error.
+> Header identity comes from `/api/v1/merchant/profile`; no hardcoded notification count or live-gate claim.
+> Backend currently returns an empty revenue series. Occupancy, camera telemetry and period statistics remain unavailable on this summary.
+> Evidence: `merchantDashboardApi.ts`, `MerchantDashboardPage.tsx`, `MerchantHeader.tsx`; verified against microservice controllers/DTOs.
+> Preserved: registration, scanner, profile, notifications, logout and navigation to lot/slot/pricing, booking and revenue management.
+> Removed prototype controls: static yard selector (never applied a filter), static range tabs (never changed chart data).
+> Verification: dashboard regression tests 6/6; typecheck, full ESLint and production build passed.
+> Wider merchant suite: 45 passed, 10 failed in existing create/detail lot test files; these pages already have separate working-tree changes and were not edited in this fix.
+> Live gateway health: HTTP 200 at localhost:8088. Authenticated browser/DB end-to-end validation and responsive visual review not performed.
+
 - Screen: `SCR-026 Merchant Dashboard Home (Bảng điều khiển tổng quan vận hành & doanh thu chủ bãi)`
 - Route: `/merchant`, `/merchant/dashboard`
 - Owning feature: `features/merchant/dashboard`
