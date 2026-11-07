@@ -6,7 +6,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { isAxiosError } from 'axios'
 import { ArrowUpRight, Check, LoaderCircle, ShieldCheck, Store, Truck } from 'lucide-react'
-import { control, button, Notice } from '@/shared/components/Workspace'
+import { control, Notice } from '@/shared/components/Workspace'
 import { errorMessage, sendData } from '@/shared/api/resources'
 import { loginDestination, readSession, saveSession } from '../model/session'
 export const loginSchema = z.object({
@@ -59,7 +59,7 @@ export function LoginForm() {
           form.setValue('phone', phone, { shouldValidate: true })
           form.setValue('password', 'password123', { shouldValidate: true })
           login.reset()
-        }} className={`group flex items-center gap-3 rounded-xl border p-3 text-left transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-600 disabled:opacity-50 ${selectedPhone === phone ? 'border-orange-600 bg-orange-50' : 'border-brand-muted/20 bg-white hover:border-orange-600'}`}>
+        }} className={`group flex items-center gap-3 rounded-xl border p-3 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d95f00] focus-visible:ring-offset-2 disabled:opacity-50 ${selectedPhone === phone ? 'border-[#d95f00] bg-orange-50' : 'border-brand-muted/20 bg-white hover:border-[#d95f00]'}`}>
           <span className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-brand-navy text-white"><Icon size={20} aria-hidden="true" /></span>
           <span className="min-w-0 flex-1"><span className="block text-xs font-semibold text-brand-muted">{role}</span><span className="mt-1 block truncate text-sm font-semibold text-brand-navy">{name}</span></span>
           {selectedPhone === phone && <Check size={16} className="text-orange-700" aria-hidden="true" />}
@@ -71,28 +71,31 @@ export function LoginForm() {
       <fieldset disabled={login.isPending} className="space-y-6">
         <div className="space-y-3">
           <label htmlFor="login-phone" className="block font-medium text-brand-navy">Số điện thoại</label>
-          <input id="login-phone" className={`${control} min-h-14 text-base`} type="tel" autoComplete="tel" inputMode="tel" aria-invalid={Boolean(form.formState.errors.phone)} aria-describedby={form.formState.errors.phone ? 'login-phone-error' : undefined} {...form.register('phone')} />
-          {form.formState.errors.phone && <p id="login-phone-error" role="alert" className="text-sm text-red-700">{form.formState.errors.phone.message}</p>}
+          <input id="login-phone" className={`${control} min-h-14 text-base focus-visible:ring-2 focus-visible:ring-[#d95f00] focus-visible:ring-offset-1`} type="tel" autoComplete="tel" inputMode="tel" aria-invalid={Boolean(form.formState.errors.phone)} aria-describedby={form.formState.errors.phone ? 'login-phone-error' : undefined} {...form.register('phone')} />
+          {form.formState.errors.phone && <p id="login-phone-error" role="alert" className="text-sm font-medium text-red-700">{form.formState.errors.phone.message}</p>}
         </div>
         <div className="space-y-3">
           <label htmlFor="login-password" className="block font-medium text-brand-navy">Mật khẩu</label>
-          <input id="login-password" className={`${control} min-h-14 text-base`} type={showPassword ? 'text' : 'password'} autoComplete="current-password" aria-invalid={Boolean(form.formState.errors.password)} aria-describedby={form.formState.errors.password ? 'login-password-error' : undefined} {...form.register('password')} />
-          {form.formState.errors.password && <p id="login-password-error" role="alert" className="text-sm text-red-700">{form.formState.errors.password.message}</p>}
+          <input id="login-password" className={`${control} min-h-14 text-base focus-visible:ring-2 focus-visible:ring-[#d95f00] focus-visible:ring-offset-1`} type={showPassword ? 'text' : 'password'} autoComplete="current-password" aria-invalid={Boolean(form.formState.errors.password)} aria-describedby={form.formState.errors.password ? 'login-password-error' : undefined} {...form.register('password')} />
+          {form.formState.errors.password && <p id="login-password-error" role="alert" className="text-sm font-medium text-red-700">{form.formState.errors.password.message}</p>}
         </div>
         <div className="flex flex-wrap items-center justify-between gap-4 text-sm">
-          <label className="flex items-center gap-2"><input type="checkbox" checked={remember} onChange={(event) => setRemember(event.target.checked)} className="accent-orange-600" />Ghi nhớ số điện thoại</label>
-          <button type="button" aria-pressed={showPassword} onClick={() => setShowPassword(!showPassword)} className="text-brand-muted underline">{showPassword ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'}</button>
+          <label className="flex items-center gap-2 cursor-pointer"><input type="checkbox" checked={remember} onChange={(event) => setRemember(event.target.checked)} className="accent-[#d95f00] h-4 w-4 rounded focus-visible:ring-2 focus-visible:ring-[#d95f00] focus-visible:ring-offset-1" />Ghi nhớ số điện thoại</label>
+          <button type="button" aria-pressed={showPassword} onClick={() => setShowPassword(!showPassword)} className="text-brand-muted underline hover:text-brand-navy focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d95f00] rounded-sm transition-colors cursor-pointer">{showPassword ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'}</button>
         </div>
       </fieldset>
       {login.isError && <Notice error>
         {isAxiosError(login.error) && login.error.response && <span>Mã lỗi {login.error.response.status}: </span>}
         {errorMessage(login.error)}
-        <button type="button" disabled={login.isPending} className="ml-3 underline" onClick={submit}>Thử lại</button>
+        <button type="button" disabled={login.isPending} className="ml-3 underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d95f00] rounded-sm" onClick={submit}>Thử lại</button>
       </Notice>}
-      <button type="submit" disabled={login.isPending} className={`${button} min-h-14 w-full`}>
+      <button type="submit" disabled={login.isPending} className="inline-flex min-h-14 w-full items-center justify-center gap-2 rounded-xl bg-[#d95f00] px-5 py-3 text-base font-semibold text-white hover:bg-[#b84e00] active:bg-[#9e4300] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d95f00] focus-visible:ring-offset-2 disabled:opacity-50 transition-colors shadow-xs cursor-pointer">
         {login.isPending ? <><LoaderCircle className="animate-spin" aria-hidden="true" />Đang đăng nhập…</> : <>Đăng nhập<ArrowUpRight size={18} aria-hidden="true" /></>}
       </button>
     </form>
-    <nav aria-label="Tài khoản" className="mt-7 flex flex-wrap gap-5 text-sm text-brand-muted"><Link to="/register">Tạo tài khoản</Link><Link to="/forgot-password">Quên mật khẩu?</Link></nav>
+    <nav aria-label="Tài khoản" className="mt-7 flex flex-wrap gap-5 text-sm text-brand-muted">
+      <Link to="/register" className="hover:text-[#d95f00] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d95f00] rounded-sm transition-colors">Tạo tài khoản</Link>
+      <Link to="/forgot-password" className="hover:text-[#d95f00] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d95f00] rounded-sm transition-colors">Quên mật khẩu?</Link>
+    </nav>
   </>
 }

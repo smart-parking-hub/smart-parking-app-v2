@@ -6,7 +6,7 @@ export function AuthLayout({ children }: { children: ReactNode }) {
       <aside className="relative hidden flex-col justify-between lg:flex overflow-hidden bg-brand-navy p-8 text-white lg:p-16">
         <Link
           to="/"
-          className="flex items-center gap-3 font-sora text-xl font-bold"
+          className="flex items-center gap-3 font-sora text-xl font-bold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white rounded-lg p-1 transition-colors"
         >
           <Truck className="text-brand-orange" />
           SMARTTRUCK HUB
@@ -32,7 +32,7 @@ export function AuthLayout({ children }: { children: ReactNode }) {
       </aside>
     <section className="flex items-center justify-center px-6 py-12 md:px-14 md:py-16 xl:px-20 2xl:px-28">
       <div className="w-full max-w-[600px]">
-        <Link to="/" className="mb-8 flex items-center gap-3 font-sora text-lg font-bold text-brand-navy lg:hidden"><Truck className="text-brand-orange" />SMARTTRUCK HUB</Link>
+        <Link to="/" className="mb-8 inline-flex items-center gap-3 font-sora text-lg font-bold text-brand-navy lg:hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d95f00] rounded-lg p-1 transition-colors"><Truck className="text-brand-orange" />SMARTTRUCK HUB</Link>
         {children}
       </div>
     </section>

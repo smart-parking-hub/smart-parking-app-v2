@@ -4,9 +4,9 @@ import { AlertCircle, ArrowLeft, ArrowRight, Search, X } from 'lucide-react'
 import { cn } from '@/shared/utils/cn'
 
 export const control =
-  'w-full rounded-xl border border-brand-border bg-white px-3 py-3 text-sm text-brand-navy outline-none focus:ring-2 focus:ring-brand-primary disabled:opacity-50'
+  'w-full rounded-xl border border-brand-border bg-white px-3 py-3 text-sm text-brand-navy outline-none focus:border-[#d95f00] focus:ring-2 focus:ring-[#d95f00] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d95f00] focus-visible:ring-offset-1 disabled:opacity-50 transition-colors'
 export const button =
-  'inline-flex items-center justify-center gap-2 rounded-xl bg-brand-primary px-4 py-3 text-sm font-semibold text-white hover:bg-brand-primary-hover active:bg-brand-primary-active focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-primary disabled:opacity-50 disabled:cursor-not-allowed transition-colors'
+  'inline-flex items-center justify-center gap-2 rounded-xl bg-[#d95f00] px-4 py-3 text-sm font-semibold text-white hover:bg-[#b84e00] active:bg-[#9e4300] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d95f00] focus-visible:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors shadow-xs'
 export const secondary =
   'inline-flex items-center justify-center gap-2 rounded-xl border border-brand-border bg-white px-4 py-3 text-sm font-semibold text-brand-navy hover:bg-brand-surface disabled:opacity-50'
 export const money = (value: unknown) =>

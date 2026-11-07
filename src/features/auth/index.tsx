@@ -6,11 +6,9 @@ import { useMutation } from '@tanstack/react-query'
 import { ArrowUpRight, Check, ShieldCheck, Truck } from 'lucide-react'
 import { errorMessage, sendData } from '@/shared/api/resources'
 import {
-  button,
   control,
   Field,
   Notice,
-  secondary,
 } from '@/shared/components/Workspace'
 export { roleHome, sessionRole, clearSession } from './model/session'
 export type { Role } from './model/session'
@@ -194,7 +192,7 @@ function LegacyAuthPage({ mode }: { mode: 'login' | 'register' | 'forgot' }) {
                   <button
                     type="button"
                     disabled={otp.isPending || countdown > 0}
-                    className={secondary}
+                    className="inline-flex items-center justify-center gap-2 rounded-xl border border-brand-border bg-white px-4 py-3 text-sm font-semibold text-brand-navy hover:bg-brand-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d95f00] focus-visible:ring-offset-2 disabled:opacity-50 transition-colors shadow-xs"
                     onClick={() => otp.mutate()}
                   >
                     {countdown ? `Gửi lại sau ${countdown}s` : 'Gửi mã OTP'}
@@ -221,7 +219,7 @@ function LegacyAuthPage({ mode }: { mode: 'login' | 'register' | 'forgot' }) {
               )}
               <button
                 disabled={submit.isPending}
-                className={`${button} w-full`}
+                className="inline-flex min-h-14 w-full items-center justify-center gap-2 rounded-xl bg-[#d95f00] px-5 py-3 text-base font-semibold text-white hover:bg-[#b84e00] active:bg-[#9e4300] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d95f00] focus-visible:ring-offset-2 disabled:opacity-50 transition-colors shadow-xs cursor-pointer"
               >
                 {submit.isPending
                   ? 'Đang xử lý…'
@@ -235,10 +233,10 @@ function LegacyAuthPage({ mode }: { mode: 'login' | 'register' | 'forgot' }) {
             </form>
           )}
           <nav className="mt-7 flex flex-wrap gap-5 text-sm text-brand-muted">
-            {mode !== 'login' && <Link to="/login">Đăng nhập</Link>}
-            {mode !== 'register' && <Link to="/register">Tạo tài khoản</Link>}
+            {mode !== 'login' && <Link to="/login" className="hover:text-[#d95f00] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d95f00] rounded-sm transition-colors">Đăng nhập</Link>}
+            {mode !== 'register' && <Link to="/register" className="hover:text-[#d95f00] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d95f00] rounded-sm transition-colors">Tạo tài khoản</Link>}
             {mode !== 'forgot' && (
-              <Link to="/forgot-password">Quên mật khẩu?</Link>
+              <Link to="/forgot-password" className="hover:text-[#d95f00] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d95f00] rounded-sm transition-colors">Quên mật khẩu?</Link>
             )}
           </nav>
         </div>
@@ -273,7 +271,7 @@ export function AuthSuccess({
           : 'Bạn có thể đăng nhập bằng mật khẩu mới để tiếp tục sử dụng tài khoản.'}
       </p>
       <Link
-        className={`${button} min-h-14 w-full sm:w-auto sm:min-w-64`}
+        className="inline-flex min-h-14 w-full sm:w-auto sm:min-w-64 items-center justify-center gap-2 rounded-xl bg-[#d95f00] px-5 py-3 text-base font-semibold text-white hover:bg-[#b84e00] active:bg-[#9e4300] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d95f00] focus-visible:ring-offset-2 transition-colors shadow-xs"
         to="/login"
       >
         Đến trang đăng nhập
@@ -298,12 +296,20 @@ export function AccessPage({ notFound = false }: { notFound?: boolean }) {
             ? 'Liên kết có thể đã thay đổi. Hãy trở về trang chủ để tiếp tục.'
             : 'Đăng nhập bằng tài khoản có vai trò phù hợp hoặc liên hệ quản trị viên.'}
         </p>
-        <Link className={button} to="/">
-          Về trang chủ
-        </Link>
-        <Link className="ml-6 underline" to="/login">
-          Đăng nhập
-        </Link>
+        <div className="flex flex-wrap items-center gap-4">
+          <Link
+            className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#d95f00] px-5 py-3 text-sm font-semibold text-white hover:bg-[#b84e00] active:bg-[#9e4300] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-brand-navy transition-colors shadow-xs"
+            to="/"
+          >
+            Về trang chủ
+          </Link>
+          <Link
+            className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-700 bg-transparent px-5 py-3 text-sm font-semibold text-white hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-brand-navy transition-colors"
+            to="/login"
+          >
+            Đăng nhập
+          </Link>
+        </div>
       </div>
     </main>
   )
