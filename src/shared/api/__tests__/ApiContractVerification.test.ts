@@ -1,10 +1,10 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { apiClient } from '../client'
 import { adaptSpringPage, toSpringPageParams } from '../adapters'
-import { getData, sendData } from '../resources'
+import { getData } from '../resources'
 import { sendSmsRecoveryOtpApi, verifySmsRecoveryOtpApi } from '@/features/change-password/api/changePasswordApi'
 import { generateAiParkingLotContent, deleteMerchantParkingLotImage, setCoverMerchantParkingLotImage } from '@/features/merchant/parking-lots/api/merchantParkingLotApi'
-import { fetchNotificationsApi, fetchUnreadCountApi, markAsReadApi, markAllAsReadApi } from '@/features/notifications/api/notificationApi'
+import { fetchUnreadCountApi, markAsReadApi, markAllAsReadApi } from '@/features/notifications/api/notificationApi'
 import { createPayOsDepositLink } from '@/features/parking-detail/api/parkingDetailApi'
 
 describe('Controlled API Contract Verification & Integration Tests', () => {
