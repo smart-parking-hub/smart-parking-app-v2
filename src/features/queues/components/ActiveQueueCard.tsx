@@ -65,11 +65,7 @@ export function ActiveQueueCard({
   return (
     <article
       data-testid="active-queue-card"
-      className={`bg-white rounded-2xl border transition-all overflow-hidden shadow-sm ${
-        isNotified
-          ? 'border-orange-200 ring-2 ring-orange-500/10 shadow-orange-500/5'
-          : 'border-slate-200'
-      }`}
+      className="bg-white rounded-2xl border border-slate-200 shadow-sm transition-all overflow-hidden"
     >
       {/* ── TOP HERO BANNER (Cam nhạt & Xám cho trạng thái nhận slot) ── */}
       {isNotified ? (
@@ -123,39 +119,39 @@ export function ActiveQueueCard({
           </div>
         </div>
       ) : (
-        <div className="bg-gradient-to-r from-orange-950 via-slate-900 to-black text-white p-5 md:p-6 border-b border-orange-500/20">
+        <div className="bg-slate-900 text-white p-4 md:p-5 border-b border-slate-800">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div className="flex items-start gap-3">
-              <span className="p-2.5 rounded-xl bg-orange-500/20 border border-orange-500/40 shrink-0">
-                <span className="w-6 h-6 flex items-center justify-center font-bold text-white font-sora">
+              <span className="p-2 rounded-xl bg-slate-800 border border-slate-700 shrink-0">
+                <span className="w-6 h-6 flex items-center justify-center font-bold text-brand-primary font-sora text-lg">
                   #{item.position ?? 1}
                 </span>
               </span>
               <div>
                 <div className="flex items-center gap-2">
-                  {/* Status Badge: Đang chờ vào chỗ (Tone Cam Đen & Màu Trắng) */}
-                  <span className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full text-xs font-bold uppercase tracking-wider bg-orange-500/20 text-white border border-orange-400/40">
-                    <span className="w-2 h-2 rounded-full bg-orange-400 animate-pulse" />
+                  {/* Status Badge: Nền xám chữ cam chuẩn */}
+                  <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-bold uppercase tracking-wider bg-orange-500/15 text-brand-primary border border-orange-500/30">
+                    <span className="w-2 h-2 rounded-full bg-brand-primary animate-pulse" />
                     Đang chờ vào chỗ
                   </span>
-                  <span className="text-xs text-white/80 font-mono">
+                  <span className="text-xs text-slate-400 font-mono">
                     {item.queueCode}
                   </span>
                 </div>
-                <h3 className="text-xl md:text-2xl font-bold font-sora text-white tracking-tight mt-1">
+                <h3 className="text-lg md:text-xl font-bold font-sora text-brand-primary tracking-tight mt-1">
                   Vị trí trong hàng đợi: #{item.position ?? 1}
                 </h3>
-                <p className="text-sm text-slate-300 mt-0.5">
+                <p className="text-xs md:text-sm text-slate-400 mt-0.5">
                   Tự động thông báo và cấp slot khi bãi đỗ giải phóng chỗ trống phù hợp.
                 </p>
               </div>
             </div>
 
-            <div className="bg-white/10 border border-white/20 rounded-2xl p-3 px-5 text-center">
-              <span className="text-[11px] font-semibold text-orange-200 block uppercase tracking-wider">
+            <div className="bg-slate-800/90 border border-slate-700 rounded-xl p-2.5 px-4 text-center">
+              <span className="text-[11px] font-semibold text-slate-400 block uppercase tracking-wider">
                 Tốc độ giải phóng bãi
               </span>
-              <span className="text-base font-bold text-white block mt-0.5">
+              <span className="text-sm md:text-base font-bold text-brand-primary block mt-0.5">
                 {item.checkOutSpeedText ?? '~4.2 phút / 1 xe'}
               </span>
             </div>
@@ -164,33 +160,33 @@ export function ActiveQueueCard({
       )}
 
       {/* ── CARD BODY ── */}
-      <div className="p-5 md:p-7 space-y-6">
-        {/* Glanceable Metrics (Gọn gàng, độ tương phản cao, loại bỏ thông tin lặp) */}
+      <div className="p-4 md:p-5 space-y-4">
+        {/* Glanceable Metrics (Thu nhỏ khoảng trống, độ tương phản cao, bỏ chữ thừa) */}
         {!isNotified && (
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-3 bg-slate-50 border border-slate-200/90 rounded-2xl p-3 sm:p-4">
-            <div className="text-center py-2 sm:py-2.5 border-b sm:border-b-0 sm:border-r border-slate-200">
-              <span className="text-xs font-bold text-slate-500 uppercase tracking-wider block">
+          <div className="grid grid-cols-3 gap-2 bg-slate-50 border border-slate-200/80 rounded-xl p-2.5 sm:p-3">
+            <div className="text-center py-1 sm:py-1.5 border-r border-slate-200/80">
+              <span className="text-[11px] sm:text-xs font-bold text-slate-500 uppercase tracking-wider block">
                 Vị trí của bạn
               </span>
-              <span className="text-3xl font-extrabold font-sora text-brand-primary block mt-0.5">
+              <span className="text-xl sm:text-2xl font-extrabold font-sora text-brand-primary block mt-0.5">
                 #{item.position ?? 1}
               </span>
             </div>
 
-            <div className="text-center py-2 sm:py-2.5 border-b sm:border-b-0 sm:border-r border-slate-200">
-              <span className="text-xs font-bold text-slate-500 uppercase tracking-wider block">
+            <div className="text-center py-1 sm:py-1.5 border-r border-slate-200/80">
+              <span className="text-[11px] sm:text-xs font-bold text-slate-500 uppercase tracking-wider block">
                 Xe phía trước
               </span>
-              <span className="text-2xl font-bold font-sora text-slate-800 block mt-1">
+              <span className="text-xl sm:text-2xl font-bold font-sora text-slate-800 block mt-0.5">
                 {item.peopleAhead ?? 0} xe
               </span>
             </div>
 
-            <div className="text-center py-2 sm:py-2.5">
-              <span className="text-xs font-bold text-slate-500 uppercase tracking-wider block">
+            <div className="text-center py-1 sm:py-1.5">
+              <span className="text-[11px] sm:text-xs font-bold text-slate-500 uppercase tracking-wider block">
                 Ước tính có chỗ
               </span>
-              <span className="text-2xl font-bold font-sora text-brand-primary block mt-1">
+              <span className="text-xl sm:text-2xl font-bold font-sora text-brand-primary block mt-0.5">
                 ~{item.estimatedWaitMinutes ?? 15} phút
               </span>
             </div>
@@ -230,9 +226,9 @@ export function ActiveQueueCard({
           </div>
         </div>
 
-        {/* Chi tiết phương tiện & làn điều phối (Hiển thị trực tiếp) */}
-        <div className="p-4 bg-slate-50/90 rounded-2xl border border-slate-200/80 space-y-4">
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 text-xs">
+        {/* Chi tiết phương tiện & làn điều phối (Hiển thị trực tiếp, gọn gàng) */}
+        <div className="p-3 sm:p-3.5 bg-slate-50/90 rounded-xl border border-slate-200/80 space-y-2.5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2.5 sm:gap-3 text-xs">
             <div>
               <span className="text-slate-400 uppercase font-medium block">Biển số đăng ký</span>
               <strong className="text-sm font-mono text-slate-900 block mt-0.5">
@@ -261,7 +257,7 @@ export function ActiveQueueCard({
           </div>
 
           {/* ALPR Timeline */}
-          <div className="pt-3 border-t border-slate-200">
+          <div className="pt-2 border-t border-slate-200/80">
             <QueueTimelineFlow items={item.timelineFlow} status={item.status} />
           </div>
         </div>
