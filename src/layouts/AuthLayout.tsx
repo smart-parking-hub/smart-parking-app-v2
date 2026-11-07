@@ -1,8 +1,12 @@
 import type { ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import { ShieldCheck, Truck } from 'lucide-react'
+import { ScrollToTop } from '@/shared/components/ScrollToTop'
+
 export function AuthLayout({ children }: { children: ReactNode }) {
-  return <main className="min-h-screen bg-brand-surface font-inter lg:grid lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
+  return (
+    <main className="min-h-screen bg-brand-surface font-inter lg:grid lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
+      <ScrollToTop />
       <aside className="relative hidden flex-col justify-between lg:flex overflow-hidden bg-brand-navy p-8 text-white lg:p-16">
         <Link
           to="/"
@@ -30,11 +34,18 @@ export function AuthLayout({ children }: { children: ReactNode }) {
           An tâm trên từng chặng đường
         </div>
       </aside>
-    <section className="flex items-center justify-center px-6 py-12 md:px-14 md:py-16 xl:px-20 2xl:px-28">
-      <div className="w-full max-w-[600px]">
-        <Link to="/" className="mb-8 inline-flex items-center gap-3 font-sora text-lg font-bold text-brand-navy lg:hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d95f00] rounded-lg p-1 transition-colors"><Truck className="text-brand-orange" />SMARTTRUCK HUB</Link>
-        {children}
-      </div>
-    </section>
-  </main>
+      <section className="flex items-center justify-center px-6 py-12 md:px-14 md:py-16 xl:px-20 2xl:px-28">
+        <div className="w-full max-w-[600px]">
+          <Link
+            to="/"
+            className="mb-8 inline-flex items-center gap-3 font-sora text-lg font-bold text-brand-navy lg:hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d95f00] rounded-lg p-1 transition-colors"
+          >
+            <Truck className="text-brand-orange" />
+            SMARTTRUCK HUB
+          </Link>
+          {children}
+        </div>
+      </section>
+    </main>
+  )
 }

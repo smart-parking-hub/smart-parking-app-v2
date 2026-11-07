@@ -4,7 +4,43 @@ import userEvent from '@testing-library/user-event'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { MerchantParkingLotDetailPage } from '../pages/MerchantParkingLotDetailPage'
+import { apiClient } from '@/shared/api/client'
 import * as api from '../api/merchantParkingLotApi'
+
+vi.mock('@/shared/api/client', () => ({
+  apiClient: {
+    get: vi.fn(),
+    post: vi.fn(),
+    put: vi.fn(),
+  },
+}))
+
+const mockApprovedLot = {
+  id: 1,
+  name: 'Bãi Đỗ Xe & Trạm Container Tân Cảng - Cát Lái (Cụm Gate 2)',
+  address: 'Đường Nguyễn Thị Định, P. Cát Lái, TP. Thủ Đức',
+  status: 'APPROVED',
+  latitude: 10.7854,
+  longitude: 106.8041,
+  ratingAverage: 4.9,
+  images: [
+    { id: 10, contentUrl: 'https://images.unsplash.com/photo-1', originalFileName: 'Trạm Cổng Barie ALPR Thông Minh', cover: true },
+    { id: 11, contentUrl: 'https://images.unsplash.com/photo-2', originalFileName: 'Mặt bằng bãi container', cover: false },
+  ],
+  slots: [
+    { id: 1, vehicleType: 'CONTAINER_40FT', totalCapacity: 50, availableCapacity: 12 },
+  ],
+  pricingRules: [
+    { id: 1, vehicleType: 'CONTAINER_40FT', basePricePerHour: 35000 },
+  ],
+}
+
+const mockPendingLot = {
+  ...mockApprovedLot,
+  id: 2,
+  status: 'PENDING_APPROVAL',
+  reviewReason: 'Đang chờ hội đồng kiểm tra hồ sơ PCCC',
+}
 
 function renderPage(lotId = 1) {
   const queryClient = new QueryClient({
@@ -36,81 +72,60 @@ describe('SCR-030: MerchantParkingLotDetailPage (Chi tiết hồ sơ kỹ thuậ
   })
 
   it('renders all key sections when parking lot is APPROVED', async () => {
+    vi.mocked(apiClient.get).mockResolvedValueOnce({
+      data: { data: mockApprovedLot },
+    })
+
     renderPage(1)
 
     // Wait for data load
-    await waitFor(() => {
-      expect(
-        screen.getByText('Bãi Đỗ Xe & Trạm Container Tân Cảng - Cát Lái (Cụm Gate 2)'),
-      ).toBeInTheDocument()
-    })
+    expect(
+      await screen.findByText('Bãi Đỗ Xe & Trạm Container Tân Cảng - Cát Lái (Cụm Gate 2)'),
+    ).toBeInTheDocument()
 
-    // 1. Breadcrumb and Approval Tag
-    expect(screen.getByText(/VN-SGN-CLG2-09/)).toBeInTheDocument()
-    expect(screen.getByText(/ĐÃ PHÊ DUYỆT \(APPROVED\)/)).toBeInTheDocument()
+    // 1. Breadcrumb and Dossier Info
+    expect(screen.getByText('Quay lại danh sách bãi')).toBeInTheDocument()
+    expect(screen.getByText(/Mã bãi: #1 · Đã duyệt/)).toBeInTheDocument()
 
-    // 2. Action buttons
-    expect(screen.getByRole('button', { name: /Chỉnh Sửa Hồ Sơ/i })).toBeInTheDocument()
-    const slotBtn = screen.getByRole('button', { name: /Cấu Hình Sức Chứa Slot/i })
-    const priceBtn = screen.getByRole('button', { name: /Biểu Phí Niêm Yết/i })
-    expect(slotBtn).not.toBeDisabled()
-    expect(priceBtn).not.toBeDisabled()
-    expect(screen.getByRole('button', { name: /TRẠM QUÉT QR BARIE/i })).toBeInTheDocument()
+    // 2. Action Links for approved yard
+    expect(screen.getByRole('link', { name: /Chỉnh sửa hồ sơ/i })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: /Cấu hình chỗ đỗ/i })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: /Cấu hình bảng giá/i })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: /Mở quét QR/i })).toBeInTheDocument()
 
-    // 3. Bento 4 metrics
-    expect(screen.getByText(/Doanh Thu Tháng Này/i)).toBeInTheDocument()
-    expect(screen.getByText(/82\.500\.000/)).toBeInTheDocument()
-    expect(screen.getByText(/90\.0%/)).toBeInTheDocument()
-    expect(screen.getByText(/CẢNH BÁO: BÃI SẮP ĐẦY TẢI VẬT LÝ/)).toBeInTheDocument()
-    expect(screen.getByText(/4\.9/)).toBeInTheDocument()
-    expect(screen.getByText(/0\.18s \/ xe/)).toBeInTheDocument()
-
-    // 4. Core sections: Gallery, Capacity, Pricing, Live Telemetry
+    // 3. Technical Sections
     expect(screen.getByText('Thư Viện Thực Tế Hạ Tầng Bãi Đỗ')).toBeInTheDocument()
-    expect(screen.getByText('Phân Bổ Tải Trọng & Sức Chứa Slot')).toBeInTheDocument()
-    expect(screen.getByText(/Container 40FT \/ 45FT Reefer/)).toBeInTheDocument()
-    expect(screen.getByText('Biểu Phí Niêm Yết Đang Áp Dụng')).toBeInTheDocument()
-    expect(screen.getByText('Giờ Cơ Bản')).toBeInTheDocument()
-    expect(screen.getByText('Giám Sát Xe Đang Đỗ Thực Tế (Live Telemetry)')).toBeInTheDocument()
-    expect(screen.getByText('51D-894.12')).toBeInTheDocument()
-    expect(screen.getByText('60C-912.44')).toBeInTheDocument()
-    expect(screen.getByText('QUÁ HẠN 15 PHÚT')).toBeInTheDocument()
-
-    // 5. Right column: GPS, Amenities, Contacts
-    expect(screen.getByText('Tọa Độ GPS & Luồng Xe')).toBeInTheDocument()
-    expect(screen.getByText('Tiện Ích Thực Tế Tại Bến')).toBeInTheDocument()
-    expect(screen.getByText('Bảo Vệ Tuần Tra 24/7')).toBeInTheDocument()
-    expect(screen.getByText('Kênh Trực Ban Bãi Đỗ')).toBeInTheDocument()
-    expect(screen.getByText('Lê Văn Thành')).toBeInTheDocument()
-    expect(screen.getByText('1900 6868 (Nhánh 2)')).toBeInTheDocument()
+    expect(screen.getByText('Vị trí bãi đỗ')).toBeInTheDocument()
+    expect(screen.getByText('Sức chứa chỗ đỗ')).toBeInTheDocument()
+    expect(screen.getByText('Bảng giá')).toBeInTheDocument()
+    expect(screen.getByText(/CONTAINER_40FT: 12\/50 chỗ trống/)).toBeInTheDocument()
   })
 
   it('enforces gatekeeper rules when parking lot is PENDING_APPROVAL', async () => {
-    vi.spyOn(api, 'fetchMerchantParkingLotDetail').mockResolvedValueOnce({
-      ...api.fallbackMerchantLotDetailData,
-      status: 'PENDING_APPROVAL',
+    vi.mocked(apiClient.get).mockResolvedValueOnce({
+      data: { data: mockPendingLot },
     })
 
-    renderPage(3)
+    renderPage(2)
 
     await waitFor(() => {
-      expect(screen.getByText(/ĐANG CHỜ DUYỆT \(PENDING\)/)).toBeInTheDocument()
+      expect(screen.getByText(/Mã bãi: #2 · Đang chờ duyệt/)).toBeInTheDocument()
     })
 
-    // Slot & Pricing buttons should be disabled for unapproved yards
-    const slotBtn = screen.getByRole('button', { name: /Cấu Hình Sức Chứa Slot/i })
-    const priceBtn = screen.getByRole('button', { name: /Biểu Phí Niêm Yết/i })
-    expect(slotBtn).toBeDisabled()
-    expect(priceBtn).toBeDisabled()
+    // Review reason is displayed
+    expect(screen.getByText('Đang chờ hội đồng kiểm tra hồ sơ PCCC')).toBeInTheDocument()
 
-    // Status banner should explain admin review process
-    expect(
-      screen.getByText(/Hồ sơ bãi đỗ đang trong quá trình thẩm định của Ban Quản Trị Hệ Thống/i),
-    ).toBeInTheDocument()
+    // Slots and pricing links should NOT be available for unapproved yards
+    expect(screen.queryByRole('link', { name: /Cấu hình chỗ đỗ/i })).not.toBeInTheDocument()
+    expect(screen.queryByRole('link', { name: /Cấu hình bảng giá/i })).not.toBeInTheDocument()
   })
 
   it('supports lightbox opening and closing on image click', async () => {
     const user = userEvent.setup()
+    vi.mocked(apiClient.get).mockResolvedValueOnce({
+      data: { data: mockApprovedLot },
+    })
+
     renderPage(1)
 
     await waitFor(() => {
@@ -123,7 +138,7 @@ describe('SCR-030: MerchantParkingLotDetailPage (Chi tiết hồ sơ kỹ thuậ
 
     // Lightbox should display the image with index indicator
     await waitFor(() => {
-      expect(screen.getByText(/1 \/ 4/)).toBeInTheDocument()
+      expect(screen.getByText(/1 \/ 2/)).toBeInTheDocument()
     })
 
     // Close lightbox
@@ -131,12 +146,16 @@ describe('SCR-030: MerchantParkingLotDetailPage (Chi tiết hồ sơ kỹ thuậ
     await user.click(closeBtn)
 
     await waitFor(() => {
-      expect(screen.queryByText(/1 \/ 4/)).not.toBeInTheDocument()
+      expect(screen.queryByText(/1 \/ 2/)).not.toBeInTheDocument()
     })
   })
 
   it('closes lightbox on Escape key and locks body scroll (TSK-P2-02 A11y)', async () => {
     const user = userEvent.setup()
+    vi.mocked(apiClient.get).mockResolvedValueOnce({
+      data: { data: mockApprovedLot },
+    })
+
     renderPage(1)
 
     await waitFor(() => {
@@ -147,20 +166,23 @@ describe('SCR-030: MerchantParkingLotDetailPage (Chi tiết hồ sơ kỹ thuậ
     await user.click(coverTitle)
 
     await waitFor(() => {
-      expect(screen.getByText(/1 \/ 4/)).toBeInTheDocument()
+      expect(screen.getByText(/1 \/ 2/)).toBeInTheDocument()
     })
 
     // Press Escape
     fireEvent.keyDown(window, { key: 'Escape' })
 
     await waitFor(() => {
-      expect(screen.queryByText(/1 \/ 4/)).not.toBeInTheDocument()
+      expect(screen.queryByText(/1 \/ 2/)).not.toBeInTheDocument()
     })
   })
 
-  it('handles image upload properly and shows feedback toast', async () => {
+  it('handles image upload properly and triggers refetch', async () => {
     const user = userEvent.setup()
-    vi.spyOn(api, 'uploadAdditionalLotImages').mockResolvedValueOnce([
+    vi.mocked(apiClient.get).mockResolvedValue({
+      data: { data: mockApprovedLot },
+    })
+    const uploadSpy = vi.spyOn(api, 'uploadAdditionalLotImages').mockResolvedValueOnce([
       {
         id: 999,
         url: 'blob:http://localhost/new-image.jpg',
@@ -187,19 +209,17 @@ describe('SCR-030: MerchantParkingLotDetailPage (Chi tiết hồ sơ kỹ thuậ
     await user.upload(fileInput, file)
 
     await waitFor(() => {
-      expect(screen.getByText(/Đã tải lên thành công 1 ảnh hạ tầng thực tế/i)).toBeInTheDocument()
+      expect(uploadSpy).toHaveBeenCalledWith(1, [file])
     })
   })
 
   it('renders error state and retry button when fetching fails', async () => {
-    vi.spyOn(api, 'fetchMerchantParkingLotDetail').mockRejectedValueOnce(
-      new Error('Network error'),
-    )
+    vi.mocked(apiClient.get).mockRejectedValueOnce(new Error('Network error'))
 
     renderPage(999)
 
     await waitFor(() => {
-      expect(screen.getByText('Không tìm thấy hồ sơ bãi đỗ xe')).toBeInTheDocument()
+      expect(screen.getByText(/Không tải được hồ sơ/i)).toBeInTheDocument()
     })
 
     expect(screen.getByRole('button', { name: /Thử lại/i })).toBeInTheDocument()

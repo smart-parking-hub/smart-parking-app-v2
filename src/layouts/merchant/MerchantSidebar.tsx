@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import {
   Truck,
@@ -12,6 +13,7 @@ import {
   Phone,
   ShieldCheck,
   X,
+  Bell,
 } from 'lucide-react'
 import { cn } from '@/shared/utils/cn'
 
@@ -36,11 +38,21 @@ const NAV_ITEMS: NavItem[] = [
   { to: '/merchant/withdrawals', label: 'Ví & Rút tiền', icon: Wallet },
   { to: '/merchant/disputes', label: 'Xử lý khiếu nại', icon: Headset },
   { to: '/merchant/profile', label: 'Hồ sơ bến bãi', icon: Building2 },
-  { to: '/merchant/notifications', label: 'Thông báo', icon: Headset },
+  { to: '/merchant/notifications', label: 'Thông báo', icon: Bell },
 ]
 
 export function MerchantSidebar({ mobileOpen = false, onCloseMobile }: MerchantSidebarProps) {
   const location = useLocation()
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && mobileOpen && onCloseMobile) {
+        onCloseMobile()
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [mobileOpen, onCloseMobile])
 
   const isCurrentActive = (item: NavItem) => {
     if (item.exact) {
@@ -58,6 +70,7 @@ export function MerchantSidebar({ mobileOpen = false, onCloseMobile }: MerchantS
       {/* Mobile Backdrop */}
       {mobileOpen && (
         <div
+          role="presentation"
           className="fixed inset-0 bg-black/60 backdrop-blur-xs z-40 lg:hidden"
           onClick={onCloseMobile}
           aria-hidden="true"
@@ -147,13 +160,15 @@ export function MerchantSidebar({ mobileOpen = false, onCloseMobile }: MerchantS
               <span>1900 6868 (Nhánh 2)</span>
             </a>
           </div>
-          {location.pathname !== '/merchant/profile' && <div className="flex items-center justify-between font-mono text-[11px] text-[#7c839b]/80 pt-1 border-t border-[#233144]/60">
-            <span>Hệ thống: V2.8.4-OPS</span>
-            <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-[#233144] text-white border border-slate-700 text-[10px] font-semibold">
-              <ShieldCheck className="w-3 h-3 text-emerald-400" />
-              <span>ISO 27001</span>
-            </span>
-          </div>}
+          {location.pathname !== '/merchant/profile' && (
+            <div className="flex items-center justify-between font-mono text-[11px] text-[#7c839b]/80 pt-1 border-t border-[#233144]/60">
+              <span>Hệ thống: V2.8.4-OPS</span>
+              <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-[#233144] text-white border border-slate-700 text-[10px] font-semibold">
+                <ShieldCheck className="w-3 h-3 text-emerald-400" />
+                <span>ISO 27001</span>
+              </span>
+            </div>
+          )}
         </div>
       </aside>
     </>

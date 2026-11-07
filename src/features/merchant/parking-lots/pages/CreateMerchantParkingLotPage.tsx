@@ -12,12 +12,15 @@ import type {
 import {
   createMerchantParkingLot,
   uploadMerchantParkingLotImages,
+  generateAiParkingLotContent,
 } from '../api/merchantParkingLotApi'
 import { CreateParkingLotStepper } from '../components/CreateParkingLotStepper'
 import { CreateParkingLotBasicInfoCard } from '../components/CreateParkingLotBasicInfoCard'
 import { CreateParkingLotGeoCard } from '../components/CreateParkingLotGeoCard'
 import { CreateParkingLotPhotosCard } from '../components/CreateParkingLotPhotosCard'
 import { CreateParkingLotConfirmStep } from '../components/CreateParkingLotConfirmStep'
+import { CreateParkingLotAiWidget } from '../components/CreateParkingLotAiWidget'
+import { CreateParkingLotSlaWidget } from '../components/CreateParkingLotSlaWidget'
 import { CreateParkingLotActionFooter } from '../components/CreateParkingLotActionFooter'
 
 const DRAFT_STORAGE_KEY = 'merchant_lot_registration_draft'
@@ -46,6 +49,15 @@ const createLotFormSchema = z.object({
 
 type CreateLotFormData = z.infer<typeof createLotFormSchema>
 
+const initialAiContent: AiContentSegments = {
+  logisticsCapacity:
+    'Depot chuyên dụng tiếp nhận đầu kéo container và xe tải nặng 3-4 chân, mặt bãi đầm nén bê tông cốt thép tải trọng trục 60T, hệ thống cắm điện lạnh Reefer 380V hoạt động liên tục 24/7.',
+  safetyRegulations:
+    'Nghiêm cấm sang chiết dầu trong khuôn viên depot. Bãi trang bị sẵn 08 họng trụ cứu hỏa D65 đấu nối nguồn nước áp lực cao cùng xe chữa cháy cơ động túc trực bảo vệ hàng hóa.',
+  circulationGuide:
+    'Tài xế đi từ đường Vành Đai 2 rẽ vào Gò Cát, duy trì vận tốc < 10km/h khi qua cổng nhận diện ALPR để camera quét biển số và mở barie tự động.',
+}
+
 export function CreateMerchantParkingLotPage() {
   const navigate = useNavigate()
 
@@ -58,6 +70,7 @@ export function CreateMerchantParkingLotPage() {
   const [draftSaved, setDraftSaved] = useState(false)
 
   // AI Assistant State
+  const [aiContent, setAiContent] = useState<AiContentSegments>(initialAiContent)
   const [appliedAiContent, setAppliedAiContent] = useState<AiContentSegments | null>(null)
 
   const [images, setImages] = useState<ParkingLotImageItem[]>([])
@@ -140,6 +153,22 @@ export function CreateMerchantParkingLotPage() {
       setCurrentStep((prev) => prev - 1)
       window.scrollTo({ top: 0, behavior: 'smooth' })
     }
+  }
+
+  const handleGenerateNewAiContent = async () => {
+    const newContent = await generateAiParkingLotContent({
+      name: formValues.name,
+      address: formValues.address,
+    })
+    setAiContent(newContent)
+  }
+
+  const handleApplyAiContent = (content: AiContentSegments) => {
+    setAppliedAiContent(content)
+    setToastMessage('Đã tích hợp nội dung trợ lý AI vào hồ sơ thẩm định bến bãi.')
+    setTimeout(() => {
+      setToastMessage(null)
+    }, 3500)
   }
 
   // Two-Phase Final Submission Handler
@@ -270,9 +299,9 @@ export function CreateMerchantParkingLotPage() {
 
         {/* Main 2-Column Split Workspace */}
         <form onSubmit={handleSubmit(onSubmitFinal)} className="w-full">
-          <div className="flex flex-col gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
             {/* Left Column: 65% (8/12) */}
-            <section className="w-full flex flex-col gap-6">
+            <section className="lg:col-span-8 flex flex-col gap-6">
               {/* STEP 0: Thông tin cơ bản */}
               {currentStep === 0 && (
                 <>
@@ -324,7 +353,16 @@ export function CreateMerchantParkingLotPage() {
               />
             </section>
 
-
+            {/* Right Column: 35% (4/12) */}
+            <aside className="lg:col-span-4 flex flex-col gap-6 sticky top-24">
+              <CreateParkingLotAiWidget
+                currentAiContent={aiContent}
+                onGenerateNewAiContent={handleGenerateNewAiContent}
+                onApplyAiContent={handleApplyAiContent}
+                isApplied={Boolean(appliedAiContent)}
+              />
+              <CreateParkingLotSlaWidget />
+            </aside>
           </div>
         </form>
       </div>

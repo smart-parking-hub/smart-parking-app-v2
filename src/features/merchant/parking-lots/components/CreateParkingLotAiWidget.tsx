@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { Sparkles, Brain, Check, Truck, Flame, CornerDownRight, CheckCircle2 } from 'lucide-react'
 import type { AiContentSegments } from '../types/merchantParkingLotTypes'
 
@@ -17,6 +17,15 @@ export function CreateParkingLotAiWidget({
 }: CreateParkingLotAiWidgetProps) {
   const [generating, setGenerating] = useState(false)
   const [justApplied, setJustApplied] = useState(false)
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  useEffect(() => {
+    return () => {
+      if (timerRef.current) {
+        clearTimeout(timerRef.current)
+      }
+    }
+  }, [])
 
   const handleGenerate = async () => {
     setGenerating(true)
@@ -30,7 +39,10 @@ export function CreateParkingLotAiWidget({
   const handleApply = () => {
     onApplyAiContent(currentAiContent)
     setJustApplied(true)
-    setTimeout(() => {
+    if (timerRef.current) {
+      clearTimeout(timerRef.current)
+    }
+    timerRef.current = setTimeout(() => {
       setJustApplied(false)
     }, 2500)
   }

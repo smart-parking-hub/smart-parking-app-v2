@@ -29,7 +29,7 @@ export function DashboardEmptyState({ driverName }: DashboardEmptyStateProps) {
         <div className="flex flex-wrap items-center justify-center gap-3">
           <Link
             to="/vehicles"
-            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-[#d95f00] hover:bg-[#b85000] text-white font-medium text-xs sm:text-sm transition-colors cursor-pointer"
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-brand-primary hover:bg-brand-primary-hover text-white font-medium text-xs sm:text-sm transition-colors cursor-pointer"
           >
             <PlusCircle className="w-4 h-4" />
             <span>Đăng Ký Xe Đầu Tiên</span>

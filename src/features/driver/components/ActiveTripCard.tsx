@@ -35,7 +35,7 @@ export function ActiveTripCard({ booking, onOpenQr }: ActiveTripCardProps) {
         </p>
         <Link
           to="/parking"
-          className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-[#d95f00] text-white font-medium text-xs sm:text-sm hover:bg-[#b85000] transition-colors"
+          className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-brand-primary text-white font-medium text-xs sm:text-sm hover:bg-brand-primary-hover transition-colors"
         >
           <Search className="w-4 h-4" />
           <span>Tìm Bãi Đỗ Ngay</span>
@@ -203,7 +203,7 @@ export function ActiveTripCard({ booking, onOpenQr }: ActiveTripCardProps) {
             <button
               type="button"
               onClick={onOpenQr}
-              className="w-full h-11 px-3 rounded-lg bg-[#d95f00] hover:bg-[#b85000] text-white font-medium text-xs sm:text-sm flex items-center justify-center gap-2 transition-colors cursor-pointer"
+              className="w-full h-11 px-3 rounded-lg bg-brand-primary hover:bg-brand-primary-hover text-white font-medium text-xs sm:text-sm flex items-center justify-center gap-2 transition-colors cursor-pointer"
             >
               <QrCode className="w-4 h-4 shrink-0" />
               <span className="truncate">MÃ QR XUẤT BÃI (BARIE CHECK-OUT)</span>

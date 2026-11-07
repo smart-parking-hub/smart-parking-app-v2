@@ -97,17 +97,6 @@ export function InteractiveMapCanvas({
       label.dataset.full = String(lot.isFull || lot.availableSlots === 0)
       label.textContent = `${new Intl.NumberFormat('vi-VN').format(lot.hourlyRate / 1000)}K · ${lot.availableSlots} chỗ`
 
-      const popup = document.createElement('div')
-      popup.className = 'min-w-[200px] space-y-2 p-1 font-inter text-brand-navy'
-      const name = document.createElement('strong')
-      name.textContent = lot.name
-      const address = document.createElement('p')
-      address.className = 'text-sm text-brand-muted'
-      address.textContent = lot.address
-      const price = document.createElement('p')
-      price.textContent = `${lot.availableSlots > 0 ? `Còn ${lot.availableSlots} chỗ` : 'Hết chỗ'} · ${new Intl.NumberFormat('vi-VN').format(lot.hourlyRate)} đ/h`
-      popup.append(name, address, price)
-
       const marker = L.marker([lot.latitude, lot.longitude], {
         icon: L.divIcon({
           html: label,
@@ -119,7 +108,21 @@ export function InteractiveMapCanvas({
         keyboard: true,
         zIndexOffset: isSelected ? 1000 : 100,
       })
-        .bindPopup(popup, { offset: [0, -32], closeButton: true })
+        .bindPopup(
+          `<div style="font-family: inherit; min-width: 200px; padding: 2px;">
+            <div style="font-weight: 700; font-size: 13px; color: #0d1c2e; margin-bottom: 3px;">${lot.name}</div>
+            <div style="font-size: 11px; color: #64748b; margin-bottom: 6px; line-height: 1.4;">${lot.address}</div>
+            <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #e2e8f0; padding-top: 5px; font-size: 11px;">
+              <span style="color: ${lot.availableSlots > 0 ? '#10b981' : '#f43f5e'}; font-weight: 700;">
+                ${lot.availableSlots > 0 ? `Còn ${lot.availableSlots} chỗ` : 'Hết chỗ'}
+              </span>
+              <span style="font-weight: 700; color: #0d1c2e; font-family: monospace;">
+                ${new Intl.NumberFormat('vi-VN').format(lot.hourlyRate)} đ/h
+              </span>
+            </div>
+          </div>`,
+          { offset: [0, -32], closeButton: true }
+        )
         .on('click', () => select.current(lot))
         .addTo(layer)
 
@@ -289,7 +292,7 @@ export function InteractiveMapCanvas({
             <button
               type="button"
               disabled={selectedLot.isFull || selectedLot.availableSlots === 0}
-              className="inline-flex min-h-12 items-center gap-2 rounded-xl bg-[#d95f00] hover:bg-[#b85000] px-5 text-sm font-semibold text-white disabled:opacity-40 transition-colors shadow-sm cursor-pointer"
+              className="inline-flex min-h-12 items-center gap-2 rounded-xl bg-brand-primary hover:bg-brand-primary-hover px-5 text-sm font-semibold text-white disabled:opacity-40 transition-colors shadow-sm cursor-pointer"
               onClick={() => onQuickBook(selectedLot)}
             >
               Giữ chỗ
