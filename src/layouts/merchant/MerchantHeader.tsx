@@ -1,5 +1,6 @@
 import { clearSession } from '@/features/auth'
-import { useState } from 'react'
+import { useQuery } from '@tanstack/react-query'
+import { getData } from '@/shared/api/resources'
 import { Link, useNavigate, useLocation } from 'react-router-dom'
 import {
   Building2,
@@ -10,22 +11,18 @@ import {
   Menu,
   LogOut,
 } from 'lucide-react'
-import { Select, type SelectOption } from '@/shared/components/Select'
 
 interface MerchantHeaderProps {
   onToggleMobileMenu?: () => void
 }
 
-const YARD_OPTIONS: SelectOption[] = [
-  { value: 'all', label: 'Tất cả 03 bãi đỗ' },
-  { value: 'cat-lai', label: 'Bãi Cát Lái Gate 2' },
-  { value: 'dinh-vu', label: 'Bãi Depot Đình Vũ Hải Phòng' },
-  { value: 'song-than', label: 'Bãi ICD Sóng Thần Bình Dương' },
-]
-
 export function MerchantHeader({ onToggleMobileMenu }: MerchantHeaderProps) {
   const navigate = useNavigate()
-  const [selectedYard, setSelectedYard] = useState('all')
+  const { data: profile } = useQuery({
+    queryKey: ['merchant-header-profile'],
+    queryFn: () => getData<{ merchantId: number; fullName: string | null } | null>('/api/v1/merchant/profile'),
+    staleTime: 60000,
+  })
   const location = useLocation()
   if (location.pathname === '/merchant/profile') return (
     <header className="fixed inset-x-0 top-0 z-40 flex h-16 items-center justify-between gap-4 border-b border-brand-border bg-white px-4 font-inter text-base lg:left-[260px] lg:px-8">
@@ -58,17 +55,11 @@ export function MerchantHeader({ onToggleMobileMenu }: MerchantHeaderProps) {
           <span className="text-slate-300">/</span>
         </div>
 
-        {/* Quick Yard Selector */}
+        {/* Owned yards navigation */}
         <div className="w-[190px] sm:w-[230px]">
-          <Select
-            value={selectedYard}
-            onChange={setSelectedYard}
-            options={YARD_OPTIONS}
-            prefixIcon={<Store className="w-4 h-4 text-[#455f87] shrink-0" />}
-            size="sm"
-            variant="subtle"
-            ariaLabel="Lọc theo bãi đỗ"
-          />
+          <Link to="/merchant/parking-lots" className="inline-flex items-center gap-2 text-xs font-semibold text-brand-navy">
+            <Store className="w-4 h-4" />Bãi đỗ của tôi
+          </Link>
         </div>
       </div>
 
@@ -78,7 +69,7 @@ export function MerchantHeader({ onToggleMobileMenu }: MerchantHeaderProps) {
         <div className="hidden xl:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-orange-50/70 border border-orange-200/60">
           <span className="w-2 h-2 rounded-full bg-[#d95f00] animate-pulse shrink-0" />
           <span className="font-mono text-[11px] font-bold text-[#d95f00] tracking-wider uppercase">
-            ALPR GATE 24/7 TRỰC TUYẾN
+            CỔNG QUẢN LÝ CHỦ BÃI
           </span>
         </div>
 
@@ -92,7 +83,7 @@ export function MerchantHeader({ onToggleMobileMenu }: MerchantHeaderProps) {
           <span>Đăng Ký Bãi Mới</span>
         </button>
 
-        {/* Notification Bell with Badge */}
+        {/* Notification center */}
         <div className="relative flex items-center">
           <Link
             to="/merchant/notifications"
@@ -101,9 +92,6 @@ export function MerchantHeader({ onToggleMobileMenu }: MerchantHeaderProps) {
           >
             <Bell className="w-5 h-5" />
           </Link>
-          <span className="absolute -top-0.5 -right-0.5 min-w-4 h-4 px-1 rounded-full bg-[#d95f00] text-white font-mono text-[10px] font-bold flex items-center justify-center shadow-xs">
-            05
-          </span>
         </div>
 
         <div className="h-6 w-px bg-slate-200 hidden sm:block" />
@@ -119,9 +107,9 @@ export function MerchantHeader({ onToggleMobileMenu }: MerchantHeaderProps) {
           </div>
           <div className="hidden md:flex flex-col text-left">
             <span className="text-xs font-bold text-[#0d1c2e] leading-tight max-w-[170px] truncate">
-              Lê Văn Thành (Tổng Kho Tân Cảng)
+              {profile?.fullName?.trim() || 'Tài khoản chủ bãi'}
             </span>
-            <span className="font-mono text-[11px] text-slate-500 font-medium">#MCH-88219</span>
+            <span className="font-mono text-[11px] text-slate-500 font-medium">{profile ? `#MCH-${profile.merchantId}` : 'Merchant'}</span>
           </div>
         </Link>
       </div>

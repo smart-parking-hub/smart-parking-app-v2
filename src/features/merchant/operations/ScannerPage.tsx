@@ -88,9 +88,9 @@ export function MerchantScannerPage() {
         const Constructor = (
           window as Window & { BarcodeDetector?: DetectorConstructor }
         ).BarcodeDetector
-        if (!Constructor)
+        if (!navigator.mediaDevices?.getUserMedia)
           throw new Error(
-            'Trình duyệt chưa hỗ trợ nhận diện QR. Vui lòng nhập mã vé bên dưới hoặc dùng Chrome Android hỗ trợ BarcodeDetector.',
+            'Camera cần HTTPS hoặc localhost. Hãy dùng kết nối an toàn và cho phép truy cập camera.',
           )
         stream = await navigator.mediaDevices.getUserMedia({
           video: { facingMode: 'environment' },
@@ -102,11 +102,17 @@ export function MerchantScannerPage() {
         if (!video.current) return
         video.current.srcObject = stream
         await video.current.play()
+        if (stopped) return
+        if (!Constructor) {
+          setCameraError('Camera đã bật nhưng trình duyệt chưa hỗ trợ quét QR. Vui lòng nhập mã vé để tiếp tục.')
+          return
+        }
         const detector = new Constructor({ formats: ['qr_code'] })
         const tick = async () => {
           if (stopped || !video.current) return
           try {
             const codes = await detector.detect(video.current)
+            if (stopped) return
             if (codes[0]) {
               form.setValue('bookingCode', codes[0].rawValue, {
                 shouldValidate: true,
@@ -123,6 +129,7 @@ export function MerchantScannerPage() {
         }
         void tick()
       } catch (error) {
+        if (stopped) return
         setCameraError(errorMessage(error))
         setCamera(false)
       }

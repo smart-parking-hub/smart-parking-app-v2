@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { AlertCircle, RefreshCw } from 'lucide-react'
 
@@ -8,12 +9,12 @@ import {
 } from '../types/parkingSearchTypes'
 import {
   fetchParkingLots,
-  fallbackVehicleOptions,
 } from '../api/parkingSearchApi'
 import {
   useParkingSearchStore,
   parkingSearchStore,
 } from '../store/parkingSearchStore'
+import { fetchVehicles } from '@/features/booking-flow'
 import { TopFilterBar } from '../components/TopFilterBar'
 import { SmartLocationBar } from '../components/SmartLocationBar'
 import { YardCardList } from '../components/YardCardList'
@@ -23,6 +24,8 @@ import { SearchParkingSkeleton } from '../components/SearchParkingSkeleton'
 import type { Coordinates, Place } from '../api/mapProvider'
 
 export function SearchParkingPage() {
+  const vehicleQuery = useQuery({ queryKey: ['booking-vehicles'], queryFn: fetchVehicles, retry: false })
+  const vehicleOptions = (vehicleQuery.data ?? []).map(vehicle => ({ id: String(vehicle.id), label: vehicle.licensePlate, type: vehicle.vehicleType }))
   const filters = useParkingSearchStore((s) => s.filters)
   const selectedLotId = useParkingSearchStore((s) => s.selectedLotId)
   const quickBookLot = useParkingSearchStore((s) => s.quickBookLot)
@@ -30,6 +33,11 @@ export function SearchParkingPage() {
   const searchText = useParkingSearchStore((s) => s.searchText)
   const origin = useParkingSearchStore((s) => s.origin)
 
+  useEffect(() => {
+    if (vehicleQuery.data?.length && !filters.selectedVehicleId.startsWith('type:') && !vehicleQuery.data.some(vehicle => String(vehicle.id) === filters.selectedVehicleId)) {
+      parkingSearchStore.setFilters({ selectedVehicleId: String(vehicleQuery.data[0].id), vehicleType: vehicleQuery.data[0].vehicleType })
+    }
+  }, [vehicleQuery.data, filters.selectedVehicleId])
   // Validate filter parameters with Zod schema
   const parsedFilters = searchFilterSchema.safeParse(filters)
   const validFilters = parsedFilters.success ? parsedFilters.data : filters
@@ -87,7 +95,7 @@ export function SearchParkingPage() {
         {/* Top Control Filter Bar: 3 Evenly Spaced Columns (Phương tiện -> Sắp xếp -> Bán kính) */}
         <TopFilterBar
           filters={filters}
-          vehicles={fallbackVehicleOptions}
+          vehicles={vehicleOptions}
           onChangeFilters={handleFilterChange}
         />
 

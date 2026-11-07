@@ -1,3 +1,5 @@
+> Log cleanup 2026-11-07: generated `.log` attachments referenced below were removed at the user's request. Historical results remain recorded here; they do not represent the latest verification.
+
 # SCR-010 — Đăng nhập đa vai trò
 
 last_verified: 2026-11-05

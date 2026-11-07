@@ -128,9 +128,7 @@ export function YardCardItem({
         <div className="border-l border-slate-200 pl-4">
           <p className="mb-1 text-xs text-slate-500 font-medium">Cọc giữ slot</p>
           <p className="text-sm sm:text-base font-bold font-mono text-slate-900">
-            {lot.depositAmount > 0
-              ? `${currency(lot.depositAmount)} ₫`
-              : 'Xác nhận khi đặt chỗ'}
+            20% phí dự kiến
           </p>
         </div>
       </div>
@@ -181,7 +179,7 @@ export function YardCardItem({
           }`}
         >
           <span>
-            {lot.isFull || lot.availableSlots === 0 ? 'ĐỢI SLOT' : 'ĐẶT GIỮ CHỖ 10P'}
+            {lot.isFull || lot.availableSlots === 0 ? 'ĐỢI SLOT' : 'ĐẶT CHỖ · CỌC 20%'}
           </span>
           <ArrowUpRight size={16} />
         </button>

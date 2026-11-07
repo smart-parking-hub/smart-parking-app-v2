@@ -1,5 +1,24 @@
 # Screen Implementation Record: SCR-028 Merchant Parking Lots Directory
 
+> Integration correction — last_verified: 2026-11-07; owner: frontend maintainers.
+> Earlier visual claims below describe prototype data, not database-backed behavior.
+> VERIFIED cause: the page initialized mock metrics, called an unsupported `/metrics` endpoint,
+> sent `status=ALL` to an enum parameter and replaced failed list requests with three demo yards.
+> The list now validates `ApiResponse.data`, propagates errors and omits ALL/blank search parameters.
+> Server state uses TanStack Query with filter/page/sort keys, cancellation and refresh on remount.
+> Summary cards use server totals from unfiltered/all, APPROVED and PENDING_APPROVAL queries (size=1).
+> No occupancy/revenue/vehicle/gate/amenity values are fabricated from the narrow list DTO.
+> Preserved: keyword/status filtering, server pagination, supported name/date sorting, persisted grid/table mode,
+> registration, detail, edit, slot/pricing/scanner links for approved yards.
+> Export now downloads actual CSV rows from the current filtered page; disabled for empty/error/loading.
+> Removed prototype behaviors: unsupported capacity/rating/revenue sorting, simulated export and support-success toast.
+> Ownership source evidence: ParkingLotController passes authenticated user ID; ParkingLotServiceImpl calls
+> ParkingLotRepository.searchOwnedParkingLots with `p.merchantId = :merchantId`. No backend/schema changes.
+> LIVE VERIFIED: the existing browser session (#MCH-15) shows 0 total/approved/pending yards and the initial empty state.
+> Dashboard in that session also shows 0 yards/bookings and a zero wallet. No demo yards rendered after navigation.
+> Unit/component regression: owned list 8/8, dashboard 6/6 passed. Full ESLint passed; TypeScript project build and Vite production build passed.
+> Existing demo detail/edit helpers remain outside this list integration; direct deep links were not reworked here.
+
 - Screen: `SCR-028 MerchantParkingLotsPage (Danh mục bãi đỗ xe sở hữu)`
 - Route: `/merchant/parking-lots`
 - Owning feature: `features/merchant/parking-lots`

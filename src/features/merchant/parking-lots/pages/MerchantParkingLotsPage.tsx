@@ -1,251 +1,94 @@
-import { useState, useEffect, useCallback } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { AlertCircle, RefreshCw, PlusCircle, CheckCircle2, X } from 'lucide-react'
-import {
-  fetchMerchantLotsMetrics,
-  fetchMerchantParkingLots,
-  fallbackMerchantLotsMetrics,
-} from '../api/merchantParkingLotApi'
-import type {
-  MerchantLotsMetrics,
-  MerchantParkingLotPageResponse,
-} from '../types/merchantParkingLotTypes'
+import { useState } from 'react'
+import { useQuery } from '@tanstack/react-query'
+import { Link } from 'react-router-dom'
+import { fetchMerchantLotCounts, fetchMerchantParkingLots, type OwnedMerchantLot } from '../api/merchantParkingLotApi'
 import { MerchantParkingLotsHeader } from '../components/MerchantParkingLotsHeader'
 import { MerchantParkingLotsMetrics } from '../components/MerchantParkingLotsMetrics'
-import {
-  MerchantParkingLotsFilterBar,
-  type ViewMode,
-} from '../components/MerchantParkingLotsFilterBar'
-import { MerchantParkingLotCardItem } from '../components/MerchantParkingLotCardItem'
-import { MerchantParkingLotsTableView } from '../components/MerchantParkingLotsTableView'
+import { MerchantParkingLotsFilterBar, type ViewMode } from '../components/MerchantParkingLotsFilterBar'
 import { MerchantParkingLotsPagination } from '../components/MerchantParkingLotsPagination'
 import { MerchantParkingLotsSkeleton } from '../components/MerchantParkingLotsSkeleton'
-import { ExportReportModal } from '../components/ExportReportModal'
+import { Notice, Badge, secondary, date } from '@/shared/components/Workspace'
+
+function LotActions({ lot }: { lot: OwnedMerchantLot }) {
+  const root = `/merchant/parking-lots/${lot.id}`
+  return <div className="flex flex-wrap gap-3 text-xs font-semibold">
+    <Link className="underline" to={root}>Chi tiết</Link>
+    {lot.status === 'APPROVED' ? <>
+      <Link className="underline" to={`${root}/slots`}>Cấu hình slot</Link>
+      <Link className="underline" to={`${root}/pricing`}>Bảng giá</Link>
+      <Link className="underline" to={`/merchant/qr-scanner?yardId=${lot.id}`}>Quét QR</Link>
+    </> : <Link className="underline" to={`${root}/edit`}>Chỉnh sửa hồ sơ</Link>}
+  </div>
+}
 
 export function MerchantParkingLotsPage() {
-  const navigate = useNavigate()
-
-  // State Management
-  const [metrics, setMetrics] = useState<MerchantLotsMetrics>(fallbackMerchantLotsMetrics)
-  const [data, setData] = useState<MerchantParkingLotPageResponse>({
-    content: [],
-    currentPage: 0,
-    totalPages: 1,
-    totalElements: 0,
-  })
-
   const [page, setPage] = useState(0)
-  const [size] = useState(10)
-  const [status, setStatus] = useState<string>('ALL')
-  const [keyword, setKeyword] = useState<string>('')
-  const [sort, setSort] = useState<string>('createdAt,desc')
-  const [viewMode, setViewMode] = useState<ViewMode>(() => {
-    return (localStorage.getItem('merchant_lots_view_mode') as ViewMode) || 'grid'
+  const [status, setStatus] = useState('ALL')
+  const [keyword, setKeyword] = useState('')
+  const [sort, setSort] = useState('createdAt,desc')
+  const [viewMode, setViewMode] = useState<ViewMode>(() => localStorage.getItem('merchant_lots_view_mode') === 'table' ? 'table' : 'grid')
+  const size = 10
+  const list = useQuery({
+    queryKey: ['merchant-owned-parking-lots', { page, size, status, keyword, sort }],
+    staleTime: 0,
+    queryFn: ({ signal }) => fetchMerchantParkingLots({ page, size, status, keyword, sort }, signal),
   })
-
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string>()
-  const [exportModalOpen, setExportModalOpen] = useState(false)
-  const [toastMessage, setToastMessage] = useState<string | null>(null)
-
-  // Persist View Mode
-  const handleViewModeChange = (mode: ViewMode) => {
-    setViewMode(mode)
-    localStorage.setItem('merchant_lots_view_mode', mode)
-  }
-
-  // Load Data
-  const loadData = useCallback(async () => {
-    setLoading(true)
-    setError(undefined)
-
-    try {
-      const [metricsRes, lotsRes] = await Promise.all([
-        fetchMerchantLotsMetrics(),
-        fetchMerchantParkingLots({
-          page,
-          size,
-          status,
-          keyword,
-          sort,
-        }),
-      ])
-
-      setMetrics(metricsRes)
-      setData(lotsRes)
-    } catch {
-      setError('Không thể kết nối đến máy chủ kiểm định bến bãi. Vui lòng thử lại.')
-    } finally {
-      setLoading(false)
+  const counts = useQuery({
+    queryKey: ['merchant-owned-parking-lot-counts'],
+    staleTime: 0,
+    queryFn: ({ signal }) => fetchMerchantLotCounts(signal),
+  })
+  const data = list.isError ? undefined : list.data
+  const filtered = Boolean(keyword.trim() || status !== 'ALL')
+  function exportPage() {
+    if (!data?.content.length) return
+    const cell = (value: unknown) => {
+      const text = String(value ?? '')
+      return `"${(/^[=+@\-\t\r\n]/.test(text) ? "'" + text : text).replace(/"/g, '""')}"`
     }
-  }, [keyword, page, size, sort, status])
-
-  useEffect(() => {
-    void loadData()
-  }, [loadData])
-
-  // Support Toast Trigger
-  const handleContactSupport = (lotCode: string) => {
-    setToastMessage(
-      `Đã gửi yêu cầu ưu tiên thẩm định cho hồ sơ bãi ${lotCode}. Đường dây nóng phòng Nghiệp vụ: 1900 6868 (Nhánh 2).`,
-    )
-    setTimeout(() => {
-      setToastMessage(null)
-    }, 6000)
+    const rows = [['ID', 'Tên bãi', 'Địa chỉ', 'Trạng thái', 'Ngày tạo'], ...data.content.map(lot => [lot.id, lot.name, lot.address, lot.status, lot.createdAt])]
+    const url = URL.createObjectURL(new Blob(['\uFEFF' + rows.map(row => row.map(cell).join(',')).join('\r\n')], { type: 'text/csv;charset=utf-8' }))
+    const link = document.createElement('a')
+    link.href = url
+    link.download = `bai-do-trang-${page + 1}.csv`
+    link.click()
+    setTimeout(() => URL.revokeObjectURL(url), 1000)
   }
-
-  return (
-    <main className="w-full bg-[#f8f9ff] min-h-screen pb-16">
-      {/* 1. Industrial Blueprint Banner / Header */}
-      <MerchantParkingLotsHeader onOpenExportModal={() => setExportModalOpen(true)} />
-
-      {/* 2. Metric Summary Strip (3 Bento KPI Cards) */}
-      <MerchantParkingLotsMetrics metrics={metrics} />
-
-      {/* Error Alert if any */}
-      {error && (
-        <div className="max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-8 mt-4">
-          <div className="bg-red-50 border border-red-200 text-red-800 p-4 rounded-2xl flex items-center justify-between gap-3 shadow-2xs">
-            <div className="flex items-center gap-2">
-              <AlertCircle className="w-5 h-5 text-red-600 shrink-0" />
-              <span className="text-xs sm:text-sm font-medium">{error}</span>
-            </div>
-            <button
-              type="button"
-              onClick={() => void loadData()}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-red-100 hover:bg-red-200 text-red-900 text-xs font-bold transition-colors cursor-pointer"
-            >
-              <RefreshCw className="w-3.5 h-3.5" />
-              <span>Thử lại</span>
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* 3. Workbench Filter & Control Panel */}
-      <MerchantParkingLotsFilterBar
-        keyword={keyword}
-        onKeywordChange={(val) => {
-          setPage(0)
-          setKeyword(val)
-        }}
-        status={status}
-        onStatusChange={(val) => {
-          setPage(0)
-          setStatus(val)
-        }}
-        sort={sort}
-        onSortChange={(val) => {
-          setPage(0)
-          setSort(val)
-        }}
-        viewMode={viewMode}
-        onViewModeChange={handleViewModeChange}
-        totalResults={data.totalElements}
-      />
-
-      {/* 4. Master Parking Lots Directory */}
-      <div className="w-full max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-8 py-4">
-        {loading ? (
-          <MerchantParkingLotsSkeleton />
-        ) : data.content.length === 0 ? (
-          /* Empty State */
-          <div className="bg-white rounded-2xl border border-slate-200/90 p-12 text-center shadow-2xs flex flex-col items-center justify-center">
-            <div className="w-14 h-14 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 mb-4">
-              <PlusCircle className="w-7 h-7" />
-            </div>
-            <h3 className="font-sora text-base font-bold text-[#0d1c2e]">
-              {keyword || status !== 'ALL'
-                ? 'Không tìm thấy bãi đỗ nào phù hợp bộ lọc'
-                : 'Bạn chưa đăng ký bãi đỗ xe nào'}
-            </h3>
-            <p className="text-xs sm:text-sm text-slate-500 mt-1.5 max-w-md">
-              {keyword || status !== 'ALL'
-                ? 'Vui lòng kiểm tra lại từ khóa tìm kiếm hoặc bấm Đặt lại để xem tất cả các bãi.'
-                : 'Đăng ký bãi đỗ mới để bắt đầu tiếp nhận xe container, xe tải nặng và kết nối cổng ALPR tự động.'}
-            </p>
-
-            <div className="mt-6 flex items-center gap-3">
-              {keyword || status !== 'ALL' ? (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setKeyword('')
-                    setStatus('ALL')
-                    setPage(0)
-                  }}
-                  className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold rounded-xl transition-colors cursor-pointer"
-                >
-                  Xóa Bộ Lọc
-                </button>
-              ) : null}
-
-              <button
-                type="button"
-                onClick={() => navigate('/merchant/parking-lots/new')}
-                className="px-5 py-2.5 bg-[#d95f00] hover:bg-[#b84e00] text-white text-xs font-bold rounded-xl transition-all shadow-xs cursor-pointer"
-              >
-                + Đăng Ký Bãi Đỗ Mới
-              </button>
-            </div>
-          </div>
-        ) : viewMode === 'grid' ? (
-          /* Card / Grid View */
-          <section className="flex flex-col gap-5 sm:gap-6" aria-label="Danh sách bãi đỗ dạng lưới">
-            {data.content.map((lot) => (
-              <MerchantParkingLotCardItem
-                key={lot.id}
-                lot={lot}
-                onContactSupport={handleContactSupport}
-              />
-            ))}
-          </section>
-        ) : (
-          /* Table View */
-          <section aria-label="Danh sách bãi đỗ dạng bảng">
-            <MerchantParkingLotsTableView lots={data.content} />
-          </section>
-        )}
-
-        {/* 5. Pagination & Regulatory Compliance Callout */}
-        {!loading && data.content.length > 0 && (
-          <MerchantParkingLotsPagination
-            currentPage={data.currentPage}
-            totalPages={data.totalPages}
-            totalElements={data.totalElements}
-            pageSize={size}
-            onPageChange={(newPage) => setPage(newPage)}
-          />
-        )}
-      </div>
-
-      {/* Floating Support Toast */}
-      {toastMessage && (
-        <div
-          role="status"
-          aria-live="polite"
-          className="fixed bottom-6 right-6 z-50 max-w-md bg-[#131b2e] text-white p-4 rounded-2xl shadow-2xl border border-slate-700 flex items-start gap-3 animate-in fade-in slide-in-from-bottom-4 duration-300"
-        >
-          <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0 mt-0.5" />
-          <div className="flex-1 text-xs leading-relaxed">{toastMessage}</div>
-          <button
-            type="button"
-            onClick={() => setToastMessage(null)}
-            className="text-slate-400 hover:text-white cursor-pointer"
-            aria-label="Đóng thông báo"
-          >
-            <X className="w-4 h-4" />
-          </button>
-        </div>
-      )}
-
-      {/* Export Report Modal */}
-      <ExportReportModal
-        isOpen={exportModalOpen}
-        onClose={() => setExportModalOpen(false)}
-        totalLots={data.totalElements}
-        lots={data.content}
-      />
-    </main>
-  )
+  return <main className="w-full bg-[#f8f9ff] min-h-screen pb-16">
+    <MerchantParkingLotsHeader onOpenExportModal={exportPage} exportDisabled={!data?.content.length || list.isFetching} />
+    <MerchantParkingLotsMetrics counts={counts.isError ? undefined : counts.data} />
+    {counts.isError && <div className="max-w-[1280px] mx-auto px-4 mt-4"><Notice error>
+      Không tải được số lượng bãi. <button className="underline" onClick={() => void counts.refetch()} disabled={counts.isFetching}>Tải lại thống kê</button>
+    </Notice></div>}
+    <MerchantParkingLotsFilterBar keyword={keyword} onKeywordChange={value => { setPage(0); setKeyword(value) }}
+      status={status} onStatusChange={value => { setPage(0); setStatus(value) }}
+      sort={sort} onSortChange={value => { setPage(0); setSort(value) }}
+      viewMode={viewMode} onViewModeChange={value => { setViewMode(value); localStorage.setItem('merchant_lots_view_mode', value) }}
+      totalResults={data?.totalElements ?? 0} />
+    <div className="w-full max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-8 py-4 space-y-4">
+      {list.isPending ? <MerchantParkingLotsSkeleton /> : list.isError ? <Notice error>
+        Không thể tải danh sách bãi đỗ. Vui lòng thử lại.
+        <button className="underline" onClick={() => void list.refetch()} disabled={list.isFetching}>Thử lại</button>
+      </Notice> : data && data.content.length === 0 ? <div className="bg-white rounded-2xl border border-slate-200/90 p-12 text-center shadow-2xs space-y-4">
+        <h2 className="font-sora text-base font-bold text-[#0d1c2e]">{filtered ? 'Không tìm thấy bãi đỗ nào phù hợp bộ lọc' : 'Bạn chưa đăng ký bãi đỗ xe nào'}</h2>
+        {filtered && <button className={secondary} onClick={() => { setKeyword(''); setStatus('ALL'); setPage(0) }}>Xóa Bộ Lọc</button>}
+        <Link className={secondary} to="/merchant/parking-lots/new">Đăng ký bãi đỗ mới</Link>
+      </div> : data && (viewMode === 'grid' ? <section className="grid gap-5 md:grid-cols-2" aria-label="Danh sách bãi đỗ dạng lưới">
+        {data.content.map(lot => <article key={lot.id} className="bg-white rounded-2xl border border-slate-200 p-6 space-y-4">
+          <h2 className="font-sora font-bold text-brand-navy">{lot.name}</h2><Badge value={lot.status} />
+          <p className="text-sm text-brand-muted">{lot.address || 'Chưa có địa chỉ'}</p>
+          <p className="text-xs text-brand-muted">Ngày tạo: {date(lot.createdAt)}</p><LotActions lot={lot} />
+        </article>)}
+      </section> : <section className="overflow-x-auto rounded-2xl border border-slate-200 bg-white" aria-label="Danh sách bãi đỗ dạng bảng">
+        <table className="w-full text-left text-sm"><thead className="bg-[#eff4ff]"><tr>
+          {['Tên cơ sở', 'Địa chỉ vận hành', 'Trạng thái', 'Ngày tạo', 'Thao tác'].map(title => <th key={title} scope="col" className="p-4">{title}</th>)}
+        </tr></thead><tbody>{data.content.map(lot => <tr key={lot.id} className="border-t border-slate-100">
+          <td className="p-4 font-semibold">{lot.name}</td><td className="p-4">{lot.address || '—'}</td>
+          <td className="p-4"><Badge value={lot.status} /></td><td className="p-4">{date(lot.createdAt)}</td><td className="p-4"><LotActions lot={lot} /></td>
+        </tr>)}</tbody></table>
+      </section>)}
+      {data && data.content.length > 0 && <MerchantParkingLotsPagination currentPage={data.currentPage} totalPages={data.totalPages}
+        totalElements={data.totalElements} pageSize={size} onPageChange={setPage} />}
+    </div>
+  </main>
 }

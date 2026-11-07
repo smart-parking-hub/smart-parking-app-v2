@@ -1,239 +1,38 @@
-import { useState, useMemo } from 'react'
+import { useState } from 'react'
+import { Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
-import type {
-  PaymentCategoryFilter,
-  PaymentStatusFilter,
-  PaymentTransactionItem,
-  CompanyInvoiceConfig,
-} from '../types/paymentTypes'
-import {
-  fetchMyPayments,
-  fetchFinancialMetrics,
-  fetchCompanyInvoiceConfig,
-  saveCompanyInvoiceConfig,
-  fallbackTransactions,
-  fallbackMetrics,
-  fallbackCompanyConfig,
-} from '../api/paymentApi'
-import { PaymentsCommandHeader } from '../components/PaymentsCommandHeader'
-import { FinancialMetricsBento } from '../components/FinancialMetricsBento'
-import { TransactionFilterToolbar } from '../components/TransactionFilterToolbar'
-import { MasterTransactionTable } from '../components/MasterTransactionTable'
-import { ReceiptInspectorPanel } from '../components/ReceiptInspectorPanel'
-import { EnterpriseAccountingPanel } from '../components/EnterpriseAccountingPanel'
-import { CompanyInvoiceConfigModal } from '../components/CompanyInvoiceConfigModal'
-import { ExportReportModal } from '../components/ExportReportModal'
-import { SendReceiptEmailModal } from '../components/SendReceiptEmailModal'
-import { PaymentsSkeleton } from '../components/PaymentsSkeleton'
+import { Workspace, Panel, Notice, Metrics, Field, control, secondary } from '@/shared/components/Workspace'
+import { errorMessage } from '@/shared/api/resources'
+import { fetchPaymentPage, paymentMoney, paymentTime, paymentStatusLabels, paymentTypeLabels, type PaymentRecord } from '../api/paymentDataApi'
 
 export function DriverPaymentsPage() {
-  // Query data
-  const {
-    data: transactions = fallbackTransactions,
-    isLoading: isLoadingPayments,
-    refetch: refetchPayments,
-  } = useQuery({
-    queryKey: ['my-driver-payments'],
-    queryFn: fetchMyPayments,
-    initialData: fallbackTransactions,
-    staleTime: 30000,
-  })
-
-  const { data: metrics = fallbackMetrics, isLoading: isLoadingMetrics } = useQuery({
-    queryKey: ['driver-payment-metrics'],
-    queryFn: fetchFinancialMetrics,
-    initialData: fallbackMetrics,
-    staleTime: 60000,
-  })
-
-  const { data: serverConfig = fallbackCompanyConfig } = useQuery({
-    queryKey: ['company-invoice-config'],
-    queryFn: fetchCompanyInvoiceConfig,
-    initialData: fallbackCompanyConfig,
-    staleTime: 120000,
-  })
-
-  // State
-  const [companyConfig, setCompanyConfig] = useState<CompanyInvoiceConfig>(serverConfig)
+  const [page, setPage] = useState(0)
+  const [status, setStatus] = useState<PaymentRecord['status'] | ''>('')
   const [search, setSearch] = useState('')
-  const [categoryFilter, setCategoryFilter] = useState<PaymentCategoryFilter>('ALL')
-  const [statusFilter, setStatusFilter] = useState<PaymentStatusFilter>('ALL')
-  const [selectedItem, setSelectedItem] = useState<PaymentTransactionItem>(
-    () => transactions[0] || fallbackTransactions[0]
-  )
-
-  // Modals state
-  const [isConfigModalOpen, setIsConfigModalOpen] = useState(false)
-  const [isExportModalOpen, setIsExportModalOpen] = useState(false)
-  const [isSendEmailModalOpen, setIsSendEmailModalOpen] = useState(false)
-  const [emailTargetItem, setEmailTargetItem] = useState<PaymentTransactionItem | null>(null)
-
-  // Filtering transactions
-  const filteredTransactions = useMemo(() => {
-    return transactions.filter((item) => {
-      // Category match
-      const matchCategory =
-        categoryFilter === 'ALL' || item.category === categoryFilter
-
-      // Status match
-      const matchStatus =
-        statusFilter === 'ALL' || item.status === statusFilter
-
-      // Search match
-      const q = search.trim().toLowerCase()
-      const matchSearch =
-        !q ||
-        item.transactionCode.toLowerCase().includes(q) ||
-        item.bookingCode.toLowerCase().includes(q) ||
-        item.parkingLotName.toLowerCase().includes(q) ||
-        item.vehiclePlate.toLowerCase().includes(q)
-
-      return matchCategory && matchStatus && matchSearch
-    })
-  }, [transactions, categoryFilter, statusFilter, search])
-
-  // Count tags
-  const counts = useMemo(() => {
-    let deposit = 0
-    let finalPayment = 0
-    let refund = 0
-    let penalty = 0
-    let paid = 0
-    let refunded = 0
-
-    transactions.forEach((t) => {
-      if (t.category === 'DEPOSIT') deposit++
-      if (t.category === 'FINAL_PAYMENT') finalPayment++
-      if (t.category === 'REFUND') refund++
-      if (t.category === 'PENALTY') penalty++
-      if (t.status === 'SUCCESS') paid++
-      if (t.status === 'REFUNDED') refunded++
-    })
-
-    return {
-      all: transactions.length,
-      deposit,
-      finalPayment,
-      refund,
-      penalty,
-      paid,
-      refunded,
-    }
-  }, [transactions])
-
-  // Handlers
-  const handleSaveConfig = async (newConfig: CompanyInvoiceConfig) => {
-    setCompanyConfig(newConfig)
-    await saveCompanyInvoiceConfig(newConfig)
-  }
-
-  const handleDownloadPdf = (item: PaymentTransactionItem) => {
-    // Generate synthetic file download for audit preview
-    const content = `BIEN LAI DIEN TU TT78\nMa GD: ${item.transactionCode}\nBooking: ${item.bookingCode}\nBai xe: ${item.parkingLotName}\nBien so: ${item.vehiclePlate}\nSo tien: ${item.amount} VND\nMa CQT: ${item.taxAuthorityCode ?? 'TT78-STH-2026'}`
-    const blob = new Blob([content], { type: 'text/plain;charset=utf-8' })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = `BienLai_${item.transactionCode}.txt`
-    document.body.appendChild(a)
-    a.click()
-    document.body.removeChild(a)
-    URL.revokeObjectURL(url)
-  }
-
-  const handleOpenSendEmail = (item: PaymentTransactionItem) => {
-    setEmailTargetItem(item)
-    setIsSendEmailModalOpen(true)
-  }
-
-  if (isLoadingPayments && isLoadingMetrics) {
-    return (
-      <div className="max-w-[1280px] mx-auto px-4 lg:px-8 py-8 font-inter">
-        <PaymentsSkeleton />
-      </div>
-    )
-  }
-
-  return (
-    <div className="max-w-[1280px] mx-auto px-4 lg:px-8 py-8 font-inter">
-      {/* 1. Header & Scrim Ticker */}
-      <PaymentsCommandHeader
-        onOpenConfig={() => setIsConfigModalOpen(true)}
-        onOpenExport={() => setIsExportModalOpen(true)}
-        companyTaxId={companyConfig.taxId}
-      />
-
-      {/* 2. 4 Bento Financial Metrics */}
-      <FinancialMetricsBento metrics={metrics} />
-
-      {/* 3. Advanced Toolbar / Search & Filter Matrix */}
-      <TransactionFilterToolbar
-        search={search}
-        onSearchChange={setSearch}
-        categoryFilter={categoryFilter}
-        onCategoryFilterChange={setCategoryFilter}
-        statusFilter={statusFilter}
-        onStatusFilterChange={setStatusFilter}
-        counts={counts}
-      />
-
-      {/* 4. Master Transaction Table */}
-      <MasterTransactionTable
-        items={filteredTransactions}
-        selectedId={selectedItem?.id ?? null}
-        onSelect={(item) => setSelectedItem(item)}
-        onRefresh={() => void refetchPayments()}
-        onDownloadPdf={handleDownloadPdf}
-      />
-
-      {/* 5. Split Informative Panels: Detail Receipt Inspector & Enterprise Accounting */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-        {/* Left 7 cols: Detailed Receipt Inspector */}
-        <div className="lg:col-span-7">
-          {selectedItem ? (
-            <ReceiptInspectorPanel
-              item={selectedItem}
-              onDownloadPdf={handleDownloadPdf}
-              onOpenSendEmail={handleOpenSendEmail}
-            />
-          ) : (
-            <div className="bg-white p-8 rounded-2xl border border-slate-200 text-center text-slate-500">
-              Chọn một giao dịch trong bảng phía trên để xem chi tiết biên lai.
-            </div>
-          )}
-        </div>
-
-        {/* Right 5 cols: Enterprise VAT Direct Dispatch & Deposit Guarantee */}
-        <div className="lg:col-span-5">
-          <EnterpriseAccountingPanel
-            config={companyConfig}
-            onEditConfig={() => setIsConfigModalOpen(true)}
-          />
-        </div>
-      </div>
-
-      {/* Modals */}
-      <CompanyInvoiceConfigModal
-        isOpen={isConfigModalOpen}
-        onClose={() => setIsConfigModalOpen(false)}
-        initialConfig={companyConfig}
-        onSave={handleSaveConfig}
-      />
-
-      <ExportReportModal
-        isOpen={isExportModalOpen}
-        onClose={() => setIsExportModalOpen(false)}
-        totalRecords={filteredTransactions.length}
-        totalAmountText={`${new Intl.NumberFormat('vi-VN').format(metrics.totalSpentMonth)} ₫`}
-        transactions={filteredTransactions}
-      />
-
-      <SendReceiptEmailModal
-        isOpen={isSendEmailModalOpen}
-        onClose={() => setIsSendEmailModalOpen(false)}
-        item={emailTargetItem}
-        defaultEmail={companyConfig.accountingEmail}
-      />
-    </div>
-  )
+  const [selectedId, setSelectedId] = useState<number | null>(null)
+  const query = useQuery({ queryKey: ['driver-payment-page', page], queryFn: () => fetchPaymentPage(page), retry: false })
+  const rows = query.data?.content ?? []
+  const filtered = rows.filter(item => (!status || item.status === status) && `${item.transactionCode ?? ''} ${item.bookingId}`.toLowerCase().includes(search.trim().toLowerCase()))
+  const selected = rows.find(item => item.id === selectedId)
+  const successful = rows.filter(item => item.status === 'SUCCESS' && item.type !== 'REFUND')
+  return <Workspace eyebrow="TÀI KHOẢN / GIAO DỊCH" title="Lịch sử thanh toán" description="Theo dõi các giao dịch thanh toán của tài khoản. Thời gian hiển thị theo giờ Việt Nam (UTC+7)." actions={<Link className={secondary} to="/bookings">Xem đặt chỗ</Link>}>
+    {query.isPending ? <p role="status">Đang tải giao dịch…</p> : query.isError ? <Notice error><div>{errorMessage(query.error)}<button className={`${secondary} mt-3`} onClick={() => void query.refetch()}>Thử lại</button></div></Notice> : <>
+      <Metrics items={[
+        { label: 'Tổng giao dịch', value: query.data.totalElements },
+        { label: 'Đã thanh toán trên trang này', value: paymentMoney(successful.reduce((sum, item) => sum + item.amount, 0)), note: 'Chỉ cộng giao dịch thành công, không gồm khoản hoàn tiền.' },
+        { label: 'Chờ thanh toán trên trang này', value: rows.filter(item => item.status === 'PENDING').length },
+        { label: 'Cần đối soát trên trang này', value: rows.filter(item => item.status === 'REQUIRES_REVIEW').length },
+      ]} />
+      {query.data.totalElements === 0 ? <Notice>Bạn chưa có giao dịch thanh toán nào.</Notice> : <Panel title="Danh sách giao dịch">
+        <div className="mb-6 grid gap-4 sm:grid-cols-2"><Field label="Tìm trong trang hiện tại"><input className={control} type="search" value={search} onChange={event => setSearch(event.target.value)} placeholder="Mã giao dịch hoặc ID booking" /></Field><Field label="Trạng thái trong trang hiện tại"><select aria-label="Trạng thái trong trang hiện tại" className={control} value={status} onChange={event => setStatus(event.target.value as PaymentRecord['status'] | '')}><option value="">Tất cả</option>{Object.entries(paymentStatusLabels).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></Field></div>
+        {!filtered.length ? <Notice>Không có giao dịch phù hợp trong trang này.</Notice> : <div className="overflow-x-auto"><table className="w-full text-left text-sm"><thead><tr className="border-b border-brand-border text-brand-muted">{['Giao dịch / Booking', 'Thời gian', 'Loại thanh toán', 'Kênh', 'Số tiền', 'Trạng thái', 'Thao tác'].map(label => <th scope="col" className="p-3" key={label}>{label}</th>)}</tr></thead><tbody>{filtered.map(item => <tr key={item.id} className="border-b border-brand-border"><td className="p-3"><p className="max-w-56 break-all font-semibold">{item.transactionCode || `Giao dịch #${item.id}`}</p><p className="mt-1 text-brand-muted">Booking #{item.bookingId}</p></td><td className="p-3">{paymentTime(item.createdAt)}</td><td className="p-3">{paymentTypeLabels[item.type]}</td><td className="p-3">{item.gateway === 'DEMO' ? 'Demo (thử nghiệm)' : item.gateway}</td><td className="whitespace-nowrap p-3 font-semibold tabular-nums">{paymentMoney(item.amount)}</td><td className="p-3"><span className={`inline-flex whitespace-nowrap rounded-lg px-3 py-1 text-xs font-semibold ${item.status === 'SUCCESS' ? 'bg-brand-surface text-brand-navy' : 'border border-brand-border text-brand-navy'}`}>{paymentStatusLabels[item.status]}</span></td><td className="p-3"><button className={secondary} onClick={() => setSelectedId(item.id)} aria-label={`Chi tiết giao dịch ${item.transactionCode || item.id}`}>Chi tiết</button></td></tr>)}</tbody></table></div>}
+        <div className="mt-5 flex flex-wrap items-center gap-3"><span className="text-sm text-brand-muted">Trang {query.data.currentPage + 1}/{Math.max(1, query.data.totalPages)}</span><button className={secondary} disabled={page === 0} onClick={() => { setSelectedId(null); setSearch(''); setStatus(''); setPage(page - 1) }}>Trang trước</button><button className={secondary} disabled={page + 1 >= query.data.totalPages} onClick={() => { setSelectedId(null); setSearch(''); setStatus(''); setPage(page + 1) }}>Trang sau</button><button className={secondary} disabled={query.isFetching} onClick={() => void query.refetch()}>Làm mới</button></div>
+      </Panel>}
+      {selected && <Panel title="Chi tiết giao dịch"><dl className="grid gap-4 sm:grid-cols-2">{[
+        ['Mã giao dịch', selected.transactionCode || `#${selected.id}`], ['Booking', `#${selected.bookingId}`],
+        ['Bãi đỗ', selected.parkingLotId == null ? '—' : `#${selected.parkingLotId}`], ['Mã đơn thanh toán', selected.orderCode ?? '—'],
+        ['Số tiền', paymentMoney(selected.amount)], ['Trạng thái', paymentStatusLabels[selected.status]],
+      ].map(([label, value]) => <div key={label}><dt className="text-sm text-brand-muted">{label}</dt><dd className="mt-1 break-all font-semibold">{value}</dd></div>)}</dl>{selected.status === 'REQUIRES_REVIEW' && <div className="mt-5"><Notice>Giao dịch đang cần đối soát. Kiểm tra trạng thái booking trước khi thực hiện thanh toán khác.</Notice></div>}<button className={`${secondary} mt-5`} onClick={() => setSelectedId(null)}>Đóng chi tiết</button></Panel>}
+    </>}
+  </Workspace>
 }

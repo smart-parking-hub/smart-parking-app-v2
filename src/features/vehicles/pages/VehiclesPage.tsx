@@ -1,302 +1,57 @@
-import { useState, useEffect, useMemo } from 'react'
-import {
-  fetchMyVehicles,
-  fetchFleetKpiMetrics,
-  addVehicleApi,
-  updateVehicleApi,
-  deleteVehicleApi,
-  fallbackKpiMetrics,
-  fallbackVehiclesList,
-} from '../api/vehicleApi'
-import type {
-  VehicleItem,
-  FleetKpiMetrics,
-  VehicleClassType,
-  VehicleStatusType,
-  AddVehicleFormData,
-} from '../types/vehicleTypes'
-import { VehiclesCommandHeader } from '../components/VehiclesCommandHeader'
-import { VehiclesKpiBento } from '../components/VehiclesKpiBento'
-import { VehicleFilterToolbar } from '../components/VehicleFilterToolbar'
-import { VehicleMasterTable } from '../components/VehicleMasterTable'
-import { AlprGateSyncBanner } from '../components/AlprGateSyncBanner'
-import { RegisterVehicleModal } from '../components/RegisterVehicleModal'
-import { EditVehicleModal } from '../components/EditVehicleModal'
-import { ViewInspectionDossierModal } from '../components/ViewInspectionDossierModal'
-import { DeleteVehicleConfirmModal } from '../components/DeleteVehicleConfirmModal'
-import { ExportFleetModal } from '../components/ExportFleetModal'
-import { VehiclesSkeleton } from '../components/VehiclesSkeleton'
-import { ProfileSidebarNav } from '../../profile/components/ProfileSidebarNav'
-import { NotificationSettingsModal } from '../../profile/components/NotificationSettingsModal'
+import { useState } from 'react'
+import { Check, MapPin, Plus, Search, UserRound, Wallet, X } from 'lucide-react'
+import { Link } from 'react-router-dom'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { Workspace, Panel, Notice, button, control, secondary } from '@/shared/components/Workspace'
+import { errorMessage } from '@/shared/api/resources'
+import { fetchVehiclePage, deactivateVehicle, type VehicleRecord } from '../api/vehicleDataApi'
+import { VehiclesTable } from '../components/VehiclesTable'
+import { VehicleEditor } from '../components/VehicleEditor'
 
 export function VehiclesPage() {
-  const [loading, setLoading] = useState(true)
-  const [vehicles, setVehicles] = useState<VehicleItem[]>([])
-  const [serverMetrics, setServerMetrics] = useState<FleetKpiMetrics>(fallbackKpiMetrics)
-
-  // Filters
+  const cache = useQueryClient()
+  const [page, setPage] = useState(0)
   const [search, setSearch] = useState('')
-  const [typeFilter, setTypeFilter] = useState<'all' | VehicleClassType>('all')
-  const [statusFilter, setStatusFilter] = useState<'all' | VehicleStatusType>('all')
-
-  // Modals & Action State
-  const [isRegisterOpen, setIsRegisterOpen] = useState(false)
-  const [editingVehicle, setEditingVehicle] = useState<VehicleItem | null>(null)
-  const [dossierVehicle, setDossierVehicle] = useState<VehicleItem | null>(null)
-  const [deletingVehicle, setDeletingVehicle] = useState<VehicleItem | null>(null)
-  const [isExportOpen, setIsExportOpen] = useState(false)
-  const [isNotificationSettingsOpen, setIsNotificationSettingsOpen] = useState(false)
-  const [isAdding, setIsAdding] = useState(false)
-  const [isSavingEdit, setIsSavingEdit] = useState(false)
-  const [isDeleting, setIsDeleting] = useState(false)
-
-  useEffect(() => {
-    let isMounted = true
-    const loadData = async () => {
-      try {
-        setLoading(true)
-        const [vehiclesData, metricsData] = await Promise.all([
-          fetchMyVehicles(),
-          fetchFleetKpiMetrics(),
-        ])
-        if (isMounted) {
-          setVehicles(vehiclesData && vehiclesData.length > 0 ? vehiclesData : fallbackVehiclesList)
-          if (metricsData) setServerMetrics(metricsData)
-        }
-      } catch {
-        if (isMounted) {
-          setVehicles(fallbackVehiclesList)
-          setServerMetrics(fallbackKpiMetrics)
-        }
-      } finally {
-        if (isMounted) {
-          setLoading(false)
-        }
-      }
-    }
-
-    loadData()
-    return () => {
-      isMounted = false
-    }
-  }, [])
-
-  // Recalculate metrics when vehicles list changes
-  const computedMetrics = useMemo<FleetKpiMetrics>(() => {
-    const defaultV = vehicles.find((v) => v.isDefault) ?? vehicles[0]
-    const tractors = vehicles.filter((v) => v.vehicleClass === 'CONTAINER' || v.vehicleClass === 'HEAVY').length
-    const trailers = vehicles.filter((v) => v.vehicleClass === 'TRAILER').length
-    const totalWeight = vehicles.reduce((acc, v) => acc + (v.curbWeightTon || 0) + (v.towingWeightTon || 0), 0)
-
-    return {
-      ...serverMetrics,
-      totalVehicles: vehicles.length,
-      tractorCount: tractors,
-      trailerCount: trailers,
-      defaultPlate: defaultV ? defaultV.licensePlate : 'Chưa thiết lập',
-      defaultSpec: defaultV ? defaultV.specDetails : 'Chưa có phương tiện',
-      defaultLocationStatus: defaultV ? 'SẴN SÀNG LƯU THÔNG' : 'CHỜ ĐĂNG KÝ',
-      alprVerifiedRate: '100%',
-      verifiedRatioText: `${vehicles.length}/${vehicles.length} xe đã duyệt hồ sơ tải trọng`,
-      totalTonnage: Math.round(totalWeight * 10) / 10,
-    }
-  }, [vehicles, serverMetrics])
-
-  // Filtered vehicles
-  const filteredVehicles = useMemo(() => {
-    return vehicles.filter((v) => {
-      const q = search.trim().toLowerCase()
-      const matchesSearch =
-        !q ||
-        v.licensePlate.toLowerCase().includes(q) ||
-        v.brandModel.toLowerCase().includes(q) ||
-        v.specDetails.toLowerCase().includes(q) ||
-        v.originDetails.toLowerCase().includes(q) ||
-        v.insuranceNumber.toLowerCase().includes(q)
-
-      const matchesType = typeFilter === 'all' || v.vehicleClass === typeFilter
-      const matchesStatus = statusFilter === 'all' || v.status === statusFilter
-
-      return matchesSearch && matchesType && matchesStatus
-    })
-  }, [vehicles, search, typeFilter, statusFilter])
-
-  // Handlers
-  const handleResetFilter = () => {
-    setSearch('')
-    setTypeFilter('all')
-    setStatusFilter('all')
+  const [editor, setEditor] = useState<VehicleRecord | 'new' | null>(null)
+  const [deleting, setDeleting] = useState<VehicleRecord | null>(null)
+  const [success, setSuccess] = useState('')
+  const query = useQuery({ queryKey: ['driver-vehicle-page', page], queryFn: () => fetchVehiclePage(page), retry: false })
+  const refresh = async () => {
+    await Promise.all([
+      cache.invalidateQueries({ queryKey: ['driver-vehicle-page'] }),
+      cache.invalidateQueries({ queryKey: ['booking-vehicles'] }),
+      cache.invalidateQueries({ queryKey: ['driver-dashboard'] }),
+    ])
   }
-
-  const handleSetDefault = (id: number) => {
-    setVehicles((prev) =>
-      prev.map((v) => ({
-        ...v,
-        isDefault: v.id === id,
-      }))
-    )
-  }
-
-  const handleAddVehicle = async (data: AddVehicleFormData) => {
-    setIsAdding(true)
-    try {
-      const newVehicle = await addVehicleApi(data)
-      setVehicles((prev) => {
-        if (data.isDefault) {
-          return [newVehicle, ...prev.map((v) => ({ ...v, isDefault: false }))]
-        }
-        return [newVehicle, ...prev]
-      })
-    } finally {
-      setIsAdding(false)
-    }
-  }
-
-  const handleSaveEdit = async (id: number, data: Partial<VehicleItem>) => {
-    setIsSavingEdit(true)
-    try {
-      await updateVehicleApi(id, {
-        licensePlate: data.licensePlate,
-        vehicleClass: data.vehicleClass,
-        curbWeightTon: data.curbWeightTon,
-        brandModel: data.brandModel,
-      })
-      setVehicles((prev) =>
-        prev.map((v) =>
-          v.id === id
-            ? {
-                ...v,
-                ...data,
-                vehicleClassLabel:
-                  data.vehicleClass === 'CONTAINER'
-                    ? 'Xe đầu kéo Container'
-                    : data.vehicleClass === 'TRAILER'
-                    ? 'Rơ-moóc chuyên dụng'
-                    : 'Xe tải nặng',
-              }
-            : v
-        )
-      )
-    } finally {
-      setIsSavingEdit(false)
-    }
-  }
-
-  const handleConfirmDelete = async (vehicle: VehicleItem) => {
-    setIsDeleting(true)
-    try {
-      await deleteVehicleApi(vehicle.id)
-      setVehicles((prev) => prev.filter((v) => v.id !== vehicle.id))
-    } finally {
-      setIsDeleting(false)
-    }
-  }
-
-  if (loading) {
-    return (
-      <main className="min-h-screen bg-slate-50 py-8 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-[1280px] mx-auto">
-          <VehiclesSkeleton />
+  const remove = useMutation({ mutationFn: deactivateVehicle, onSuccess: async () => { setDeleting(null); setSuccess('Đã ngừng sử dụng phương tiện.'); await refresh() } })
+  const vehicles = query.data?.content.filter(vehicle => `${vehicle.licensePlate} ${vehicle.brandModel ?? ''}`.toLocaleLowerCase('vi').includes(search.trim().toLocaleLowerCase('vi'))) ?? []
+  return <Workspace eyebrow="TÀI KHOẢN / PHƯƠNG TIỆN" title="Đội xe của tôi" description="Quản lý phương tiện đăng ký với tài khoản của bạn." actions={<button className={button} disabled={editor !== null} onClick={() => { setSuccess(''); setEditor('new') }}><Plus size={17} aria-hidden="true" />Thêm phương tiện</button>}>
+    <nav aria-label="Liên kết tài khoản" className="flex flex-wrap gap-2 text-sm">
+      <Link to="/profile" className={`${secondary} !min-h-10 !py-2`}><UserRound size={16} aria-hidden="true" />Hồ sơ</Link>
+      <Link to="/payments" className={`${secondary} !min-h-10 !py-2`}><Wallet size={16} aria-hidden="true" />Lịch sử thanh toán</Link>
+      <Link to="/parking" className={`${secondary} !min-h-10 !py-2`}><MapPin size={16} aria-hidden="true" />Tìm bãi đỗ</Link>
+    </nav>
+    {success && <div role="status" className="flex items-center gap-3 rounded-xl border border-brand-orange/20 bg-brand-orange/5 px-4 py-3 text-sm text-brand-navy"><Check size={18} aria-hidden="true" className="text-brand-orange-ink" /><span className="flex-1">{success}</span><button type="button" aria-label="Đóng thông báo lưu xe" className="rounded-lg p-2 hover:bg-brand-orange/10" onClick={() => setSuccess('')}><X size={16} aria-hidden="true" /></button></div>}
+    {editor && <VehicleEditor key={editor === 'new' ? 'new' : editor.id} vehicle={editor === 'new' ? undefined : editor} onClose={() => setEditor(null)} onSaved={async () => { setEditor(null); setSuccess('Đã lưu phương tiện.'); await refresh() }} />}
+    {deleting && <Panel title="Ngừng sử dụng phương tiện?"><p className="mb-4">Xe {deleting.licensePlate} sẽ không còn được chọn khi đặt chỗ. Thông tin xe vẫn được giữ trong hồ sơ.</p><div className="flex flex-wrap gap-3"><button className={button} disabled={remove.isPending} onClick={() => remove.mutate(deleting.id)}>Xác nhận ngừng sử dụng</button><button className={secondary} disabled={remove.isPending} onClick={() => { setDeleting(null); remove.reset() }}>Hủy</button></div>{remove.isError && <div className="mt-4"><Notice error>{errorMessage(remove.error)}</Notice></div>}</Panel>}
+    {query.isPending ? <p role="status">Đang tải phương tiện…</p> : query.isError ? <Notice error><div>{errorMessage(query.error)}<button className={`${secondary} mt-3`} onClick={() => void query.refetch()}>Thử lại</button></div></Notice> : <section aria-labelledby="vehicles-list-title" className="overflow-hidden rounded-2xl border border-brand-border bg-white">
+      <div className="flex flex-wrap items-end justify-between gap-4 border-b border-brand-border bg-brand-surface px-5 py-4">
+        <div>
+          <h2 id="vehicles-list-title" className="font-sora text-lg font-semibold">Phương tiện đã đăng ký ({query.data.totalElements})</h2>
+          <p className="mt-1 text-xs leading-5 text-brand-muted">Chỉ xe đang sử dụng mới được chọn khi đặt chỗ.</p>
         </div>
-      </main>
-    )
-  }
-
-  return (
-    <main className="min-h-screen bg-slate-50 py-8 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-[1280px] mx-auto flex flex-col gap-6">
-        {/* Command Header */}
-        <VehiclesCommandHeader
-          onOpenExport={() => setIsExportOpen(true)}
-          onOpenRegister={() => setIsRegisterOpen(true)}
-        />
-
-        {/* Master 2-Column Grid (4 Cols Sidebar + 8 Cols Operations) */}
-        <div className="grid grid-cols-1 lg:grid-cols-[260px_minmax(0,1fr)] gap-6 items-start">
-          {/* Left Column (4 cols): Cấu hình tài khoản vận hành Navigation & Fleet Operations Card */}
-          <aside className="lg:sticky lg:top-[calc(var(--driver-header-height)+24px)]">
-            <ProfileSidebarNav
-              compact
-              activeTab="vehicles"
-              onOpenNotificationSettings={() => setIsNotificationSettingsOpen(true)}
-            />
-
-          </aside>
-
-          {/* Right Column (8 cols): Fleet Bento KPI, Filters & Table */}
-          <div className="min-w-0 flex flex-col gap-6">
-            {/* Bento KPI Section */}
-            <VehiclesKpiBento metrics={computedMetrics} />
-
-            {/* Filter Toolbar */}
-            <VehicleFilterToolbar
-              search={search}
-              onSearchChange={setSearch}
-              typeFilter={typeFilter}
-              onTypeFilterChange={setTypeFilter}
-              statusFilter={statusFilter}
-              onStatusFilterChange={setStatusFilter}
-              onReset={handleResetFilter}
-              totalCount={vehicles.length}
-              tractorCount={computedMetrics.tractorCount}
-              trailerCount={computedMetrics.trailerCount}
-            />
-
-            {/* Master Table Section with ZERO horizontal scroll */}
-            <VehicleMasterTable
-              vehicles={filteredVehicles}
-              onSetDefault={handleSetDefault}
-              onEdit={(v) => setEditingVehicle(v)}
-              onViewDossier={(v) => setDossierVehicle(v)}
-              onDelete={(v) => setDeletingVehicle(v)}
-              onOpenRegister={() => setIsRegisterOpen(true)}
-            />
-
-            <AlprGateSyncBanner />
-          </div>
-        </div>
+        {query.data.totalElements > 0 && <div className="w-full sm:w-80">
+          <label htmlFor="vehicle-table-search" className="mb-1.5 block text-xs font-medium text-brand-muted">Tìm trong trang hiện tại</label>
+          <div className="relative"><Search size={17} aria-hidden="true" className="pointer-events-none absolute left-3 top-3.5 text-brand-muted" /><input id="vehicle-table-search" className={`${control} pl-10`} type="search" value={search} onChange={event => setSearch(event.target.value)} placeholder="Biển số, nhãn hiệu…" /></div>
+        </div>}
       </div>
-
-      {/* Modals */}
-      <RegisterVehicleModal
-        isOpen={isRegisterOpen}
-        onClose={() => setIsRegisterOpen(false)}
-        onSubmit={handleAddVehicle}
-        isSubmitting={isAdding}
-      />
-
-      <EditVehicleModal
-        vehicle={editingVehicle}
-        isOpen={!!editingVehicle}
-        onClose={() => setEditingVehicle(null)}
-        onSave={handleSaveEdit}
-        isSaving={isSavingEdit}
-      />
-
-      <ViewInspectionDossierModal
-        vehicle={dossierVehicle}
-        isOpen={!!dossierVehicle}
-        onClose={() => setDossierVehicle(null)}
-      />
-
-      <DeleteVehicleConfirmModal
-        vehicle={deletingVehicle}
-        isOpen={!!deletingVehicle}
-        onClose={() => setDeletingVehicle(null)}
-        onConfirm={handleConfirmDelete}
-        isDeleting={isDeleting}
-      />
-
-      <ExportFleetModal
-        vehicles={vehicles}
-        isOpen={isExportOpen}
-        onClose={() => setIsExportOpen(false)}
-      />
-
-      <NotificationSettingsModal
-        isOpen={isNotificationSettingsOpen}
-        onClose={() => setIsNotificationSettingsOpen(false)}
-      />
-    </main>
-  )
+      {query.data.totalElements === 0 ? <div className="p-5"><Notice>Bạn chưa có phương tiện nào. Thêm xe để bắt đầu đặt chỗ.</Notice></div> : <>
+        {!vehicles.length ? <div className="p-5"><Notice>Không có phương tiện phù hợp trong trang này.</Notice></div> : <VehiclesTable vehicles={vehicles} onEdit={vehicle => { setSuccess(''); setEditor(vehicle) }} onDeactivate={vehicle => { setSuccess(''); remove.reset(); setDeleting(vehicle) }} />}
+        <div className="flex flex-wrap items-center justify-between gap-3 border-t border-brand-border bg-brand-surface/60 px-5 py-3">
+          <p className="text-xs text-brand-muted">Hiển thị {vehicles.length} phương tiện trên trang này</p>
+          <div className="flex flex-wrap items-center gap-2"><span className="mr-2 text-xs text-brand-muted">Trang {query.data.currentPage + 1}/{Math.max(1, query.data.totalPages)}</span><button className={`${secondary} !min-h-9 !px-3 !py-2 !text-xs`} disabled={page === 0} onClick={() => { setSearch(''); setPage(page - 1) }}>Trang trước</button><button className={`${secondary} !min-h-9 !px-3 !py-2 !text-xs`} disabled={page + 1 >= query.data.totalPages} onClick={() => { setSearch(''); setPage(page + 1) }}>Trang sau</button></div>
+        </div>
+      </>}
+    </section>}
+  </Workspace>
 }

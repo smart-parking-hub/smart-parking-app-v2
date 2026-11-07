@@ -5,7 +5,7 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { isAxiosError } from 'axios'
-import { ArrowUpRight, Check, LoaderCircle, ShieldCheck, Store, Truck } from 'lucide-react'
+import { ArrowUpRight, Check, Eye, EyeOff, LoaderCircle, ShieldCheck, Store, Truck } from 'lucide-react'
 import { control, Notice } from '@/shared/components/Workspace'
 import { errorMessage, sendData } from '@/shared/api/resources'
 import { loginDestination, readSession, saveSession } from '../model/session'
@@ -76,12 +76,17 @@ export function LoginForm() {
         </div>
         <div className="space-y-3">
           <label htmlFor="login-password" className="block font-medium text-brand-navy">Mật khẩu</label>
-          <input id="login-password" className={`${control} min-h-14 text-base focus-visible:ring-2 focus-visible:ring-[#d95f00] focus-visible:ring-offset-1`} type={showPassword ? 'text' : 'password'} autoComplete="current-password" aria-invalid={Boolean(form.formState.errors.password)} aria-describedby={form.formState.errors.password ? 'login-password-error' : undefined} {...form.register('password')} />
-          {form.formState.errors.password && <p id="login-password-error" role="alert" className="text-sm font-medium text-red-700">{form.formState.errors.password.message}</p>}
+          <div className="relative">
+          <input id="login-password" className={`${control} min-h-14 pr-14 text-base`} type={showPassword ? 'text' : 'password'} autoComplete="current-password" aria-invalid={Boolean(form.formState.errors.password)} aria-describedby={form.formState.errors.password ? 'login-password-error' : undefined} {...form.register('password')} />
+            <button type="button" aria-label={showPassword ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'} aria-controls="login-password" aria-pressed={showPassword} onClick={() => setShowPassword(!showPassword)} className="absolute inset-y-0 right-1 flex w-12 items-center justify-center rounded-lg text-brand-muted hover:text-brand-navy focus-visible:outline-2 focus-visible:outline-orange-600">
+              {showPassword ? <EyeOff size={20} aria-hidden="true" /> : <Eye size={20} aria-hidden="true" />}
+            </button>
+          </div>
+          {form.formState.errors.password && <p id="login-password-error" role="alert" className="text-sm text-red-700">{form.formState.errors.password.message}</p>}
         </div>
         <div className="flex flex-wrap items-center justify-between gap-4 text-sm">
-          <label className="flex items-center gap-2 cursor-pointer"><input type="checkbox" checked={remember} onChange={(event) => setRemember(event.target.checked)} className="accent-[#d95f00] h-4 w-4 rounded focus-visible:ring-2 focus-visible:ring-[#d95f00] focus-visible:ring-offset-1" />Ghi nhớ số điện thoại</label>
-          <button type="button" aria-pressed={showPassword} onClick={() => setShowPassword(!showPassword)} className="text-brand-muted underline hover:text-brand-navy focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d95f00] rounded-sm transition-colors cursor-pointer">{showPassword ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'}</button>
+          <label className="flex items-center gap-2"><input type="checkbox" checked={remember} onChange={(event) => setRemember(event.target.checked)} className="accent-orange-600" />Ghi nhớ số điện thoại</label>
+
         </div>
       </fieldset>
       {login.isError && <Notice error>

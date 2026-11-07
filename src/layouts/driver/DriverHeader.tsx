@@ -91,7 +91,7 @@ export function DriverHeader() {
             </span>
             <span>
               <span className="block font-sora text-[14px] font-bold tracking-tight sm:text-lg">
-                SMARTTRUCK<span className="text-brand-orange">HUB</span>
+                Smart Parking <span className="text-brand-orange">Hub</span>
               </span>
               <span className="mt-1 block text-[9px] font-semibold tracking-wider text-slate-400 sm:text-[10px] sm:tracking-[.2em]">
                 CỔNG THÔNG TIN TÀI XẾ

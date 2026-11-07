@@ -74,10 +74,10 @@ describe('GROUP 13 - Authentication & Access Control Guards Hardening', () => {
       expect(passwordInput).toHaveFocus()
 
       await user.tab()
-      expect(rememberCheckbox).toHaveFocus()
+      expect(showPasswordBtn).toHaveFocus()
 
       await user.tab()
-      expect(showPasswordBtn).toHaveFocus()
+      expect(rememberCheckbox).toHaveFocus()
 
       await user.tab()
       expect(submitBtn).toHaveFocus()
@@ -130,7 +130,7 @@ describe('GROUP 13 - Authentication & Access Control Guards Hardening', () => {
       const { renderWithProviders } = createTestContext('/forgot-password')
       renderWithProviders(<AuthPage mode="forgot" />)
 
-      const otpBtn = screen.getByRole('button', { name: 'Gửi mã OTP' })
+      const otpBtn = screen.getByRole('button', { name: 'Gửi mã qua email' })
       expect(otpBtn.className).toContain('focus-visible:ring-[#d95f00]')
 
       const submitBtn = screen.getByRole('button', { name: 'Đặt lại mật khẩu' })

@@ -1,28 +1,14 @@
+import { z } from 'zod'
 import { apiClient } from '@/shared/api/client'
 import type {
   AiContentSegments,
   CreateMerchantParkingLotRequest,
-  MerchantLotsMetrics,
   MerchantParkingLotCardData,
   MerchantParkingLotDetailData,
   MerchantParkingLotListParams,
-  MerchantParkingLotPageResponse,
   ParkingLotImageItem,
   YardGalleryImage,
 } from '../types/merchantParkingLotTypes'
-
-export const fallbackMerchantLotsMetrics: MerchantLotsMetrics = {
-  totalFacilities: 3,
-  activeFacilities: 2,
-  underReviewFacilities: 1,
-  totalCapacity: 200,
-  usedSlots: 165,
-  availableSlots: 35,
-  occupancyRate: 82.5,
-  todayRevenue: 18450000,
-  revenueGrowthPercent: 14.2,
-  todayGatePasses: 48,
-}
 
 export const fallbackMerchantParkingLots: MerchantParkingLotCardData[] = [
   {
@@ -133,77 +119,34 @@ export const fallbackMerchantParkingLots: MerchantParkingLotCardData[] = [
   },
 ]
 
-export async function fetchMerchantLotsMetrics(): Promise<MerchantLotsMetrics> {
-  try {
-    const res = await apiClient.get<{ data: MerchantLotsMetrics }>('/api/v1/merchant/parking-lots/metrics')
-    if (res.data?.data) {
-      return res.data.data
-    }
-  } catch {
-    // Fallback to offline precision metrics
-  }
-  return fallbackMerchantLotsMetrics
+const ownedLotSchema = z.object({
+  id: z.number().int(), name: z.string(), address: z.string().nullish(),
+  status: z.enum(['APPROVED', 'PENDING_APPROVAL', 'CHANGES_REQUESTED', 'SUSPENDED', 'REJECTED']),
+  ratingAverage: z.number().nullish(), createdAt: z.string().nullish(),
+})
+const ownedLotsPageSchema = z.object({
+  content: z.array(ownedLotSchema), currentPage: z.number().int().nonnegative(),
+  totalPages: z.number().int().nonnegative(), totalElements: z.number().int().nonnegative(),
+})
+export type OwnedMerchantLot = z.infer<typeof ownedLotSchema>
+
+export async function fetchMerchantParkingLots(params: MerchantParkingLotListParams = {}, signal?: AbortSignal) {
+  const { status, keyword, ...pagination } = params
+  const res = await apiClient.get<{ data: unknown }>('/api/v1/merchant/parking-lots', {
+    params: { ...pagination, ...(status && status !== 'ALL' ? { status } : {}),
+      ...(keyword?.trim() ? { keyword: keyword.trim() } : {}) },
+    signal,
+  })
+  return ownedLotsPageSchema.parse(res.data.data)
 }
 
-export async function fetchMerchantParkingLots(
-  params: MerchantParkingLotListParams = {},
-): Promise<MerchantParkingLotPageResponse> {
-  try {
-    const res = await apiClient.get<{ data: MerchantParkingLotPageResponse }>(
-      '/api/v1/merchant/parking-lots',
-      { params },
-    )
-    if (res.data?.data?.content) {
-      return res.data.data
-    }
-  } catch {
-    // Use fallback mock data with client filtering
-  }
-
-  let filtered = [...fallbackMerchantParkingLots]
-
-  if (params.status && params.status !== 'ALL') {
-    filtered = filtered.filter((lot) => lot.status === params.status)
-  }
-
-  if (params.keyword && params.keyword.trim()) {
-    const q = params.keyword.toLowerCase().trim()
-    filtered = filtered.filter(
-      (lot) =>
-        lot.name.toLowerCase().includes(q) ||
-        lot.code.toLowerCase().includes(q) ||
-        lot.address.toLowerCase().includes(q),
-    )
-  }
-
-  if (params.sort) {
-    if (params.sort === 'capacity,desc') {
-      filtered.sort((a, b) => b.totalCapacity - a.totalCapacity)
-    } else if (params.sort === 'rating,desc') {
-      filtered.sort((a, b) => (b.ratingAverage || 0) - (a.ratingAverage || 0))
-    } else if (params.sort === 'revenue,desc') {
-      filtered.sort((a, b) => b.monthlyRevenue - a.monthlyRevenue)
-    } else if (params.sort === 'name,asc') {
-      filtered.sort((a, b) => a.name.localeCompare(b.name, 'vi'))
-    } else if (params.sort === 'name,desc') {
-      filtered.sort((a, b) => b.name.localeCompare(a.name, 'vi'))
-    } else {
-      // default: createdAt,desc
-      filtered.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-    }
-  }
-
-  const page = params.page || 0
-  const size = params.size || 10
-  const startIndex = page * size
-  const paginated = filtered.slice(startIndex, startIndex + size)
-
-  return {
-    content: paginated,
-    currentPage: page,
-    totalPages: Math.max(1, Math.ceil(filtered.length / size)),
-    totalElements: filtered.length,
-  }
+export async function fetchMerchantLotCounts(signal?: AbortSignal) {
+  const [all, approved, pending] = await Promise.all([
+    fetchMerchantParkingLots({ page: 0, size: 1 }, signal),
+    fetchMerchantParkingLots({ page: 0, size: 1, status: 'APPROVED' }, signal),
+    fetchMerchantParkingLots({ page: 0, size: 1, status: 'PENDING_APPROVAL' }, signal),
+  ])
+  return { total: all.totalElements, approved: approved.totalElements, pending: pending.totalElements }
 }
 
 export async function createMerchantParkingLot(
@@ -487,7 +430,6 @@ export async function uploadAdditionalLotImages(
   parkingLotId: number,
   files: File[],
 ): Promise<YardGalleryImage[]> {
-  try {
     const uploaded = await uploadMerchantParkingLotImages(parkingLotId, files)
     return uploaded.map((item, idx) => ({
       id: item.id || Date.now() + idx,
@@ -496,15 +438,7 @@ export async function uploadAdditionalLotImages(
       subtitle: `${(item.sizeBytes / 1024).toFixed(0)} KB · Tải lên mới`,
       isCover: false,
     }))
-  } catch {
-    return files.map((file, idx) => ({
-      id: Date.now() + idx,
-      url: URL.createObjectURL(file),
-      title: file.name,
-      subtitle: `${(file.size / 1024).toFixed(0)} KB · Tải lên mới`,
-      isCover: false,
-    }))
-  }
+
 }
 
 export async function updateMerchantParkingLot(
