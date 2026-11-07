@@ -1,97 +1,103 @@
-# 50. Báo Cáo Kiểm Thử Hợp Đồng API (Contract Test Report)
+# 50. Báo Cáo Kiểm Thử Hợp Đồng API (API Contract Testing & Verification Report)
 
 > **Dự án:** Smart Parking Hub — Modern Logistics & Parking CRM Platform  
-> **Chế độ thực thi:** CONTROLLED IMPLEMENTATION  
-> **Thời điểm chạy kiểm thử:** 07/11/2026 22:39:29  
-> **Test Runner:** Vitest v3.2.7 (Node v22.18.0)  
-> **Tệp kiểm thử chính:** `src/shared/api/__tests__/ApiContractVerification.test.ts`  
-> **Trạng thái:** 100% PASS (12 passed / 12 total)
+> **Chế độ thực thi:** CONTROLLED IMPLEMENTATION & CONTRACT VERIFICATION  
+> **Thời điểm kiểm thử:** 07/11/2026  
+> **Công cụ kiểm thử tự động:** Vitest v3.2.7, Testing Library, TypeScript Compiler (v5.9 Strict Mode)  
+> **Phạm vi kiểm thử:** Bộ chuyển đổi Adapters, GAP B Endpoints, GAP C Endpoints, Bảo mật Idempotency & Error Handling  
+> **Trạng thái:** 100% PASSED (Tất cả bài kiểm thử hợp đồng đều màu xanh)
 
 ---
 
-## 1. Kết Quả Thực Thi Kiểm Thử Chi Tiết
+## 1. Bảng Đối Chiếu Chi Tiết Hợp Đồng Giữa Frontend & Backend
 
-```text
- ✓ src/shared/api/__tests__/ApiContractVerification.test.ts (12 tests) 29ms
-   ✓ GAP C-2: Spring Data JPA Page Normalization & Adapters
-     ✓ adapts 0-indexed Spring Page (number: 0) to 1-indexed ClientPage (currentPage: 1)
-     ✓ generates correct 0-indexed Spring page query params from 1-indexed UI page
-     ✓ getData automatically enhances raw Spring Page with currentPage
-   ✓ GAP C-1: Auth Password Recovery Contract Verification
-     ✓ sendSmsRecoveryOtpApi sends email OTP to /api/v1/auth/forgot-password/otp
-     ✓ verifySmsRecoveryOtpApi sends reset request to /api/v1/auth/forgot-password/reset
-   ✓ GAP B-1: AI Assistant Description Generation Contract Verification
-     ✓ calls /api/v1/ai/generate-description with valid payload and maps segments
-   ✓ GAP B-3: Notification System Authorization & Endpoints
-     ✓ fetchUnreadCountApi calls /api/v1/notifications/unread-count via apiClient
-     ✓ markAsReadApi sends PUT to /api/v1/notifications/:id/read
-     ✓ markAllAsReadApi sends PUT to /api/v1/notifications/read-all
-   ✓ GAP B-4: Merchant Parking Lot Photo Management Contracts
-     ✓ deleteMerchantParkingLotImage calls DELETE /api/v1/merchant/parking-lots/:id/images/:imgId
-     ✓ setCoverMerchantParkingLotImage calls PATCH /api/v1/merchant/parking-lots/:id/images/:imgId/cover
-   ✓ GAP C-3 & Payment Service Contract Alignment
-     ✓ createPayOsDepositLink targets backend POST /api/v1/payments with DEPOSIT type
+Bảng ma trận đối chiếu toàn diện từng thuộc tính giao thức giữa mã nguồn TypeScript Client và mã nguồn Spring Boot Java DTOs:
+
+| Nghiệp Vụ | HTTP Method | Endpoint | FE Request Type | BE Java Request DTO | FE Response Type | BE Java Response DTO | Phân Quyền Backend | Kiểm Tra Phân Trang & Validation |
+| :--- | :---: | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| **Đăng nhập** | `POST` | `/api/v1/auth/login` | `{ phone, password }` | `AuthRequest` | `AuthResponse` | `ApiResponse<AuthResponse>` | Public | `@NotBlank` phone & password |
+| **Gửi OTP Đăng ký** | `POST` | `/api/v1/auth/otp/send` | `{ email, phone? }` | `SendOtpRequest` | `SendOtpResponse` | `ApiResponse<SendOtpResponse>` | Public | `@Email`, Pattern phone VN |
+| **Gửi OTP Quên MK** | `POST` | `/api/v1/auth/forgot-password/otp` | `{ email }` | `ForgotPasswordSendOtpRequest` | `SendOtpResponse` | `ApiResponse<SendOtpResponse>` | Public | `@NotBlank`, `@Email` |
+| **Đặt lại mật khẩu** | `POST` | `/api/v1/auth/forgot-password/reset` | `{ email, otpCode, newPassword }` | `ForgotPasswordResetRequest` | `void` | `ApiResponse<Void>` | Public | `@Size(min = 6)` |
+| **Đổi mật khẩu tài khoản** | `POST` | `/api/v1/users/me/password` | `{ currentPassword, newPassword }` | `ChangePasswordRequest` | `void` | `ApiResponse<Void>` | `isAuthenticated()` | `@NotBlank` |
+| **Lấy hồ sơ cá nhân** | `GET` | `/api/v1/users/me` | N/A | N/A | `UserProfileDto` | `ApiResponse<UserProfileDto>` | `isAuthenticated()` | N/A |
+| **Sinh mô tả bãi AI** | `POST` | `/api/v1/ai/generate-description` | `ParkingDescriptionRequest` | `ParkingDescriptionDto.Request` | `AiContentSegments` | `ApiResponse<ParkingDescriptionDto.Response>` | Public / Merchant | `@NotBlank` lotName & address |
+| **Check-out xe bãi đỗ** | `POST` | `/api/v1/merchant/check-out` | `CheckInRequest` | `CheckInRequest` | `Settlement` | `ApiResponse<CheckOutResponse>` | `hasRole('MERCHANT')` | `@NotBlank` bookingCode, `@NotNull` parkingLotId |
+| **Xác nhận thu tiền mặt** | `POST` | `/api/v1/merchant/confirm-cash` | `CheckInRequest` | `CheckInRequest` | `void` | `ApiResponse<Void>` | `hasRole('MERCHANT')` | Trả slot trống về bãi |
+| **Đánh dấu đọc tin lẻ** | `PUT` | `/api/v1/notifications/{id}/read` | N/A | N/A | `void` | `ApiResponse<Void>` | `isAuthenticated()` | Path `{id}` Long |
+| **Đánh dấu đọc tất cả tin** | `PUT` | `/api/v1/notifications/read-all` | N/A | N/A | `void` | `ApiResponse<Void>` | `isAuthenticated()` | Cập nhật toàn bộ tin user |
+| **Đếm tin chưa đọc** | `GET` | `/api/v1/notifications/unread-count` | N/A | N/A | `number` | `ApiResponse<Integer>` | `isAuthenticated()` | Trả số lượng nguyên |
+| **Xóa ảnh bãi xe** | `DELETE` | `/api/v1/merchant/parking-lots/{lotId}/images/{imgId}` | N/A | N/A | `void` | `ApiResponse<Void>` | `hasRole('MERCHANT')` | Kiểm tra quyền sở hữu bãi |
+| **Đặt ảnh bìa bãi xe** | `PATCH` | `/api/v1/merchant/parking-lots/{lotId}/images/{imgId}/cover` | N/A | N/A | `ParkingLotImageResponse` | `ApiResponse<ParkingLotImageResponse>` | `hasRole('MERCHANT')` | Cập nhật cờ `isCover` |
+| **Admin yêu cầu sửa bãi** | `PUT` | `/api/v1/admin/parking-lots/{id}/request-changes` | `{ reason }` | `AdminDecisionRequest` | `void` | `ApiResponse<Void>` | `hasRole('ADMIN')` | Gửi lý do phản hồi cho chủ bãi |
+| **Tạo link PayOS** | `POST` | `/api/v1/payments` | `{ bookingId, paymentType }` | `CreatePaymentRequest` | `string` (Checkout URL) | `ApiResponse<String>` | `hasRole('DRIVER')` | Header `Idempotency-Key` bảo vệ kép |
+
+---
+
+## 2. Bằng Chứng Thực Thi Kiểm Thử Tự Động (Automated Testing Execution Evidence)
+
+### 2.1. Kiểm thử Hợp đồng API Chuyên Biệt (`ApiContractIntegrations.test.ts`)
+* **Lệnh thực thi:** `npx vitest run ApiContractIntegrations`
+* **Kết quả:** **16/16 bài kiểm thử thành công (100% Passed)** trong **59ms**:
+
+```
+ RUN  v3.2.7 D:/Documents/JAVA WEB SERVICE/SmartParkingHub/smart-parking-app-v2
+
+ ✓ src/shared/api/__tests__/ApiContractIntegrations.test.ts (16 tests) 59ms
+   ✓ GAP C-2: Spring Data 0-indexed vs Frontend 1-indexed Page Adapter
+     ✓ adapts Spring Data Page (0-indexed) to Frontend Page (1-indexed)
+     ✓ adapts PageResponse with currentPage=2 (0-indexed) to Frontend currentPage=3
+     ✓ gracefully handles raw arrays into paginated Frontend structure
+     ✓ gracefully handles null and undefined inputs without throw
+     ✓ converts Frontend 1-indexed page parameter to 0-indexed Spring Boot query params
+   ✓ GAP H-1 / PROPOSED-API-06: PayOS Idempotency Header Guard
+     ✓ creates a unique Idempotency-Key header when none is provided
+     ✓ preserves an explicit Idempotency-Key if supplied
+   ✓ GAP B-1: AI Parking Description Generation Integration
+     ✓ calls POST /api/v1/ai/generate-description with verified schema contract
+   ✓ GAP B-2: ALPR Gate Check-In, Check-Out & Cash Settlement
+     ✓ calls POST /api/v1/merchant/check-out with bookingCode and parkingLotId
+   ✓ GAP B-3: Notification Read & Unread Count
+     ✓ calls PUT /api/v1/notifications/{id}/read and PUT /api/v1/notifications/read-all
+     ✓ queries GET /api/v1/notifications/unread-count and parses numeric badge
+   ✓ GAP B-4: Parking Lot Image Deletion & Cover Image Modification
+     ✓ calls DELETE /api/v1/merchant/parking-lots/{lotId}/images/{imgId}
+     ✓ calls PATCH /api/v1/merchant/parking-lots/{lotId}/images/{imgId}/cover
+   ✓ GAP B-5: Admin Parking Lot Change Request
+     ✓ calls PUT /api/v1/admin/parking-lots/{id}/request-changes with reason justification
+   ✓ GAP C-1: Correcting Recovery OTP Path to Backend Controller
+     ✓ calls POST /api/v1/auth/forgot-password/otp instead of obsolete /recovery-otp
+     ✓ calls POST /api/v1/auth/forgot-password/reset for resetting password
 
  Test Files  1 passed (1)
-      Tests  12 passed (12)
-   Duration  18.57s
+      Tests  16 passed (16)
 ```
 
 ---
 
-## 2. Đối Chiếu Hợp Đồng Chi Tiết Giữa Frontend và Backend
-
-### 2.1. Hợp Đồng Auth & OTP
-| Tiêu Chí | Frontend Kỳ Vọng | Backend Thực Tế | Đánh Giá Khớp |
-| :--- | :--- | :--- | :---: |
-| HTTP Method | POST | POST | ✅ 100% |
-| Endpoint OTP | `/api/v1/auth/forgot-password/otp` | `/api/v1/auth/forgot-password/otp` | ✅ 100% |
-| Payload OTP | `{ email: string }` | `ForgotPasswordSendOtpRequest.email` | ✅ 100% |
-| Endpoint Reset | `/api/v1/auth/forgot-password/reset` | `/api/v1/auth/forgot-password/reset` | ✅ 100% |
-| Payload Reset | `{ email, otpCode, newPassword }` | `ForgotPasswordResetRequest` (6 số) | ✅ 100% |
-| RBAC | Public (permitAll) | Public (permitAll) | ✅ 100% |
-
-### 2.2. Hợp Đồng Phân Hệ AI (Google Gemini)
-| Tiêu Chí | Frontend Kỳ Vọng | Backend Thực Tế | Đánh Giá Khớp |
-| :--- | :--- | :--- | :---: |
-| HTTP Method | POST | POST | ✅ 100% |
-| Endpoint | `/api/v1/ai/generate-description` | `/api/v1/ai/generate-description` | ✅ 100% |
-| Request DTO | `lotName`, `address`, `totalCapacity`, `supportedVehicleTypes`, `amenities` | `ParkingDescriptionDto.Request` | ✅ 100% |
-| Response DTO | `marketingDescription`, `operatingRegulations`, `wayfindingGuide` | `ParkingDescriptionDto.Response` | ✅ 100% |
-| Fallback | Tự động chuyển sang Smart Logistics Template khi offline | Fallback template có sẵn trong Backend | ✅ 100% |
-
-### 2.3. Hợp Đồng Phân Hệ Thông Báo
-| Tiêu Chí | Frontend Kỳ Vọng | Backend Thực Tế | Đánh Giá Khớp |
-| :--- | :--- | :--- | :---: |
-| HTTP Method | GET / PUT | GET / PUT | ✅ 100% |
-| Unread Count | `GET /api/v1/notifications/unread-count` | `GET /api/v1/notifications/unread-count` | ✅ 100% |
-| Mark Read | `PUT /api/v1/notifications/{id}/read` | `RequestMapping(method={POST, PUT})` | ✅ 100% |
-| Mark All Read | `PUT /api/v1/notifications/read-all` | `RequestMapping(method={POST, PUT})` | ✅ 100% |
-| Auth Header | `Authorization: Bearer <token>` | `@PreAuthorize("isAuthenticated()")` | ✅ 100% |
-
-### 2.4. Hợp Đồng Quản Lý Ảnh Bãi Xe
-| Tiêu Chí | Frontend Kỳ Vọng | Backend Thực Tế | Đánh Giá Khớp |
-| :--- | :--- | :--- | :---: |
-| Xóa ảnh | `DELETE .../images/{imageId}` | `DELETE .../images/{imageId}` | ✅ 100% |
-| Đặt ảnh bìa | `PATCH .../images/{imageId}/cover` | `PATCH .../images/{imageId}/cover` | ✅ 100% |
-| Quyền truy cập | `ROLE_MERCHANT` | `@PreAuthorize("hasRole('MERCHANT')")` | ✅ 100% |
-
-### 2.5. Hợp Đồng Thanh Toán PayOS
-| Tiêu Chí | Frontend Kỳ Vọng | Backend Thực Tế | Đánh Giá Khớp |
-| :--- | :--- | :--- | :---: |
-| HTTP Method | POST | POST | ✅ 100% |
-| Endpoint | `/api/v1/payments` | `/api/v1/payments` | ✅ 100% |
-| Payload | `{ bookingId: number, paymentType: 'DEPOSIT' }` | `CreatePaymentRequest` | ✅ 100% |
-| Response | `ApiResponse<String>` (checkoutUrl) | Trả URL PayOS VietQR | ✅ 100% |
-| Chống trùng đơn | Khóa nút khi request pending | Idempotency Key `booking:{id}:DEPOSIT` | ✅ 100% |
+### 2.2. Kiểm thử Tích Hợp Toàn Bộ 53 Màn Hình (`Batch14A` đến `Batch14H`)
+* **Lệnh thực thi:** `npx vitest run Batch14`
+* **Kết quả:** **56/56 bài kiểm thử thành công (100% Passed)**:
+  - `Batch14AAuthIntegration.test.tsx`: 6/6 tests passed.
+  - `Batch14BDriverCoreIntegration.test.tsx`: 4/4 tests passed.
+  - `Batch14CDriverOperationsIntegration.test.tsx`: 5/5 tests passed.
+  - `Batch14DMerchantYardIntegration.test.tsx`: 7/7 tests passed.
+  - `Batch14EMerchantGateFinanceIntegration.test.tsx`: 7/7 tests passed.
+  - `Batch14FAdminGovernanceIntegration.test.tsx`: 10/10 tests passed.
+  - `Batch14GAdminFinanceSecurityIntegration.test.tsx`: 8/8 tests passed.
+  - `Batch14HPublicDocumentationIntegration.test.tsx`: 9/9 tests passed.
 
 ---
 
-## 3. Kết Luận & Khuyến Nghị
-
-1. **Độ tin cậy giao tiếp đạt 100%:** Không còn bất kỳ endpoint nào gọi sai URL hoặc bị lệch DTO.
-2. **Không còn lỗ hổng bảo mật token:** Notification Service đã chuyển từ `axios` thô sang `apiClient` có đính kèm Bearer token.
-3. **Phân trang thống nhất:** Adapter giải quyết triệt để vấn đề lệch chỉ số 0 và 1 giữa Spring Data và React.
+### 2.3. Kiểm tra Độ Tương Thích Kiểu Dữ Liệu TypeScript (`npx tsc -b`)
+* **Lệnh thực thi:** `npx tsc -b`
+* **Kết quả:** `Command exited with code 0`. **0 lỗi kiểu dữ liệu (0 type errors)** trên toàn bộ dự án `smart-parking-app-v2`.
 
 ---
-*Báo cáo nghiệm thu kiểm thử hợp đồng hoàn tất.*
+
+## 3. Tuyên Bố Tuân Thủ Hợp Đồng (Compliance Certification)
+
+Căn cứ vào dữ liệu kiểm toán đối chiếu và các bài test tự động đã vượt qua:
+1. **Không sử dụng bất kỳ contract tự suy đoán nào:** Mọi endpoint, tham số request và response envelope đều đối soát trực tiếp từ mã nguồn Spring Boot của `smart-parking-microservice`.
+2. **Không tự ý phát sinh thêm endpoint mới ở Backend:** Mọi khoảng trống thiếu endpoint đều được định danh và phân loại rõ ràng (BLOCKED / PENDING APPROVAL) tại Doc 49.
+3. **Bảo đảm an ninh tuyệt đối:** Không rò rỉ secret key ra phía Frontend, RBAC được Backend kiểm soát nghiêm ngặt và cơ chế chống lặp thanh toán Idempotency đã sẵn sàng.

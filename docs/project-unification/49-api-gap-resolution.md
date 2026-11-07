@@ -1,107 +1,99 @@
-# 49. Báo Cáo Giải Quyết Khoảng Trống API (API Gap Resolution Report)
+# 49. Báo Cáo Xử Lý Khoảng Trống API (API Gap Resolution & Decision Dossier)
 
 > **Dự án:** Smart Parking Hub — Modern Logistics & Parking CRM Platform  
-> **Chế độ thực thi:** CONTROLLED IMPLEMENTATION  
-> **Thời điểm hoàn thành:** 07/11/2026  
-> **Căn cứ tài liệu:** Doc 27 (API Gap Report), Doc 41 (Backend API Backlog)  
-> **Trạng thái:** RESOLVED 100%
+> **Chế độ thực thi:** CONTROLLED IMPLEMENTATION (Tuân thủ nghiêm ngặt Master Constitution & Prompt 15)  
+> **Thời điểm xác lập:** 07/11/2026  
+> **Căn cứ kỹ thuật:** Doc 27 (API Gap Report), Doc 28 (Proposed Contracts), Doc 41 (Backend API Backlog)  
+> **Trạng thái:** VERIFIED & CLASSIFIED
 
 ---
 
-## 1. Bảng Trạng Thái Xử Lý Khoảng Trống (Gap Resolution Summary)
+## 1. Ma Trận Xử Lý Khoảng Trống API Toàn Diện (Gap Resolution Matrix)
 
 ```mermaid
-pie title Kết Quả Giải Quyết Khoảng Trống API
-    "Đã giải quyết hoàn toàn (Resolved)" : 7
-    "Đã căn chỉnh hợp đồng (Aligned)" : 3
-    "Duy trì theo thiết kế PayOS trực tiếp" : 1
-    "Chờ khảo sát thực địa phần cứng" : 1
+graph TD
+    GAP["TỔNG HỢP KHOẢNG TRỐNG API (GAP A - GAP I)"]
+    GAP --> R1["ĐÃ GIẢI QUYẾT 100% TRÊN FE & HỢP ĐỒNG<br>(GAP B-1 đến B-5, GAP C-1, GAP C-2, GAP H-1)"]
+    GAP --> R2["CHỜ QUYẾT ĐỊNH NGHIỆP VỤ TỪ PRODUCT OWNER (BLOCKED)<br>(GAP A-1 / PROPOSED-API-01: Ví Tài Xế Trả Trước)"]
+    GAP --> R3["CHỜ BACKEND TRIỂN KHAI THEO HỢP ĐỒNG ĐÃ DUYỆT (BLOCKED)<br>(GAP A-2 / PROPOSED-API-02: Xuất Hóa Đơn ZIP Hàng Loạt)"]
+    GAP --> R4["TIẾP TỤC ĐỒNG BỘ DỮ LIỆU TỰ ĐỘNG<br>(GAP D-1, D-2: Bổ sung cờ EV Charger & Gate ID vào DTO)"]
 ```
 
 ---
 
-## 2. Chi Tiết Phương Án Xử Lý Cho Từng Khoảng Trống
+## 2. Chi Tiết Phương Án Xử Lý Từng Khoảng Trống
 
-### GAP C-1: Lệch URL Endpoint Gửi OTP Khôi Phục Mật Khẩu
-* **Vấn đề ban đầu:** Frontend tại `changePasswordApi.ts` gọi `POST /api/v1/auth/recovery-otp` và `POST /api/v1/auth/reset-password-otp`, dẫn tới lỗi 404 vì Backend lắng nghe tại `/api/v1/auth/forgot-password/otp` và `/forgot-password/reset`.
-* **Biện pháp xử lý:**
-  1. Căn chỉnh đường dẫn Frontend trong `changePasswordApi.ts` trỏ đúng vào `/api/v1/auth/forgot-password/otp` và `/api/v1/auth/forgot-password/reset`.
-  2. Khớp đúng DTO Backend: `ForgotPasswordSendOtpRequest` (`{ email }`) và `ForgotPasswordResetRequest` (`{ email, otpCode, newPassword }`).
-* **Trạng thái:** ✅ **RESOLVED & VERIFIED**.
+### 2.1. Nhóm Đã Giải Quyết Xong (Resolved Gaps)
 
----
+#### GAP B-1: Tích Hợp AI Sinh Mô Tả Bãi Xe (`POST /api/v1/ai/generate-description`)
+* **GAP ID:** `GAP-B-01`
+* **Dịch vụ Backend:** `ai-service` (`AiController.java`)
+* **Trạng thái:** ✅ **RESOLVED**
+* **Phương án giải quyết:** Đã kết nối hàm `generateAiParkingLotContent` trong `src/features/merchant/parking-lots/api/merchantParkingLotApi.ts` với payload `{ lotName, address, totalCapacity, supportedVehicleTypes, amenities }`. Tích hợp trực tiếp tại Form tạo bãi xe Step 1, cho phép chủ bãi tự động tạo nội dung mô tả, quy định PCCC và chỉ dẫn đường xe vào bãi chỉ với 1 click.
 
-### GAP C-2: Lệch Cấu Trúc Phân Trang Giữa Spring Data JPA và TypeScript Interface
-* **Vấn đề ban đầu:** Spring Boot trả về `number: 0` (0-indexed), trong khi Frontend kỳ vọng `currentPage: 1`. Đọc `page.currentPage` trực tiếp dẫn tới `undefined` hoặc lệch 1 trang.
-* **Biện pháp xử lý:**
-  1. Xây dựng module Adapter chuẩn `src/shared/api/adapters.ts` cung cấp hàm `adaptSpringPage<T>()` và `toSpringPageParams()`.
-  2. Nâng cấp hàm `getData<T>()` trong `src/shared/api/resources.ts` để tự động gán `currentPage = number + 1` nếu phát hiện đối tượng phân trang trả về từ Spring Boot.
-* **Trạng thái:** ✅ **RESOLVED & VERIFIED**.
+#### GAP B-2: Tích Hợp ALPR Check-Out Cổng Ra (`POST /api/v1/merchant/check-out`)
+* **GAP ID:** `GAP-B-02`
+* **Dịch vụ Backend:** `booking-service` (`MerchantCheckInOutController.java`)
+* **Trạng thái:** ✅ **RESOLVED**
+* **Phương án giải quyết:** Đã tích hợp tại `src/features/merchant/operations/ScannerPage.tsx`. Giao diện hỗ trợ chuyển đổi giữa chế độ `check-in` và `check-out`, nhận diện mã QR hoặc biển số xe, hiển thị bảng tính số tiền cọc đã trừ và số tiền còn phải thu (`amountDue`), kèm nút xác nhận thanh toán tiền mặt gọi `POST /api/v1/merchant/confirm-cash`.
 
----
+#### GAP B-3: Đánh Dấu Thông Báo Đã Đọc & Đếm Tin Chưa Đọc (`PUT /api/v1/notifications/{id}/read`, `GET /unread-count`)
+* **GAP ID:** `GAP-B-03`
+* **Dịch vụ Backend:** `notification-service` (`NotificationController.java`)
+* **Trạng thái:** ✅ **RESOLVED**
+* **Phương án giải quyết:** Đã tích hợp tại `src/features/notifications/api/notificationApi.ts` với các hàm `markAsReadApi`, `markAllAsReadApi`, và `fetchUnreadCountApi`. Cập nhật badge số lượng tin nhắn chưa đọc thời gian thực trên thanh tiêu đề Navbar.
 
-### GAP B-1: Sinh Mô Tả Bãi Xe & Nội Quy Bằng AI Chưa Đấu Nối
-* **Vấn đề ban đầu:** `AiController.java` trong `ai-service` đã có `POST /api/v1/ai/generate-description` tích hợp Google Gemini, nhưng Frontend mới chỉ dùng mock tĩnh.
-* **Biện pháp xử lý:**
-  1. Nâng cấp `generateAiParkingLotContent()` trong `merchantParkingLotApi.ts` gọi trực tiếp `POST /api/v1/ai/generate-description` với payload đầy đủ (`lotName`, `address`, `totalCapacity`, `supportedVehicleTypes`, `amenities`).
-  2. Bổ sung cơ chế fallback tự động chuyển sang Smart Logistics Template nếu Backend AI offline hoặc chưa có API key.
-  3. Kích hoạt `CreateParkingLotAiWidget.tsx` trong trang tạo bãi `/merchant/parking-lots/new` với tương tác live generation và preview.
-* **Trạng thái:** ✅ **RESOLVED & VERIFIED**.
+#### GAP B-4: Quản Lý Album Ảnh Bãi Xe (`DELETE .../images/{id}`, `PATCH .../images/{id}/cover`)
+* **GAP ID:** `GAP-B-04`
+* **Dịch vụ Backend:** `parking-lot-service` (`ParkingLotImageController.java`)
+* **Trạng thái:** ✅ **RESOLVED**
+* **Phương án giải quyết:** Đã kết nối `deleteMerchantParkingLotImage` và `setCoverMerchantParkingLotImage` trong `merchantParkingLotApi.ts`, cho phép chủ bãi trực tiếp xóa ảnh lỗi thời và chọn ảnh bìa hiển thị trên sàn tìm kiếm.
 
----
+#### GAP B-5: Admin Yêu Cầu Sửa Đổi Hồ Sơ Bãi Xe (`PUT /api/v1/admin/parking-lots/{id}/request-changes`)
+* **GAP ID:** `GAP-B-05`
+* **Dịch vụ Backend:** `parking-lot-service` (`AdminParkingLotController.java`)
+* **Trạng thái:** ✅ **RESOLVED**
+* **Phương án giải quyết:** Đã cấu hình tại `DecisionDialog` trong `src/features/admin/index.tsx`. Khi Admin chọn "Yêu cầu bổ sung", hệ thống bắt buộc nhập lý do cần sửa đổi (ví dụ: thiếu chứng chỉ kiểm định PCCC), gửi lệnh tới endpoint Backend và tự động invalidate cache danh sách bãi.
 
-### GAP B-2: ALPR Check-Out Cổng Xuất Bãi Chưa Khép Kín
-* **Vấn đề ban đầu:** Cổng ra cần tính toán thời gian đỗ thực tế, trừ cọc và ra quyết định thu tiền mặt hoặc mở barie.
-* **Biện pháp xử lý:**
-  1. Kiểm chứng và đấu nối `POST /api/v1/merchant/check-out` trong `ScannerPage.tsx`.
-  2. Khớp DTO trả về `CheckOutResponse` (`bookingCode`, `totalAmount`, `advanceDeposit`, `amountDue`, `parkingMinutes`, `bookingStatus`).
-  3. Tích hợp nút *"Xác nhận thu tiền mặt & trả chỗ"* gọi `POST /api/v1/merchant/confirm-cash`.
-* **Trạng thái:** ✅ **RESOLVED & VERIFIED**.
+#### GAP C-1: Lệch URL Endpoint Gửi OTP Khôi Phục Mật Khẩu
+* **GAP ID:** `GAP-C-01`
+* **Dịch vụ Backend:** `identity-service` (`AuthController.java`)
+* **Trạng thái:** ✅ **RESOLVED**
+* **Phương án giải quyết:** Đã sửa mã nguồn `src/features/change-password/api/changePasswordApi.ts`, thay thế đường dẫn không tồn tại `/api/v1/auth/recovery-otp` thành `/api/v1/auth/forgot-password/otp` và `/api/v1/auth/forgot-password/reset`, đồng bộ 100% với Backend.
 
----
+#### GAP C-2: Lệch Chỉ Số Phân Trang Giữa Spring Data (0-indexed) và Frontend (1-indexed)
+* **GAP ID:** `GAP-C-02`
+* **Dịch vụ Backend:** Toàn bộ Microservices
+* **Trạng thái:** ✅ **RESOLVED**
+* **Phương án giải quyết:** Tạo mới tệp adapter dùng chung `src/shared/api/adapters.ts` với hai hàm chuẩn hóa:
+  - `adaptPageResponse<T>()`: Tự động cộng 1 vào chỉ số `number` / `currentPage` nhận từ Backend, bảo đảm thanh phân trang UI luôn hiển thị từ trang 1.
+  - `toSpringPageParams()`: Chuyển đổi số trang người dùng click trên UI trừ đi 1 trước khi gửi vào query params `page` tới Spring Boot.
 
-### GAP B-3: Thông Báo Chưa Gọi API Đọc Tin & Đếm Tin Chưa Đọc
-* **Vấn đề ban đầu:** `notificationApi.ts` dùng thư viện `axios` độc lập, không gắn JWT token, không thể gọi thành công các API yêu cầu xác thực.
-* **Biện pháp xử lý:**
-  1. Chuyển đổi toàn bộ sang `apiClient` của dự án (`@/shared/api/client`).
-  2. Đấu nối `GET /api/v1/notifications/unread-count`.
-  3. Đấu nối `PUT /api/v1/notifications/{id}/read` và `PUT /api/v1/notifications/read-all`.
-* **Trạng thái:** ✅ **RESOLVED & VERIFIED**.
-
----
-
-### GAP B-4: Quản Lý Album Ảnh Bãi Xe Chưa Kích Hoạt Xóa & Đặt Ảnh Bìa
-* **Vấn đề ban đầu:** Thiếu hàm API trên Frontend cho 2 thao tác quản lý ảnh.
-* **Biện pháp xử lý:**
-  1. Thêm hàm `deleteMerchantParkingLotImage(parkingLotId, imageId)` gọi `DELETE /api/v1/merchant/parking-lots/{lotId}/images/{imgId}`.
-  2. Thêm hàm `setCoverMerchantParkingLotImage(parkingLotId, imageId)` gọi `PATCH /api/v1/merchant/parking-lots/{lotId}/images/{imgId}/cover`.
-* **Trạng thái:** ✅ **RESOLVED & VERIFIED**.
+#### GAP H-1 / PROPOSED-API-06: Chống Tạo Đơn Thanh Toán Trùng Lặp (Idempotency Key)
+* **GAP ID:** `GAP-H-01`
+* **Dịch vụ Backend:** `payment-service` (`PaymentController.java`)
+* **Trạng thái:** ✅ **ADAPTED / READY**
+* **Phương án giải quyết:** Đã bổ sung hàm `createIdempotencyHeader()` tự sinh khóa UUID chuẩn RFC 4122 cho mỗi lượt click thanh toán. Khi người dùng bấm tạo liên kết PayOS, header `Idempotency-Key` được truyền kèm để Backend và Gateway phát hiện double-submission.
 
 ---
 
-### GAP B-5: Admin Yêu Cầu Sửa Đổi Hồ Sơ Bãi Xe
-* **Vấn đề ban đầu:** Admin cần gửi feedback yêu cầu bổ sung hồ sơ thay vì chỉ có Duyệt / Từ chối.
-* **Biện pháp xử lý:**
-  1. Backend `AdminParkingLotController.java` đã có sẵn `PUT /api/v1/admin/parking-lots/{id}/request-changes`.
-  2. Frontend `features/admin/index.tsx` đã có nút `['request-changes', 'Yêu cầu bổ sung']` gọi trực tiếp endpoint kèm lý do.
-* **Trạng thái:** ✅ **RESOLVED & VERIFIED**.
+### 2.2. Nhóm Tồn Đọng Chờ Backend & Chủ Dự Án (Blocked / Pending PO Approval)
+
+Tuân thủ nghiêm ngặt nguyên tắc **Không tự ý sửa code Backend khi chưa được phê duyệt**, các mục sau được đánh dấu phân loại minh bạch:
+
+| GAP ID | Mã Đề Xuất | Nghiệp Vụ Cần Xử Lý | Dịch Vụ Phụ Trách | Trạng Thái Kỹ Thuật | Hành Động Cần Thiết Tiếp Theo |
+| :--- | :--- | :--- | :--- | :---: | :--- |
+| `GAP-A-01` | `PROPOSED-API-01` | Tra cứu số dư ví nội bộ tài xế (`GET /api/v1/wallets/me`) | `payment-service` | 🛑 **BLOCKED** | **Chờ Product Owner quyết định:** Xác định mô hình ví: Tài xế nạp tiền trước vào ví SmartTruck (Prepaid) hay thanh toán 100% từng lượt qua VietQR PayOS? Khi có quyết định duyệt, Backend mới tạo `DriverWalletController`. |
+| `GAP-A-02` | `PROPOSED-API-02` | Xuất hóa đơn VAT hàng loạt dạng file nén ZIP (`POST /api/v1/merchant/invoices/bulk-export`) | `payment-service` | 🛑 **BLOCKED** | **Chờ Backend phát triển:** Cần bổ sung logic luồng `ZipOutputStream` nén các tệp PDF/XML hóa đơn trong tháng cho chủ bãi xe. |
+| `GAP-D-01` | N/A | Bổ sung cờ `hasEvCharger` cho từng slot đỗ xe | `parking-lot-service` | ⏳ **PENDING DTO EXTENSION** | Backend mở rộng thêm trường boolean `hasEvCharger` trong `SlotResponse.java` trong đợt phát hành tiếp theo. |
+| `GAP-D-02` | N/A | Bổ sung thông tin Cổng Barie (`gateId`, `gateName`) trong chi tiết vé | `booking-service` | ⏳ **PENDING DTO EXTENSION** | Backend mở rộng thêm `gateName` trong `BookingDetailResponse.java` để hiển thị trên vé điện tử. |
 
 ---
 
-### GAP C-3 & H-1: Endpoint Tạo Link PayOS & Khóa Idempotency Chống Trùng Đơn
-* **Vấn đề ban đầu:** `parkingDetailApi.ts` gọi sai URL `/api/v1/payments/payos/create-deposit-link`; nguy cơ click đúp thanh toán.
-* **Biện pháp xử lý:**
-  1. Sửa URL gọi chuẩn về `POST /api/v1/payments` với body `{ bookingId, paymentType: 'DEPOSIT' }`.
-  2. Backend `PaymentServiceImpl.java` đã khóa idempotency chuẩn theo cấu trúc `booking:{bookingId}:DEPOSIT`, kiểm tra trạng thái thanh toán cũ trước khi gọi PayOS, chống phát sinh đơn thanh toán kép 100%.
-* **Trạng thái:** ✅ **RESOLVED & VERIFIED**.
+## 3. Quy Định An Ninh Vận Hành (Operational Security Directives)
 
----
-
-### GAP A-1: Ví Tài Xế (Driver Wallet)
-* **Phân tích:** Theo Quyết định 1 trong Doc 41, hệ thống thanh toán tài xế đang vận hành theo mô hình **Thanh toán trực tiếp theo từng đơn qua cổng PayOS VietQR**, ghi nhận hóa đơn điện tử VAT và lịch sử chi tiêu tại `DriverPaymentsPage` (`GET /api/v1/payments`), không áp dụng mô hình ví tiền ảo nội bộ trả trước (prepaid wallet).
-* **Kết luận:** Giữ nguyên thiết kế PayOS trực tiếp, bảo đảm tính minh bạch tài chính và giảm thiểu rủi ro pháp lý về giấy phép trung gian thanh toán.
-* **Trạng thái:** ✅ **ALIGNED BY DESIGN**.
-
----
-
-*Toàn bộ 9 khoảng trống API đã được giải quyết và chuẩn hóa đồng bộ.*
+1. **Ranh giới thực thi:**
+   - Frontend không can thiệp sâu vào logic sinh mã thanh toán PayOS hoặc thay đổi trạng thái booking.
+   - Khi Backend chưa cung cấp endpoint cho ví tài xế, Frontend duy trì hiển thị dạng thẻ Lịch sử chi tiêu & Biên lai cọc an toàn, không hiển thị số dư giả lập có thể gây tranh chấp với tài xế thực tế.
+2. **Kiểm tra chữ ký số:**
+   - Toàn bộ giao dịch cập nhật trạng thái thanh toán từ PayOS Webhook bắt buộc phải được xác thực chữ ký HMAC trên Backend tại `PaymentController.java` (`/api/v1/payments/webhook`) trước khi cập nhật số dư cho chủ bãi.

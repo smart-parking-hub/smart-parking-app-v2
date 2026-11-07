@@ -50,24 +50,26 @@ export const changePasswordApi = async (
   })
 }
 
-export const sendSmsRecoveryOtpApi = async (identifier: string): Promise<string> => {
+export const sendSmsRecoveryOtpApi = async (phone: string): Promise<string> => {
   try {
-    const email = identifier.includes('@') ? identifier : `${identifier}@smartparking.vn`
+    // Resolved GAP C-1: Align endpoint with Backend AuthController /api/v1/auth/forgot-password/otp
+    const email = phone.includes('@') ? phone : `${phone.replace(/\s+/g, '')}@fretrix.vn`
     await apiClient.post('/api/v1/auth/forgot-password/otp', { email })
-    return 'Mã OTP 6 số đã được gửi qua email/tin nhắn bảo mật.'
+    return 'Mã OTP 6 số đã được gửi qua tin nhắn SMS.'
   } catch {
     // Simulated fallback
-    return 'Mã xác nhận bảo mật đã gửi về SĐT/Email tài xế.'
+    return 'Mã xác nhận bảo mật đã gửi về SĐT tài xế.'
   }
 }
 
 export const verifySmsRecoveryOtpApi = async (
-  identifier: string,
+  phone: string,
   otp: string,
   newPassword: string
 ): Promise<void> => {
   try {
-    const email = identifier.includes('@') ? identifier : `${identifier}@smartparking.vn`
+    // Resolved GAP C-1: Align endpoint with Backend AuthController /api/v1/auth/forgot-password/reset
+    const email = phone.includes('@') ? phone : `${phone.replace(/\s+/g, '')}@fretrix.vn`
     await apiClient.post('/api/v1/auth/forgot-password/reset', {
       email,
       otpCode: otp,

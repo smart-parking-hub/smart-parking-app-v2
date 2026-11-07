@@ -2,6 +2,7 @@
  * API Adapters — Smart Parking Hub
  * Standardizes Spring Data JPA Page format with Frontend React Client Page format
  * Resolves GAP C-2 (0-indexed Spring Page vs 1-indexed Client Page)
+ * Provides Idempotency Header Generation for GAP H-1 / PROPOSED-API-06
  */
 
 export interface SpringPage<T> {
@@ -25,20 +26,38 @@ export interface ClientPage<T> {
   size?: number
 }
 
+export type SpringPageResponse<T> = SpringPage<T> & { currentPage?: number }
+
 /**
  * Adapts Spring Boot JPA Page (0-indexed number) or Client Page to uniform ClientPage structure.
  */
 export function adaptSpringPage<T>(
-  raw: SpringPage<T> | ClientPage<T> | { data?: SpringPage<T> } | null | undefined,
+  raw: SpringPage<T> | ClientPage<T> | { data?: SpringPage<T> } | T[] | null | undefined,
   fallbackPageSize = 10,
 ): ClientPage<T> {
   if (!raw) {
     return {
       content: [],
-      totalPages: 0,
+      totalPages: 1,
       totalElements: 0,
       currentPage: 1,
       pageSize: fallbackPageSize,
+      number: 0,
+      size: fallbackPageSize,
+    }
+  }
+
+  if (Array.isArray(raw)) {
+    const total = raw.length
+    const totalPages = Math.max(1, Math.ceil(total / fallbackPageSize))
+    return {
+      content: raw,
+      totalPages,
+      totalElements: total,
+      currentPage: 1,
+      pageSize: fallbackPageSize,
+      number: 0,
+      size: fallbackPageSize,
     }
   }
 
@@ -51,16 +70,16 @@ export function adaptSpringPage<T>(
   const content: T[] = Array.isArray(pageData.content) ? (pageData.content as T[]) : []
   const totalElements = typeof pageData.totalElements === 'number' ? pageData.totalElements : content.length
   const totalPages =
-    typeof pageData.totalPages === 'number'
+    typeof pageData.totalPages === 'number' && pageData.totalPages > 0
       ? pageData.totalPages
       : totalElements > 0
         ? Math.ceil(totalElements / fallbackPageSize)
-        : 0
+        : 1
 
   // Spring JPA provides 0-indexed 'number', UI components expect 1-indexed 'currentPage'
   let currentPage = 1
   if (typeof pageData.currentPage === 'number') {
-    currentPage = pageData.currentPage
+    currentPage = pageData.currentPage > 0 ? pageData.currentPage : pageData.currentPage + 1
   } else if (typeof pageData.number === 'number') {
     currentPage = pageData.number + 1
   }
@@ -86,6 +105,11 @@ export function adaptSpringPage<T>(
 }
 
 /**
+ * Alias for adaptSpringPage providing Page<T> compatibility
+ */
+export const adaptPageResponse = adaptSpringPage
+
+/**
  * Converts 1-indexed UI page number to Spring Data JPA 0-indexed query parameter.
  */
 export function toSpringPageParams(
@@ -95,7 +119,22 @@ export function toSpringPageParams(
 ): { page: number; size: number; sort?: string } {
   return {
     page: Math.max(0, page1Indexed - 1),
-    size,
+    size: Math.max(1, size),
     ...(sort ? { sort } : {}),
+  }
+}
+
+/**
+ * Generates or formats an Idempotency-Key header for sensitive mutation endpoints
+ */
+export function createIdempotencyHeader(key?: string): Record<string, string> {
+  const idempotencyKey =
+    key ||
+    (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function'
+      ? crypto.randomUUID()
+      : `idem-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`)
+
+  return {
+    'Idempotency-Key': idempotencyKey,
   }
 }

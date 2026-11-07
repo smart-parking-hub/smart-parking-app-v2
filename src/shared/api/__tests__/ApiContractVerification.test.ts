@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { apiClient } from '../client'
-import { adaptSpringPage, toSpringPageParams } from '../adapters'
-import { getData } from '../resources'
+import { adaptSpringPage, toSpringPageParams, createIdempotencyHeader } from '../adapters'
+import { getData, sendData } from '../resources'
 import { sendSmsRecoveryOtpApi, verifySmsRecoveryOtpApi } from '@/features/change-password/api/changePasswordApi'
 import { generateAiParkingLotContent, deleteMerchantParkingLotImage, setCoverMerchantParkingLotImage } from '@/features/merchant/parking-lots/api/merchantParkingLotApi'
 import { fetchUnreadCountApi, markAsReadApi, markAllAsReadApi } from '@/features/notifications/api/notificationApi'
@@ -119,6 +119,45 @@ describe('Controlled API Contract Verification & Integration Tests', () => {
     })
   })
 
+  describe('GAP B-2: ALPR Gate Check-In & Check-Out Settlement', () => {
+    it('calls POST /api/v1/merchant/check-out with bookingCode and parkingLotId', async () => {
+      const reqSpy = vi.spyOn(apiClient, 'request').mockResolvedValueOnce({
+        data: {
+          code: 200,
+          message: 'Check-out thành công!',
+          data: {
+            bookingCode: 'BK-2026-9081',
+            totalAmount: 120000,
+            advanceDeposit: 50000,
+            amountDue: 70000,
+            parkingMinutes: 270,
+            bookingStatus: 'COMPLETED',
+          },
+        },
+      } as any)
+
+      const settlement = await sendData('post', '/api/v1/merchant/check-out', {
+        bookingCode: 'BK-2026-9081',
+        parkingLotId: 12,
+      })
+
+      expect(reqSpy).toHaveBeenCalledWith({
+        method: 'post',
+        url: '/api/v1/merchant/check-out',
+        data: {
+          bookingCode: 'BK-2026-9081',
+          parkingLotId: 12,
+        },
+      })
+      expect(settlement).toEqual(
+        expect.objectContaining({
+          bookingCode: 'BK-2026-9081',
+          amountDue: 70000,
+        })
+      )
+    })
+  })
+
   describe('GAP B-3: Notification System Authorization & Endpoints', () => {
     it('fetchUnreadCountApi calls /api/v1/notifications/unread-count via apiClient', async () => {
       vi.spyOn(apiClient, 'get').mockResolvedValueOnce({
@@ -169,6 +208,26 @@ describe('Controlled API Contract Verification & Integration Tests', () => {
     })
   })
 
+  describe('GAP B-5: Admin Parking Lot Change Request', () => {
+    it('calls PUT /api/v1/admin/parking-lots/:id/request-changes with reason justification', async () => {
+      const reqSpy = vi.spyOn(apiClient, 'request').mockResolvedValueOnce({
+        data: { code: 200, message: 'Yêu cầu sửa đổi thành công', data: null },
+      } as any)
+
+      await sendData('put', '/api/v1/admin/parking-lots/45/request-changes', {
+        reason: 'Bổ sung giấy chứng nhận kiểm định trạm cân 100 tấn.',
+      })
+
+      expect(reqSpy).toHaveBeenCalledWith({
+        method: 'put',
+        url: '/api/v1/admin/parking-lots/45/request-changes',
+        data: {
+          reason: 'Bổ sung giấy chứng nhận kiểm định trạm cân 100 tấn.',
+        },
+      })
+    })
+  })
+
   describe('GAP C-3 & Payment Service Contract Alignment', () => {
     it('createPayOsDepositLink targets backend POST /api/v1/payments with DEPOSIT type', async () => {
       const postSpy = vi.spyOn(apiClient, 'post').mockResolvedValueOnce({
@@ -184,6 +243,20 @@ describe('Controlled API Contract Verification & Integration Tests', () => {
         paymentType: 'DEPOSIT',
       })
       expect(result.checkoutUrl).toBe('https://pay.payos.vn/web/checkout-real-token')
+    })
+  })
+
+  describe('GAP H-1 / PROPOSED-API-06: PayOS Idempotency Header Guard', () => {
+    it('creates a unique Idempotency-Key header when none is provided', () => {
+      const headers = createIdempotencyHeader()
+      expect(headers['Idempotency-Key']).toBeDefined()
+      expect(typeof headers['Idempotency-Key']).toBe('string')
+      expect(headers['Idempotency-Key'].length).toBeGreaterThan(5)
+    })
+
+    it('preserves an explicit Idempotency-Key if supplied', () => {
+      const headers = createIdempotencyHeader('CUSTOM-IDEMPOTENCY-UUID-1234')
+      expect(headers['Idempotency-Key']).toBe('CUSTOM-IDEMPOTENCY-UUID-1234')
     })
   })
 })

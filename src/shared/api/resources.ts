@@ -1,7 +1,15 @@
-import { isAxiosError } from 'axios'
+import { isAxiosError, type AxiosRequestConfig } from 'axios'
 import { apiClient } from './client'
 
-export { adaptSpringPage, toSpringPageParams, type SpringPage, type ClientPage } from './adapters'
+export {
+  adaptSpringPage,
+  adaptPageResponse,
+  toSpringPageParams,
+  createIdempotencyHeader,
+  type SpringPage,
+  type ClientPage,
+  type SpringPageResponse,
+} from './adapters'
 
 export interface Page<T> {
   content: T[]
@@ -12,8 +20,12 @@ export interface Page<T> {
   size?: number
 }
 
-export async function getData<T>(url: string, params?: object): Promise<T> {
-  const result = await apiClient.get<{ data: T }>(url, { params })
+export async function getData<T>(
+  url: string,
+  params?: object,
+  config?: AxiosRequestConfig,
+): Promise<T> {
+  const result = await apiClient.get<{ data: T }>(url, { params, ...config })
   const raw = result.data.data
   if (
     raw &&
@@ -33,11 +45,13 @@ export async function sendData<T = void>(
   method: 'post' | 'put' | 'delete' | 'patch',
   url: string,
   body?: unknown,
+  config?: AxiosRequestConfig,
 ): Promise<T> {
   const result = await apiClient.request<{ data: T }>({
     method,
     url,
     data: body,
+    ...config,
   })
   return result.data.data
 }
