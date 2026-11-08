@@ -130,15 +130,12 @@ export function ForgotPasswordEmailForm({
           >
             {isPending ? (
               <>
-                <span className="relative flex items-center justify-center">
-                  <span className="absolute -inset-1 rounded-full bg-white/30 animate-ping" />
-                  <LoaderCircle
-                    size={20}
-                    className="animate-spin text-white"
-                    aria-hidden="true"
-                  />
-                </span>
-                <span className="animate-pulse">Đang gửi mã OTP…</span>
+                <LoaderCircle
+                  size={20}
+                  className="animate-spin text-white"
+                  aria-hidden="true"
+                />
+                <span>Đang gửi mã OTP…</span>
               </>
             ) : (
               <>

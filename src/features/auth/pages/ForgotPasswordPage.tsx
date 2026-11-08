@@ -431,7 +431,7 @@ export function ForgotPasswordPage() {
         </div>
       )}
 
-      <div className="w-full bg-transparent relative animate-auth-fade-in transition-all duration-300">
+      <div className="w-full bg-transparent relative">
         <div className="h-1.5 w-full bg-black/10 rounded-full overflow-hidden mb-5">
           <div
             className={`h-full bg-[#d95f00] transition-all duration-500 ${progressWidth}`}

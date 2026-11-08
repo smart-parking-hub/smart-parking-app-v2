@@ -203,7 +203,7 @@ function LegacyAuthPage({ mode }: { mode: 'login' | 'register' | 'forgot' }) {
 
   return (
     <AuthLayout>
-      <div className="animate-auth-fade-in transition-all duration-300">
+      <div>
         <div className="mb-6 sm:mb-8 flex flex-col items-center text-center">
           <Link
             to="/"
@@ -239,7 +239,7 @@ function LegacyAuthPage({ mode }: { mode: 'login' | 'register' | 'forgot' }) {
               <div
                 className={`grid ${
                   selectedRole === 'MERCHANT' ? 'grid-cols-4' : 'grid-cols-3'
-                } gap-1 p-1 bg-black/5 rounded-2xl border border-black/10 mb-4 transition-all duration-300`}
+                } gap-1 p-1 bg-black/5 rounded-2xl border border-black/10 mb-4`}
                 role="tablist"
                 aria-label="Các bước đăng ký tài khoản"
               >
@@ -252,7 +252,7 @@ function LegacyAuthPage({ mode }: { mode: 'login' | 'register' | 'forgot' }) {
                       role="tab"
                       aria-selected={isActive}
                       onClick={() => setRegisterStepKey(s.key)}
-                      className={`py-2 px-1 sm:px-2 text-[11px] sm:text-xs rounded-xl transition-all duration-300 flex items-center justify-center gap-1.5 cursor-pointer ${
+                      className={`py-2 px-1 sm:px-2 text-[11px] sm:text-xs rounded-xl flex items-center justify-center gap-1.5 cursor-pointer ${
                         isActive
                           ? 'bg-white text-black shadow-xs font-semibold scale-[1.02]'
                           : 'text-black/70 hover:text-black hover:bg-white/40 font-normal'
@@ -279,7 +279,7 @@ function LegacyAuthPage({ mode }: { mode: 'login' | 'register' | 'forgot' }) {
               className={
                 mode === 'register' && registerStepKey !== 'info'
                   ? 'sr-only'
-                  : 'space-y-4 animate-auth-fade-in transition-all duration-300'
+                  : 'space-y-4'
               }
             >
               {mode === 'register' && (
@@ -369,7 +369,7 @@ function LegacyAuthPage({ mode }: { mode: 'login' | 'register' | 'forgot' }) {
                 className={
                   registerStepKey !== 'bank'
                     ? 'sr-only'
-                    : 'space-y-4 animate-auth-fade-in transition-all duration-300'
+                    : 'space-y-4'
                 }
               >
                 <div className="p-3.5 rounded-xl bg-orange-50/70 border border-orange-200/70 flex items-start gap-2.5 text-xs text-black">
@@ -421,7 +421,7 @@ function LegacyAuthPage({ mode }: { mode: 'login' | 'register' | 'forgot' }) {
               className={
                 mode === 'register' && registerStepKey !== 'email'
                   ? 'sr-only'
-                  : 'space-y-4 animate-auth-fade-in transition-all duration-300'
+                  : 'space-y-4'
               }
             >
               {mode !== 'login' && (
@@ -458,15 +458,12 @@ function LegacyAuthPage({ mode }: { mode: 'login' | 'register' | 'forgot' }) {
                     >
                       {otp.isPending ? (
                         <>
-                          <span className="relative flex items-center justify-center">
-                            <span className="absolute -inset-1 rounded-full bg-[#d95f00]/30 animate-ping" />
-                            <LoaderCircle
-                              className="animate-spin text-[#d95f00] shrink-0"
-                              size={18}
-                              aria-hidden="true"
-                            />
-                          </span>
-                          <span className="text-[#d95f00] font-semibold animate-pulse">
+                          <LoaderCircle
+                            className="animate-spin text-[#d95f00] shrink-0"
+                            size={18}
+                            aria-hidden="true"
+                          />
+                          <span className="text-[#d95f00] font-semibold">
                             Đang gửi mã…
                           </span>
                         </>
@@ -489,7 +486,7 @@ function LegacyAuthPage({ mode }: { mode: 'login' | 'register' | 'forgot' }) {
               )}
 
               {sentValid && (
-                <div className="flex items-start gap-3 rounded-xl border border-brand-border bg-brand-surface p-3 sm:p-3.5 text-xs animate-auth-fade-in">
+                <div className="flex items-start gap-3 rounded-xl border border-brand-border bg-brand-surface p-3 sm:p-3.5 text-xs">
                   <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#d95f00] text-white">
                     <Check size={18} strokeWidth={2.5} aria-hidden="true" />
                   </span>
@@ -600,7 +597,7 @@ function LegacyAuthPage({ mode }: { mode: 'login' | 'register' | 'forgot' }) {
               className={
                 mode === 'register' && registerStepKey !== 'password'
                   ? 'sr-only'
-                  : 'space-y-4 animate-auth-fade-in transition-all duration-300'
+                  : 'space-y-4'
               }
             >
               {mode !== 'forgot' &&
@@ -680,14 +677,11 @@ function LegacyAuthPage({ mode }: { mode: 'login' | 'register' | 'forgot' }) {
                   >
                     {submit.isPending ? (
                       <>
-                        <span className="relative flex items-center justify-center">
-                          <span className="absolute -inset-1 rounded-full bg-white/30 animate-ping" />
-                          <LoaderCircle
-                            className="animate-spin text-white"
-                            size={18}
-                            aria-hidden="true"
-                          />
-                        </span>
+                        <LoaderCircle
+                          className="animate-spin text-white"
+                          size={18}
+                          aria-hidden="true"
+                        />
                         <span>Đang xử lý…</span>
                       </>
                     ) : (

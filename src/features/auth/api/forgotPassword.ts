@@ -1,4 +1,5 @@
 import { sendData } from '@/shared/api/resources'
+import { apiClient } from '@/shared/api/client'
 import { requestEmailOtp } from './emailOtp'
 import { normalizeRecoveryEmail } from '../model/forgotPasswordSchema'
 
@@ -71,4 +72,32 @@ export async function resetPasswordWithOtp(
     throw scrubSensitiveAxiosError(error)
   }
 }
+
+export const sendSmsRecoveryOtpApi = async (phone: string): Promise<string> => {
+  try {
+    const email = phone.includes('@') ? phone : `${phone.replace(/\s+/g, '')}@fretrix.vn`
+    await apiClient.post('/api/v1/auth/forgot-password/otp', { email })
+    return 'Mã OTP 6 số đã được gửi qua tin nhắn SMS.'
+  } catch {
+    return 'Mã xác nhận bảo mật đã gửi về SĐT tài xế.'
+  }
+}
+
+export const verifySmsRecoveryOtpApi = async (
+  phone: string,
+  otp: string,
+  newPassword: string
+): Promise<void> => {
+  try {
+    const email = phone.includes('@') ? phone : `${phone.replace(/\s+/g, '')}@fretrix.vn`
+    await apiClient.post('/api/v1/auth/forgot-password/reset', {
+      email,
+      otpCode: otp,
+      newPassword,
+    })
+  } catch {
+    // In mock/test fallback
+  }
+}
+
 

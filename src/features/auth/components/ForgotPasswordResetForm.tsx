@@ -214,15 +214,12 @@ export function ForgotPasswordResetForm({
               >
                 {isResendPending ? (
                   <>
-                    <span className="relative flex items-center justify-center">
-                      <span className="absolute -inset-1 rounded-full bg-[#d95f00]/30 animate-ping" />
-                      <LoaderCircle
-                        size={14}
-                        className="animate-spin text-[#d95f00]"
-                        aria-hidden="true"
-                      />
-                    </span>
-                    <span className="animate-pulse">Đang gửi lại mã…</span>
+                    <LoaderCircle
+                      size={14}
+                      className="animate-spin text-[#d95f00]"
+                      aria-hidden="true"
+                    />
+                    <span>Đang gửi lại mã…</span>
                   </>
                 ) : resendRemainingSeconds > 0 ? (
                   <>
