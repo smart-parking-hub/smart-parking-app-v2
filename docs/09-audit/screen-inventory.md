@@ -34,6 +34,8 @@
 
 SCR-010 (2026-11-05): /login dùng LoginPage + AuthLayout riêng; Redux session sync, guest guard, role redirect, toast; 217 unit/component tests và 7 E2E PASS. Live backend acceptance pending. Xem [báo cáo](./scr-010-login-record.md).
 
+SCR-012 (2026-11-08): `/forgot-password` dùng `ForgotPasswordPage` + `AuthLayout` (`variant="recovery"`) theo Stitch bản 1; quy trình 2 bước (gửi OTP qua `POST /api/v1/auth/forgot-password/otp` và đặt lại mật khẩu qua `POST /api/v1/auth/forgot-password/reset`), tách biệt TTL (`expiresInSeconds`) và cooldown (`resendAfterSeconds`), chống race condition và không lưu dữ liệu nhạy cảm. Chi tiết tại [tài liệu module auth](../05-modules/auth/scr-012-forgot-password.md).
+
 
 ## SCR-021 profile simplification — 2026-11-05
 
