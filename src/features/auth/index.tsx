@@ -99,6 +99,7 @@ function LegacyAuthPage({ mode }: { mode: 'login' | 'register' | 'forgot' }) {
     label: string,
     type = 'text',
     options: Parameters<typeof form.register>[1] = {},
+    placeholder?: string,
   ) => {
     const isPassword = type === 'password'
     return (
@@ -111,6 +112,7 @@ function LegacyAuthPage({ mode }: { mode: 'login' | 'register' | 'forgot' }) {
             aria-invalid={Boolean(form.formState.errors[name])}
             aria-describedby={form.formState.errors[name] ? `auth-${name}-error` : undefined}
             type={isPassword && showPassword[name] ? 'text' : type}
+            placeholder={placeholder}
             autoComplete={
               name === 'password'
                 ? mode === 'login'
@@ -154,17 +156,17 @@ function LegacyAuthPage({ mode }: { mode: 'login' | 'register' | 'forgot' }) {
 
   return (
     <AuthLayout>
-      <div className="mb-6">
+      <div className="mb-6 sm:mb-8 flex flex-col items-center text-center">
         <Link
           to="/"
-          className="inline-flex items-center gap-3 font-sora text-xl sm:text-2xl font-bold text-brand-navy mb-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d95f00] rounded-xl p-1 -m-1 transition-colors group"
+          className="inline-flex items-center gap-3.5 font-sora text-xl sm:text-2xl font-bold text-brand-navy mb-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d95f00] rounded-2xl p-1.5 transition-all hover:scale-105 group"
         >
           <img
             src="/image-smart-parking-hub.png"
             alt="Smart Parking Hub Logo"
-            className="w-10 h-10 rounded-2xl object-contain shrink-0 shadow-md group-hover:scale-105 transition-transform ring-1 ring-white/60"
+            className="w-11 h-11 sm:w-12 sm:h-12 rounded-2xl object-contain shrink-0 shadow-md ring-1 ring-white/60 group-hover:shadow-lg transition-all"
           />
-          <span className="tracking-tight text-brand-navy font-extrabold text-xl sm:text-2xl">SMARTTRUCK HUB</span>
+          <span className="tracking-tight text-brand-navy font-extrabold text-xl sm:text-2xl group-hover:text-brand-orange transition-colors">SMARTTRUCK HUB</span>
         </Link>
         <h1 className="font-sora text-3xl sm:text-4xl font-extrabold tracking-tight text-brand-navy drop-shadow-xs">
           {title}
@@ -180,14 +182,14 @@ function LegacyAuthPage({ mode }: { mode: 'login' | 'register' | 'forgot' }) {
         <AuthSuccess mode={mode} />
       ) : (
         <form
-          className="space-y-5 [&_input]:min-h-12 [&_input]:sm:min-h-14 [&_input]:text-base [&_input]:rounded-xl [&_input]:px-4 [&_select]:min-h-12 [&_select]:sm:min-h-14 [&_select]:text-base [&_select]:rounded-xl [&_select]:px-4 [&_label]:gap-2 [&_label]:text-sm [&_label]:sm:text-base [&_label]:text-brand-navy [&_label]:font-bold"
+          className="space-y-5 [&_input:not([role='combobox'])]:min-h-12 [&_input:not([role='combobox'])]:sm:min-h-14 [&_input:not([role='combobox'])]:text-base [&_input:not([role='combobox'])]:rounded-xl [&_input:not([role='combobox'])]:px-4 [&_select]:min-h-12 [&_select]:sm:min-h-14 [&_select]:text-base [&_select]:rounded-xl [&_select]:px-4 [&_label]:gap-2 [&_label]:text-sm [&_label]:sm:text-base [&_label]:text-brand-navy [&_label]:font-bold"
           onSubmit={form.handleSubmit((data) => submit.mutate(data))}
         >
           {mode !== 'forgot' &&
             input('phone', 'Số điện thoại', 'tel', {
               pattern: /^(0|\+84)[35789][0-9]{8}$/,
-            })}
-          {mode !== 'login' && input('email', 'Email nhận mã xác thực', 'email')}
+            }, 'Ví dụ: 0918239485')}
+          {mode !== 'login' && input('email', 'Email nhận mã xác thực', 'email', {}, 'Ví dụ: taixe.nguyen@gmail.com')}
           {mode === 'register' && (
             <>
               <Field label="Bạn tham gia với vai trò">
@@ -199,17 +201,17 @@ function LegacyAuthPage({ mode }: { mode: 'login' | 'register' | 'forgot' }) {
                   <option value="MERCHANT">Chủ bãi</option>
                 </select>
               </Field>
-              {input('fullName', 'Họ và tên', 'text', { maxLength: 100 })}
+              {input('fullName', 'Họ và tên', 'text', { maxLength: 100 }, 'Ví dụ: Nguyễn Văn Hùng')}
               {input('citizenId', 'CCCD / CMND', 'text', {
                 required: false,
                 pattern: /^$|^(?:[0-9]{9}|[0-9]{12})$/,
-              })}
+              }, 'Ví dụ: 079123456789 (9 hoặc 12 số)')}
               {form.watch('role') === 'MERCHANT' && (
                 <>
                   <BankField control={form.control} disabled={submit.isPending} />
                   {input('bankAccountNum', 'Số tài khoản ngân hàng', 'text', {
                     required: true,
-                  })}
+                  }, 'Ví dụ: 19036789123456')}
                 </>
               )}
             </>
@@ -218,7 +220,7 @@ function LegacyAuthPage({ mode }: { mode: 'login' | 'register' | 'forgot' }) {
             input('password', 'Mật khẩu', 'password', {
               minLength: 6,
               maxLength: 50,
-            })}
+            }, 'Mật khẩu từ 6 đến 50 ký tự')}
           {mode !== 'login' && (
             <>
               <button
@@ -266,11 +268,11 @@ function LegacyAuthPage({ mode }: { mode: 'login' | 'register' | 'forgot' }) {
               )}
               {input('otpCode', 'Mã xác thực email (6 số)', 'text', {
                 pattern: /^\d{6}$/,
-              })}
+              }, 'Ví dụ: 123456')}
               {mode === 'forgot' &&
                 input('newPassword', 'Mật khẩu mới', 'password', {
                   minLength: 6,
-                })}
+                }, 'Mật khẩu mới từ 6 đến 50 ký tự')}
             </>
           )}
           {otp.isError && <Notice error>{errorMessage(otp.error)}</Notice>}
