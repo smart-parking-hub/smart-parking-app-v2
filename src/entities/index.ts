@@ -1,5 +1,6 @@
 export * from './parking-lot/types'
 export * from './parking-lot/components/ParkingLotLivePreviewCard'
+export * from './driver'
 export * from './driver/types'
 export * from './owner/types'
 export * from './owner/components/OwnerLotLiveCard'
