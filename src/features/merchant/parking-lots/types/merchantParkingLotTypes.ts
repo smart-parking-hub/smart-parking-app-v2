@@ -108,6 +108,7 @@ export type CreateParkingLotDraft = {
   latitude?: number
   longitude?: number
   aiContent?: AiContentSegments
+  customHighlights?: string
   updatedAt?: string
 }
 

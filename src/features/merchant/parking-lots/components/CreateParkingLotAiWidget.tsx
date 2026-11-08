@@ -1,12 +1,23 @@
 import { useState, useRef, useEffect } from 'react'
-import { Sparkles, Brain, Check, Truck, Flame, CornerDownRight, CheckCircle2 } from 'lucide-react'
+import { Sparkles, Brain, Check, Truck, Flame, CornerDownRight, CheckCircle2, Tag } from 'lucide-react'
 import type { AiContentSegments } from '../types/merchantParkingLotTypes'
+
+const PRESET_TAGS = [
+  'Bảo vệ 24/7',
+  'Mái che toàn bãi',
+  'Trạm sạc xe điện',
+  'Camera ALPR',
+  'Gần cao tốc',
+  'Hỗ trợ bốc xếp',
+]
 
 interface CreateParkingLotAiWidgetProps {
   currentAiContent: AiContentSegments
-  onGenerateNewAiContent: () => Promise<void>
+  onGenerateNewAiContent: (customHighlights?: string) => Promise<void>
   onApplyAiContent: (content: AiContentSegments) => void
   isApplied: boolean
+  initialHighlights?: string
+  onHighlightsChange?: (highlights: string) => void
 }
 
 export function CreateParkingLotAiWidget({
@@ -14,10 +25,17 @@ export function CreateParkingLotAiWidget({
   onGenerateNewAiContent,
   onApplyAiContent,
   isApplied,
+  initialHighlights = '',
+  onHighlightsChange,
 }: CreateParkingLotAiWidgetProps) {
+  const [highlights, setHighlights] = useState(initialHighlights)
   const [generating, setGenerating] = useState(false)
   const [justApplied, setJustApplied] = useState(false)
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  useEffect(() => {
+    setHighlights(initialHighlights)
+  }, [initialHighlights])
 
   useEffect(() => {
     return () => {
@@ -27,10 +45,43 @@ export function CreateParkingLotAiWidget({
     }
   }, [])
 
+  const handleHighlightsChange = (newVal: string) => {
+    if (newVal.length <= 500) {
+      setHighlights(newVal)
+      onHighlightsChange?.(newVal)
+    }
+  }
+
+  const handleToggleTag = (tag: string) => {
+    const parts = highlights
+      .split(/[,;\n]+/)
+      .map((p) => p.trim())
+      .filter(Boolean)
+    const exists = parts.some((p) => p.toLowerCase() === tag.toLowerCase())
+    let next: string
+    if (exists) {
+      next = parts.filter((p) => p.toLowerCase() !== tag.toLowerCase()).join(', ')
+    } else {
+      next = parts.length > 0 ? `${parts.join(', ')}, ${tag}` : tag
+    }
+    if (next.length <= 500) {
+      setHighlights(next)
+      onHighlightsChange?.(next)
+    }
+  }
+
+  const isTagActive = (tag: string) => {
+    return highlights
+      .toLowerCase()
+      .split(/[,;\n]+/)
+      .map((p) => p.trim())
+      .includes(tag.toLowerCase())
+  }
+
   const handleGenerate = async () => {
     setGenerating(true)
     try {
-      await onGenerateNewAiContent()
+      await onGenerateNewAiContent(highlights)
     } finally {
       setGenerating(false)
     }
@@ -70,8 +121,57 @@ export function CreateParkingLotAiWidget({
       </div>
 
       <p className="text-xs text-slate-600 leading-relaxed">
-        Tự động tổng hợp bản mô tả vận hành bãi đỗ chuyên nghiệp dựa trên tọa độ mặt bằng, hạ tầng tiếp vận và tiêu chuẩn tiếp nhận đầu kéo container.
+        Tự động tổng hợp bản mô tả vận hành bãi đỗ chuyên nghiệp dựa trên tọa độ mặt bằng, hạ tầng tiếp vận và đặc điểm tiện ích riêng.
       </p>
+
+      {/* Custom Highlights & Suggestion Tags Section */}
+      <div className="flex flex-col gap-2 pt-1">
+        <div className="flex items-center justify-between">
+          <label
+            htmlFor="custom-highlights-input"
+            className="text-[11px] font-semibold text-slate-700 flex items-center gap-1.5"
+          >
+            <Tag className="w-3.5 h-3.5 text-[#d95f00]" />
+            Điểm nhấn đặc thù &amp; Tiện ích
+          </label>
+          <span className="text-[10px] font-mono text-slate-600">
+            {highlights.length}/500 ký tự
+          </span>
+        </div>
+
+        {/* Preset Tags */}
+        <div className="flex flex-wrap gap-1.5">
+          {PRESET_TAGS.map((tag) => {
+            const active = isTagActive(tag)
+            return (
+              <button
+                key={tag}
+                type="button"
+                onClick={() => handleToggleTag(tag)}
+                className={`text-[11px] px-2.5 py-1 rounded-lg border transition-all cursor-pointer font-medium ${
+                  active
+                    ? 'bg-[#341100] text-[#d95f00] border-[#d95f00]/40 shadow-xs'
+                    : 'bg-slate-50 hover:bg-slate-100 text-slate-600 border-slate-200'
+                }`}
+              >
+                {active ? '✓ ' : '+ '}
+                {tag}
+              </button>
+            )
+          })}
+        </div>
+
+        {/* Highlights Textarea */}
+        <textarea
+          id="custom-highlights-input"
+          value={highlights}
+          onChange={(e) => handleHighlightsChange(e.target.value)}
+          placeholder="Nhập thêm điểm nhấn đặc thù (vd: Gần cảng Cát Lái, trạm cân 80T, dịch vụ rửa xe container...)"
+          rows={2}
+          maxLength={500}
+          className="w-full text-xs p-2.5 rounded-xl border border-slate-200 focus:outline-none focus:border-[#d95f00] focus:ring-1 focus:ring-[#d95f00] bg-slate-50/50 resize-none transition-colors placeholder:text-slate-400"
+        />
+      </div>
 
       {/* Button Generate */}
       <button

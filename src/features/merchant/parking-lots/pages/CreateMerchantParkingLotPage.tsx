@@ -72,6 +72,7 @@ export function CreateMerchantParkingLotPage() {
   // AI Assistant State
   const [aiContent, setAiContent] = useState<AiContentSegments>(initialAiContent)
   const [appliedAiContent, setAppliedAiContent] = useState<AiContentSegments | null>(null)
+  const [customHighlights, setCustomHighlights] = useState<string>('')
 
   const [images, setImages] = useState<ParkingLotImageItem[]>([])
 
@@ -104,6 +105,7 @@ export function CreateMerchantParkingLotPage() {
         if (typeof parsed.latitude === 'number') setValue('latitude', parsed.latitude)
         if (typeof parsed.longitude === 'number') setValue('longitude', parsed.longitude)
         if (parsed.aiContent) setAppliedAiContent(parsed.aiContent)
+        if (parsed.customHighlights) setCustomHighlights(parsed.customHighlights)
       }
     } catch {
       // Ignore localStorage parse error
@@ -118,6 +120,7 @@ export function CreateMerchantParkingLotPage() {
       latitude: formValues.latitude,
       longitude: formValues.longitude,
       aiContent: appliedAiContent || undefined,
+      customHighlights: customHighlights || undefined,
       updatedAt: new Date().toISOString(),
     }
     localStorage.setItem(DRAFT_STORAGE_KEY, JSON.stringify(draft))
@@ -155,10 +158,12 @@ export function CreateMerchantParkingLotPage() {
     }
   }
 
-  const handleGenerateNewAiContent = async () => {
+  const handleGenerateNewAiContent = async (highlights?: string) => {
+    const highlightsToUse = highlights !== undefined ? highlights : customHighlights
     const newContent = await generateAiParkingLotContent({
       name: formValues.name,
       address: formValues.address,
+      customHighlights: highlightsToUse,
     })
     setAiContent(newContent)
   }
@@ -360,6 +365,8 @@ export function CreateMerchantParkingLotPage() {
                 onGenerateNewAiContent={handleGenerateNewAiContent}
                 onApplyAiContent={handleApplyAiContent}
                 isApplied={Boolean(appliedAiContent)}
+                initialHighlights={customHighlights}
+                onHighlightsChange={setCustomHighlights}
               />
               <CreateParkingLotSlaWidget />
             </aside>
