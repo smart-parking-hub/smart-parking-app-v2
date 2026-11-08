@@ -27,7 +27,6 @@ export interface ProfileSidebarNavProps {
 export function ProfileSidebarNav({
   compact = false,
   activeTab = 'profile',
-  onOpenChangePassword,
   onOpenNotificationSettings,
 }: ProfileSidebarNavProps) {
   if (compact) {
@@ -49,7 +48,7 @@ export function ProfileSidebarNav({
           const current = item.id === activeTab
           return <Link key={item.id} to={item.to} aria-current={current ? 'page' : undefined}
             onClick={event => {
-              const action = item.id === 'notifications' ? onOpenNotificationSettings : item.id === 'change-password' ? onOpenChangePassword : undefined
+              const action = item.id === 'notifications' ? onOpenNotificationSettings : undefined
               if (action) { event.preventDefault(); action() }
             }}
             className={`flex min-h-11 items-center gap-3 rounded-lg px-3 py-2.5 font-medium transition-colors focus-visible:outline-2 focus-visible:outline-brand-orange ${current ? 'bg-brand-surface font-semibold text-brand-orange-ink' : 'text-brand-muted hover:bg-brand-surface hover:text-brand-navy'}`}>
@@ -167,8 +166,7 @@ export function ProfileSidebarNav({
         </div>
       ) : (
         <Link
-          to="/change-password"
-          onClick={onOpenChangePassword}
+          to="/profile#bao-mat"
           className="flex items-center justify-between px-5 py-4 hover:bg-slate-50 text-slate-600 hover:text-slate-900 border-l-4 border-transparent transition-colors text-left cursor-pointer"
         >
           <div className="flex items-center gap-3">

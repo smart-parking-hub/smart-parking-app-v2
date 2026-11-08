@@ -46,7 +46,7 @@ export function DriverFooter() {
             <Link to="/profile" className="hover:text-white transition-colors">
               Tài khoản
             </Link>
-            <Link to="/change-password" className="hover:text-white transition-colors">
+            <Link to="/profile#bao-mat" className="hover:text-white transition-colors">
               Đổi mật khẩu
             </Link>
             <Link to="/about" className="hover:text-white transition-colors">

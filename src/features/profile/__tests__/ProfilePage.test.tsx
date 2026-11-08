@@ -8,8 +8,8 @@ import { ProfilePage } from '../pages/ProfilePage'
 
 vi.mock('@/shared/api/client', () => ({ apiClient: { get: vi.fn(), put: vi.fn(), post: vi.fn() } }))
 const profile = { fullName: 'Nguyễn Minh', phone: '0901234567', email: 'minh@example.com', address: 'Hà Nội', emergencyContact: '0907654321' }
-function mount() {
-  return render(<QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } })}><MemoryRouter><ProfilePage /></MemoryRouter></QueryClientProvider>)
+function mount(initialEntries = ['/profile']) {
+  return render(<QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } })}><MemoryRouter initialEntries={initialEntries}><ProfilePage /></MemoryRouter></QueryClientProvider>)
 }
 afterEach(cleanup)
 beforeEach(() => { vi.clearAllMocks(); vi.mocked(apiClient.get).mockResolvedValue({ data: { data: profile } }) })
@@ -77,5 +77,26 @@ describe('Driver profile with verified user API fields', () => {
     expect(await screen.findByText('Đã đổi mật khẩu thành công.')).toBeInTheDocument()
     expect(apiClient.post).toHaveBeenLastCalledWith('/api/v1/users/me/password', { currentPassword: 'current-demo', newPassword: 'new-demo-123' })
     await waitFor(() => expect(screen.getByLabelText('Mật khẩu hiện tại')).toHaveValue(''))
+  })
+  it('scrolls to #bao-mat section after delayed profile query resolves and when clicking sidebar security link', async () => {
+    const scrollSpy = vi.fn()
+    window.HTMLElement.prototype.scrollIntoView = scrollSpy
+    let resolveProfile!: (value: { data: { data: typeof profile } }) => void
+    vi.mocked(apiClient.get).mockImplementationOnce(
+      () => new Promise(resolve => { resolveProfile = resolve }),
+    )
+    mount(['/profile#bao-mat'])
+    expect(screen.getByRole('status')).toHaveTextContent('Đang tải')
+    expect(scrollSpy).not.toHaveBeenCalled()
+    resolveProfile({ data: { data: profile } })
+    const section = await screen.findByRole('region', { name: 'Bảo mật tài khoản' })
+    expect(section).toHaveAttribute('id', 'bao-mat')
+    expect(section.className).toContain('scroll-mt-[calc(var(--driver-header-height)+24px)]')
+    await waitFor(() => expect(scrollSpy).toHaveBeenCalledWith({ behavior: 'smooth' }))
+    scrollSpy.mockClear()
+    const securityLink = screen.getByRole('link', { name: /Bảo mật tài khoản/ })
+    expect(securityLink).toHaveAttribute('href', '/profile#bao-mat')
+    await userEvent.click(securityLink)
+    await waitFor(() => expect(scrollSpy).toHaveBeenCalledWith({ behavior: 'smooth' }))
   })
 })

@@ -1,4 +1,4 @@
-import { createBrowserRouter } from 'react-router-dom'
+import { createBrowserRouter, Navigate } from 'react-router-dom'
 import { lazy, Suspense } from 'react'
 const DesignPreviewPage = import.meta.env.DEV
   ? lazy(() => import('@/app/pages/DesignPreviewPage'))
@@ -114,11 +114,6 @@ const VehiclesPage = lazy(() =>
 const ProfilePage = lazy(() =>
   import('@/features/profile').then((module) => ({
     default: module.ProfilePage,
-  })),
-)
-const ChangePasswordPage = lazy(() =>
-  import('@/features/change-password').then((module) => ({
-    default: module.ChangePasswordPage,
   })),
 )
 const PaymentReturnPage = lazy(() =>
@@ -317,7 +312,7 @@ export const router = createBrowserRouter([
       },
       {
         path: 'change-password',
-        element: <ChangePasswordPage />,
+        element: <Navigate to="/profile#bao-mat" replace />,
       },
       {
         path: 'payment/success',
@@ -375,7 +370,7 @@ export const router = createBrowserRouter([
       },
       {
         path: 'change-password',
-        element: <ChangePasswordPage />,
+        element: <Navigate to="/profile#bao-mat" replace />,
       },
       {
         path: 'payment/success',
@@ -447,7 +442,7 @@ export const router = createBrowserRouter([
     children: [
       {
         index: true,
-        element: <ChangePasswordPage />,
+        element: <Navigate to="/profile#bao-mat" replace />,
       },
     ],
   },
