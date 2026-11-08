@@ -106,7 +106,7 @@ function LegacyAuthPage({ mode }: { mode: 'login' | 'register' | 'forgot' }) {
         <div className="relative">
           <input
             id={`auth-${name}`}
-            className={`${control} min-h-11 sm:min-h-12 text-sm bg-white/90 border border-slate-300 text-brand-navy placeholder:text-slate-400 focus:bg-white focus:border-[#d95f00] focus-visible:ring-2 focus-visible:ring-[#d95f00] focus-visible:ring-offset-1`}
+            className={`${control} min-h-11 sm:min-h-12 text-sm bg-white/50 hover:bg-white/65 focus:bg-white/90 backdrop-blur-sm border border-white/60 text-brand-navy placeholder:text-slate-500 focus:border-[#d95f00] focus-visible:ring-2 focus-visible:ring-[#d95f00] focus-visible:ring-offset-1`}
             disabled={submit.isPending}
             aria-invalid={Boolean(form.formState.errors[name])}
             aria-describedby={form.formState.errors[name] ? `auth-${name}-error` : undefined}
@@ -192,7 +192,7 @@ function LegacyAuthPage({ mode }: { mode: 'login' | 'register' | 'forgot' }) {
             <>
               <Field label="Bạn tham gia với vai trò">
                 <select
-                  className={`${control} bg-white/90 border border-slate-300 text-brand-navy focus-visible:ring-2 focus-visible:ring-[#d95f00] focus-visible:ring-offset-1`}
+                  className={`${control} bg-white/50 backdrop-blur-sm border border-white/60 text-brand-navy focus-visible:ring-2 focus-visible:ring-[#d95f00] focus-visible:ring-offset-1`}
                   {...form.register('role')}
                 >
                   <option value="DRIVER">Tài xế</option>
@@ -224,7 +224,7 @@ function LegacyAuthPage({ mode }: { mode: 'login' | 'register' | 'forgot' }) {
               <button
                 type="button"
                 disabled={otp.isPending || countdown > 0}
-                className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white/90 px-4 py-2.5 text-sm font-semibold text-brand-navy hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d95f00] focus-visible:ring-offset-2 disabled:opacity-50 transition-colors shadow-xs cursor-pointer"
+                className="inline-flex items-center justify-center gap-2 rounded-xl border border-white/60 bg-white/50 backdrop-blur-sm px-4 py-2.5 text-sm font-semibold text-brand-navy hover:bg-white/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d95f00] focus-visible:ring-offset-2 disabled:opacity-50 transition-colors shadow-xs cursor-pointer"
                 onClick={() => otp.mutate()}
               >
                 {otp.isPending ? (

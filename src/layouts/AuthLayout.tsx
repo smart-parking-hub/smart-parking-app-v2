@@ -58,9 +58,9 @@ export function AuthLayout({ children, variant = 'default' }: AuthLayoutProps) {
         className="absolute inset-0 h-full w-full object-cover object-[70%_center] sm:object-center scale-100"
       />
 
-      {/* Lớp phủ gradient mờ điện ảnh để card modal trắng mờ và thông điệp nổi bật rõ nét */}
-      <div className="absolute inset-0 bg-gradient-to-r from-slate-950/75 via-slate-950/30 to-transparent pointer-events-none" />
-      <div className="absolute inset-0 bg-gradient-to-t from-slate-950/60 via-transparent to-slate-950/30 pointer-events-none" />
+      {/* Lớp phủ gradient mờ điện ảnh rất nhẹ để giữ trọn vẹn chi tiết và ánh đèn của ảnh bãi đỗ xe phía sau kính */}
+      <div className="absolute inset-0 bg-gradient-to-r from-slate-950/35 via-slate-950/15 to-transparent pointer-events-none" />
+      <div className="absolute inset-0 bg-gradient-to-t from-slate-950/45 via-transparent to-slate-950/20 pointer-events-none" />
 
       {/* Thông điệp slogan thương hiệu ở góc trên bên phải trên nền ảnh */}
       <div className="absolute top-6 right-6 sm:top-10 sm:right-12 hidden md:block max-w-[360px] text-right pointer-events-none z-10">
@@ -78,9 +78,9 @@ export function AuthLayout({ children, variant = 'default' }: AuthLayoutProps) {
         <span>An tâm trên từng chặng đường</span>
       </div>
 
-      {/* 2. PHẦN MODE (MODAL FORM): NẰM BÊN TRÁI, NỀN TRẮNG TRONG SUỐT NHÌN MỜ MỜ ẢNH BÃI ĐỖ XE PHÍA SAU */}
+      {/* 2. PHẦN MODE (MODAL FORM): NẰM BÊN TRÁI, HIỆU ỨNG KÍNH THỦY TINH TRONG SUỐT (GLASSMORPHISM) NHÌN THẤU MỜ MỜ ẢNH NỀN PHÍA SAU */}
       <section className="relative z-20 w-full max-w-[440px] my-auto mx-auto sm:mx-0 sm:ml-8 md:ml-14 lg:ml-20 xl:ml-28 p-4 sm:p-0">
-        <div className="w-full max-h-[90vh] overflow-y-auto bg-white/75 backdrop-blur-xl rounded-[28px] sm:rounded-[32px] p-6 sm:p-8 shadow-2xl shadow-slate-950/40 border border-white/80 text-brand-navy">
+        <div className="w-full max-h-[90vh] overflow-y-auto bg-white/25 hover:bg-white/30 backdrop-blur-2xl rounded-[28px] sm:rounded-[32px] p-6 sm:p-8 shadow-[0_20px_50px_rgba(0,0,0,0.45)] border border-white/50 ring-1 ring-white/30 text-brand-navy transition-all">
           {children}
         </div>
       </section>
