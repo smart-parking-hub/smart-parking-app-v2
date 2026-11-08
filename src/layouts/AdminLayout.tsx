@@ -54,7 +54,7 @@ export function AdminLayout() {
     <div className="min-h-screen bg-brand-surface font-inter text-slate-800">
       <ScrollToTop />
       {/* Top Header */}
-      <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-slate-700 bg-brand-navy px-5 text-white lg:pl-64">
+      <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-slate-700 bg-brand-navy px-5 text-white lg:pl-[calc(16rem+2rem)] lg:pr-8">
         <div className="flex items-center gap-3">
           <button
             type="button"
