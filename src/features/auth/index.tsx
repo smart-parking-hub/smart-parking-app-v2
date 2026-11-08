@@ -208,7 +208,7 @@ function LegacyAuthPage({ mode }: { mode: 'login' | 'register' | 'forgot' }) {
 
   return (
     <AuthLayout>
-      <div className="animate-auth-fade-in transition-all duration-300">
+      <div>
         {mode === 'register' && (
           <div className="h-1.5 w-full bg-black/10 rounded-full overflow-hidden mb-5">
             <div
@@ -301,7 +301,7 @@ function LegacyAuthPage({ mode }: { mode: 'login' | 'register' | 'forgot' }) {
               className={
                 mode === 'register' && registerStepKey !== 'info'
                   ? 'sr-only'
-                  : 'space-y-4 animate-auth-fade-in transition-all duration-300'
+                  : 'space-y-4'
               }
             >
               {mode === 'register' && (
@@ -391,7 +391,7 @@ function LegacyAuthPage({ mode }: { mode: 'login' | 'register' | 'forgot' }) {
                 className={
                   registerStepKey !== 'bank'
                     ? 'sr-only'
-                    : 'space-y-4 animate-auth-fade-in transition-all duration-300'
+                    : 'space-y-4'
                 }
               >
                 <div className="p-3.5 rounded-xl bg-orange-50/70 border border-orange-200/70 flex items-start gap-2.5 text-xs text-black">
@@ -443,7 +443,7 @@ function LegacyAuthPage({ mode }: { mode: 'login' | 'register' | 'forgot' }) {
               className={
                 mode === 'register' && registerStepKey !== 'email'
                   ? 'sr-only'
-                  : 'space-y-4 animate-auth-fade-in transition-all duration-300'
+                  : 'space-y-4'
               }
             >
               {mode !== 'login' && (
@@ -480,15 +480,12 @@ function LegacyAuthPage({ mode }: { mode: 'login' | 'register' | 'forgot' }) {
                     >
                       {otp.isPending ? (
                         <>
-                          <span className="relative flex items-center justify-center">
-                            <span className="absolute -inset-1 rounded-full bg-[#d95f00]/30 animate-ping" />
-                            <LoaderCircle
-                              className="animate-spin text-[#d95f00] shrink-0"
-                              size={18}
-                              aria-hidden="true"
-                            />
-                          </span>
-                          <span className="text-[#d95f00] font-semibold animate-pulse">
+                          <LoaderCircle
+                            className="animate-spin text-[#d95f00] shrink-0"
+                            size={18}
+                            aria-hidden="true"
+                          />
+                          <span className="text-[#d95f00] font-semibold">
                             Đang gửi mã…
                           </span>
                         </>
@@ -511,7 +508,7 @@ function LegacyAuthPage({ mode }: { mode: 'login' | 'register' | 'forgot' }) {
               )}
 
               {sentValid && (
-                <div className="flex items-start gap-3 rounded-xl border border-brand-border bg-brand-surface p-3 sm:p-3.5 text-xs animate-auth-fade-in">
+                <div className="flex items-start gap-3 rounded-xl border border-brand-border bg-brand-surface p-3 sm:p-3.5 text-xs">
                   <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#d95f00] text-white">
                     <Check size={18} strokeWidth={2.5} aria-hidden="true" />
                   </span>
@@ -622,7 +619,7 @@ function LegacyAuthPage({ mode }: { mode: 'login' | 'register' | 'forgot' }) {
               className={
                 mode === 'register' && registerStepKey !== 'password'
                   ? 'sr-only'
-                  : 'space-y-4 animate-auth-fade-in transition-all duration-300'
+                  : 'space-y-4'
               }
             >
               {mode !== 'forgot' &&
@@ -702,14 +699,11 @@ function LegacyAuthPage({ mode }: { mode: 'login' | 'register' | 'forgot' }) {
                   >
                     {submit.isPending ? (
                       <>
-                        <span className="relative flex items-center justify-center">
-                          <span className="absolute -inset-1 rounded-full bg-white/30 animate-ping" />
-                          <LoaderCircle
-                            className="animate-spin text-white"
-                            size={18}
-                            aria-hidden="true"
-                          />
-                        </span>
+                        <LoaderCircle
+                          className="animate-spin text-white"
+                          size={18}
+                          aria-hidden="true"
+                        />
                         <span>Đang xử lý…</span>
                       </>
                     ) : (

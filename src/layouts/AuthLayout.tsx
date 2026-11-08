@@ -12,9 +12,7 @@ const RECOVERY_TYPOGRAPHY_SCOPE: CSSProperties = {
   '--font-sora': "'Sora', 'Inter', 'Be Vietnam Pro', sans-serif",
 } as CSSProperties
 
-export function AuthLayout({ children, variant = 'default' }: AuthLayoutProps) {
-  const isRecovery = variant === 'recovery'
-
+export function AuthLayout({ children }: AuthLayoutProps) {
   return (
     <div
       style={RECOVERY_TYPOGRAPHY_SCOPE}
@@ -52,30 +50,11 @@ export function AuthLayout({ children, variant = 'default' }: AuthLayoutProps) {
       {/* 2. PHẦN MODE (MODAL FORM): NẰM LỆCH PHẢI XÍCH VÀO GIỮA, RỘNG RÃI, NỀN KÍNH TRONG SUỐT TĨNH KHÔNG ĐỔI MÀU KHI HOVER */}
       <main className="relative z-20 w-full flex-1 flex items-center justify-end overflow-hidden py-4 sm:py-6">
         <section className="relative z-20 w-full max-w-[540px] sm:max-w-[560px] lg:max-w-[580px] my-auto mx-auto sm:mx-0 sm:mr-10 md:mr-14 lg:mr-20 xl:mr-28 2xl:mr-36 p-3 sm:p-0">
-          <div className="w-full max-h-[94vh] overflow-y-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden bg-white/60 backdrop-blur-2xl rounded-[32px] sm:rounded-[36px] p-6 sm:p-8 lg:p-9 shadow-[0_25px_60px_rgba(0,0,0,0.4)] border border-white/70 ring-1 ring-white/40 text-black animate-auth-fade-in transition-all duration-300">
+          <div className="w-full max-h-[94vh] overflow-y-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden bg-white/60 backdrop-blur-2xl rounded-[32px] sm:rounded-[36px] p-6 sm:p-8 lg:p-9 shadow-[0_25px_60px_rgba(0,0,0,0.4)] border border-white/70 ring-1 ring-white/40 text-black">
             {children}
           </div>
         </section>
       </main>
-
-      {/* Footer bar for recovery */}
-      {isRecovery && (
-        <footer className="relative z-20 w-full py-3 border-t border-white/10 bg-slate-950/80 backdrop-blur-md text-white">
-          <div className="max-w-7xl mx-auto px-4 md:px-9 flex flex-col sm:flex-row items-center justify-between gap-2 font-inter text-xs leading-4 font-normal tracking-[0.06em] text-white">
-            <div className="flex items-center gap-2">
-              <ShieldCheck size={16} className="text-[#d95f00] shrink-0" aria-hidden="true" />
-              <span>SMARTTRUCK HUB — BẢO MẬT TÀI KHOẢN &amp; ĐIỀU PHỐI BẾN BÃI</span>
-            </div>
-            <div className="flex items-center gap-4">
-              <span>XÁC THỰC EMAIL OTP</span>
-              <span className="text-white/30" aria-hidden="true">
-                |
-              </span>
-              <span>MÃ MÀN HÌNH: SCR-012</span>
-            </div>
-          </div>
-        </footer>
-      )}
     </div>
   )
 }

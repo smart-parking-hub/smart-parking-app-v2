@@ -431,7 +431,7 @@ export function ForgotPasswordPage() {
         </div>
       )}
 
-      <div className="w-full bg-transparent relative animate-auth-fade-in transition-all duration-300">
+      <div className="w-full bg-transparent relative">
         <div className="h-1.5 w-full bg-black/10 rounded-full overflow-hidden mb-5">
           <div
             className={`h-full bg-[#d95f00] transition-all duration-500 ${progressWidth}`}
@@ -458,9 +458,6 @@ export function ForgotPasswordPage() {
             <h1 className="font-sora text-2xl sm:text-3xl font-bold text-black tracking-tight mb-1 drop-shadow-xs">
               Khôi Phục Mật Khẩu
             </h1>
-            <p className="text-sm text-black font-normal">
-              Quy trình tự phục vụ 2 bước bằng mã OTP xác thực qua email để đặt lại mật khẩu.
-            </p>
           </div>
 
           <div

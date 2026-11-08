@@ -118,7 +118,7 @@ export function ForgotPasswordEmailForm({
             >
               <Info size={14} className="shrink-0 text-slate-400" aria-hidden="true" />
               <span>
-                Hỗ trợ địa chỉ email đã liên kết với tài khoản SmartTruck Hub (tối đa 100 ký tự).
+                Hỗ trợ địa chỉ email đã liên kết với tài khoản SmartTruck Hub.
               </span>
             </p>
           </div>
@@ -130,15 +130,12 @@ export function ForgotPasswordEmailForm({
           >
             {isPending ? (
               <>
-                <span className="relative flex items-center justify-center">
-                  <span className="absolute -inset-1 rounded-full bg-white/30 animate-ping" />
-                  <LoaderCircle
-                    size={20}
-                    className="animate-spin text-white"
-                    aria-hidden="true"
-                  />
-                </span>
-                <span className="animate-pulse">Đang gửi mã OTP…</span>
+                <LoaderCircle
+                  size={20}
+                  className="animate-spin text-white"
+                  aria-hidden="true"
+                />
+                <span>Đang gửi mã OTP…</span>
               </>
             ) : (
               <>
