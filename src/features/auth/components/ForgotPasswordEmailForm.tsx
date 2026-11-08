@@ -126,16 +126,19 @@ export function ForgotPasswordEmailForm({
           <button
             type="submit"
             disabled={isPending}
-            className="w-full min-h-12 sm:min-h-14 rounded-xl bg-[#d95f00] hover:bg-[#b84e00] active:bg-[#9e4300] text-white text-base font-bold flex items-center justify-center gap-2 shadow-md transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d95f00] focus-visible:ring-offset-2 disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer"
+            className="w-full min-h-12 sm:min-h-14 rounded-xl bg-[#d95f00] hover:bg-[#b84e00] active:bg-[#9e4300] hover:scale-[1.01] active:scale-[0.99] text-white text-base font-bold flex items-center justify-center gap-2.5 shadow-md transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d95f00] focus-visible:ring-offset-2 disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer"
           >
             {isPending ? (
               <>
-                <LoaderCircle
-                  size={18}
-                  className="animate-spin"
-                  aria-hidden="true"
-                />
-                <span>Đang gửi mã OTP…</span>
+                <span className="relative flex items-center justify-center">
+                  <span className="absolute -inset-1 rounded-full bg-white/30 animate-ping" />
+                  <LoaderCircle
+                    size={20}
+                    className="animate-spin text-white"
+                    aria-hidden="true"
+                  />
+                </span>
+                <span className="animate-pulse">Đang gửi mã OTP…</span>
               </>
             ) : (
               <>
