@@ -224,9 +224,11 @@ export async function uploadMerchantParkingLotImages(
 export async function generateAiParkingLotContent(params: {
   name?: string
   address?: string
+  customHighlights?: string
 }): Promise<AiContentSegments> {
   const lotName = params.name || 'Bãi Đỗ Xe & Depot Logistics'
   const lotAddress = params.address || 'Khu Công Nghiệp Cảng Biển Logistics'
+  const customHighlights = params.customHighlights?.trim()
 
   try {
     const res = await apiClient.post<{
@@ -241,6 +243,7 @@ export async function generateAiParkingLotContent(params: {
       totalCapacity: 80,
       supportedVehicleTypes: ['CONTAINER_40FT', 'HEAVY_TRUCK'],
       amenities: ['ALPR_GATE', 'REEFER_380V', 'SECURITY_24_7', 'EV_CHARGER'],
+      customHighlights: customHighlights || undefined,
     })
 
     if (res.data?.data?.marketingDescription) {
@@ -255,8 +258,10 @@ export async function generateAiParkingLotContent(params: {
   }
 
   // Simulating Fretrix-Dispatch-V3 high-precision logistics AI synthesis
+  const highlightSuffix = customHighlights ? ` Điểm nhấn nổi bật: ${customHighlights}.` : ''
+
   return {
-    logisticsCapacity: `Depot chuyên dụng "${lotName}" tại ${lotAddress}. Mặt bằng chịu lực xe đầu kéo container và xe tải nặng 3-4 chân (tải trọng trục 60T). Trang bị hệ thống điện lạnh Reefer 380V hoạt động liên tục 24/7.`,
+    logisticsCapacity: `Depot chuyên dụng "${lotName}" tại ${lotAddress}.${highlightSuffix} Mặt bằng chịu lực xe đầu kéo container và xe tải nặng 3-4 chân (tải trọng trục 60T). Trang bị hệ thống điện lạnh Reefer 380V hoạt động liên tục 24/7.`,
     safetyRegulations:
       'Nghiêm cấm sang chiết dầu trong khuôn viên bãi. Đạt quy chuẩn PCCC cấp 1 với 08 họng trụ cứu hỏa D65 đấu nối nguồn nước áp lực cao cùng xe chữa cháy cơ động túc trực bảo vệ hàng hóa.',
     circulationGuide:

@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useForm } from 'react-hook-form'
 import { useSearchParams } from 'react-router-dom'
-import { Camera, Loader2, ScanLine, ShieldCheck } from 'lucide-react'
+import { Camera, Loader2, ScanLine, ShieldCheck, SwitchCamera, Zap } from 'lucide-react'
 import type { Lot, Settlement } from '@/entities/operations'
 import {
   getData,
@@ -23,17 +23,47 @@ import {
   secondary,
 } from '@/shared/components/Workspace'
 
-interface Detector {
-  detect(source: HTMLVideoElement): Promise<{ rawValue: string }[]>
+interface ZXingReader {
+  decodeFromConstraints(
+    constraints: MediaStreamConstraints,
+    videoElement: HTMLVideoElement,
+    callback: (result: { getText(): string } | null, error: unknown) => void,
+  ): Promise<unknown>
+  reset(): void
 }
-type DetectorConstructor = new (options: { formats: string[] }) => Detector
+
+function playBeepSound() {
+  try {
+    const AudioContextClass =
+      window.AudioContext ||
+      (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext
+    if (!AudioContextClass) return
+    const ctx = new AudioContextClass()
+    const osc = ctx.createOscillator()
+    const gain = ctx.createGain()
+    osc.type = 'sine'
+    osc.frequency.setValueAtTime(880, ctx.currentTime) // 880Hz crisp terminal beep
+    gain.gain.setValueAtTime(0.2, ctx.currentTime)
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.12)
+    osc.connect(gain)
+    gain.connect(ctx.destination)
+    osc.start()
+    osc.stop(ctx.currentTime + 0.12)
+  } catch {
+    // Ignore audio errors on unsupported environments
+  }
+}
+
 export function MerchantScannerPage() {
   const [params] = useSearchParams()
   const [mode, setMode] = useState<'check-in' | 'check-out'>('check-in')
   const [camera, setCamera] = useState(false)
   const [cameraError, setCameraError] = useState('')
   const [success, setSuccess] = useState('')
+  const [facingMode, setFacingMode] = useState<'environment' | 'user'>('environment')
+  const [autoSubmit, setAutoSubmit] = useState(true)
   const video = useRef<HTMLVideoElement>(null)
+  const readerRef = useRef<ZXingReader | null>(null)
   const cache = useQueryClient()
   const form = useForm<{ bookingCode: string; parkingLotId: number }>({
     defaultValues: {
@@ -56,6 +86,7 @@ export function MerchantScannerPage() {
       form.setValue('parkingLotId', lotId)
     }
   }, [lots.data, params, form])
+
   const scan = useMutation({
     mutationFn: (data: { bookingCode: string; parkingLotId: number }) =>
       sendData<Settlement | null>('post', `/api/v1/merchant/${mode}`, data),
@@ -69,6 +100,7 @@ export function MerchantScannerPage() {
       void cache.invalidateQueries({ queryKey: ['merchant-bookings'] })
     },
   })
+
   const cash = useMutation({
     mutationFn: () =>
       sendData('post', '/api/v1/merchant/confirm-cash', scan.variables),
@@ -78,75 +110,101 @@ export function MerchantScannerPage() {
       void cache.invalidateQueries({ queryKey: ['merchant-bookings'] })
     },
   })
+
   useEffect(() => {
     if (!camera) return
     let stopped = false
-    let stream: MediaStream | undefined
-    let timer: ReturnType<typeof setTimeout>
+    let currentReader: ZXingReader | null = null
+
     const start = async () => {
       try {
-        const Constructor = (
-          window as Window & { BarcodeDetector?: DetectorConstructor }
-        ).BarcodeDetector
-        if (!navigator.mediaDevices?.getUserMedia)
-          throw new Error(
-            'Camera cần HTTPS hoặc localhost. Hãy dùng kết nối an toàn và cho phép truy cập camera.',
-          )
-        stream = await navigator.mediaDevices.getUserMedia({
-          video: { facingMode: 'environment' },
-        })
-        if (stopped) {
-          stream.getTracks().forEach((track) => track.stop())
-          return
-        }
-        if (!video.current) return
-        video.current.srcObject = stream
-        await video.current.play()
+        setCameraError('')
+        const ZXing = (await import(
+          'html5-qrcode/third_party/zxing-js.umd.js'
+        )) as unknown as { BrowserQRCodeReader: new () => ZXingReader }
         if (stopped) return
-        if (!Constructor) {
-          setCameraError('Camera đã bật nhưng trình duyệt chưa hỗ trợ quét QR. Vui lòng nhập mã vé để tiếp tục.')
-          return
-        }
-        const detector = new Constructor({ formats: ['qr_code'] })
-        const tick = async () => {
-          if (stopped || !video.current) return
-          try {
-            const codes = await detector.detect(video.current)
+
+        const reader: ZXingReader = new ZXing.BrowserQRCodeReader()
+        readerRef.current = reader
+        currentReader = reader
+
+        if (!video.current) return
+
+        await reader.decodeFromConstraints(
+          {
+            audio: false,
+            video: {
+              facingMode: { ideal: facingMode },
+              width: { ideal: 1280 },
+              height: { ideal: 720 },
+            },
+          },
+          video.current,
+          (result) => {
             if (stopped) return
-            if (codes[0]) {
-              form.setValue('bookingCode', codes[0].rawValue, {
+            const raw = result?.getText()?.trim()
+            if (raw) {
+              playBeepSound()
+              if (typeof navigator !== 'undefined' && navigator.vibrate) {
+                navigator.vibrate([40, 50, 40])
+              }
+              form.setValue('bookingCode', raw, {
                 shouldValidate: true,
               })
               setCamera(false)
-              return
+
+              // Instant Auto-Confirm (Quét phát ăn ngay)
+              const lotId = form.getValues('parkingLotId')
+              if (autoSubmit && lotId) {
+                scan.mutate({ bookingCode: raw, parkingLotId: lotId })
+              }
             }
-          } catch {
-            setCameraError('Không đọc được QR. Hãy thử lại hoặc nhập mã vé.')
-            setCamera(false)
-            return
+          },
+        )
+
+        if (stopped) {
+          reader.reset()
+          if (video.current?.srcObject) {
+            const stream = video.current.srcObject as MediaStream
+            stream.getTracks().forEach((t) => t.stop())
+            video.current.srcObject = null
           }
-          timer = setTimeout(() => void tick(), 350)
         }
-        void tick()
       } catch (error) {
         if (stopped) return
-        setCameraError(errorMessage(error))
+        setCameraError(
+          'Không thể khởi động camera. Hãy kiểm tra quyền camera hoặc dùng kết nối HTTPS / localhost.',
+        )
         setCamera(false)
       }
     }
+
     void start()
     return () => {
       stopped = true
-      clearTimeout(timer)
-      stream?.getTracks().forEach((track) => track.stop())
+      if (currentReader) {
+        try {
+          currentReader.reset()
+        } catch {
+          // ignore reset error
+        }
+      }
+      if (video.current?.srcObject) {
+        const stream = video.current.srcObject as MediaStream
+        stream.getTracks().forEach((t) => t.stop())
+        video.current.srcObject = null
+      }
+      readerRef.current = null
     }
-  }, [camera, form])
+  }, [camera, facingMode, autoSubmit, form, scan])
+
   function changeMode(next: typeof mode) {
     setMode(next)
     scan.reset()
     cash.reset()
     setSuccess('')
   }
+
   return (
     <Workspace
       title="Trạm kiểm soát QR"
@@ -162,34 +220,76 @@ export function MerchantScannerPage() {
             </div>
             <Badge value={camera ? 'CAMERA ĐANG BẬT' : 'CAMERA TẮT'} />
           </div>
+
+          {/* Video Container with Clean Symmetrical Square Tracking Box */}
           <div className="relative flex aspect-video items-center justify-center overflow-hidden rounded-xl border border-slate-700 bg-black shadow-inner">
             <video
               ref={video}
               muted
               playsInline
+              autoPlay
               className={`absolute inset-0 h-full w-full object-cover ${camera ? '' : 'hidden'}`}
             />
-            <div
-              aria-hidden="true"
-              className="pointer-events-none absolute inset-[18%] rounded-xl border-2 border-emerald-400 shadow-[0_0_20px_rgba(52,211,153,0.35)] animate-pulse"
-            />
+            {camera && (
+              <div
+                aria-hidden="true"
+                className="pointer-events-none absolute w-[min(230px,65%)] aspect-square rounded-2xl border-2 border-emerald-400 shadow-[0_0_20px_rgba(52,211,153,0.35)] animate-pulse z-10"
+              />
+            )}
             {!camera && <Camera size={48} className="text-slate-600" />}
           </div>
-          <div className="mt-5 flex flex-wrap items-center justify-between gap-4">
-            <p className="text-xs text-slate-300">
-              Mã nhận diện sẽ điền vào ô vé để bạn kiểm tra.
-            </p>
-            <button
-              className={button}
-              onClick={() => {
-                setCameraError('')
-                setCamera(!camera)
-              }}
-            >
-              {camera ? 'Tắt camera' : 'Bật camera'}
-            </button>
+
+          <div className="mt-4 flex flex-col gap-3">
+            {/* Auto-Confirm Switch */}
+            <div className="flex items-center justify-between bg-slate-900/90 px-3.5 py-2.5 rounded-xl border border-slate-700/70">
+              <label className="flex items-center gap-2.5 cursor-pointer text-xs text-slate-200 hover:text-white select-none">
+                <input
+                  type="checkbox"
+                  checked={autoSubmit}
+                  onChange={(e) => setAutoSubmit(e.target.checked)}
+                  className="w-4 h-4 rounded text-[#d95f00] focus:ring-[#d95f00] border-slate-600 bg-slate-800 cursor-pointer"
+                />
+                <span className="flex items-center gap-1.5 font-medium">
+                  <Zap className="w-3.5 h-3.5 text-amber-400" />
+                  Tự động xác nhận khi quét trúng
+                </span>
+              </label>
+            </div>
+
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <p className="text-xs text-slate-300">
+                {autoSubmit
+                  ? 'Mã QR quét được sẽ tự động gửi lệnh xử lý cổng.'
+                  : 'Mã nhận diện sẽ điền vào ô vé để bạn kiểm tra.'}
+              </p>
+              <div className="flex items-center gap-2">
+                {camera && (
+                  <button
+                    type="button"
+                    className="text-xs px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-600 flex items-center gap-1.5 cursor-pointer transition-colors"
+                    onClick={() => {
+                      setFacingMode((prev) => (prev === 'environment' ? 'user' : 'environment'))
+                    }}
+                    title="Đổi camera trước / sau"
+                  >
+                    <SwitchCamera className="w-3.5 h-3.5 text-emerald-400" />
+                    <span>Đổi camera</span>
+                  </button>
+                )}
+                <button
+                  className={button}
+                  onClick={() => {
+                    setCameraError('')
+                    setCamera(!camera)
+                  }}
+                >
+                  {camera ? 'Tắt camera' : 'Bật camera'}
+                </button>
+              </div>
+            </div>
           </div>
         </Panel>
+
         <Panel title="Điều phối lượt xe">
           <div
             className="mb-6 grid grid-cols-2 gap-2"
@@ -273,9 +373,11 @@ export function MerchantScannerPage() {
           </div>
         </Panel>
       </div>
+
       {cameraError && <Notice error>{cameraError}</Notice>}
       {scan.isError && <Notice error>{errorMessage(scan.error)}</Notice>}
       {success && <Notice>{success}</Notice>}
+
       {scan.data && mode === 'check-out' && (
         <Dialog
           title="Quyết toán lượt đỗ"
