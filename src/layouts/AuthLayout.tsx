@@ -78,9 +78,9 @@ export function AuthLayout({ children, variant = 'default' }: AuthLayoutProps) {
         <span>An tâm trên từng chặng đường</span>
       </div>
 
-      {/* 2. PHẦN MODE (MODAL FORM): NẰM BÊN TRÁI, HIỆU ỨNG KÍNH THỦY TINH TRONG SUỐT (GLASSMORPHISM) NHÌN THẤU MỜ MỜ ẢNH NỀN PHÍA SAU */}
-      <section className="relative z-20 w-full max-w-[440px] my-auto mx-auto sm:mx-0 sm:ml-8 md:ml-14 lg:ml-20 xl:ml-28 p-4 sm:p-0">
-        <div className="w-full max-h-[90vh] overflow-y-auto bg-white/25 hover:bg-white/30 backdrop-blur-2xl rounded-[28px] sm:rounded-[32px] p-6 sm:p-8 shadow-[0_20px_50px_rgba(0,0,0,0.45)] border border-white/50 ring-1 ring-white/30 text-brand-navy transition-all">
+      {/* 2. PHẦN MODE (MODAL FORM): NẰM BÊN TRÁI, RỘNG RÃI VÀ THOÁNG ĐÃNG, HIỆU ỨNG KÍNH THỦY TINH TRONG SUỐT (GLASSMORPHISM) */}
+      <section className="relative z-20 w-full max-w-[500px] lg:max-w-[520px] my-auto mx-auto sm:mx-0 sm:ml-8 md:ml-12 lg:ml-16 xl:ml-24 p-3 sm:p-0">
+        <div className="w-full max-h-[92vh] overflow-y-auto bg-white/25 hover:bg-white/30 backdrop-blur-2xl rounded-[32px] sm:rounded-[36px] p-7 sm:p-9 lg:p-10 shadow-[0_20px_50px_rgba(0,0,0,0.45)] border border-white/50 ring-1 ring-white/30 text-brand-navy transition-all">
           {children}
         </div>
       </section>

@@ -154,22 +154,22 @@ function LegacyAuthPage({ mode }: { mode: 'login' | 'register' | 'forgot' }) {
 
   return (
     <AuthLayout>
-      <div className="mb-4">
+      <div className="mb-6">
         <Link
           to="/"
-          className="inline-flex items-center gap-2.5 font-sora text-lg sm:text-xl font-bold text-brand-navy mb-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d95f00] rounded-lg p-1 -m-1 transition-colors group"
+          className="inline-flex items-center gap-3 font-sora text-xl sm:text-2xl font-bold text-brand-navy mb-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d95f00] rounded-xl p-1 -m-1 transition-colors group"
         >
           <img
             src="/image-smart-parking-hub.png"
             alt="Smart Parking Hub Logo"
-            className="w-8 h-8 rounded-xl object-contain shrink-0 shadow-xs group-hover:scale-105 transition-transform"
+            className="w-10 h-10 rounded-2xl object-contain shrink-0 shadow-md group-hover:scale-105 transition-transform ring-1 ring-white/60"
           />
-          <span className="tracking-tight text-brand-navy">SMARTTRUCK HUB</span>
+          <span className="tracking-tight text-brand-navy font-extrabold text-xl sm:text-2xl">SMARTTRUCK HUB</span>
         </Link>
-        <h1 className="font-sora text-2xl lg:text-3xl font-bold tracking-tight text-brand-navy">
+        <h1 className="font-sora text-3xl sm:text-4xl font-extrabold tracking-tight text-brand-navy drop-shadow-xs">
           {title}
         </h1>
-        <p className="mt-1 text-xs sm:text-sm text-brand-muted">
+        <p className="mt-2 text-base sm:text-lg text-slate-700 font-medium">
           {mode === 'login'
             ? 'Đăng nhập để tiếp tục công việc của bạn.'
             : 'Thông tin được xác thực bởi hệ thống SmartTruck Hub.'}
@@ -180,7 +180,7 @@ function LegacyAuthPage({ mode }: { mode: 'login' | 'register' | 'forgot' }) {
         <AuthSuccess mode={mode} />
       ) : (
         <form
-          className="space-y-4 [&_input]:min-h-11 [&_input]:text-sm [&_select]:min-h-11 [&_label]:gap-1.5 [&_label]:text-sm [&_label]:text-brand-navy [&_label]:font-semibold"
+          className="space-y-5 [&_input]:min-h-12 [&_input]:sm:min-h-14 [&_input]:text-base [&_input]:rounded-xl [&_input]:px-4 [&_select]:min-h-12 [&_select]:sm:min-h-14 [&_select]:text-base [&_select]:rounded-xl [&_select]:px-4 [&_label]:gap-2 [&_label]:text-sm [&_label]:sm:text-base [&_label]:text-brand-navy [&_label]:font-bold"
           onSubmit={form.handleSubmit((data) => submit.mutate(data))}
         >
           {mode !== 'forgot' &&
