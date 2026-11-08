@@ -2,6 +2,7 @@ import type { AuthFields } from './model/authFields'
 import { LoginPage } from './pages/LoginPage'
 import { BankField } from './components/BankField'
 import { requestEmailOtp } from './api/emailOtp'
+import { ForgotPasswordPage } from './pages/ForgotPasswordPage'
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
@@ -19,9 +20,12 @@ export { roleHome, sessionRole, clearSession } from './model/session'
 export type { Role } from './model/session'
 export { RequireRole } from './components/RequireRole'
 export { LoginPage } from './pages/LoginPage'
+export { ForgotPasswordPage } from './pages/ForgotPasswordPage'
 
 export function AuthPage({ mode }: { mode: 'login' | 'register' | 'forgot' }) {
-  return mode === 'login' ? <LoginPage /> : <LegacyAuthPage mode={mode} />
+  if (mode === 'login') return <LoginPage />
+  if (mode === 'forgot') return <ForgotPasswordPage />
+  return <LegacyAuthPage mode={mode} />
 }
 
 function LegacyAuthPage({ mode }: { mode: 'login' | 'register' | 'forgot' }) {

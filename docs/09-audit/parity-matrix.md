@@ -202,3 +202,14 @@
 ## SCR-021 profile simplification — 2026-11-05
 
 User-approved API-only redesign. Personal profile, one emergency contact and password operations preserved using verified users/me endpoints; unsupported demo fields removed. Readonly login phone matches backend behavior. See [current SCR-021 record](scr-021-driver-profile-record.md) for parity, tests and limitations.
+
+## SCR-012 — Forgot Password 2-Step OTP Wizard (2026-11-08)
+| Capability / Stitch Element | React 19 Implementation | Backend Contract | Result |
+|---|---|---|---|
+| Public route `/forgot-password` & inbound link from `/login` (`SCR-010`) | `AuthLayout` (`variant="recovery"`) + `ForgotPasswordPage.tsx` | Public (`permitAll`) | **Implemented (No API on mount)** |
+| Step 1: Email normalization & validation (required, RFC email, ≤ 100 chars) | `ForgotPasswordEmailForm.tsx` + `forgotPasswordSchema.ts` | `POST /api/v1/auth/forgot-password/otp` (`{ email }`) | **Full Match (Generic anti-enumeration notice)** |
+| Step 2: 6-digit OTP (preserves leading zero), password 6–50 chars non-blank, confirm match | `ForgotPasswordResetForm.tsx` + `forgotPasswordSchema.ts` | `POST /api/v1/auth/forgot-password/reset` (`{ email, otpCode, newPassword }`) | **Full Match (`confirmPassword` FE-only)** |
+| Independent TTL (`expiresInSeconds`) & resend cooldown (`resendAfterSeconds`) deadlines | `ForgotPasswordPage.tsx` (`Date.now()` deadline calculation) | `SendOtpResponse` (`expiresInSeconds`, `resendAfterSeconds`) | **Implemented (Resilient to tab drift)** |
+| Stale async protection, email change reset, and secret non-persistence | Sequence token ref & form key reset in `ForgotPasswordPage.tsx` | Server-side SMTP & BCrypt OTP verification | **Hardened (No EmailJS/response OTP/storage)** |
+| Success state (`role="status"`) & return to `/login` without auto-login | `ForgotPasswordPage.tsx` (`#state-success` + `Toast`) | Returns `200 OK` (`data: null`) | **Implemented** |
+| Stitch Variant 1 visual shell with neutral copy adjustments | Removed simulator bar, demo email/OTP, and unverified ISO/AES/SSO/hotline claims | Verified against `identity-service` | **Documented in module record** |

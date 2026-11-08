@@ -130,13 +130,13 @@ describe('GROUP 13 - Authentication & Access Control Guards Hardening', () => {
       const { renderWithProviders } = createTestContext('/forgot-password')
       renderWithProviders(<AuthPage mode="forgot" />)
 
-      const otpBtn = screen.getByRole('button', { name: 'Gửi mã qua email' })
-      expect(otpBtn.className).toContain('focus-visible:ring-[#d95f00]')
+      const emailInput = screen.getByLabelText(/Email nhận mã xác thực/i)
+      expect(emailInput.className).toContain('focus-visible:ring-[#d95f00]')
 
-      const submitBtn = screen.getByRole('button', { name: 'Đặt lại mật khẩu' })
-      expect(submitBtn.className).toContain('bg-[#d95f00]')
-      expect(submitBtn.className).toContain('text-white')
-      expect(submitBtn.className).toContain('focus-visible:ring-[#d95f00]')
+      const otpBtn = screen.getByRole('button', { name: /Gửi Mã Xác Nhận OTP/i })
+      expect(otpBtn.className).toContain('bg-[#d95f00]')
+      expect(otpBtn.className).toContain('text-white')
+      expect(otpBtn.className).toContain('focus-visible:ring-[#d95f00]')
     })
   })
 
