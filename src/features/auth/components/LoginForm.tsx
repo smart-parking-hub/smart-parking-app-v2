@@ -89,14 +89,11 @@ export function LoginForm() {
           </div>
           {form.formState.errors.password && <p id="login-password-error" role="alert" className="text-xs font-medium text-red-700">{form.formState.errors.password.message}</p>}
         </div>
-        <div className="flex flex-wrap items-center justify-between gap-3 text-sm">
+        <div className="flex items-center text-sm">
           <label className="flex items-center gap-2 cursor-pointer text-xs sm:text-sm text-slate-700 select-none">
             <input type="checkbox" checked={remember} onChange={(event) => setRemember(event.target.checked)} className="rounded-sm accent-[#d95f00] focus-visible:ring-2 focus-visible:ring-[#d95f00]" />
             Ghi nhớ số điện thoại
           </label>
-          <Link to="/forgot-password" className="text-xs sm:text-sm font-medium text-brand-orange hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d95f00] rounded-xs transition-colors">
-            Quên mật khẩu?
-          </Link>
         </div>
       </fieldset>
       {login.isError && <div
@@ -117,9 +114,12 @@ export function LoginForm() {
         {login.isPending ? <><LoaderCircle className="animate-spin" aria-hidden="true" size={18} />Đang đăng nhập…</> : <>Đăng nhập<ArrowUpRight size={18} aria-hidden="true" /></>}
       </button>
     </form>
-    <nav aria-label="Tài khoản" className="mt-4 flex items-center justify-center gap-2 text-xs sm:text-sm text-brand-muted">
-      <span>Chưa có tài khoản?</span>
-      <Link to="/register" className="font-semibold text-[#d95f00] hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d95f00] rounded-xs transition-colors">Tạo tài khoản</Link>
+    <nav aria-label="Tài khoản" className="mt-4 flex flex-wrap items-center justify-between gap-3 text-xs sm:text-sm text-brand-muted">
+      <div>
+        <span>Chưa có tài khoản? </span>
+        <Link to="/register" className="font-semibold text-[#d95f00] hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d95f00] rounded-xs transition-colors">Tạo tài khoản</Link>
+      </div>
+      <Link to="/forgot-password" className="font-medium text-brand-orange hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d95f00] rounded-xs transition-colors">Quên mật khẩu?</Link>
     </nav>
   </>
 }
