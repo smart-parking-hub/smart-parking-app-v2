@@ -154,20 +154,33 @@ function LegacyAuthPage({ mode }: { mode: 'login' | 'register' | 'forgot' }) {
 
   return (
     <AuthLayout>
-      <h1 className="font-sora text-3xl font-semibold leading-snug tracking-tight text-brand-navy xl:text-4xl">
-        {title}
-      </h1>
-      <p className="mb-10 mt-4 text-base leading-7 text-brand-muted">
-        {mode === 'login'
-          ? 'Đăng nhập để tiếp tục công việc của bạn.'
-          : 'Thông tin được xác thực bởi hệ thống SmartTruck Hub.'}
-      </p>
+      <div className="mb-4">
+        <Link
+          to="/"
+          className="inline-flex items-center gap-2.5 font-sora text-lg sm:text-xl font-bold text-brand-navy mb-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d95f00] rounded-lg p-1 -m-1 transition-colors group"
+        >
+          <img
+            src="/image-smart-parking-hub.png"
+            alt="Smart Parking Hub Logo"
+            className="w-8 h-8 rounded-xl object-contain shrink-0 shadow-xs group-hover:scale-105 transition-transform"
+          />
+          <span className="tracking-tight">SMARTTRUCK HUB</span>
+        </Link>
+        <h1 className="font-sora text-2xl lg:text-3xl font-bold tracking-tight text-brand-navy">
+          {title}
+        </h1>
+        <p className="mt-1 text-xs sm:text-sm text-brand-muted">
+          {mode === 'login'
+            ? 'Đăng nhập để tiếp tục công việc của bạn.'
+            : 'Thông tin được xác thực bởi hệ thống SmartTruck Hub.'}
+        </p>
+      </div>
 
       {submit.isSuccess && mode !== 'login' ? (
         <AuthSuccess mode={mode} />
       ) : (
         <form
-          className="space-y-6 [&_input]:min-h-14 [&_input]:text-base [&_select]:min-h-14 [&_label]:gap-3 [&_label]:text-base"
+          className="space-y-4 [&_input]:min-h-11 [&_input]:text-sm [&_select]:min-h-11 [&_label]:gap-1.5 [&_label]:text-sm"
           onSubmit={form.handleSubmit((data) => submit.mutate(data))}
         >
           {mode !== 'forgot' &&
