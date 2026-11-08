@@ -1,10 +1,11 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, screen, fireEvent, waitFor } from '@testing-library/react'
+import { render, screen, fireEvent, waitFor, act } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { apiClient } from '@/shared/api/client'
 import { VirtualQueuesPage } from '../pages/VirtualQueuesPage'
 import { fallbackActiveQueue } from '../api/queueApi'
+import { getQueueStoreSnapshot } from '../store/queueStore'
 
 vi.mock('@/shared/api/client', () => ({
   apiClient: {
@@ -32,6 +33,7 @@ function renderWithProviders(ui: React.ReactElement, initialEntries = ['/queues'
 describe('SCR-018: VirtualQueuesPage (Hàng Đợi Ảo Thông Minh)', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    getQueueStoreSnapshot().resetStore()
     vi.mocked(apiClient.get).mockResolvedValue({
       data: {
         data: fallbackActiveQueue,
@@ -47,7 +49,7 @@ describe('SCR-018: VirtualQueuesPage (Hàng Đợi Ảo Thông Minh)', () => {
     })
   })
 
-  it('renders command toolbar, eyebrow, telemetry chips, and tab controls', async () => {
+  it('renders command toolbar, eyebrow, and tab controls', async () => {
     renderWithProviders(<VirtualQueuesPage />)
 
     expect(
@@ -56,15 +58,14 @@ describe('SCR-018: VirtualQueuesPage (Hàng Đợi Ảo Thông Minh)', () => {
     expect(
       screen.getByRole('heading', {
         level: 1,
-        name: /Hàng Đợi Ảo \(Virtual Queues\)/i,
+        name: /Lượt Chờ Vào Bãi|Hàng Đợi Ảo/i,
       })
     ).toBeInTheDocument()
     expect(screen.getByText(/Radar 5km Active/i)).toBeInTheDocument()
-    expect(screen.getByText(/18 xe đang chờ • ~4.2p\/xe/i)).toBeInTheDocument()
 
     // 2 Segmented tabs
     expect(screen.getByRole('tab', { name: /Đang hoạt động/i })).toBeInTheDocument()
-    expect(screen.getByRole('tab', { name: /Lịch sử xếp hàng/i })).toBeInTheDocument()
+    expect(screen.getByRole('tab', { name: /Lịch sử giữ chỗ|Lịch sử xếp hàng/i })).toBeInTheDocument()
   })
 
   it('renders active queue card with NOTIFIED state, vehicle plate and hold countdown timer', async () => {
@@ -76,19 +77,22 @@ describe('SCR-018: VirtualQueuesPage (Hàng Đợi Ảo Thông Minh)', () => {
     expect(screen.getByText(/VQ-2026-8821/i)).toBeInTheDocument()
     expect(screen.getAllByText(/51D-894.12/i).length).toBeGreaterThanOrEqual(1)
     expect(screen.getByText(/Bãi Đỗ Xe Cảng Cát Lái - Phân khu Container 02/i)).toBeInTheDocument()
-    expect(screen.getByText(/Berth #B04 \(Cẩu chuyên dụng 40FT\)/i)).toBeInTheDocument()
-    expect(screen.getByText(/Ưu tiên Hàng Lạnh Reefer 380V/i)).toBeInTheDocument()
   })
 
-  it('renders ALPR timeline flow with vehicle items and user highlight', async () => {
+  it('renders essential vehicle specifications, gate information and ETA cleanly without redundant external vehicle pipeline', async () => {
     renderWithProviders(<VirtualQueuesPage />)
 
+    // Essential driver info is rendered
+    expect(screen.getAllByText('51D-894.12').length).toBeGreaterThanOrEqual(1)
+    expect(screen.getByText('Cổng G2 - Làn kiểm soát tự động ALPR')).toBeInTheDocument()
+    expect(screen.getByText('2.4 km (~8 phút)')).toBeInTheDocument()
+    expect(screen.getByText('Hợp lệ trong bán kính bãi')).toBeInTheDocument()
+
+    // Redundant external queue pipeline simulation is removed for cleaner UX
     expect(
-      screen.getByText(/Tiến trình điều phối thực tế \(ALPR Pipeline\)/i)
-    ).toBeInTheDocument()
-    expect(screen.getByText('50H-123.45')).toBeInTheDocument()
-    expect(screen.getByText('60C-982.11')).toBeInTheDocument()
-    expect(screen.getByText(/Xe xuất bãi trước/i)).toBeInTheDocument()
+      screen.queryByText(/Tiến trình điều phối thực tế \(ALPR Pipeline\)/i)
+    ).not.toBeInTheDocument()
+    expect(screen.queryByText('50H-123.45')).not.toBeInTheDocument()
   })
 
   it('accepts slot and opens success modal with booking code and CTA', async () => {
@@ -104,7 +108,7 @@ describe('SCR-018: VirtualQueuesPage (Hàng Đợi Ảo Thông Minh)', () => {
     await waitFor(() => {
       expect(
         screen.getByRole('heading', {
-          name: /Nhận Slot Đỗ Xe Thành Công!/i,
+          name: /Đã Có Chỗ Đỗ Xe!|Nhận Slot Đỗ Xe Thành Công!/i,
         })
       ).toBeInTheDocument()
     })
@@ -113,16 +117,27 @@ describe('SCR-018: VirtualQueuesPage (Hàng Đợi Ảo Thông Minh)', () => {
     expect(screen.getByText(/Xem vé QR & Thanh toán cọc/i)).toBeInTheDocument()
   })
 
-  it('handles declining slot and updates active queue', async () => {
+  it('handles declining slot with confirmation modal and updates active queue', async () => {
     renderWithProviders(<VirtualQueuesPage />)
 
     const declineButton = screen.getByRole('button', {
-      name: /Từ chối nhường lượt/i,
+      name: /^Từ chối$/i,
     })
     fireEvent.click(declineButton)
 
+    // Modal xác nhận nhường lượt mở ra
+    expect(
+      screen.getByRole('heading', { name: /Xác Nhận Nhường Lượt\?/i })
+    ).toBeInTheDocument()
+
+    // Bấm xác nhận nhường lượt trong modal
+    const confirmDeclineBtn = screen.getByRole('button', {
+      name: /Xác nhận nhường lượt/i,
+    })
+    fireEvent.click(confirmDeclineBtn)
+
     await waitFor(() => {
-      expect(screen.getByText(/Đang Xếp Hàng Chờ/i)).toBeInTheDocument()
+      expect(screen.getByText(/Đang chờ vào chỗ/i)).toBeInTheDocument()
       expect(screen.getByText(/Vị trí trong hàng đợi: #3/i)).toBeInTheDocument()
     })
   })
@@ -163,13 +178,13 @@ describe('SCR-018: VirtualQueuesPage (Hàng Đợi Ảo Thông Minh)', () => {
     renderWithProviders(<VirtualQueuesPage />)
 
     const historyTab = screen.getByRole('tab', {
-      name: /Lịch sử xếp hàng/i,
+      name: /Lịch sử giữ chỗ|Lịch sử xếp hàng/i,
     })
     fireEvent.click(historyTab)
 
     expect(
       screen.getByRole('heading', {
-        name: /Lịch Sử Lượt Xếp Hàng Ảo/i,
+        name: /Lịch Sử Giữ Chỗ|Lịch Sử Lượt Xếp Hàng Ảo/i,
       })
     ).toBeInTheDocument()
 
@@ -178,11 +193,11 @@ describe('SCR-018: VirtualQueuesPage (Hàng Đợi Ảo Thông Minh)', () => {
     expect(screen.getByText(/VQ-2026-7420/i)).toBeInTheDocument()
   })
 
-  it('filters history table by keyword and status', async () => {
+  it('filters history table by keyword and status, and opens detail modal', async () => {
     renderWithProviders(<VirtualQueuesPage />)
 
     // Switch to history tab
-    fireEvent.click(screen.getByRole('tab', { name: /Lịch sử xếp hàng/i }))
+    fireEvent.click(screen.getByRole('tab', { name: /Lịch sử giữ chỗ|Lịch sử xếp hàng/i }))
 
     // Search input
     const searchInput = screen.getByPlaceholderText(/Tìm theo mã, bãi xe, biển số\.\.\./i)
@@ -200,10 +215,30 @@ describe('SCR-018: VirtualQueuesPage (Hàng Đợi Ảo Thông Minh)', () => {
 
     expect(screen.getByText(/VQ-2026-7810/i)).toBeInTheDocument()
     expect(screen.queryByText(/VQ-2026-7650/i)).not.toBeInTheDocument()
+
+    // Click [Chi tiết] button to open QueueHistoryDetailModal
+    const detailButtons = screen.getAllByRole('button', { name: /Chi tiết/i })
+    expect(detailButtons.length).toBeGreaterThanOrEqual(1)
+    fireEvent.click(detailButtons[0])
+
+    expect(screen.getByRole('heading', { name: /Chi Tiết Lượt Giữ Chỗ/i })).toBeInTheDocument()
+    expect(screen.getByText(/Bãi Đỗ Xe Điều Phối/i)).toBeInTheDocument()
+
+    // Close modal via Escape
+    fireEvent.keyDown(window, { key: 'Escape', code: 'Escape' })
+    await waitFor(() => {
+      expect(screen.queryByText(/Bãi Đỗ Xe Điều Phối/i)).not.toBeInTheDocument()
+    })
   })
 
   it('renders the 4 operational regulations cards', async () => {
     renderWithProviders(<VirtualQueuesPage />)
+
+    // Expand regulations accordion
+    const toggleRegsBtn = screen.getByRole('button', {
+      name: /Quy Định Vận Hành/i,
+    })
+    fireEvent.click(toggleRegsBtn)
 
     expect(
       screen.getByRole('heading', {
@@ -212,7 +247,7 @@ describe('SCR-018: VirtualQueuesPage (Hàng Đợi Ảo Thông Minh)', () => {
     ).toBeInTheDocument()
 
     expect(screen.getByText(/Nguyên Tắc FIFO & ALPR Minh Bạch/i)).toBeInTheDocument()
-    expect(screen.getByText(/Thời Gian Giữ Slot 15 Phút/i)).toBeInTheDocument()
+    expect(screen.getAllByText(/Thời Gian Giữ Slot 15 Phút/i).length).toBeGreaterThanOrEqual(1)
     expect(screen.getByText(/Bán Kính Radar Geofence 5\.0 KM/i)).toBeInTheDocument()
     expect(screen.getByText(/Giới Hạn 1 Hàng Đợi Đồng Thời/i)).toBeInTheDocument()
   })
@@ -227,7 +262,7 @@ describe('SCR-018: VirtualQueuesPage (Hàng Đợi Ảo Thông Minh)', () => {
     fireEvent.click(acceptButton)
 
     await waitFor(() => {
-      expect(screen.getByRole('heading', { name: /Nhận Slot Đỗ Xe Thành Công!/i })).toBeInTheDocument()
+      expect(screen.getByRole('heading', { name: /Đã Có Chỗ Đỗ Xe!|Nhận Slot Đỗ Xe Thành Công!/i })).toBeInTheDocument()
     })
 
     // 1. Close via [X] button or bottom close button
@@ -237,31 +272,31 @@ describe('SCR-018: VirtualQueuesPage (Hàng Đợi Ảo Thông Minh)', () => {
     // Test close via Escape key
     fireEvent.keyDown(window, { key: 'Escape' })
     await waitFor(() => {
-      expect(screen.queryByRole('heading', { name: /Nhận Slot Đỗ Xe Thành Công!/i })).not.toBeInTheDocument()
+      expect(screen.queryByRole('heading', { name: /Đã Có Chỗ Đỗ Xe!|Nhận Slot Đỗ Xe Thành Công!/i })).not.toBeInTheDocument()
     })
 
     // Reopen and test close via [X] button
     fireEvent.click(acceptButton)
     await waitFor(() => {
-      expect(screen.getByRole('heading', { name: /Nhận Slot Đỗ Xe Thành Công!/i })).toBeInTheDocument()
+      expect(screen.getByRole('heading', { name: /Đã Có Chỗ Đỗ Xe!|Nhận Slot Đỗ Xe Thành Công!/i })).toBeInTheDocument()
     })
 
     const [xBtn] = screen.getAllByRole('button', { name: 'Đóng' })
     fireEvent.click(xBtn)
     await waitFor(() => {
-      expect(screen.queryByRole('heading', { name: /Nhận Slot Đỗ Xe Thành Công!/i })).not.toBeInTheDocument()
+      expect(screen.queryByRole('heading', { name: /Đã Có Chỗ Đỗ Xe!|Nhận Slot Đỗ Xe Thành Công!/i })).not.toBeInTheDocument()
     })
 
     // Reopen and test backdrop click
     fireEvent.click(acceptButton)
     await waitFor(() => {
-      expect(screen.getByRole('heading', { name: /Nhận Slot Đỗ Xe Thành Công!/i })).toBeInTheDocument()
+      expect(screen.getByRole('heading', { name: /Đã Có Chỗ Đỗ Xe!|Nhận Slot Đỗ Xe Thành Công!/i })).toBeInTheDocument()
     })
 
     const dialogOverlay = screen.getByRole('dialog')
     fireEvent.click(dialogOverlay)
     await waitFor(() => {
-      expect(screen.queryByRole('heading', { name: /Nhận Slot Đỗ Xe Thành Công!/i })).not.toBeInTheDocument()
+      expect(screen.queryByRole('heading', { name: /Đã Có Chỗ Đỗ Xe!|Nhận Slot Đỗ Xe Thành Công!/i })).not.toBeInTheDocument()
     })
   })
 
@@ -289,14 +324,52 @@ describe('SCR-018: VirtualQueuesPage (Hàng Đợi Ảo Thông Minh)', () => {
     expect(findOtherLotsBtn).toBeInTheDocument()
 
     // Switch to history tab and test search with 0 matches
-    const historyTab = screen.getByRole('tab', { name: /Lịch sử xếp hàng/i })
+    const historyTab = screen.getByRole('tab', { name: /Lịch sử giữ chỗ|Lịch sử xếp hàng/i })
     fireEvent.click(historyTab)
 
     const searchInput = screen.getByPlaceholderText(/Tìm theo mã, bãi xe, biển số\.\.\./i)
     fireEvent.change(searchInput, { target: { value: 'ZERO_MATCH_XYZ_12345' } })
 
-    expect(screen.getByText(/Không tìm thấy lượt xếp hàng nào/i)).toBeInTheDocument()
+    expect(screen.getByText(/Không tìm thấy lượt giữ chỗ|Không tìm thấy lượt xếp hàng/i)).toBeInTheDocument()
     const historyEmptyCta = screen.getAllByRole('link', { name: /Tìm bãi xe khác/i })
     expect(historyEmptyCta.length).toBeGreaterThanOrEqual(1)
   })
+
+  it('handles leave modal form validation when reason is OTHER without custom detail', async () => {
+    renderWithProviders(<VirtualQueuesPage />)
+
+    // Toggle demo to waiting state
+    const toggleDemoBtn = screen.getByRole('button', {
+      name: /Mô phỏng: Chuyển về Đang chờ/i,
+    })
+    fireEvent.click(toggleDemoBtn)
+
+    // Open leave modal
+    const leaveButton = screen.getByRole('button', { name: /Rời hàng đợi/i })
+    fireEvent.click(leaveButton)
+
+    // Select "Lý do khác"
+    const reasonSelect = screen.getByLabelText(/Lý do rời hàng đợi/i)
+    fireEvent.change(reasonSelect, { target: { value: 'OTHER' } })
+
+    // Submit without typing custom detail
+    const confirmLeaveBtn = screen.getByRole('button', { name: /Xác nhận rời hàng/i })
+    fireEvent.click(confirmLeaveBtn)
+
+    // Verify error message from Zod schema
+    await waitFor(() => {
+      expect(screen.getByText(/Vui lòng nhập chi tiết lý do/i)).toBeInTheDocument()
+    })
+  })
+
+  it('renders error alert and supports clicking retry', async () => {
+    renderWithProviders(<VirtualQueuesPage />)
+
+    act(() => {
+      getQueueStoreSnapshot().showToast('Lỗi mạng', 'error')
+    })
+
+    expect(await screen.findByText('Lỗi mạng')).toBeInTheDocument()
+  })
 })
+

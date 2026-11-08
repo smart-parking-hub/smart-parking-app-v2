@@ -3,6 +3,7 @@ import { Outlet } from 'react-router-dom'
 import { MerchantSidebar } from './merchant/MerchantSidebar'
 import { MerchantHeader } from './merchant/MerchantHeader'
 import { ScrollToTop } from '@/shared/components/ScrollToTop'
+import { AiCopilot } from '@/features/copilot'
 
 export function MerchantLayout() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
@@ -31,6 +32,9 @@ export function MerchantLayout() {
           <Outlet />
         </main>
       </div>
+
+      {/* AI Assistant Copilot */}
+      <AiCopilot />
     </div>
   )
 }

@@ -18,7 +18,7 @@ const links = [
   ['/dashboard', 'Tổng quan'],
   ['/parking', 'Bản đồ tìm bãi'],
   ['/bookings', 'Vé & Đặt chỗ'],
-  ['/queues', 'Hàng đợi ảo'],
+  ['/queues', 'Chờ vào bãi'],
   ['/payments', 'Lịch sử cước'],
   ['/vehicles', 'Đội xe của tôi'],
   ['/disputes', 'Khiếu nại'],
@@ -49,8 +49,8 @@ export function DriverHeader() {
     if (current === '/search') return path === '/parking'
     return path === '/dashboard'
       ? ['/dashboard', '/driver', '/driver/dashboard'].includes(
-          location.pathname,
-        )
+        location.pathname,
+      )
       : current.startsWith(path)
   }
 
@@ -128,9 +128,8 @@ export function DriverHeader() {
                 </span>
                 <ChevronDown
                   size={15}
-                  className={`hidden shrink-0 text-slate-400 transition-transform duration-200 group-hover:text-white sm:block ${
-                    accountOpen ? 'rotate-180 text-white' : ''
-                  }`}
+                  className={`hidden shrink-0 text-slate-400 transition-transform duration-200 group-hover:text-white sm:block ${accountOpen ? 'rotate-180 text-white' : ''
+                    }`}
                 />
               </button>
               {accountOpen && (

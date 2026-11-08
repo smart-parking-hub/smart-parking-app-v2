@@ -60,6 +60,7 @@ export function CreateMerchantParkingLotPage() {
 
   // AI Assistant State
   const [appliedAiContent, setAppliedAiContent] = useState<AiContentSegments | null>(null)
+  const [customHighlights, setCustomHighlights] = useState<string>('')
 
   const [images, setImages] = useState<ParkingLotImageItem[]>([])
 
@@ -97,6 +98,7 @@ export function CreateMerchantParkingLotPage() {
         if (typeof parsed.latitude === 'number') setValue('latitude', parsed.latitude)
         if (typeof parsed.longitude === 'number') setValue('longitude', parsed.longitude)
         if (parsed.aiContent) setAppliedAiContent(parsed.aiContent)
+        if (parsed.customHighlights) setCustomHighlights(parsed.customHighlights)
       }
     } catch {
       // Ignore localStorage parse error
@@ -111,6 +113,7 @@ export function CreateMerchantParkingLotPage() {
       latitude: formValues.latitude,
       longitude: formValues.longitude,
       aiContent: appliedAiContent || undefined,
+      customHighlights: customHighlights || undefined,
       updatedAt: new Date().toISOString(),
     }
     try {

@@ -106,10 +106,10 @@ describe('SCR-015: Interactive Parking Search & Map (Bản đồ tìm kiếm bã
 
   it('opens the server-backed booking flow without claiming a hold before submission', async () => {
     renderWithProviders(<SearchParkingPage />)
-    const buttons = await screen.findAllByText(/ĐẶT CHỖ · CỌC 20%/i)
+    const buttons = await screen.findAllByText(/ĐẶT GIỮ CHỖ 10P|ĐẶT CHỖ/i)
     fireEvent.click(buttons[0])
     expect(screen.getByRole('dialog')).toBeInTheDocument()
-    expect(screen.getByText('Đặt chỗ và thanh toán cọc')).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: /Đặt giữ chỗ khẩn cấp/i })).toBeInTheDocument()
     expect(screen.queryByText('Giữ Chỗ Thành Công!')).not.toBeInTheDocument()
     expect(apiClient.request).not.toHaveBeenCalled()
   })
