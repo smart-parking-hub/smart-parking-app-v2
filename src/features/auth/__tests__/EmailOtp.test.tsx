@@ -10,7 +10,7 @@ afterEach(() => { cleanup(); vi.restoreAllMocks() })
 function mount(mode: 'register' | 'forgot' = 'register') {
   render(<QueryClientProvider client={new QueryClient({ defaultOptions: { mutations: { retry: false } } })}><MemoryRouter><AuthPage mode={mode} /></MemoryRouter></QueryClientProvider>)
 }
-const emailInput = () => screen.getByLabelText('Email nhận mã xác thực')
+const emailInput = () => screen.getByLabelText(/Email nhận mã xác thực/i)
 it('validates email before requesting a code without requiring the remaining registration fields', async () => {
   const request = vi.spyOn(apiClient, 'request')
   mount(); fireEvent.change(emailInput(), { target: { value: 'invalid-email' } })
@@ -37,8 +37,8 @@ it('stops claiming delivery when the destination email changes', async () => {
 it('keeps forgot-password response generic and uses the reset OTP endpoint', async () => {
   const request = vi.spyOn(apiClient, 'request').mockResolvedValue({ data: { data: { expiresInSeconds: 300, resendAfterSeconds: 60 } } })
   mount('forgot'); fireEvent.change(emailInput(), { target: { value: 'unknown@example.test' } })
-  await userEvent.click(screen.getByRole('button', { name: 'Gửi mã qua email' }))
-  expect(await screen.findByText(/Nếu email đã đăng ký/)).toBeInTheDocument()
+  await userEvent.click(screen.getByRole('button', { name: /Gửi Mã Xác Nhận OTP/i }))
+  expect(await screen.findByText(/Nếu email đã đăng ký, mã OTP 6 chữ số đã được gửi tới/i)).toBeInTheDocument()
   expect(request).toHaveBeenCalledWith(expect.objectContaining({ url: '/api/v1/auth/forgot-password/otp', data: { email: 'unknown@example.test' } }))
   expect(screen.queryByText('Mã xác thực đã được gửi')).not.toBeInTheDocument()
 })

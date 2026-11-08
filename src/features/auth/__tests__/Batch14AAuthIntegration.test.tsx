@@ -1,9 +1,10 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { render, screen, fireEvent } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { Provider } from 'react-redux'
 import { configureStore } from '@reduxjs/toolkit'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { apiClient } from '@/shared/api/client'
 import { LoginPage } from '../pages/LoginPage'
 import { AuthPage, AuthSuccess, AccessPage } from '../index'
 import authReducer from '../model/authSlice'
@@ -60,20 +61,30 @@ describe('BATCH-14A: Authentication & Access Control Pages Integration', () => {
     expect(screen.getByLabelText('Mật khẩu')).toHaveAttribute('type', 'text')
   })
 
-  it('SCR-012: ForgotPasswordPage renders inside AuthLayout with OTP and new password toggle', () => {
+  it('SCR-012: ForgotPasswordPage renders inside AuthLayout with OTP wizard and new password toggle', async () => {
+    vi.spyOn(apiClient, 'request').mockResolvedValueOnce({
+      data: { data: { expiresInSeconds: 300, resendAfterSeconds: 60 } },
+    })
     renderWithContext(<AuthPage mode="forgot" />, '/forgot-password')
 
-    expect(screen.getByRole('heading', { name: 'Khôi phục quyền truy cập.' })).toBeInTheDocument()
-    expect(screen.getByLabelText('Email nhận mã xác thực')).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /Gửi mã/i })).toBeInTheDocument()
-    expect(screen.getByLabelText('Mã xác thực email (6 số)')).toBeInTheDocument()
-    expect(screen.getByLabelText('Mật khẩu mới')).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Đặt lại mật khẩu' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Khôi Phục Mật Khẩu' })).toBeInTheDocument()
+    const emailField = screen.getByLabelText(/Email nhận mã xác thực/i)
+    expect(emailField).toBeInTheDocument()
+    const sendOtpBtn = screen.getByRole('button', { name: /Gửi Mã Xác Nhận OTP/i })
+    expect(sendOtpBtn).toBeInTheDocument()
+
+    fireEvent.change(emailField, { target: { value: 'driver@example.com' } })
+    fireEvent.click(sendOtpBtn)
+
+    expect(await screen.findByLabelText(/Mã OTP xác thực/i)).toBeInTheDocument()
+    expect(screen.getByLabelText(/^Mật khẩu mới/i)).toBeInTheDocument()
+    expect(screen.getByLabelText(/^Xác nhận mật khẩu/i)).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /Đặt Lại Mật Khẩu/i })).toBeInTheDocument()
 
     // Password toggle
-    const toggleBtn = screen.getByLabelText('Hiện mật khẩu')
+    const toggleBtn = screen.getByRole('button', { name: 'Hiện mật khẩu mới' })
     fireEvent.click(toggleBtn)
-    expect(screen.getByLabelText('Mật khẩu mới')).toHaveAttribute('type', 'text')
+    expect(screen.getByLabelText(/^Mật khẩu mới/i)).toHaveAttribute('type', 'text')
   })
 
   it('SCR-011/SCR-012: AuthSuccess displays status card and link to LoginPage', () => {
