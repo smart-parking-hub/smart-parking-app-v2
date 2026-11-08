@@ -214,12 +214,15 @@ export function ForgotPasswordResetForm({
               >
                 {isResendPending ? (
                   <>
-                    <LoaderCircle
-                      size={14}
-                      className="animate-spin text-[#d95f00]"
-                      aria-hidden="true"
-                    />
-                    <span>Đang gửi lại mã…</span>
+                    <span className="relative flex items-center justify-center">
+                      <span className="absolute -inset-1 rounded-full bg-[#d95f00]/30 animate-ping" />
+                      <LoaderCircle
+                        size={14}
+                        className="animate-spin text-[#d95f00]"
+                        aria-hidden="true"
+                      />
+                    </span>
+                    <span className="animate-pulse">Đang gửi lại mã…</span>
                   </>
                 ) : resendRemainingSeconds > 0 ? (
                   <>
@@ -358,18 +361,18 @@ export function ForgotPasswordResetForm({
               />
               <span>Quy định mật khẩu mới trên hệ thống:</span>
             </p>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-1 text-[11px]">
-              <span className="flex items-center gap-1.5">
+            <div className="grid grid-cols-3 gap-2 pt-1 text-[10.5px] sm:text-[11px] text-black/75">
+              <span className="flex items-center gap-1.5 whitespace-nowrap">
                 <span className="w-1.5 h-1.5 rounded-full bg-[#d95f00] shrink-0" />
                 <span>Từ 6 đến 50 ký tự</span>
               </span>
-              <span className="flex items-center gap-1.5">
+              <span className="flex items-center gap-1.5 whitespace-nowrap">
                 <span className="w-1.5 h-1.5 rounded-full bg-[#d95f00] shrink-0" />
-                <span>Không chỉ gồm khoảng trắng</span>
+                <span>Không chỉ khoảng trắng</span>
               </span>
-              <span className="flex items-center gap-1.5">
+              <span className="flex items-center gap-1.5 whitespace-nowrap">
                 <span className="w-1.5 h-1.5 rounded-full bg-[#d95f00] shrink-0" />
-                <span>Xác nhận mật khẩu trùng khớp</span>
+                <span>Mật khẩu trùng khớp</span>
               </span>
             </div>
           </div>

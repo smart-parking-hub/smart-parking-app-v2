@@ -203,7 +203,7 @@ function LegacyAuthPage({ mode }: { mode: 'login' | 'register' | 'forgot' }) {
 
   return (
     <AuthLayout>
-      <div>
+      <div className="animate-auth-fade-in transition-all duration-300">
         <div className="mb-6 sm:mb-8 flex flex-col items-center text-center">
           <Link
             to="/"
@@ -239,7 +239,7 @@ function LegacyAuthPage({ mode }: { mode: 'login' | 'register' | 'forgot' }) {
               <div
                 className={`grid ${
                   selectedRole === 'MERCHANT' ? 'grid-cols-4' : 'grid-cols-3'
-                } gap-1 p-1 bg-black/5 rounded-2xl border border-black/10 mb-4`}
+                } gap-1 p-1 bg-black/5 rounded-2xl border border-black/10 mb-4 transition-all duration-300`}
                 role="tablist"
                 aria-label="Các bước đăng ký tài khoản"
               >
@@ -252,7 +252,7 @@ function LegacyAuthPage({ mode }: { mode: 'login' | 'register' | 'forgot' }) {
                       role="tab"
                       aria-selected={isActive}
                       onClick={() => setRegisterStepKey(s.key)}
-                      className={`py-2 px-1 sm:px-2 text-[11px] sm:text-xs rounded-xl flex items-center justify-center gap-1.5 cursor-pointer ${
+                      className={`py-2 px-1 sm:px-2 text-[11px] sm:text-xs rounded-xl transition-all duration-300 flex items-center justify-center gap-1.5 cursor-pointer ${
                         isActive
                           ? 'bg-white text-black shadow-xs font-semibold scale-[1.02]'
                           : 'text-black/70 hover:text-black hover:bg-white/40 font-normal'
@@ -279,7 +279,7 @@ function LegacyAuthPage({ mode }: { mode: 'login' | 'register' | 'forgot' }) {
               className={
                 mode === 'register' && registerStepKey !== 'info'
                   ? 'sr-only'
-                  : 'space-y-4'
+                  : 'space-y-4 animate-auth-fade-in transition-all duration-300'
               }
             >
               {mode === 'register' && (
@@ -369,7 +369,7 @@ function LegacyAuthPage({ mode }: { mode: 'login' | 'register' | 'forgot' }) {
                 className={
                   registerStepKey !== 'bank'
                     ? 'sr-only'
-                    : 'space-y-4'
+                    : 'space-y-4 animate-auth-fade-in transition-all duration-300'
                 }
               >
                 <div className="p-3.5 rounded-xl bg-orange-50/70 border border-orange-200/70 flex items-start gap-2.5 text-xs text-black">
@@ -421,7 +421,7 @@ function LegacyAuthPage({ mode }: { mode: 'login' | 'register' | 'forgot' }) {
               className={
                 mode === 'register' && registerStepKey !== 'email'
                   ? 'sr-only'
-                  : 'space-y-4'
+                  : 'space-y-4 animate-auth-fade-in transition-all duration-300'
               }
             >
               {mode !== 'login' && (
@@ -458,12 +458,15 @@ function LegacyAuthPage({ mode }: { mode: 'login' | 'register' | 'forgot' }) {
                     >
                       {otp.isPending ? (
                         <>
-                          <LoaderCircle
-                            className="animate-spin text-[#d95f00] shrink-0"
-                            size={18}
-                            aria-hidden="true"
-                          />
-                          <span className="text-[#d95f00] font-semibold">
+                          <span className="relative flex items-center justify-center">
+                            <span className="absolute -inset-1 rounded-full bg-[#d95f00]/30 animate-ping" />
+                            <LoaderCircle
+                              className="animate-spin text-[#d95f00] shrink-0"
+                              size={18}
+                              aria-hidden="true"
+                            />
+                          </span>
+                          <span className="text-[#d95f00] font-semibold animate-pulse">
                             Đang gửi mã…
                           </span>
                         </>
@@ -486,7 +489,7 @@ function LegacyAuthPage({ mode }: { mode: 'login' | 'register' | 'forgot' }) {
               )}
 
               {sentValid && (
-                <div className="flex items-start gap-3 rounded-xl border border-brand-border bg-brand-surface p-3 sm:p-3.5 text-xs">
+                <div className="flex items-start gap-3 rounded-xl border border-brand-border bg-brand-surface p-3 sm:p-3.5 text-xs animate-auth-fade-in">
                   <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#d95f00] text-white">
                     <Check size={18} strokeWidth={2.5} aria-hidden="true" />
                   </span>
@@ -597,7 +600,7 @@ function LegacyAuthPage({ mode }: { mode: 'login' | 'register' | 'forgot' }) {
               className={
                 mode === 'register' && registerStepKey !== 'password'
                   ? 'sr-only'
-                  : 'space-y-4'
+                  : 'space-y-4 animate-auth-fade-in transition-all duration-300'
               }
             >
               {mode !== 'forgot' &&
@@ -639,18 +642,18 @@ function LegacyAuthPage({ mode }: { mode: 'login' | 'register' | 'forgot' }) {
                     <ShieldCheck size={15} className="text-[#d95f00] shrink-0" />
                     <span>Quy định mật khẩu trên hệ thống:</span>
                   </p>
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-1 text-[11px] text-black/75">
-                    <span className="flex items-center gap-1.5">
+                  <div className="grid grid-cols-3 gap-2 pt-1 text-[10.5px] sm:text-[11px] text-black/75">
+                    <span className="flex items-center gap-1.5 whitespace-nowrap">
                       <span className="w-1.5 h-1.5 rounded-full bg-[#d95f00] shrink-0" />
                       <span>Từ 6 đến 50 ký tự</span>
                     </span>
-                    <span className="flex items-center gap-1.5">
+                    <span className="flex items-center gap-1.5 whitespace-nowrap">
                       <span className="w-1.5 h-1.5 rounded-full bg-[#d95f00] shrink-0" />
                       <span>Không chỉ khoảng trắng</span>
                     </span>
-                    <span className="flex items-center gap-1.5">
+                    <span className="flex items-center gap-1.5 whitespace-nowrap">
                       <span className="w-1.5 h-1.5 rounded-full bg-[#d95f00] shrink-0" />
-                      <span>Xác nhận mật khẩu khớp</span>
+                      <span>Mật khẩu trùng khớp</span>
                     </span>
                   </div>
                 </div>
@@ -677,11 +680,14 @@ function LegacyAuthPage({ mode }: { mode: 'login' | 'register' | 'forgot' }) {
                   >
                     {submit.isPending ? (
                       <>
-                        <LoaderCircle
-                          className="animate-spin text-white"
-                          size={18}
-                          aria-hidden="true"
-                        />
+                        <span className="relative flex items-center justify-center">
+                          <span className="absolute -inset-1 rounded-full bg-white/30 animate-ping" />
+                          <LoaderCircle
+                            className="animate-spin text-white"
+                            size={18}
+                            aria-hidden="true"
+                          />
+                        </span>
                         <span>Đang xử lý…</span>
                       </>
                     ) : (

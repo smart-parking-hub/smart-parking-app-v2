@@ -12,7 +12,7 @@ export function LoginPage() {
   if (role) return <Navigate to={loginDestination(new URLSearchParams(location.search).get('next'), role)} replace />
   return (
     <AuthLayout>
-      <div>
+      <div className="animate-auth-fade-in transition-all duration-300">
         <div className="mb-6 sm:mb-8 flex flex-col items-center text-center">
           <Link
             to="/"
