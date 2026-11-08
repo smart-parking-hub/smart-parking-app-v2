@@ -156,7 +156,7 @@ export function DriverHeader() {
                       Hồ sơ cá nhân
                     </Link>
                     <Link
-                      to="/change-password"
+                      to="/profile#bao-mat"
                       onClick={closeMenus}
                       className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm hover:bg-brand-surface text-slate-700 hover:text-brand-navy transition-colors"
                     >

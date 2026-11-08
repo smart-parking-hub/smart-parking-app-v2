@@ -4,9 +4,8 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { isAxiosError } from 'axios'
-import { ArrowUpRight, Check, Eye, EyeOff, LoaderCircle, ShieldCheck, Store, Truck } from 'lucide-react'
-import { control, Notice } from '@/shared/components/Workspace'
+import { AlertCircle, ArrowUpRight, Check, Eye, EyeOff, LoaderCircle, ShieldCheck, Store, Truck } from 'lucide-react'
+import { control } from '@/shared/components/Workspace'
 import { errorMessage, sendData } from '@/shared/api/resources'
 import { loginDestination, readSession, saveSession } from '../model/session'
 export const loginSchema = z.object({
@@ -89,11 +88,20 @@ export function LoginForm() {
 
         </div>
       </fieldset>
-      {login.isError && <Notice error>
-        {isAxiosError(login.error) && login.error.response && <span>Mã lỗi {login.error.response.status}: </span>}
-        {errorMessage(login.error)}
-        <button type="button" disabled={login.isPending} className="ml-3 underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d95f00] rounded-sm" onClick={submit}>Thử lại</button>
-      </Notice>}
+      {login.isError && <div
+        role="alert"
+        aria-labelledby="login-error-title"
+        aria-atomic="true"
+        className="grid grid-cols-[2.25rem_minmax(0,1fr)] items-start gap-3 rounded-xl border border-status-danger-border bg-status-danger-bg/60 p-4"
+      >
+        <span className="flex size-9 items-center justify-center rounded-full border border-status-danger-border bg-surface text-status-danger" aria-hidden="true">
+          <AlertCircle size={18} />
+        </span>
+        <div className="min-w-0 self-center">
+          <p id="login-error-title" className="font-heading text-sm font-semibold leading-5 text-text-primary">Chưa thể đăng nhập</p>
+          <p className="mt-1 break-words font-body text-sm leading-5 text-text-secondary">{errorMessage(login.error)}</p>
+        </div>
+      </div>}
       <button type="submit" disabled={login.isPending} className="inline-flex min-h-14 w-full items-center justify-center gap-2 rounded-xl bg-[#d95f00] px-5 py-3 text-base font-semibold text-white hover:bg-[#b84e00] active:bg-[#9e4300] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d95f00] focus-visible:ring-offset-2 disabled:opacity-50 transition-colors shadow-xs cursor-pointer">
         {login.isPending ? <><LoaderCircle className="animate-spin" aria-hidden="true" />Đang đăng nhập…</> : <>Đăng nhập<ArrowUpRight size={18} aria-hidden="true" /></>}
       </button>

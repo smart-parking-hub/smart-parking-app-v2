@@ -1,5 +1,6 @@
+import { useEffect } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { Link } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
 import { ArrowLeft } from 'lucide-react'
 import { fetchMyProfile } from '../api/profileApi'
 import { errorMessage } from '@/shared/api/resources'
@@ -11,9 +12,18 @@ import { accountButton } from '../components/AccountSection'
 
 export const driverProfileKey = ['current-user', 'profile'] as const
 export function ProfilePage() {
+  const { hash, key } = useLocation()
   const cache = useQueryClient()
   const query = useQuery({ queryKey: driverProfileKey, queryFn: fetchMyProfile, staleTime: 30_000, retry: false, refetchOnWindowFocus: false })
   const profile = query.data
+  const hasProfile = Boolean(profile)
+  useEffect(() => {
+    if (!hash || !hasProfile) return
+    const target = document.getElementById(hash.replace(/^#/, ''))
+    if (typeof target?.scrollIntoView === 'function') {
+      target.scrollIntoView({ behavior: 'smooth' })
+    }
+  }, [hash, key, hasProfile])
   return <div className="mx-auto w-full max-w-[1120px] px-4 py-8 font-inter text-base leading-relaxed text-brand-navy sm:px-8 lg:py-10">
     <header className="mb-8">
       <Link to="/dashboard" className="mb-5 inline-flex items-center gap-2 text-brand-muted hover:text-brand-navy focus-visible:outline-2 focus-visible:outline-brand-orange"><ArrowLeft size={16} aria-hidden="true" /> Tổng quan</Link>

@@ -67,7 +67,7 @@ describe('SCR-010 user journey', () => {
     const request = vi.spyOn(apiClient, 'request').mockRejectedValueOnce(new Error('Tài khoản đã bị khóa.')).mockResolvedValueOnce({ data: { data: { token: token('DRIVER'), role: 'DRIVER' } } })
     setup(); await fill(); fireEvent.click(screen.getByRole('button', { name: /^Đăng nhập$/ }))
     expect(await screen.findByText('Tài khoản đã bị khóa.')).toBeInTheDocument()
-    fireEvent.click(screen.getByRole('button', { name: 'Thử lại' }))
+    fireEvent.click(screen.getByRole('button', { name: /^Đăng nhập$/ }))
     await screen.findByText('Driver dashboard'); expect(request).toHaveBeenCalledTimes(2)
   })
   it('hydrates on reload and guest guard skips the login page', async () => {

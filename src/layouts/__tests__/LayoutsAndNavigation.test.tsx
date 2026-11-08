@@ -113,7 +113,7 @@ describe('Layouts and Navigation System Comprehensive Tests', () => {
       expect(screen.getByRole('link', { name: 'Tổng quan' })).toBeInTheDocument()
       expect(screen.getByRole('link', { name: 'Bản đồ tìm bãi' })).toBeInTheDocument()
       expect(screen.getByRole('link', { name: 'Vé & Đặt chỗ' })).toBeInTheDocument()
-      expect(screen.getByRole('link', { name: 'Hàng đợi ảo' })).toBeInTheDocument()
+      expect(screen.getByRole('link', { name: 'Chờ vào bãi' })).toBeInTheDocument()
       expect(screen.getByRole('link', { name: 'Lịch sử cước' })).toBeInTheDocument()
       expect(screen.getByRole('link', { name: 'Đội xe của tôi' })).toBeInTheDocument()
       expect(screen.getByRole('link', { name: 'Khiếu nại' })).toBeInTheDocument()
@@ -154,6 +154,22 @@ describe('Layouts and Navigation System Comprehensive Tests', () => {
       expect(screen.getByText('ISO/IEC 27001:2022')).toBeInTheDocument()
       expect(screen.getByText(/2026 SmartTruckHub Logistics Network/)).toBeInTheDocument()
       expect(screen.getByRole('link', { name: 'Hỗ trợ 24/7' })).toBeInTheDocument()
+      expect(screen.getByRole('link', { name: 'Đổi mật khẩu' })).toHaveAttribute('href', '/profile#bao-mat')
+    })
+
+    it('links DriverHeader account menu change-password action to /profile#bao-mat', () => {
+      const queryClient = createTestQueryClient()
+
+      render(
+        <QueryClientProvider client={queryClient}>
+          <MemoryRouter initialEntries={['/dashboard']}>
+            <DriverHeader />
+          </MemoryRouter>
+        </QueryClientProvider>
+      )
+
+      fireEvent.click(screen.getByRole('button', { name: 'Menu tài khoản' }))
+      expect(screen.getByRole('link', { name: 'Đổi mật khẩu' })).toHaveAttribute('href', '/profile#bao-mat')
     })
   })
 

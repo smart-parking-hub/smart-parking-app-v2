@@ -19,6 +19,20 @@ describe('Merged route ownership', () => {
         ?.params.id,
     ).toBe('42')
   })
+  it('matches public authentication recovery route /forgot-password', () => {
+    const match = matchRoutes(router.routes, '/forgot-password')?.at(-1)
+    expect(match?.route.path).toBe('/forgot-password')
+  })
+  it.each([
+    '/change-password',
+    '/dashboard/change-password',
+    '/driver/change-password',
+  ])('redirects legacy change-password route (%s) to /profile#bao-mat with replace', (path) => {
+    const match = matchRoutes(router.routes, path)?.at(-1)
+    expect(match?.route.element).toMatchObject({
+      props: { to: '/profile#bao-mat', replace: true },
+    })
+  })
   it('does not shadow routes with duplicate path shapes', () => {
     const visit = (routes: RouteObject[]) => {
       const shapes = routes
