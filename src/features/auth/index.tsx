@@ -106,7 +106,7 @@ function LegacyAuthPage({ mode }: { mode: 'login' | 'register' | 'forgot' }) {
         <div className="relative">
           <input
             id={`auth-${name}`}
-            className={`${control} min-h-11 sm:min-h-12 text-sm bg-white/50 hover:bg-white/65 focus:bg-white/90 backdrop-blur-sm border border-white/60 text-brand-navy placeholder:text-slate-500 focus:border-[#d95f00] focus-visible:ring-2 focus-visible:ring-[#d95f00] focus-visible:ring-offset-1`}
+            className={`${control} min-h-12 sm:min-h-14 text-base bg-white border border-slate-300 text-slate-900 placeholder:text-slate-400 focus:border-[#d95f00] focus:ring-2 focus:ring-[#d95f00]/20 focus-visible:ring-2 focus-visible:ring-[#d95f00] focus-visible:ring-offset-1 rounded-xl px-4 py-3 shadow-2xs transition-colors`}
             disabled={submit.isPending}
             aria-invalid={Boolean(form.formState.errors[name])}
             aria-describedby={form.formState.errors[name] ? `auth-${name}-error` : undefined}
@@ -192,7 +192,7 @@ function LegacyAuthPage({ mode }: { mode: 'login' | 'register' | 'forgot' }) {
             <>
               <Field label="Bạn tham gia với vai trò">
                 <select
-                  className={`${control} bg-white/50 backdrop-blur-sm border border-white/60 text-brand-navy focus-visible:ring-2 focus-visible:ring-[#d95f00] focus-visible:ring-offset-1`}
+                  className={`${control} min-h-12 sm:min-h-14 text-base bg-white border border-slate-300 text-slate-900 rounded-xl px-4 py-3 shadow-2xs focus-visible:ring-2 focus-visible:ring-[#d95f00] focus-visible:ring-offset-1`}
                   {...form.register('role')}
                 >
                   <option value="DRIVER">Tài xế</option>
@@ -224,7 +224,7 @@ function LegacyAuthPage({ mode }: { mode: 'login' | 'register' | 'forgot' }) {
               <button
                 type="button"
                 disabled={otp.isPending || countdown > 0}
-                className="inline-flex items-center justify-center gap-2 rounded-xl border border-white/60 bg-white/50 backdrop-blur-sm px-4 py-2.5 text-sm font-semibold text-brand-navy hover:bg-white/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d95f00] focus-visible:ring-offset-2 disabled:opacity-50 transition-colors shadow-xs cursor-pointer"
+                className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-5 py-3 text-sm sm:text-base font-semibold text-brand-navy hover:bg-orange-50/50 hover:border-[#d95f00] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d95f00] focus-visible:ring-offset-2 disabled:opacity-50 transition-colors shadow-2xs cursor-pointer"
                 onClick={() => otp.mutate()}
               >
                 {otp.isPending ? (

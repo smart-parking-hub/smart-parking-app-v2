@@ -48,22 +48,22 @@ export function AuthLayout({ children, variant = 'default' }: AuthLayoutProps) {
   }
 
   return (
-    <main className="relative min-h-screen w-full bg-[#060D1A] font-inter flex items-center justify-start overflow-hidden">
+    <main className="relative min-h-screen w-full bg-[#060D1A] font-inter flex items-center justify-end overflow-hidden">
       <ScrollToTop />
 
-      {/* 1. Ảnh bãi đỗ xe chụp thực tế trải rộng toàn màn hình (full-bleed), tĩnh 100%, chủ thể bãi đỗ tập trung bên phải */}
+      {/* 1. Ảnh bãi đỗ xe chụp thực tế trải rộng toàn màn hình (full-bleed), tĩnh 100% */}
       <img
         src="/images/auth-parking-lot-bg.jpg"
         alt="SmartTruck Hub Commercial Logistics Parking Depot"
-        className="absolute inset-0 h-full w-full object-cover object-[70%_center] sm:object-center scale-100"
+        className="absolute inset-0 h-full w-full object-cover object-[30%_center] sm:object-center scale-100"
       />
 
-      {/* Lớp phủ gradient mờ điện ảnh rất nhẹ để giữ trọn vẹn chi tiết và ánh đèn của ảnh bãi đỗ xe phía sau kính */}
-      <div className="absolute inset-0 bg-gradient-to-r from-slate-950/35 via-slate-950/15 to-transparent pointer-events-none" />
-      <div className="absolute inset-0 bg-gradient-to-t from-slate-950/45 via-transparent to-slate-950/20 pointer-events-none" />
+      {/* Lớp phủ gradient mờ điện ảnh để card modal và thông điệp nổi bật rõ nét */}
+      <div className="absolute inset-0 bg-gradient-to-l from-slate-950/45 via-slate-950/20 to-transparent pointer-events-none" />
+      <div className="absolute inset-0 bg-gradient-to-t from-slate-950/50 via-transparent to-slate-950/20 pointer-events-none" />
 
-      {/* Thông điệp slogan thương hiệu ở góc trên bên phải trên nền ảnh */}
-      <div className="absolute top-6 right-6 sm:top-10 sm:right-12 hidden md:block max-w-[360px] text-right pointer-events-none z-10">
+      {/* Thông điệp slogan thương hiệu ở góc trên bên TRÁI trên nền ảnh */}
+      <div className="absolute top-6 left-6 sm:top-10 sm:left-12 hidden md:block max-w-[380px] text-left pointer-events-none z-10">
         <p className="font-sora text-base sm:text-lg font-bold leading-relaxed text-white drop-shadow-md">
           Một điểm đỗ. <span className="text-brand-orange">Ngàn hành trình.</span>
         </p>
@@ -72,15 +72,15 @@ export function AuthLayout({ children, variant = 'default' }: AuthLayoutProps) {
         </p>
       </div>
 
-      {/* Badge bảo mật góc dưới bên phải */}
-      <div className="absolute bottom-6 right-6 sm:bottom-10 sm:right-12 hidden md:flex items-center gap-2 rounded-full bg-slate-950/65 backdrop-blur-md border border-white/20 px-4 py-2 text-xs font-medium text-white shadow-lg pointer-events-none z-10">
+      {/* Badge bảo mật góc dưới bên TRÁI */}
+      <div className="absolute bottom-6 left-6 sm:bottom-10 sm:left-12 hidden md:flex items-center gap-2 rounded-full bg-slate-950/65 backdrop-blur-md border border-white/20 px-4 py-2 text-xs font-medium text-white shadow-lg pointer-events-none z-10">
         <ShieldCheck className="w-4 h-4 text-brand-orange shrink-0" />
         <span>An tâm trên từng chặng đường</span>
       </div>
 
-      {/* 2. PHẦN MODE (MODAL FORM): NẰM BÊN TRÁI, RỘNG RÃI VÀ THOÁNG ĐÃNG, HIỆU ỨNG KÍNH THỦY TINH TRONG SUỐT (GLASSMORPHISM) */}
-      <section className="relative z-20 w-full max-w-[500px] lg:max-w-[520px] my-auto mx-auto sm:mx-0 sm:ml-8 md:ml-12 lg:ml-16 xl:ml-24 p-3 sm:p-0">
-        <div className="w-full max-h-[92vh] overflow-y-auto bg-white/25 hover:bg-white/30 backdrop-blur-2xl rounded-[32px] sm:rounded-[36px] p-7 sm:p-9 lg:p-10 shadow-[0_20px_50px_rgba(0,0,0,0.45)] border border-white/50 ring-1 ring-white/30 text-brand-navy transition-all">
+      {/* 2. PHẦN MODE (MODAL FORM): NẰM BÊN PHẢI, NỀN KÍNH TĨNH KHÔNG ĐỔI MÀU KHI HOVER, TƯƠNG PHẢN RÕ NÉT */}
+      <section className="relative z-20 w-full max-w-[500px] lg:max-w-[520px] my-auto mx-auto sm:mx-0 sm:mr-8 md:mr-12 lg:mr-16 xl:mr-24 p-3 sm:p-0">
+        <div className="w-full max-h-[92vh] overflow-y-auto bg-white/75 backdrop-blur-2xl rounded-[32px] sm:rounded-[36px] p-7 sm:p-9 lg:p-10 shadow-[0_20px_50px_rgba(0,0,0,0.45)] border border-white/70 ring-1 ring-white/40 text-brand-navy">
           {children}
         </div>
       </section>
