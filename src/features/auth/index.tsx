@@ -106,7 +106,7 @@ function LegacyAuthPage({ mode }: { mode: 'login' | 'register' | 'forgot' }) {
         <div className="relative">
           <input
             id={`auth-${name}`}
-            className={`${control} min-h-14 text-base focus-visible:ring-2 focus-visible:ring-[#d95f00] focus-visible:ring-offset-1`}
+            className={`${control} min-h-11 sm:min-h-12 text-sm bg-slate-900/60 border border-white/20 text-white placeholder:text-slate-400 focus:bg-slate-900/80 focus:border-[#d95f00] focus-visible:ring-2 focus-visible:ring-[#d95f00] focus-visible:ring-offset-1`}
             disabled={submit.isPending}
             aria-invalid={Boolean(form.formState.errors[name])}
             aria-describedby={form.formState.errors[name] ? `auth-${name}-error` : undefined}
@@ -157,19 +157,19 @@ function LegacyAuthPage({ mode }: { mode: 'login' | 'register' | 'forgot' }) {
       <div className="mb-4">
         <Link
           to="/"
-          className="inline-flex items-center gap-2.5 font-sora text-lg sm:text-xl font-bold text-brand-navy mb-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d95f00] rounded-lg p-1 -m-1 transition-colors group"
+          className="inline-flex items-center gap-2.5 font-sora text-lg sm:text-xl font-bold text-white mb-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d95f00] rounded-lg p-1 -m-1 transition-colors group"
         >
           <img
             src="/image-smart-parking-hub.png"
             alt="Smart Parking Hub Logo"
-            className="w-8 h-8 rounded-xl object-contain shrink-0 shadow-xs group-hover:scale-105 transition-transform"
+            className="w-8 h-8 rounded-xl object-contain shrink-0 shadow-xs group-hover:scale-105 transition-transform ring-1 ring-white/20"
           />
-          <span className="tracking-tight">SMARTTRUCK HUB</span>
+          <span className="tracking-tight text-white">SMARTTRUCK HUB</span>
         </Link>
-        <h1 className="font-sora text-2xl lg:text-3xl font-bold tracking-tight text-brand-navy">
+        <h1 className="font-sora text-2xl lg:text-3xl font-bold tracking-tight text-white">
           {title}
         </h1>
-        <p className="mt-1 text-xs sm:text-sm text-brand-muted">
+        <p className="mt-1 text-xs sm:text-sm text-slate-300">
           {mode === 'login'
             ? 'Đăng nhập để tiếp tục công việc của bạn.'
             : 'Thông tin được xác thực bởi hệ thống SmartTruck Hub.'}
@@ -180,7 +180,7 @@ function LegacyAuthPage({ mode }: { mode: 'login' | 'register' | 'forgot' }) {
         <AuthSuccess mode={mode} />
       ) : (
         <form
-          className="space-y-4 [&_input]:min-h-11 [&_input]:text-sm [&_select]:min-h-11 [&_label]:gap-1.5 [&_label]:text-sm"
+          className="space-y-4 [&_input]:min-h-11 [&_input]:text-sm [&_select]:min-h-11 [&_label]:gap-1.5 [&_label]:text-sm [&_label]:text-slate-200"
           onSubmit={form.handleSubmit((data) => submit.mutate(data))}
         >
           {mode !== 'forgot' &&
@@ -192,11 +192,11 @@ function LegacyAuthPage({ mode }: { mode: 'login' | 'register' | 'forgot' }) {
             <>
               <Field label="Bạn tham gia với vai trò">
                 <select
-                  className={`${control} focus-visible:ring-2 focus-visible:ring-[#d95f00] focus-visible:ring-offset-1`}
+                  className={`${control} bg-slate-900/60 border border-white/20 text-white focus-visible:ring-2 focus-visible:ring-[#d95f00] focus-visible:ring-offset-1`}
                   {...form.register('role')}
                 >
-                  <option value="DRIVER">Tài xế</option>
-                  <option value="MERCHANT">Chủ bãi</option>
+                  <option value="DRIVER" className="bg-slate-900 text-white">Tài xế</option>
+                  <option value="MERCHANT" className="bg-slate-900 text-white">Chủ bãi</option>
                 </select>
               </Field>
               {input('fullName', 'Họ và tên', 'text', { maxLength: 100 })}
@@ -224,7 +224,7 @@ function LegacyAuthPage({ mode }: { mode: 'login' | 'register' | 'forgot' }) {
               <button
                 type="button"
                 disabled={otp.isPending || countdown > 0}
-                className="inline-flex items-center justify-center gap-2 rounded-xl border border-brand-border bg-white px-4 py-3 text-sm font-semibold text-brand-navy hover:bg-brand-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d95f00] focus-visible:ring-offset-2 disabled:opacity-50 transition-colors shadow-xs cursor-pointer"
+                className="inline-flex items-center justify-center gap-2 rounded-xl border border-white/20 bg-white/10 px-4 py-2.5 text-sm font-semibold text-white hover:bg-white/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d95f00] focus-visible:ring-offset-2 disabled:opacity-50 transition-colors shadow-xs cursor-pointer"
                 onClick={() => otp.mutate()}
               >
                 {otp.isPending ? (
@@ -301,11 +301,11 @@ function LegacyAuthPage({ mode }: { mode: 'login' | 'register' | 'forgot' }) {
           </button>
         </form>
       )}
-      <nav aria-label="Tài khoản" className="mt-7 flex flex-wrap gap-5 text-sm text-brand-muted">
+      <nav aria-label="Tài khoản" className="mt-5 flex flex-wrap gap-5 text-sm text-slate-300">
         {mode !== 'login' && (
           <Link
             to="/login"
-            className="hover:text-[#d95f00] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d95f00] rounded-sm transition-colors"
+            className="text-brand-orange hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d95f00] rounded-sm transition-colors"
           >
             Đăng nhập
           </Link>
@@ -313,7 +313,7 @@ function LegacyAuthPage({ mode }: { mode: 'login' | 'register' | 'forgot' }) {
         {mode !== 'register' && (
           <Link
             to="/register"
-            className="hover:text-[#d95f00] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d95f00] rounded-sm transition-colors"
+            className="text-brand-orange hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d95f00] rounded-sm transition-colors"
           >
             Tạo tài khoản
           </Link>
@@ -321,7 +321,7 @@ function LegacyAuthPage({ mode }: { mode: 'login' | 'register' | 'forgot' }) {
         {mode !== 'forgot' && (
           <Link
             to="/forgot-password"
-            className="hover:text-[#d95f00] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d95f00] rounded-sm transition-colors"
+            className="text-brand-orange hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d95f00] rounded-sm transition-colors"
           >
             Quên mật khẩu?
           </Link>

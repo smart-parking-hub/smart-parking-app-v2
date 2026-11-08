@@ -47,13 +47,13 @@ export function LoginForm() {
   })
   const submit = form.handleSubmit((fields) => { if (!login.isPending) login.mutate(fields) })
   return <>
-    {import.meta.env.DEV && <section aria-label="Tài khoản trải nghiệm" className="mb-4 rounded-xl border border-brand-muted/20 bg-slate-50/80 p-3">
+    {import.meta.env.DEV && <section aria-label="Tài khoản trải nghiệm" className="mb-4 rounded-xl border border-white/15 bg-white/10 backdrop-blur-md p-3">
       <div className="mb-2 flex items-center justify-between gap-2">
         <div>
-          <p className="font-sora text-xs font-bold text-brand-navy">Chọn vai trò mẫu</p>
-          <p className="text-[11px] text-brand-muted">Nhấn để tự động điền thông tin.</p>
+          <p className="font-sora text-xs font-bold text-white">Chọn vai trò mẫu</p>
+          <p className="text-[11px] text-slate-300">Nhấn để tự động điền thông tin.</p>
         </div>
-        <span className="rounded-full bg-brand-navy px-2.5 py-0.5 text-[10px] font-semibold text-white tracking-wider">DEMO</span>
+        <span className="rounded-full bg-white/20 px-2.5 py-0.5 text-[10px] font-semibold text-white tracking-wider">DEMO</span>
       </div>
       <div className="grid grid-cols-2 gap-1.5 sm:gap-2">
         {demoAccounts.map(({ phone, name, role, icon: Icon }) => <button key={phone} type="button" disabled={login.isPending} aria-pressed={selectedPhone === phone} onClick={() => {
@@ -61,36 +61,36 @@ export function LoginForm() {
           form.setValue('phone', phone, { shouldValidate: true })
           form.setValue('password', 'password123', { shouldValidate: true })
           login.reset()
-        }} className={`group flex items-center gap-2 rounded-lg border p-1.5 sm:p-2 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d95f00] focus-visible:ring-offset-1 disabled:opacity-50 ${selectedPhone === phone ? 'border-[#d95f00] bg-orange-50/80 ring-1 ring-[#d95f00]' : 'border-slate-200 bg-white hover:border-[#d95f00]'}`}>
-          <span className="flex size-7 shrink-0 items-center justify-center rounded-md bg-brand-navy text-white"><Icon size={14} aria-hidden="true" /></span>
+        }} className={`group flex items-center gap-2 rounded-lg border p-1.5 sm:p-2 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d95f00] focus-visible:ring-offset-1 disabled:opacity-50 ${selectedPhone === phone ? 'border-[#d95f00] bg-orange-500/25 ring-1 ring-[#d95f00]' : 'border-white/15 bg-white/10 hover:bg-white/20'}`}>
+          <span className="flex size-7 shrink-0 items-center justify-center rounded-md bg-slate-900/80 text-white"><Icon size={14} aria-hidden="true" /></span>
           <span className="min-w-0 flex-1">
-            <span className="block truncate text-[11px] font-semibold text-brand-navy">{name}</span>
-            <span className="block text-[10px] text-brand-muted">{role}</span>
+            <span className="block truncate text-[11px] font-semibold text-white">{name}</span>
+            <span className="block text-[10px] text-slate-300">{role}</span>
           </span>
-          {selectedPhone === phone && <Check size={14} className="text-orange-700 shrink-0" aria-hidden="true" />}
+          {selectedPhone === phone && <Check size={14} className="text-orange-400 shrink-0" aria-hidden="true" />}
         </button>)}
       </div>
-      <p role="status" className="mt-2 text-[11px] text-brand-muted">{selectedPhone ? 'Đã điền tài khoản mẫu. Nhấn Đăng nhập để tiếp tục.' : '4 tài khoản mẫu · 2 tài xế / 1 chủ bãi / 1 quản trị viên'}</p>
+      <p role="status" className="mt-2 text-[11px] text-slate-300">{selectedPhone ? 'Đã điền tài khoản mẫu. Nhấn Đăng nhập để tiếp tục.' : '4 tài khoản mẫu · 2 tài xế / 1 chủ bãi / 1 quản trị viên'}</p>
     </section>}
     <form noValidate onSubmit={submit} className="space-y-4" aria-busy={login.isPending}>
       <fieldset disabled={login.isPending} className="space-y-4">
         <div className="space-y-1.5">
-          <label htmlFor="login-phone" className="block text-sm font-semibold text-brand-navy">Số điện thoại</label>
-          <input id="login-phone" className={`${control} min-h-11 sm:min-h-12 text-sm focus-visible:ring-2 focus-visible:ring-[#d95f00] focus-visible:ring-offset-1`} type="tel" autoComplete="tel" inputMode="tel" aria-invalid={Boolean(form.formState.errors.phone)} aria-describedby={form.formState.errors.phone ? 'login-phone-error' : undefined} {...form.register('phone')} />
-          {form.formState.errors.phone && <p id="login-phone-error" role="alert" className="text-xs font-medium text-red-700">{form.formState.errors.phone.message}</p>}
+          <label htmlFor="login-phone" className="block text-sm font-semibold text-slate-200">Số điện thoại</label>
+          <input id="login-phone" className={`${control} min-h-11 sm:min-h-12 text-sm bg-slate-900/60 border border-white/20 text-white placeholder:text-slate-400 focus:bg-slate-900/80 focus:border-[#d95f00] focus-visible:ring-2 focus-visible:ring-[#d95f00] focus-visible:ring-offset-1`} type="tel" autoComplete="tel" inputMode="tel" aria-invalid={Boolean(form.formState.errors.phone)} aria-describedby={form.formState.errors.phone ? 'login-phone-error' : undefined} {...form.register('phone')} />
+          {form.formState.errors.phone && <p id="login-phone-error" role="alert" className="text-xs font-semibold text-red-700 bg-red-100/90 px-2 py-0.5 rounded-sm inline-block">{form.formState.errors.phone.message}</p>}
         </div>
         <div className="space-y-1.5">
-          <label htmlFor="login-password" className="block text-sm font-semibold text-brand-navy">Mật khẩu</label>
+          <label htmlFor="login-password" className="block text-sm font-semibold text-slate-200">Mật khẩu</label>
           <div className="relative">
-          <input id="login-password" className={`${control} min-h-11 sm:min-h-12 pr-12 text-sm`} type={showPassword ? 'text' : 'password'} autoComplete="current-password" aria-invalid={Boolean(form.formState.errors.password)} aria-describedby={form.formState.errors.password ? 'login-password-error' : undefined} {...form.register('password')} />
-            <button type="button" aria-label={showPassword ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'} aria-controls="login-password" aria-pressed={showPassword} onClick={() => setShowPassword(!showPassword)} className="absolute inset-y-0 right-1 flex w-10 items-center justify-center rounded-lg text-brand-muted hover:text-brand-navy focus-visible:outline-2 focus-visible:outline-orange-600">
+          <input id="login-password" className={`${control} min-h-11 sm:min-h-12 pr-12 text-sm bg-slate-900/60 border border-white/20 text-white placeholder:text-slate-400 focus:bg-slate-900/80 focus:border-[#d95f00]`} type={showPassword ? 'text' : 'password'} autoComplete="current-password" aria-invalid={Boolean(form.formState.errors.password)} aria-describedby={form.formState.errors.password ? 'login-password-error' : undefined} {...form.register('password')} />
+            <button type="button" aria-label={showPassword ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'} aria-controls="login-password" aria-pressed={showPassword} onClick={() => setShowPassword(!showPassword)} className="absolute inset-y-0 right-1 flex w-10 items-center justify-center rounded-lg text-slate-300 hover:text-white focus-visible:outline-2 focus-visible:outline-orange-500">
               {showPassword ? <EyeOff size={18} aria-hidden="true" /> : <Eye size={18} aria-hidden="true" />}
             </button>
           </div>
-          {form.formState.errors.password && <p id="login-password-error" role="alert" className="text-xs font-medium text-red-700">{form.formState.errors.password.message}</p>}
+          {form.formState.errors.password && <p id="login-password-error" role="alert" className="text-xs font-semibold text-red-700 bg-red-100/90 px-2 py-0.5 rounded-sm inline-block">{form.formState.errors.password.message}</p>}
         </div>
         <div className="flex items-center text-sm">
-          <label className="flex items-center gap-2 cursor-pointer text-xs sm:text-sm text-slate-700 select-none">
+          <label className="flex items-center gap-2 cursor-pointer text-xs sm:text-sm text-slate-200 select-none">
             <input type="checkbox" checked={remember} onChange={(event) => setRemember(event.target.checked)} className="rounded-sm accent-[#d95f00] focus-visible:ring-2 focus-visible:ring-[#d95f00]" />
             Ghi nhớ số điện thoại
           </label>
@@ -100,24 +100,24 @@ export function LoginForm() {
         role="alert"
         aria-labelledby="login-error-title"
         aria-atomic="true"
-        className="grid grid-cols-[2rem_minmax(0,1fr)] items-start gap-2.5 rounded-xl border border-status-danger-border bg-status-danger-bg/60 p-3"
+        className="grid grid-cols-[2rem_minmax(0,1fr)] items-start gap-2.5 rounded-xl border border-status-danger-border bg-status-danger-bg/80 p-3"
       >
         <span className="flex size-8 items-center justify-center rounded-full border border-status-danger-border bg-surface text-status-danger" aria-hidden="true">
           <AlertCircle size={16} />
         </span>
         <div className="min-w-0 self-center">
-          <p id="login-error-title" className="font-heading text-xs font-semibold leading-4 text-text-primary">Chưa thể đăng nhập</p>
-          <p className="mt-0.5 break-words font-body text-xs leading-4 text-text-secondary">{errorMessage(login.error)}</p>
+          <p id="login-error-title" className="font-heading text-xs font-semibold leading-4 text-white">Chưa thể đăng nhập</p>
+          <p className="mt-0.5 break-words font-body text-xs leading-4 text-slate-200">{errorMessage(login.error)}</p>
         </div>
       </div>}
-      <button type="submit" disabled={login.isPending} className="inline-flex min-h-11 sm:min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-[#d95f00] px-5 py-2.5 text-sm sm:text-base font-semibold text-white hover:bg-[#b84e00] active:bg-[#9e4300] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d95f00] focus-visible:ring-offset-2 disabled:opacity-50 transition-colors shadow-xs cursor-pointer">
+      <button type="submit" disabled={login.isPending} className="inline-flex min-h-11 sm:min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-[#d95f00] px-5 py-2.5 text-sm sm:text-base font-semibold text-white hover:bg-[#b84e00] active:bg-[#9e4300] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d95f00] focus-visible:ring-offset-2 disabled:opacity-50 transition-colors shadow-lg shadow-orange-950/30 cursor-pointer">
         {login.isPending ? <><LoaderCircle className="animate-spin" aria-hidden="true" size={18} />Đang đăng nhập…</> : <>Đăng nhập<ArrowUpRight size={18} aria-hidden="true" /></>}
       </button>
     </form>
-    <nav aria-label="Tài khoản" className="mt-4 flex flex-wrap items-center justify-between gap-3 text-xs sm:text-sm text-brand-muted">
+    <nav aria-label="Tài khoản" className="mt-4 flex flex-wrap items-center justify-between gap-3 text-xs sm:text-sm text-slate-300">
       <div>
         <span>Chưa có tài khoản? </span>
-        <Link to="/register" className="font-semibold text-[#d95f00] hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d95f00] rounded-xs transition-colors">Tạo tài khoản</Link>
+        <Link to="/register" className="font-semibold text-brand-orange hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d95f00] rounded-xs transition-colors">Tạo tài khoản</Link>
       </div>
       <Link to="/forgot-password" className="font-medium text-brand-orange hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d95f00] rounded-xs transition-colors">Quên mật khẩu?</Link>
     </nav>
