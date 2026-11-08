@@ -424,92 +424,62 @@ export const fallbackMerchantLotDetailData: MerchantParkingLotDetailData = {
   ],
 }
 
-export async function fetchMerchantParkingLotDetail(
-  id: number,
-): Promise<MerchantParkingLotDetailData> {
-  try {
-    const res = await apiClient.get<{ data: MerchantParkingLotDetailData }>(
-      `/api/v1/merchant/parking-lots/${id}`,
-    )
-    if (res.data?.data) {
-      return {
-        ...fallbackMerchantLotDetailData,
-        ...res.data.data,
-      }
-    }
-  } catch {
-    // If backend endpoint is offline or 404, fallback to robust mock matching requested ID
-  }
+const merchantLotImageSchema = z.object({
+  id: z.number().int().positive(),
+  originalFileName: z.string(),
+  contentUrl: z.string(),
+  cover: z.boolean(),
+})
 
-  const foundLot = fallbackMerchantParkingLots.find((lot) => lot.id === id)
-  if (foundLot) {
-    return {
-      ...fallbackMerchantLotDetailData,
-      ...foundLot,
-      ownershipVerified: true,
-    }
-  }
+const merchantLotDetailSchema = ownedLotSchema.extend({
+  latitude: z.number().min(-90).max(90).nullish(),
+  longitude: z.number().min(-180).max(180).nullish(),
+  reviewReason: z.string().nullish(),
+  images: z.array(merchantLotImageSchema).nullish(),
+})
 
-  return {
-    ...fallbackMerchantLotDetailData,
-    id,
-    ownershipVerified: true,
-  }
+export type MerchantLotRecord = z.infer<typeof merchantLotDetailSchema>
+
+function parseMerchantLot(data: unknown, id: number): MerchantLotRecord {
+  const lot = merchantLotDetailSchema.parse(data)
+  if (lot.id !== id) throw new Error('Hồ sơ trả về không khớp với bãi đang chọn.')
+  return lot
+}
+
+export async function fetchMerchantParkingLotDetail(id: number, signal?: AbortSignal) {
+  const response = await apiClient.get<{ data: unknown }>(
+    `/api/v1/merchant/parking-lots/${id}`, { signal },
+  )
+  return parseMerchantLot(response.data.data, id)
 }
 
 export async function uploadAdditionalLotImages(
   parkingLotId: number,
   files: File[],
 ): Promise<YardGalleryImage[]> {
-    const uploaded = await uploadMerchantParkingLotImages(parkingLotId, files)
-    return uploaded.map((item, idx) => ({
-      id: item.id || Date.now() + idx,
-      url: item.fileUrl || item.previewUrl,
-      title: item.name,
-      subtitle: `${(item.sizeBytes / 1024).toFixed(0)} KB · Tải lên mới`,
-      isCover: false,
-    }))
-
+  const body = new FormData()
+  files.forEach(file => body.append('files', file))
+  const response = await apiClient.post<{ data: unknown }>(
+    `/api/v1/merchant/parking-lots/${parkingLotId}/images`, body,
+    { headers: { 'Content-Type': 'multipart/form-data' } },
+  )
+  return z.array(merchantLotImageSchema).parse(response.data.data).map(image => ({
+    id: image.id,
+    url: image.contentUrl,
+    title: image.originalFileName,
+    subtitle: '',
+    isCover: image.cover,
+  }))
 }
 
 export async function updateMerchantParkingLot(
   id: number,
   request: CreateMerchantParkingLotRequest,
-): Promise<MerchantParkingLotDetailData> {
-  try {
-    const response = await apiClient.put<{
-      data?: {
-        id?: number
-        name?: string
-        address?: string
-        latitude?: number
-        longitude?: number
-        status?: string
-      }
-    }>(`/api/v1/merchant/parking-lots/${id}`, request)
-
-    if (response.data?.data) {
-      return {
-        ...fallbackMerchantLotDetailData,
-        id,
-        name: response.data.data.name || request.name,
-        address: response.data.data.address || request.address,
-        status: 'PENDING_APPROVAL',
-        reviewReason: undefined,
-      }
-    }
-  } catch {
-    // In dev / offline sandbox, return updated mock lot
-  }
-
-  return {
-    ...fallbackMerchantLotDetailData,
-    id,
-    name: request.name,
-    address: request.address,
-    status: 'PENDING_APPROVAL',
-    reviewReason: undefined,
-  }
+): Promise<MerchantLotRecord> {
+  const response = await apiClient.put<{ data: unknown }>(
+    `/api/v1/merchant/parking-lots/${id}`, request,
+  )
+  return parseMerchantLot(response.data.data, id)
 }
 
 export async function deleteMerchantParkingLotImage(

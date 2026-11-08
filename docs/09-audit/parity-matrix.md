@@ -203,6 +203,62 @@
 
 User-approved API-only redesign. Personal profile, one emergency contact and password operations preserved using verified users/me endpoints; unsupported demo fields removed. Readonly login phone matches backend behavior. See [current SCR-021 record](scr-021-driver-profile-record.md) for parity, tests and limitations.
 
+
+## SCR-029 — Registration readability redesign (2026-11-07)
+
+Last verified: 2026-11-07. Owner: frontend maintainers. Evidence: current create page, backend `CreateParkingLotRequest` / `ParkingLotController`, component tests and `e2e/merchant-registration.spec.ts`.
+
+| Capability | Result | Evidence |
+|---|---|---|
+| Three-step registration, required name/address, coordinate ranges | Preserved | RHF + Zod and backend request constraints unchanged |
+| Image selection, five-image/5 MB/type limits, preview, delete, first image as cover | Preserved; drag/drop added | Photos card, component tests |
+| Manual GPS input, device location and interactive Leaflet map | Preserved | Geo card + existing map picker |
+| Back navigation and completed-step editing | Preserved; keyboard semantics added | Native buttons with stable accessible names at mobile/desktop widths |
+| Save/restore local draft and any previously saved AI content | Preserved | Same storage key and AI preview; image non-persistence explained |
+| Create lot, upload images, retry without duplicate creation | Preserved | Same API functions and MERCHANT role; component/E2E tests |
+| Submit/loading/errors/success and return to list | Preserved; controls locked during submission | Fieldset, footer, stepper, retry test |
+| Layout, typography, concise labels and guidance | Changed as requested | Scoped CSS using existing tokens and locally hosted fonts |
+| AI generation and SLA widgets absent in current baseline | No new widgets or claims introduced | Current page before redesign did not render these widgets; historical test expectations were stale |
+
+See [redesign report](./scr-029-redesign-report.md) for visual evidence and repository-wide test limitations.
+
+
+### SCR-032 capacity correction — 2026-11-07
+
+Selected-lot API data only; removed sample vehicle rows/telemetry/specifications, corrected held-capacity meaning, preserved capacity editing/save/confirmation/navigation. See [screen report](scr-032-capacity-data-redesign.md) for contract, parity and verification evidence.
+
+## SCR-031 — Correct data for the selected yard
+
+Last verified: 2026-11-07. Owner: frontend maintainers.
+
+| Capability | Result | Evidence |
+|---|---|---|
+| Load yard by route ID, names/address/GPS/status/images | Corrected: validated API response only; no mock profile merge | Feature API and 16 edit component tests |
+| Edit only rejected/changes requested | Preserved; redirect noneditable yards and hide edit link | Backend update service; Edge E2E |
+| Admin feedback | Real reviewReason only | API DTO and component tests |
+| Manual GPS, device location, map, reset | Preserved with this yard's coordinates; no fixed port fallback | Form and browser assertions |
+| Image uploads | Real image DTO/content; accurate limits; no duplicate upload after failed PUT | Image service contract and component tests |
+| Local drafts | Explicit restore per yard; ignore legacy drafts contaminated by prototype data | Versioned schema and tests |
+| Confirmation/loading/error/retry/success | Preserved and corrected to actual server outcome | Component and Edge tests |
+| Prototype reviewer/history, revision, OTP/RTK claims, hotline, height and response fields | Removed from active screen as requested; API does not supply/persist these fields | ParkingLotDto/CreateParkingLotRequest |
+
+See [current screen record](./scr-031-merchant-edit-parking-lot-record.md) for checks and limitations.
+
+
+### SCR-030 detail visual redesign — 2026-11-08
+
+Real-data capacity summary/category bars, Vietnamese pricing cards, read-only location map and neutral gallery copy. Existing page actions/states preserved. See [screen report](scr-030-detail-redesign.md).
+
+## Lot profile navigation parity (2026-11-08)
+| Capability | Presentation | Result |
+|---|---|---|
+| Overview, gallery upload/lightbox, location, capacity and price summary | Tổng quan | Preserved |
+| Slot capacity editor and save validation | Cấu hình chỗ đỗ in common navigation | Preserved |
+| Bulk pricing editor and save validation | Bảng giá in common navigation | Preserved |
+| Review-dependent profile edit action | Hồ sơ for rejected/changes requested lots | Preserved |
+| QR scanner with selected lot | Quét QR beside navigation | Preserved |
+| Deep links, reload, browser history | Existing route paths, active NavLink | Preserved |
+
 ## SCR-012 — Forgot Password 2-Step OTP Wizard (2026-11-08)
 | Capability / Stitch Element | React 19 Implementation | Backend Contract | Result |
 |---|---|---|---|

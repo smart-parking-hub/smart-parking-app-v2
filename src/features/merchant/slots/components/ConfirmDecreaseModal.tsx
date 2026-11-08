@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 import { AlertTriangle, ArrowRight, X, Loader2 } from 'lucide-react'
 import type { SlotMatrixItem, VehicleType } from '../types/merchantSlotsTypes'
 
@@ -26,6 +26,25 @@ export function ConfirmDecreaseModal({
   drafts,
   isSaving,
 }: ConfirmDecreaseModalProps) {
+  const dialogRef = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    if (!isOpen) return
+    const previous = document.activeElement instanceof HTMLElement ? document.activeElement : null
+    const dialog = dialogRef.current
+    const controls = () => Array.from(dialog?.querySelectorAll<HTMLElement>('button:not(:disabled), input:not(:disabled), [tabindex="0"]') ?? [])
+    controls()[0]?.focus()
+    const trapFocus = (event: KeyboardEvent) => {
+      if (event.key !== 'Tab') return
+      const items = controls()
+      const first = items[0]
+      const last = items[items.length - 1]
+      if (!first) { event.preventDefault(); dialog?.focus(); return }
+      if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus() }
+      if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus() }
+    }
+    dialog?.addEventListener('keydown', trapFocus)
+    return () => { dialog?.removeEventListener('keydown', trapFocus); previous?.focus() }
+  }, [isOpen])
   // A11y: Escape key listener
   useEffect(() => {
     if (!isOpen) return
@@ -67,6 +86,8 @@ export function ConfirmDecreaseModal({
 
   return (
     <div
+      ref={dialogRef}
+      tabIndex={-1}
       role="dialog"
       aria-modal="true"
       aria-labelledby="confirm-decrease-modal-title"
@@ -87,7 +108,7 @@ export function ConfirmDecreaseModal({
                 Xác nhận giảm sức chứa?
               </h3>
               <p className="text-xs text-slate-500">
-                Hệ thống đã kiểm tra đảm bảo không vi phạm số xe đang đỗ
+                Hệ thống đã kiểm tra đảm bảo không vi phạm số chỗ đã sử dụng
               </p>
             </div>
           </div>
@@ -116,11 +137,11 @@ export function ConfirmDecreaseModal({
               >
                 <div className="flex flex-col">
                   <span className="font-semibold text-slate-800">{item.typeNameVi}</span>
-                  <span className="font-mono text-[11px] text-slate-500">
+                  <span className="font-inter text-[11px] text-slate-500">
                     Xe đang đỗ thực tế: {item.occupied} xe
                   </span>
                 </div>
-                <div className="flex items-center gap-2 font-mono font-bold">
+                <div className="flex items-center gap-2 font-inter font-bold">
                   <span className="text-slate-500 line-through">{item.oldTotal}</span>
                   <ArrowRight className="w-3.5 h-3.5 text-slate-400" />
                   <span className="text-[#d95f00] text-sm">{item.newTotal}</span>

@@ -461,9 +461,11 @@ interface Decision {
 export function DecisionDialog({
   decision,
   onClose,
+  onSuccess,
 }: {
   decision: Decision
   onClose: () => void
+  onSuccess?: () => void
 }) {
   const cache = useQueryClient()
   const form = useForm<{ reason: string }>()
@@ -481,6 +483,7 @@ export function DecisionDialog({
       void cache.invalidateQueries({ queryKey: ['admin-list'] })
       void cache.invalidateQueries({ queryKey: ['admin-detail'] })
       void cache.invalidateQueries({ queryKey: ['admin-dashboard'] })
+      onSuccess?.()
       onClose()
     },
   })
@@ -704,6 +707,7 @@ export function AdminWithdrawalsPage() {
 export function AdminLotDetailPage() {
   const { id } = useParams()
   const [decision, setDecision] = useState<Decision | null>(null)
+  const [successMessage, setSuccessMessage] = useState<string | null>(null)
   const query = useQuery({
     queryKey: ['admin-detail', 'lot', id],
     queryFn: () => getData<Lot>(`/api/v1/admin/parking-lots/${id}`),
@@ -758,7 +762,33 @@ export function AdminLotDetailPage() {
         )}
       </QueryState>
       {decision && (
-        <DecisionDialog decision={decision} onClose={() => setDecision(null)} />
+        <DecisionDialog
+          decision={decision}
+          onClose={() => setDecision(null)}
+          onSuccess={() => setSuccessMessage(
+            decision.action === 'approve'
+              ? 'Duyệt bãi thành công'
+              : decision.action === 'reject'
+                ? 'Đã từ chối hồ sơ bãi'
+                : 'Đã gửi yêu cầu bổ sung hồ sơ',
+          )}
+        />
+      )}
+      {successMessage && (
+        <Dialog title={successMessage} onClose={() => setSuccessMessage(null)}>
+          <p className="mb-6 text-sm leading-relaxed text-brand-muted">
+            Quyết định đã được lưu thành công. Trạng thái bãi được cập nhật theo kết quả xử lý.
+          </p>
+          <div className="flex justify-end">
+            <button
+              type="button"
+              className="rounded-xl bg-[#d95f00] px-5 py-3 text-sm font-semibold text-white hover:bg-[#b84e00] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d95f00] focus-visible:ring-offset-2"
+              onClick={() => setSuccessMessage(null)}
+            >
+              Đã hiểu
+            </button>
+          </div>
+        </Dialog>
       )}
     </Workspace>
   )

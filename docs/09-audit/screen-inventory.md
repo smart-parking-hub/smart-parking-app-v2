@@ -28,9 +28,9 @@
 | `SCR-026` | Merchant Executive Dashboard (Bảng điều khiển tổng quan vận hành & Doanh thu chủ bãi) | `/merchant`, `/merchant/dashboard` | `features/merchant/dashboard` | Stitch HTML/CSS (`web_dashboard`) | **IMPLEMENTED** | Sẵn sàng nghiệm thu |
 | `SCR-027` | Merchant Legal & Banking Profile (Hồ sơ pháp lý & Tài khoản nhận tiền chủ bãi) | `/merchant/profile` | `features/merchant/profile` | Stitch HTML/CSS (`web_dashboard`) | **IMPLEMENTED** | Sẵn sàng nghiệm thu |
 | `SCR-028` | Merchant Parking Lots Directory (Danh mục bãi đỗ xe sở hữu) | `/merchant/parking-lots` | `features/merchant/parking-lots` | Stitch HTML/CSS (`web_dashboard`) | **IMPLEMENTED** | Sẵn sàng nghiệm thu |
-| `SCR-029` | Merchant Create Parking Lot Wizard (Đăng ký bãi đỗ xe & depot mới) | `/merchant/parking-lots/new` | `features/merchant/parking-lots` | Stitch HTML/CSS (`web_dashboard`) | **IMPLEMENTED** | Sẵn sàng nghiệm thu |
+| `SCR-029` | Merchant Create Parking Lot Wizard (Đăng ký bãi đỗ xe & depot mới) | `/merchant/parking-lots/new` | `features/merchant/parking-lots` | User-requested redesign 2026-11-07 | **IMPLEMENTED** | [Redesign verification](./scr-029-redesign-report.md): 10 component tests + 3 E2E pass; full-suite limitation recorded |
 | `SCR-030` | Merchant Parking Lot Details & Telemetry (Chi tiết bãi đỗ xe & Hồ sơ kỹ thuật) | `/merchant/parking-lots/:parkingLotId` | `features/merchant/parking-lots` | Stitch HTML/CSS (`web_dashboard`) | **IMPLEMENTED** | Sẵn sàng nghiệm thu |
-| `SCR-031` | Edit Merchant Parking Lot (Chỉnh sửa & Cập nhật hồ sơ bãi đỗ) | `/merchant/parking-lots/:parkingLotId/edit` | `features/merchant/parking-lots` | Stitch HTML/CSS (`web_dashboard`) | **IMPLEMENTED** | Sẵn sàng nghiệm thu |
+| `SCR-031` | Edit Merchant Parking Lot (Chỉnh sửa & Cập nhật hồ sơ bãi đỗ) | `/merchant/parking-lots/:parkingLotId/edit` | `features/merchant/parking-lots` | API bãi thực tế; yêu cầu bỏ dữ liệu mẫu (2026-11-07) | **IMPLEMENTED** | 16 component tests + 3 Edge E2E passed; chưa kiểm chứng lưu backend thật |
 
 SCR-010 (2026-11-05): /login dùng LoginPage + AuthLayout riêng; Redux session sync, guest guard, role redirect, toast; 217 unit/component tests và 7 E2E PASS. Live backend acceptance pending. Xem [báo cáo](./scr-010-login-record.md).
 
@@ -40,3 +40,20 @@ SCR-012 (2026-11-08): `/forgot-password` dùng `ForgotPasswordPage` + `AuthLayou
 ## SCR-021 profile simplification — 2026-11-05
 
 User-approved API-only redesign. Personal profile, one emergency contact and password operations preserved using verified users/me endpoints; unsupported demo fields removed. Readonly login phone matches backend behavior. See [current SCR-021 record](scr-021-driver-profile-record.md) for parity, tests and limitations.
+
+
+### SCR-032 capacity correction — 2026-11-07
+
+Selected-lot API data only; removed sample vehicle rows/telemetry/specifications, corrected held-capacity meaning, preserved capacity editing/save/confirmation/navigation. See [screen report](scr-032-capacity-data-redesign.md) for contract, parity and verification evidence.
+
+
+### SCR-030 detail visual redesign — 2026-11-08
+
+Real-data capacity summary/category bars, Vietnamese pricing cards, read-only location map and neutral gallery copy. Existing page actions/states preserved. See [screen report](scr-030-detail-redesign.md).
+
+## Lot profile navigation — 2026-11-08
+- Owner: frontend maintainers. Last verified: 2026-11-08.
+- VERIFIED: SCR-030/032 and the pricing editor share `MerchantLotNavigation` in the parking-lot entity layer. It composes existing routes; no API or router definitions changed.
+- Tổng quan shows the profile, images, capacity/location and current price summary. Cấu hình chỗ đỗ and Bảng giá open the existing editors; only the selected route's content renders. The active link uses aria-current and supports keyboard activation.
+- Status-based configuration/edit visibility and the lot-specific QR scanner link are preserved. Narrow screens scroll the navigation horizontally without widening the page.
+- Validation: typecheck, lint and build passed; complete Vitest suite: 48 files / 344 tests passed (existing tests emitted network stderr). Browser evidence and outcomes: see `lot-navigation-report.md`.

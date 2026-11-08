@@ -380,7 +380,7 @@ describe('Finance, disputes and lot configuration', () => {
     const containerInput = screen.getByLabelText(/Tổng sức chứa \(min: 25\)/i)
     expect(containerInput).toHaveAttribute('min', '25')
   })
-  it('prevents duplicate submissions in pricing editor while request is pending', async () => {
+  it('prevents duplicate submissions and shows a dismissible corner toast that expires', async () => {
     let resolveMutation!: (value: null) => void
     const pendingPromise = new Promise<null>((resolve) => {
       resolveMutation = resolve
@@ -410,7 +410,16 @@ describe('Finance, disputes and lot configuration', () => {
     await waitFor(() =>
       expect(screen.getByText('Đã lưu cấu hình thành công.')).toBeInTheDocument(),
     )
-  })
+    expect(screen.getByRole('status')).toHaveClass('fixed', 'top-20', 'right-4')
+    await waitFor(() =>
+      expect(screen.queryByText('Đã lưu cấu hình thành công.')).not.toBeInTheDocument(),
+      { timeout: 5000 },
+    )
+    fireEvent.click(submitBtn)
+    await screen.findByText('Đã lưu cấu hình thành công.')
+    fireEvent.click(screen.getByRole('button', { name: 'Đóng thông báo thành công' }))
+    expect(screen.queryByText('Đã lưu cấu hình thành công.')).not.toBeInTheDocument()
+  }, 10000)
 })
 
 describe('Merchant bookings dispatch and notifications center', () => {

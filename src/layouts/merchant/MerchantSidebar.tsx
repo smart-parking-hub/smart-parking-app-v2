@@ -12,14 +12,15 @@ import {
   Building2,
   Phone,
   ShieldCheck,
-  X,
   Bell,
+  X,
 } from 'lucide-react'
 import { cn } from '@/shared/utils/cn'
 
 interface MerchantSidebarProps {
   mobileOpen?: boolean
   onCloseMobile?: () => void
+  collapsed?: boolean
 }
 
 interface NavItem {
@@ -41,7 +42,7 @@ const NAV_ITEMS: NavItem[] = [
   { to: '/merchant/notifications', label: 'Thông báo', icon: Bell },
 ]
 
-export function MerchantSidebar({ mobileOpen = false, onCloseMobile }: MerchantSidebarProps) {
+export function MerchantSidebar({ mobileOpen = false, onCloseMobile, collapsed = false }: MerchantSidebarProps) {
   const location = useLocation()
 
   useEffect(() => {
@@ -79,8 +80,10 @@ export function MerchantSidebar({ mobileOpen = false, onCloseMobile }: MerchantS
 
       {/* Sidebar Shell */}
       <aside
+        id="merchant-sidebar"
         className={cn(
-          'fixed left-0 top-0 h-full w-[260px] bg-[#131b2e] z-50 flex flex-col justify-between border-r border-[#233144] shadow-xl transition-transform duration-300 ease-in-out',
+          'fixed left-0 top-0 h-full w-[260px] bg-[#131b2e] z-50 flex flex-col justify-between border-r border-[#233144] shadow-xl transition-[width,transform] duration-300 ease-in-out motion-reduce:transition-none',
+          collapsed && 'lg:w-[76px]',
           mobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0',
         )}
       >
@@ -89,15 +92,17 @@ export function MerchantSidebar({ mobileOpen = false, onCloseMobile }: MerchantS
           <div className="h-16 px-5 flex items-center justify-between border-b border-[#233144]">
             <Link
               to="/merchant/dashboard"
-              className="flex items-center gap-2.5 text-white focus:outline-none"
+              className="flex items-center gap-2.5 text-white rounded-lg focus-visible:outline-2 focus-visible:outline-brand-orange"
+              aria-label="Smart Parking Hub - Tổng quan chủ bãi"
+              title="Smart Parking Hub"
               onClick={onCloseMobile}
             >
-              <div className="w-8 h-8 rounded-lg bg-[#341100] border border-[#d95f00]/30 flex items-center justify-center shrink-0">
-                <Truck className="w-4 h-4 text-[#d95f00]" />
+              <div className="w-9 h-9 rounded-xl border border-brand-orange/30 flex items-center justify-center shrink-0">
+                <Truck className="w-[22px] h-[22px] text-brand-orange" aria-hidden="true" />
               </div>
-              <div className="flex flex-col">
+              <div className={cn('flex flex-col', collapsed && 'lg:hidden')}>
                 <span className="font-sora text-sm font-bold text-white tracking-tight leading-none">
-                  SMARTTRUCK <span className="text-[#d95f00]">HUB</span>
+                  Smart Parking <span className="text-brand-orange">Hub</span>
                 </span>
                 <div className="flex items-center gap-1 mt-1">
                   <span className="text-[9px] uppercase tracking-widest px-1.5 py-0.5 rounded font-mono bg-[#341100] text-[#d95f00] font-bold border border-[#d95f00]/20">
@@ -128,8 +133,11 @@ export function MerchantSidebar({ mobileOpen = false, onCloseMobile }: MerchantS
                   key={item.to}
                   to={item.to}
                   onClick={onCloseMobile}
+                  aria-label={item.label}
+                  title={collapsed ? item.label : undefined}
                   className={cn(
-                    'flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs lg:text-sm transition-all font-medium',
+                    'flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs lg:text-sm transition-colors font-medium focus-visible:outline-2 focus-visible:outline-brand-orange',
+                    collapsed && 'lg:justify-center lg:px-0',
                     active
                       ? 'bg-[#d5e3fc] text-[#0d1c2e] font-bold shadow-xs'
                       : 'text-[#7c839b] hover:bg-[#233144]/60 hover:text-white',
@@ -142,7 +150,7 @@ export function MerchantSidebar({ mobileOpen = false, onCloseMobile }: MerchantS
                       active ? 'text-[#0d1c2e]' : 'text-[#7c839b]',
                     )}
                   />
-                  <span className="truncate">{item.label}</span>
+                  <span className={cn('truncate', collapsed && 'lg:hidden')}>{item.label}</span>
                 </Link>
               )
             })}
@@ -154,21 +162,21 @@ export function MerchantSidebar({ mobileOpen = false, onCloseMobile }: MerchantS
           <div className="flex items-center justify-between text-[#7c839b] font-mono text-xs">
             <a
               href="tel:19006868"
-              className="flex items-center gap-1.5 hover:text-white transition-colors"
+              className="flex items-center gap-1.5 hover:text-white transition-colors rounded focus-visible:outline-2 focus-visible:outline-brand-orange"
+              aria-label="Hỗ trợ: 1900 6868 (Nhánh 2)"
+              title="1900 6868 (Nhánh 2)"
             >
               <Phone className="w-3.5 h-3.5 text-[#d95f00]" />
-              <span>1900 6868 (Nhánh 2)</span>
+              <span className={cn(collapsed && 'lg:hidden')}>1900 6868 (Nhánh 2)</span>
             </a>
           </div>
-          {location.pathname !== '/merchant/profile' && (
-            <div className="flex items-center justify-between font-mono text-[11px] text-[#7c839b]/80 pt-1 border-t border-[#233144]/60">
-              <span>Hệ thống: V2.8.4-OPS</span>
-              <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-[#233144] text-white border border-slate-700 text-[10px] font-semibold">
-                <ShieldCheck className="w-3 h-3 text-emerald-400" />
-                <span>ISO 27001</span>
-              </span>
-            </div>
-          )}
+          {location.pathname !== '/merchant/profile' && <div className={cn('flex items-center justify-between font-mono text-[11px] text-[#7c839b]/80 pt-1 border-t border-[#233144]/60', collapsed && 'lg:hidden')}>
+            <span>Hệ thống: V2.8.4-OPS</span>
+            <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-[#233144] text-white border border-slate-700 text-[10px] font-semibold">
+              <ShieldCheck className="w-3 h-3 text-emerald-400" />
+              <span>ISO 27001</span>
+            </span>
+          </div>}
         </div>
       </aside>
     </>

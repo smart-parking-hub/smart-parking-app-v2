@@ -96,10 +96,10 @@ export function MerchantLotGallery({
           </div>
           <div>
             <h2 className="font-sora text-base lg:text-lg text-[#0d1c2e] font-bold">
-              Thư Viện Thực Tế Hạ Tầng Bãi Đỗ
+              Hình ảnh bãi đỗ
             </h2>
             <p className="text-xs text-slate-500">
-              Hình ảnh xác thực mặt bằng, hệ thống barie ALPR và trạm cấp nguồn
+              Ảnh mặt bằng và lối vào do chủ bãi cung cấp
             </p>
           </div>
         </div>
@@ -126,7 +126,13 @@ export function MerchantLotGallery({
           {images.map((img, idx) => (
             <div
               key={img.id || idx}
+              role="button"
+              tabIndex={0}
+              aria-label={`Xem ảnh ${img.title}`}
               onClick={() => openLightbox(idx)}
+              onKeyDown={(event) => {
+                if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); openLightbox(idx) }
+              }}
               className="group relative aspect-4/3 rounded-xl overflow-hidden bg-slate-100 border border-slate-200/80 cursor-pointer shadow-2xs hover:shadow-md transition-all"
             >
               <img

@@ -47,13 +47,14 @@ export function Dialog({
     return () => {
       document.body.style.overflow = 'unset'
       if (element) {
-        element.removeAttribute('open')
         if (typeof element.close === 'function' && element.open) {
           try {
             element.close()
           } catch {
-            // ignore close error
+            element.removeAttribute('open')
           }
+        } else {
+          element.removeAttribute('open')
         }
       }
       if (previous instanceof HTMLElement) {

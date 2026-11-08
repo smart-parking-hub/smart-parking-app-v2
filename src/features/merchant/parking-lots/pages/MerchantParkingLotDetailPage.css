@@ -1,0 +1,57 @@
+.lot-detail { padding: 32px; color: var(--color-text-primary); font-family: var(--font-body); }
+.lot-detail-container { max-width: 1280px; margin: auto; display: flex; flex-direction: column; gap: 24px; }
+.lot-detail :is(h1,h2,h3,p) { margin: 0; }
+.lot-detail :is(a,button):focus-visible { outline: 3px solid var(--color-brand-primary); outline-offset: 4px; }
+.lot-detail-back { display: inline-flex; align-items: center; gap: 8px; align-self: flex-start; color: var(--color-text-muted); font-size: 14px; }
+.lot-detail-header { display: flex; align-items: center; justify-content: space-between; gap: 24px; }
+.lot-detail-eyebrow { color: var(--color-brand-orange-ink); font-size: 11px; letter-spacing: .12em; }
+.lot-detail-header h1 { margin: 8px 0 12px; font: 600 30px/1.3 var(--font-heading); letter-spacing: -.8px; }
+.lot-detail-address { display: flex; align-items: center; gap: 8px; color: var(--color-text-muted); font-size: 14px; }
+.lot-detail-address svg { flex-shrink: 0; }
+.lot-detail-status { display: flex; flex-direction: column; align-items: flex-end; gap: 10px; font-size: 13px; color: var(--color-text-muted); }
+.lot-status-badge { display: inline-flex; align-items: center; gap: 7px; padding: 7px 12px; border-radius: 24px; background: var(--color-status-warning-bg); color: var(--color-text-primary); white-space: nowrap; }
+.lot-status-badge.is-approved { background: var(--color-status-success-bg); color: var(--color-status-success); }
+.lot-detail-gallery { min-width: 0; }
+.lot-location-map { position: relative; overflow: hidden; border-radius: 12px; }
+.lot-location-map-canvas { height: 320px; width: 100%; z-index: 0; }
+.lot-map-error { padding: 12px; background: var(--color-status-warning-bg); font-size: 12px; }
+.lot-detail-operating-grid { display: grid; grid-template-columns: minmax(0,1.4fr) minmax(0,1fr); gap: 24px; }
+.lot-detail-panel { min-width: 0; border: 1px solid var(--color-surface-border); border-radius: 16px; background: var(--color-surface-card); padding: 24px; }
+.lot-panel-heading, .lot-panel-heading > div { display: flex; align-items: center; gap: 12px; }
+.lot-panel-heading { justify-content: space-between; margin-bottom: 24px; }
+.lot-panel-heading h2 { font: 600 18px/1.4 var(--font-heading); }
+.lot-section-icon, .lot-price-icon { display: inline-flex; align-items: center; justify-content: center; color: var(--color-brand-orange-ink); }
+.lot-count-label, .lot-muted-icon, .lot-panel-footnote { color: var(--color-text-muted); font-size: 12px; }
+.lot-capacity-summary { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 12px; padding: 20px 24px; border-radius: 10px; background: var(--color-brand-navy-light); font-size: 14px; color: var(--color-api-muted); }
+.lot-capacity-summary strong { display: block; font: 600 38px/1.4 var(--font-heading); color: var(--color-surface-card); font-variant-numeric: tabular-nums; }
+.lot-capacity-summary small { margin-left: 8px; font: 400 14px var(--font-body); color: var(--color-api-muted); }
+.lot-summary-dot { display: inline-block; width: 7px; height: 7px; margin-right: 6px; border-radius: 50%; background: var(--color-brand-primary); }
+.lot-capacity-list { list-style: none; margin: 0; padding: 0; }
+.lot-capacity-list li { display: flex; align-items: center; gap: 12px; padding: 19px 0; border-bottom: 1px solid var(--color-surface-border); }
+.lot-vehicle-glyph { color: var(--color-text-muted); }
+.lot-capacity-type { flex: 1; min-width: 0; }
+.lot-capacity-type h3 { font-size: 15px; font-weight: 500; }
+.lot-capacity-track { height: 5px; margin-top: 10px; border-radius: 8px; background: var(--color-surface-subtle); overflow: hidden; }
+.lot-capacity-track span { display: block; height: 100%; background: var(--color-brand-primary); border-radius: inherit; }
+.lot-capacity-value { text-align: right; font-variant-numeric: tabular-nums; }
+.lot-capacity-value strong { font-size: 18px; }
+.lot-capacity-value strong span { font-size: 13px; color: var(--color-text-muted); font-weight: 400; }
+.lot-capacity-value small { display: block; color: var(--color-text-muted); font-size: 11px; }
+.lot-panel-footnote { padding-top: 16px; line-height: 1.6; }
+.lot-location-info { margin-top: 20px; font-size: 14px; }
+.lot-location-info p { display: flex; align-items: flex-start; gap: 8px; }
+.lot-location-info p svg { flex-shrink: 0; }
+.lot-location-info dl { display: flex; gap: 32px; margin: 16px 0; }
+.lot-location-info dt { color: var(--color-text-muted); font-size: 11px; }
+.lot-location-info dd { margin: 4px 0 0; font-variant-numeric: tabular-nums; }
+.lot-map-link, .lot-pricing-footer a, .lot-detail-empty a { display: inline-flex; align-items: center; gap: 6px; color: var(--color-brand-orange-ink); font-size: 13px; font-weight: 600; }
+.lot-price-grid { display: grid; grid-template-columns: repeat(auto-fit,minmax(170px,1fr)); gap: 16px; list-style: none; padding: 0; margin: 0; }
+.lot-price-grid li { padding: 20px; border: 1px solid var(--color-surface-border); border-radius: 12px; }
+.lot-price-grid h3 { margin: 12px 0; font-size: 15px; font-weight: 500; }
+.lot-price-grid p { display: flex; flex-wrap: wrap; gap: 5px; align-items: baseline; }
+.lot-price-grid strong { font: 600 22px/1.5 var(--font-heading); font-variant-numeric: tabular-nums; }
+.lot-price-grid p span { font-size: 12px; color: var(--color-text-muted); }
+.lot-pricing-footer { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px; margin-top: 20px; padding-top: 18px; border-top: 1px solid var(--color-surface-border); font-size: 12px; color: var(--color-text-muted); }
+.lot-detail-empty { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; padding: 36px 16px; color: var(--color-text-muted); font-size: 14px; }
+@media (max-width: 900px) { .lot-detail-operating-grid { grid-template-columns: 1fr; } }
+@media (max-width: 600px) { .lot-detail { padding: 20px 16px; } .lot-detail-header { align-items: flex-start; flex-direction: column; gap: 16px; } .lot-detail-header h1 { font-size: 25px; } .lot-detail-status { flex-direction: row; align-items: center; } .lot-detail-panel { padding: 18px; } .lot-panel-heading { gap: 8px; } .lot-panel-heading h2 { font-size: 16px; } .lot-price-grid { grid-template-columns: 1fr 1fr; gap: 10px; } .lot-price-grid li { padding: 14px; } .lot-price-grid strong { font-size: 19px; } .lot-location-map-canvas { height: 280px; } }

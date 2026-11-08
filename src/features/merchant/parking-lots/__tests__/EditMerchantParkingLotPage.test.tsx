@@ -1,330 +1,150 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, screen, waitFor, fireEvent } from '@testing-library/react'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { EditMerchantParkingLotPage } from '../pages/EditMerchantParkingLotPage'
-import * as api from '../api/merchantParkingLotApi'
-import type { MerchantParkingLotDetailData } from '../types/merchantParkingLotTypes'
+import { apiClient } from '@/shared/api/client'
 
-function renderPage(lotId = 1) {
-  const queryClient = new QueryClient({
-    defaultOptions: {
-      queries: {
-        retry: false,
-      },
-    },
-  })
-
-  return render(
-    <QueryClientProvider client={queryClient}>
-      <MemoryRouter initialEntries={[`/merchant/parking-lots/${lotId}/edit`]}>
-        <Routes>
-          <Route
-            path="/merchant/parking-lots/:parkingLotId/edit"
-            element={<EditMerchantParkingLotPage />}
-          />
-          <Route
-            path="/merchant/parking-lots/:parkingLotId"
-            element={<div>CHI TIẾT BÃI ĐỖ MOCK</div>}
-          />
-        </Routes>
-      </MemoryRouter>
-    </QueryClientProvider>,
-  )
+vi.mock('@/shared/api/client', () => ({ apiClient: { get: vi.fn(), put: vi.fn(), post: vi.fn() } }))
+vi.mock('../components/CreateParkingLotMapPicker', () => ({ CreateParkingLotMapPicker: () => <div>Bản đồ</div> }))
+vi.mock('@/shared/components/ApiImage', () => ({ ApiImage: ({ path, alt }: { path: string; alt: string }) => <img src={path} alt={alt} /> }))
+const lot = { id: 35, name: 'Bến Cảng Quận 1', address: '65 Nguyễn Chí, Quận 1', latitude: 21.0278, longitude: 105.8342, status: 'CHANGES_REQUESTED', reviewReason: 'Cập nhật địa chỉ cổng vào.', images: [{ id: 91, originalFileName: 'cong-bai-35.jpg', contentUrl: '/api/v1/parking-lots/35/images/91/content', cover: true }] }
+function renderPage(id = '35') {
+  const client = new QueryClient({ defaultOptions: { queries: { retry: false, gcTime: 0 }, mutations: { retry: false } } })
+  return render(<QueryClientProvider client={client}><MemoryRouter initialEntries={[`/merchant/parking-lots/${id}/edit`]}><Routes>
+    <Route path="/merchant/parking-lots/:parkingLotId/edit" element={<EditMerchantParkingLotPage />} />
+    <Route path="/merchant/parking-lots/:parkingLotId" element={<p>Chi tiết bãi thật</p>} />
+  </Routes></MemoryRouter></QueryClientProvider>)
 }
+beforeEach(() => { vi.resetAllMocks(); localStorage.clear(); vi.mocked(apiClient.get).mockResolvedValue({ data: { data: lot } }) })
+afterEach(() => { cleanup(); vi.unstubAllGlobals() })
 
-describe('SCR-031: EditMerchantParkingLotPage (Chỉnh sửa & Cập nhật hồ sơ bãi đỗ xe)', () => {
-  beforeEach(() => {
-    vi.clearAllMocks()
-    localStorage.clear()
+describe('SCR-031 uses the selected lot and real API outcomes', () => {
+  it('loads actual fields, review reason and image without prototype data', async () => {
+    renderPage()
+    expect(await screen.findByLabelText('Tên bãi đỗ')).toHaveValue(lot.name)
+    expect(screen.getByLabelText('Địa chỉ')).toHaveValue(lot.address)
+    expect(screen.getByLabelText('Vĩ độ')).toHaveValue(lot.latitude)
+    expect(screen.getByLabelText('Kinh độ')).toHaveValue(lot.longitude)
+    expect(screen.getByText(lot.reviewReason)).toBeInTheDocument()
+    expect(screen.getByRole('img', { name: 'cong-bai-35.jpg' })).toHaveAttribute('src', lot.images[0].contentUrl)
+    expect(apiClient.get).toHaveBeenCalledWith('/api/v1/merchant/parking-lots/35', expect.objectContaining({ signal: expect.any(AbortSignal) }))
+    for (const text of [/Nguyễn Hoàng Nam/, /Rev 2.1/, /RTK/, /MOD-04/, /OTP Verified/, /Gò Cát/, /Lịch Sử Thẩm Định/]) expect(screen.queryByText(text)).not.toBeInTheDocument()
   })
-
-  it('renders all key sections, Admin feedback alert, 4 form cards and 3 right column widgets', async () => {
-    // Mock lot in CHANGES_REQUESTED status
-    vi.spyOn(api, 'fetchMerchantParkingLotDetail').mockResolvedValueOnce({
-      ...api.fallbackMerchantLotDetailData,
-      id: 1,
-      name: 'Depot Container Tân Cảng - Phú Hữu (Cơ Sở 2)',
-      address: 'Đường Gò Cát, Phường Phú Hữu, TP. Thủ Đức, TP. Hồ Chí Minh',
-      status: 'CHANGES_REQUESTED',
-      code: 'TAN-CANG-PH2',
-      reviewReason:
-        'Cần kéo lại ghim GPS đúng cổng Barie và bổ sung ảnh kiểm định PCCC đêm.',
-    })
-
-    renderPage(1)
-
-    // Wait for initial render
-    await waitFor(() => {
-      expect(
-        screen.getByRole('heading', { name: /Chỉnh Sửa & Cập Nhật Hồ Sơ Bãi Đỗ/i }),
-      ).toBeInTheDocument()
-    })
-
-    // 1. Breadcrumb and Header
-    expect(screen.getByText(/HỒ SƠ BẾN BÃI & THẨM ĐỊNH KỸ THUẬT/i)).toBeInTheDocument()
-    expect(screen.getByText(/YÊU CẦU BỔ SUNG \(CHANGES REQUESTED\)/i)).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /Quay lại Chi Tiết Bãi/i })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /Xem Lịch Sử Thẩm Định/i })).toBeInTheDocument()
-
-    // 2. Admin Review Alert Banner
-    expect(
-      screen.getByText(/BIÊN BẢN YÊU CẦU BỔ SUNG TỪ HỘI ĐỒNG THẨM ĐỊNH ADMIN/i),
-    ).toBeInTheDocument()
-    expect(screen.getByText(/ĐỢT XÉT DUYỆT #02/i)).toBeInTheDocument()
-    expect(screen.getByText(/Tọa độ GPS cổng vào:/i)).toBeInTheDocument()
-    expect(screen.getByText(/Hệ thống chiếu sáng & PCCC:/i)).toBeInTheDocument()
-    expect(screen.getByText(/Tĩnh không hạ tầng:/i)).toBeInTheDocument()
-
-    // 3. 4 Form Panels in Left Column
-    expect(screen.getByText('Thông Tin Mặt Bằng & Pháp Lý Vận Hành')).toBeInTheDocument()
-    expect(screen.getByLabelText(/Tên bãi đỗ thương mại/i)).toBeInTheDocument()
-    expect(screen.getByLabelText(/Địa chỉ kinh doanh đăng ký/i)).toBeInTheDocument()
-    expect(screen.getByLabelText(/Hotline điều phối trực ban 24\/7/i)).toBeInTheDocument()
-    expect(screen.getByLabelText(/Tĩnh không cổng tiếp nhận/i)).toBeInTheDocument()
-
-    expect(screen.getByText('Tọa Độ GPS Cổng Barie (Chuẩn WGS-84 RTK)')).toBeInTheDocument()
-    expect(screen.getByLabelText(/Vĩ độ \(Latitude - North\)/i)).toBeInTheDocument()
-    expect(screen.getByLabelText(/Kinh độ \(Longitude - East\)/i)).toBeInTheDocument()
-
-    expect(screen.getByText('Hình Ảnh Hiện Trường & Thẩm Định PCCC Bổ Sung')).toBeInTheDocument()
-    expect(screen.getByText('TỐI THIỂU 4 ẢNH CHUẨN')).toBeInTheDocument()
-    expect(screen.getByText(/Đèn Đêm & Trụ PCCC/i)).toBeInTheDocument()
-
-    expect(
-      screen.getByText('Mô Tả Bổ Sung Giải Trình Của Chủ Bãi (Merchant Response)'),
-    ).toBeInTheDocument()
-    expect(screen.getByLabelText(/Ghi chú phúc đáp trực tiếp/i)).toBeInTheDocument()
-
-    // 4. 3 Right Column Cards
-    expect(screen.getByText('Tọa Độ Ghim Thực Địa')).toBeInTheDocument()
-    expect(screen.getByText('RTK < 0.5m')).toBeInTheDocument()
-    expect(screen.getByText('Quy Chuẩn Thẩm Định Gatekeeper')).toBeInTheDocument()
-    expect(screen.getByText('Tiến độ hoàn thiện hồ sơ')).toBeInTheDocument()
-    expect(screen.getByText(/3\/3 HẠNG MỤC/i)).toBeInTheDocument()
-
-    // 5. Sticky Footer
-    expect(screen.getByText(/Rev 2\.1/i)).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /Hủy Bỏ Thay Đổi/i })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /Lưu Bản Nháp Nội Bộ/i })).toBeInTheDocument()
-    expect(
-      screen.getByRole('button', { name: /GỬI LẠI HỒ SƠ KIỂM DUYỆT ADMIN/i }),
-    ).toBeInTheDocument()
+  it('does not invent missing coordinates, images or feedback', async () => {
+    vi.mocked(apiClient.get).mockResolvedValue({ data: { data: { ...lot, latitude: null, longitude: null, images: [], reviewReason: null } } })
+    renderPage()
+    expect(await screen.findByLabelText('Vĩ độ')).toHaveValue(null)
+    expect(screen.getByLabelText('Kinh độ')).toHaveValue(null)
+    expect(screen.getByText('Bãi chưa có ảnh.')).toBeInTheDocument()
+    expect(screen.queryByText('Phản hồi từ quản trị viên')).not.toBeInTheDocument()
+    await userEvent.click(screen.getByRole('button', { name: 'Gửi lại hồ sơ' }))
+    expect(apiClient.put).not.toHaveBeenCalled()
   })
-
-  it('enforces lockout mode when parking lot is APPROVED', async () => {
-    vi.spyOn(api, 'fetchMerchantParkingLotDetail').mockResolvedValueOnce({
-      ...api.fallbackMerchantLotDetailData,
-      id: 2,
-      name: 'Bãi Đỗ Xe Vận Tải Sóng Thần',
-      status: 'APPROVED',
-    })
-
-    renderPage(2)
-
-    await waitFor(() => {
-      expect(screen.getByText(/Hồ sơ hiện không thể chỉnh sửa/i)).toBeInTheDocument()
-    })
-
-    // Check warning and disabled submit button
-    expect(screen.getByText(/STATUS: APPROVED/i)).toBeInTheDocument()
-    const submitBtn = screen.getByRole('button', { name: /GỬI LẠI HỒ SƠ KIỂM DUYỆT ADMIN/i })
-    expect(submitBtn).toBeDisabled()
+  it.each(['APPROVED', 'PENDING_APPROVAL', 'SUSPENDED'])('redirects %s to detail without edit controls', async status => {
+    vi.mocked(apiClient.get).mockResolvedValue({ data: { data: { ...lot, status } } })
+    renderPage()
+    expect(await screen.findByText('Chi tiết bãi thật')).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Gửi lại hồ sơ' })).not.toBeInTheDocument()
   })
-
-  it('calibrates coordinates when clicking the calibration button', async () => {
-    const user = userEvent.setup()
-    vi.spyOn(api, 'fetchMerchantParkingLotDetail').mockResolvedValueOnce({
-      ...api.fallbackMerchantLotDetailData,
-      id: 1,
-      status: 'CHANGES_REQUESTED',
-    })
-
-    renderPage(1)
-
-    await waitFor(() => {
-      expect(screen.getByLabelText(/Vĩ độ/i)).toBeInTheDocument()
-    })
-
-    const latInput = screen.getByLabelText(/Vĩ độ/i) as HTMLInputElement
-    const lngInput = screen.getByLabelText(/Kinh độ/i) as HTMLInputElement
-    const calibrateBtn = screen.getByRole('button', {
-      name: /Đã hiệu chỉnh \+15m theo tim đường Gò Cát/i,
-    })
-
-    await user.click(calibrateBtn)
-
-    expect(Number(latInput.value)).toBeCloseTo(10.785514, 5)
-    expect(Number(lngInput.value)).toBeCloseTo(106.804289, 5)
+  it('does not fetch lot 1 when the route ID is invalid', async () => {
+    renderPage('abc')
+    expect(screen.getByRole('alert')).toHaveTextContent('Mã bãi đỗ không hợp lệ')
+    expect(apiClient.get).not.toHaveBeenCalled()
   })
-
-  it('resets coordinates when clicking reset button', async () => {
-    const user = userEvent.setup()
-    vi.spyOn(api, 'fetchMerchantParkingLotDetail').mockResolvedValueOnce({
-      ...api.fallbackMerchantLotDetailData,
-      id: 1,
-      status: 'REJECTED',
-    })
-
-    renderPage(1)
-
-    await waitFor(() => {
-      expect(screen.getByLabelText(/Vĩ độ/i)).toBeInTheDocument()
-    })
-
-    const latInput = screen.getByLabelText(/Vĩ độ/i) as HTMLInputElement
-    const lngInput = screen.getByLabelText(/Kinh độ/i) as HTMLInputElement
-    const resetBtn = screen.getByRole('button', { name: /Khôi phục tọa độ ban đầu/i })
-
-    await user.click(resetBtn)
-
-    expect(Number(latInput.value)).toBeCloseTo(10.785421, 5)
-    expect(Number(lngInput.value)).toBeCloseTo(106.804152, 5)
+  it('rejects a response for another lot', async () => {
+    vi.mocked(apiClient.get).mockResolvedValue({ data: { data: { ...lot, id: 36 } } })
+    renderPage()
+    expect(await screen.findByRole('alert')).toHaveTextContent('không khớp')
+    expect(screen.queryByLabelText('Tên bãi đỗ')).not.toBeInTheDocument()
   })
-
-  it('saves local draft to localStorage when clicking Lưu Bản Nháp Nội Bộ', async () => {
-    const user = userEvent.setup()
-    vi.spyOn(api, 'fetchMerchantParkingLotDetail').mockResolvedValueOnce({
-      ...api.fallbackMerchantLotDetailData,
-      id: 1,
-      status: 'CHANGES_REQUESTED',
-    })
-
-    renderPage(1)
-
-    await waitFor(() => {
-      expect(screen.getByRole('button', { name: /Lưu Bản Nháp Nội Bộ/i })).toBeInTheDocument()
-    })
-
-    const draftBtn = screen.getByRole('button', { name: /Lưu Bản Nháp Nội Bộ/i })
-    await user.click(draftBtn)
-
-    expect(localStorage.getItem('merchant_lot_edit_draft_1')).not.toBeNull()
-    expect(screen.getByText(/Đã lưu bản nháp nội bộ thành công/i)).toBeInTheDocument()
+  it('shows load failure and retries instead of displaying a fallback yard', async () => {
+    vi.mocked(apiClient.get).mockRejectedValueOnce(new Error('Không có quyền truy cập'))
+    renderPage()
+    expect(await screen.findByRole('alert')).toHaveTextContent('Không có quyền truy cập')
+    expect(screen.queryByLabelText('Tên bãi đỗ')).not.toBeInTheDocument()
+    await userEvent.click(screen.getByRole('button', { name: 'Thử lại' }))
+    expect(await screen.findByLabelText('Tên bãi đỗ')).toHaveValue(lot.name)
   })
-
-  it('opens and closes the history inspection modal', async () => {
-    const user = userEvent.setup()
-    vi.spyOn(api, 'fetchMerchantParkingLotDetail').mockResolvedValueOnce({
-      ...api.fallbackMerchantLotDetailData,
-      id: 1,
-      status: 'CHANGES_REQUESTED',
-    })
-
-    renderPage(1)
-
-    await waitFor(() => {
-      expect(screen.getByRole('button', { name: /Xem Lịch Sử Thẩm Định/i })).toBeInTheDocument()
-    })
-
-    const historyBtn = screen.getByRole('button', { name: /Xem Lịch Sử Thẩm Định/i })
-    await user.click(historyBtn)
-
-    expect(screen.getByText('Nhật Ký Thẩm Định Mặt Bằng')).toBeInTheDocument()
-    expect(screen.getByText(/ĐỢT 02 · CHANGES REQUESTED/i)).toBeInTheDocument()
-
-    const closeBtn = screen.getByRole('button', { name: /Đóng Nhật Ký/i })
-    await user.click(closeBtn)
-
-    await waitFor(() => {
-      expect(screen.queryByText('Nhật Ký Thẩm Định Mặt Bằng')).not.toBeInTheDocument()
-    })
+  it('ignores legacy drafts and drafts belonging to another yard', async () => {
+    localStorage.setItem('merchant_lot_edit_draft_35', JSON.stringify({ lotId: 35, name: 'Nội dung mẫu cũ', latitude: 10.785514 }))
+    const view = renderPage()
+    expect(await screen.findByLabelText('Tên bãi đỗ')).toHaveValue(lot.name)
+    view.unmount()
+    localStorage.setItem('merchant_lot_edit_draft_35', JSON.stringify({ version: 2, lotId: 36, values: { ...lot, name: 'Bãi khác' } }))
+    renderPage()
+    expect(await screen.findByLabelText('Tên bãi đỗ')).toHaveValue(lot.name)
+    expect(screen.queryByRole('button', { name: 'Khôi phục bản nháp' })).not.toBeInTheDocument()
   })
-
-  it('closes history modal when pressing Escape key (TSK-P2-02 A11y)', async () => {
-    const user = userEvent.setup()
-    vi.spyOn(api, 'fetchMerchantParkingLotDetail').mockResolvedValueOnce({
-      ...api.fallbackMerchantLotDetailData,
-      id: 1,
-      status: 'CHANGES_REQUESTED',
-    })
-
-    renderPage(1)
-
-    await waitFor(() => {
-      expect(screen.getByRole('button', { name: /Xem Lịch Sử Thẩm Định/i })).toBeInTheDocument()
-    })
-
-    await user.click(screen.getByRole('button', { name: /Xem Lịch Sử Thẩm Định/i }))
-    expect(screen.getByText('Nhật Ký Thẩm Định Mặt Bằng')).toBeInTheDocument()
-
-    // Press Escape
-    fireEvent.keyDown(window, { key: 'Escape' })
-
-    await waitFor(() => {
-      expect(screen.queryByText('Nhật Ký Thẩm Định Mặt Bằng')).not.toBeInTheDocument()
-    })
+  it('restores a matching draft only after explicit selection', async () => {
+    localStorage.setItem('merchant_lot_edit_draft_35', JSON.stringify({ version: 2, lotId: 35, values: { ...lot, name: 'Tên trong bản nháp', latitude: 0, longitude: 0 } }))
+    renderPage()
+    expect(await screen.findByLabelText('Tên bãi đỗ')).toHaveValue(lot.name)
+    await userEvent.click(screen.getByRole('button', { name: 'Khôi phục bản nháp' }))
+    expect(screen.getByLabelText('Tên bãi đỗ')).toHaveValue('Tên trong bản nháp')
+    expect(screen.getByLabelText('Vĩ độ')).toHaveValue(0)
+    expect(screen.getByLabelText('Kinh độ')).toHaveValue(0)
   })
-
-  it('submits updated parking lot and triggers updateMerchantParkingLot API', async () => {
-    const user = userEvent.setup()
-    const updateSpy = vi.spyOn(api, 'updateMerchantParkingLot').mockResolvedValueOnce({
-      ...api.fallbackMerchantLotDetailData,
-      id: 1,
-      name: 'Depot Container Tân Cảng - Phú Hữu (Đã Cập Nhật)',
-      status: 'PENDING_APPROVAL',
-    })
-
-    vi.spyOn(api, 'fetchMerchantParkingLotDetail').mockResolvedValueOnce({
-      ...api.fallbackMerchantLotDetailData,
-      id: 1,
-      status: 'CHANGES_REQUESTED',
-    })
-
-    renderPage(1)
-
-    await waitFor(() => {
-      expect(
-        screen.getByRole('button', { name: /GỬI LẠI HỒ SƠ KIỂM DUYỆT ADMIN/i }),
-      ).toBeInTheDocument()
-    })
-
-    const submitBtn = screen.getByRole('button', { name: /GỬI LẠI HỒ SƠ KIỂM DUYỆT ADMIN/i })
-    await user.click(submitBtn)
-
-    await waitFor(() => {
-      expect(updateSpy).toHaveBeenCalledWith(
-        1,
-        expect.objectContaining({
-          latitude: expect.any(Number),
-          longitude: expect.any(Number),
-        }),
-      )
-    })
+  it('preserves saved coordinates when device geolocation fails', async () => {
+    const getCurrentPosition = vi.fn((_success, failure) => failure())
+    vi.stubGlobal('navigator', { geolocation: { getCurrentPosition } })
+    renderPage()
+    await userEvent.click(await screen.findByRole('button', { name: 'Lấy vị trí thiết bị' }))
+    expect(screen.getByRole('alert')).toHaveTextContent('Tọa độ bãi được giữ nguyên')
+    expect(screen.getByLabelText('Vĩ độ')).toHaveValue(lot.latitude)
+    expect(screen.getByLabelText('Kinh độ')).toHaveValue(lot.longitude)
   })
-
-  it('prevents duplicate submissions by disabling submit button while submitting (TSK-P2-01)', async () => {
-    const user = userEvent.setup()
-    let resolveUpdate!: (value: MerchantParkingLotDetailData) => void
-    vi.spyOn(api, 'updateMerchantParkingLot').mockImplementationOnce(
-      () =>
-        new Promise((resolve) => {
-          resolveUpdate = resolve
-        }),
-    )
-
-    vi.spyOn(api, 'fetchMerchantParkingLotDetail').mockResolvedValueOnce({
-      ...api.fallbackMerchantLotDetailData,
-      id: 1,
-      status: 'CHANGES_REQUESTED',
+  it('restores coordinates from this lot instead of a fixed port location', async () => {
+    renderPage()
+    const latitude = await screen.findByLabelText('Vĩ độ')
+    fireEvent.change(latitude, { target: { value: '0' } })
+    await userEvent.click(screen.getByRole('button', { name: 'Khôi phục tọa độ đã lưu' }))
+    expect(latitude).toHaveValue(lot.latitude)
+  })
+  it('sends only the real DTO, reports failures and retries successfully', async () => {
+    vi.mocked(apiClient.put).mockRejectedValueOnce(new Error('Máy chủ từ chối cập nhật')).mockResolvedValueOnce({ data: { data: { ...lot, status: 'PENDING_APPROVAL', reviewReason: null } } })
+    renderPage()
+    await userEvent.click(await screen.findByRole('button', { name: 'Gửi lại hồ sơ' }))
+    expect(await screen.findByRole('alert')).toHaveTextContent('Máy chủ từ chối cập nhật')
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+    expect(apiClient.put).toHaveBeenCalledWith('/api/v1/merchant/parking-lots/35', { name: lot.name, address: lot.address, latitude: lot.latitude, longitude: lot.longitude })
+    await userEvent.click(screen.getByRole('button', { name: 'Gửi lại hồ sơ' }))
+    expect(await screen.findByRole('dialog', { name: 'Đã lưu hồ sơ bãi' })).toHaveTextContent('Chờ duyệt')
+  })
+  it('does not resubmit the lot when supplementary image upload fails', async () => {
+    vi.mocked(apiClient.post).mockRejectedValue(new Error('Tải ảnh thất bại'))
+    renderPage()
+    await userEvent.upload(await screen.findByLabelText('Thêm ảnh bổ sung'), new File(['image'], 'anh-moi.png', { type: 'image/png' }))
+    await userEvent.click(screen.getByRole('button', { name: 'Gửi lại hồ sơ' }))
+    expect(await screen.findByRole('alert')).toHaveTextContent('Tải ảnh thất bại')
+    expect(apiClient.put).not.toHaveBeenCalled()
+  })
+  it('keeps uploaded photos and does not upload them twice if the lot update needs retry', async () => {
+    vi.mocked(apiClient.post).mockResolvedValue({ data: { data: [{ id: 92, originalFileName: 'anh-moi.png', contentUrl: '/api/v1/parking-lots/35/images/92/content', cover: false }] } })
+    vi.mocked(apiClient.put).mockRejectedValueOnce(new Error('Chưa lưu được hồ sơ')).mockResolvedValueOnce({ data: { data: { ...lot, status: 'PENDING_APPROVAL' } } })
+    renderPage()
+    await userEvent.upload(await screen.findByLabelText('Thêm ảnh bổ sung'), new File(['image'], 'anh-moi.png', { type: 'image/png' }))
+    await userEvent.click(screen.getByRole('button', { name: 'Gửi lại hồ sơ' }))
+    expect(await screen.findByRole('alert')).toHaveTextContent('Chưa lưu được hồ sơ')
+    expect(screen.getByRole('img', { name: 'anh-moi.png' })).toHaveAttribute('src', '/api/v1/parking-lots/35/images/92/content')
+    await userEvent.click(screen.getByRole('button', { name: 'Gửi lại hồ sơ' }))
+    expect(await screen.findByRole('dialog')).toBeInTheDocument()
+    expect(apiClient.post).toHaveBeenCalledTimes(1)
+    expect(apiClient.put).toHaveBeenCalledTimes(2)
+  })
+  it('blocks duplicate confirmation while the server is saving', async () => {
+    let release!: () => void
+    const gate = new Promise<void>(resolve => { release = resolve })
+    vi.mocked(apiClient.put).mockImplementation(async () => {
+      await gate
+      return { data: { data: { ...lot, status: 'PENDING_APPROVAL' } } }
     })
-
-    renderPage(1)
-
-    const submitBtn = await screen.findByRole('button', {
-      name: /GỬI LẠI HỒ SƠ KIỂM DUYỆT ADMIN/i,
-    })
-    await user.click(submitBtn)
-
-    // Button should be disabled with spinner
-    expect(screen.getByRole('button', { name: /ĐANG GỬI HỒ SƠ.../i })).toBeDisabled()
-
-    // Resolve update
-    resolveUpdate({
-      ...api.fallbackMerchantLotDetailData,
-      id: 1,
-      status: 'PENDING_APPROVAL',
-    })
+    renderPage()
+    await userEvent.dblClick(await screen.findByRole('button', { name: 'Gửi lại hồ sơ' }))
+    expect(screen.getByRole('button', { name: 'Đang gửi hồ sơ…' })).toBeDisabled()
+    expect(apiClient.put).toHaveBeenCalledTimes(1)
+    await act(async () => { release() })
+    expect(await screen.findByRole('dialog')).toBeInTheDocument()
   })
 })

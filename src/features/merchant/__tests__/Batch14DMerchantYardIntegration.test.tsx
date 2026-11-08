@@ -14,6 +14,15 @@ import { MerchantSlotsPage } from '../slots/pages/MerchantSlotsPage'
 
 import * as parkingLotApi from '../parking-lots/api/merchantParkingLotApi'
 import * as slotsApi from '../slots/api/merchantSlotsApi'
+import type { SlotMatrixItem, SimpleLotHeaderInfo } from '../slots/types/merchantSlotsTypes'
+
+const mockSlotMatrix: SlotMatrixItem[] = [
+  { id: 1, vehicleType: 'CONTAINER', typeNameVi: 'Xe container', totalCapacity: 30, availableCapacity: 2, occupiedCapacity: 28 },
+  { id: 2, vehicleType: 'HEAVY_TRUCK', typeNameVi: 'Xe tải nặng', totalCapacity: 10, availableCapacity: 0, occupiedCapacity: 10 },
+]
+const mockLotInfo: SimpleLotHeaderInfo = {
+  id: 1, name: 'Bãi Tân Cảng', address: 'Cát Lái, TP. Thủ Đức', status: 'APPROVED',
+}
 
 // Mock apiClient
 vi.mock('@/shared/api/client', () => ({
@@ -147,7 +156,7 @@ describe('BATCH-14D: Merchant Yard Infrastructure Integration (SCR-026 to SCR-03
       if (url.includes('slots')) {
         return Promise.resolve({
           data: {
-            data: slotsApi.fallbackSlotMatrix,
+            data: mockSlotMatrix,
           },
         })
       }
@@ -163,9 +172,9 @@ describe('BATCH-14D: Merchant Yard Infrastructure Integration (SCR-026 to SCR-03
     })
 
     // Mock slots API
-    vi.spyOn(slotsApi, 'fetchMerchantLotSimpleInfo').mockResolvedValue(slotsApi.fallbackLotInfo)
-    vi.spyOn(slotsApi, 'fetchMerchantLotSlots').mockResolvedValue(slotsApi.fallbackSlotMatrix)
-    vi.spyOn(slotsApi, 'updateMerchantLotSlotsBulk').mockResolvedValue(slotsApi.fallbackSlotMatrix)
+    vi.spyOn(slotsApi, 'fetchMerchantLotSimpleInfo').mockResolvedValue(mockLotInfo)
+    vi.spyOn(slotsApi, 'fetchMerchantLotSlots').mockResolvedValue(mockSlotMatrix)
+    vi.spyOn(slotsApi, 'updateMerchantLotSlotsBulk').mockResolvedValue(mockSlotMatrix)
   })
 
   // -------------------------------------------------------------
@@ -302,7 +311,6 @@ describe('BATCH-14D: Merchant Yard Infrastructure Integration (SCR-026 to SCR-03
       name: 'Depot Container Tân Cảng - Phú Hữu (Cơ Sở 2)',
       address: 'Đường Gò Cát, Phường Phú Hữu, TP. Thủ Đức, TP. Hồ Chí Minh',
       status: 'CHANGES_REQUESTED',
-      code: 'TAN-CANG-PH2',
       reviewReason: 'Cần kéo lại ghim GPS đúng cổng Barie và bổ sung ảnh kiểm định PCCC đêm.',
     })
 
