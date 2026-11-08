@@ -48,81 +48,71 @@ export function AuthLayout({ children, variant = 'default' }: AuthLayoutProps) {
   }
 
   return (
-    <main className="min-h-screen bg-brand-surface font-inter lg:grid lg:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)] xl:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)] p-3 lg:p-4 gap-4">
+    <main className="min-h-screen bg-[#F0F4F9] font-inter flex items-center justify-center p-3 sm:p-5 lg:p-7">
       <ScrollToTop />
-      {/* Cột bên trái: Khung nền ảnh xe tải với viền bo góc tạo hình dáng cabin xe tải và Card modal kính mờ */}
-      <aside className="relative hidden lg:flex flex-col justify-center overflow-hidden rounded-3xl lg:rounded-[36px] xl:rounded-tr-[90px] xl:rounded-br-[40px] border border-slate-800/80 bg-slate-950 p-6 xl:p-10 shadow-2xl ring-1 ring-brand-orange/20">
-        {/* Ảnh nền chiếc xe tải độ nét cao */}
-        <img
-          src="/images/auth-truck-bg.jpg"
-          alt="SmartTruck Hub Logistics Fleet"
-          className="absolute inset-0 h-full w-full object-cover object-[65%_center] transition-transform duration-700 ease-out hover:scale-105"
-        />
+      {/* SVG ClipPath Definition cho viền cắt nghệ thuật lồi/lõm uốn lượn đặc trưng giống ảnh mẫu */}
+      <svg width="0" height="0" className="absolute pointer-events-none" aria-hidden="true">
+        <defs>
+          <clipPath id="bus-hero-clip" clipPathUnits="objectBoundingBox">
+            <path d="M 0.16,0 
+                     L 0.86,0 
+                     C 0.94,0 1,0.06 1,0.14 
+                     L 1,0.84 
+                     C 0.93,0.84 0.84,0.93 0.84,1 
+                     L 0.14,1 
+                     C 0.06,1 0,0.94 0,0.86 
+                     L 0,0.16 
+                     C 0.07,0.16 0.16,0.07 0.16,0 Z" />
+          </clipPath>
+        </defs>
+      </svg>
 
-        {/* Lớp phủ đa tầng tạo chiều sâu điện ảnh và đảm bảo tương phản */}
-        <div className="absolute inset-0 bg-gradient-to-r from-slate-950/90 via-slate-950/65 to-transparent pointer-events-none" />
-        <div className="absolute inset-0 bg-gradient-to-t from-slate-950/95 via-transparent to-slate-950/60 pointer-events-none" />
-        
-        {/* Dải LED viền khí động học phong cách cabin xe tải */}
-        <div className="absolute top-0 right-0 w-44 h-44 bg-gradient-to-bl from-brand-orange/30 via-transparent to-transparent pointer-events-none rounded-tr-[90px]" />
-        <div className="absolute bottom-0 left-0 w-60 h-28 bg-gradient-to-tr from-brand-orange/20 via-transparent to-transparent pointer-events-none" />
+      {/* Card container lớn màu trắng bao trọn 2 cột */}
+      <div className="w-full max-w-[1240px] xl:max-w-[1280px] bg-white rounded-[32px] sm:rounded-[40px] shadow-2xl shadow-slate-200/80 border border-slate-100 flex flex-col lg:flex-row items-stretch overflow-hidden lg:h-[88vh] lg:max-h-[820px] lg:min-h-[620px]">
+        {/* CỘT TRÁI: FORM ĐĂNG NHẬP / ĐĂNG KÝ (Rộng vừa phải, vừa khít khung nhìn, không bị cuộn kéo) */}
+        <section className="w-full lg:w-[48%] xl:w-[45%] flex flex-col justify-center px-6 py-6 sm:px-10 sm:py-8 lg:px-12 lg:py-8 overflow-y-auto">
+          <div className="w-full max-w-[420px] mx-auto my-auto">
+            {children}
+          </div>
+        </section>
 
-        {/* Khối modal nổi (ảnh 2) thu nhỏ lại, đặt ở phía bên trái, phong cách Glassmorphism trong suốt */}
-        <div className="relative z-10 max-w-[420px] w-full rounded-2xl xl:rounded-3xl bg-slate-950/65 backdrop-blur-xl border border-white/15 p-6 xl:p-8 shadow-2xl shadow-black/80 flex flex-col justify-between space-y-6">
-          {/* Header với Logo */}
-          <Link
-            to="/"
-            className="inline-flex items-center gap-3 font-sora text-lg font-bold text-white hover:text-brand-orange transition-colors w-fit focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-orange rounded-lg p-1 -m-1"
+        {/* CỘT PHẢI: KHỐI HÌNH ẢNH XE BUS VỚI ĐƯỜNG CẮT NGHỆ THUẬT */}
+        <aside className="hidden lg:flex flex-1 p-4 lg:p-6 items-center justify-center relative overflow-hidden bg-white">
+          <div
+            className="relative w-full h-full overflow-hidden shadow-xl"
+            style={{
+              clipPath: 'url(#bus-hero-clip)',
+              WebkitClipPath: 'url(#bus-hero-clip)',
+            }}
           >
+            {/* Ảnh chiếc xe bus hiện đại sắc nét */}
             <img
-              src="/image-smart-parking-hub.png"
-              alt="Smart Parking Hub Logo"
-              className="w-8 h-8 rounded-lg object-contain shrink-0 ring-1 ring-white/20"
+              src="/images/auth-bus-bg.jpg"
+              alt="SmartTruck Hub Bus Transit Fleet"
+              className="absolute inset-0 h-full w-full object-cover object-center scale-100 hover:scale-105 transition-transform duration-700 ease-out"
             />
-            <span>SMARTTRUCK HUB</span>
-          </Link>
 
-          {/* Phần nội dung chính của Modal */}
-          <div className="space-y-3.5">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-orange/15 border border-brand-orange/30 font-mono text-[11px] font-semibold tracking-wider text-brand-orange">
-              <span className="w-1.5 h-1.5 rounded-full bg-brand-orange animate-pulse" />
-              KẾT NỐI MỌI ĐIỂM ĐỖ
+            {/* Gradient phủ nhẹ */}
+            <div className="absolute inset-0 bg-gradient-to-t from-slate-950/85 via-slate-950/20 to-slate-950/45 pointer-events-none" />
+
+            {/* Text slogan góc trên bên phải theo ảnh mẫu */}
+            <div className="absolute top-8 right-8 max-w-[320px] text-right pointer-events-none">
+              <p className="font-sora text-sm sm:text-base font-semibold leading-relaxed text-white drop-shadow-md">
+                Một điểm đỗ. <span className="text-brand-orange">Ngàn hành trình.</span>
+              </p>
+              <p className="mt-1 text-xs text-slate-200/90 leading-relaxed drop-shadow-sm font-normal">
+                Quản lý bãi đỗ xe tải và xe bus thông minh trên toàn quốc.
+              </p>
             </div>
 
-            <h2 className="font-sora text-2xl xl:text-3xl font-extrabold leading-snug tracking-tight text-white">
-              Một điểm đỗ.
-              <br />
-              <span className="text-brand-orange">Ngàn hành trình.</span>
-            </h2>
-
-            <p className="text-xs xl:text-sm leading-relaxed text-slate-300 font-normal">
-              Quản lý bãi đỗ, đặt chỗ và vận hành cổng trong cùng một hệ thống dành cho cộng đồng vận tải.
-            </p>
+            {/* Badge bảo mật góc dưới bên trái */}
+            <div className="absolute bottom-8 left-8 flex items-center gap-2 rounded-full bg-slate-950/60 backdrop-blur-md border border-white/20 px-4 py-2 text-xs font-medium text-white shadow-lg pointer-events-none">
+              <ShieldCheck className="w-4 h-4 text-brand-orange shrink-0" />
+              <span>An tâm trên từng chặng đường</span>
+            </div>
           </div>
-
-          {/* Footer của Modal */}
-          <div className="flex items-center gap-2.5 border-t border-white/10 pt-4 text-xs font-medium text-slate-300">
-            <ShieldCheck className="w-4 h-4 text-brand-orange shrink-0" />
-            <span>An tâm trên từng chặng đường</span>
-          </div>
-        </div>
-      </aside>
-      <section className="flex items-center justify-center px-6 py-12 md:px-14 md:py-16 xl:px-20 2xl:px-28">
-        <div className="w-full max-w-[600px]">
-          <Link
-            to="/"
-            className="mb-8 inline-flex items-center gap-3 font-sora text-lg font-bold text-brand-navy lg:hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d95f00] rounded-lg p-1 transition-colors"
-          >
-            <img
-            src="/image-smart-parking-hub.png"
-            alt="Smart Parking Hub Logo"
-            className="w-8 h-8 rounded-lg object-contain shrink-0"
-          />
-            SMARTTRUCK HUB
-          </Link>
-          {children}
-        </div>
-      </section>
+        </aside>
+      </div>
     </main>
   )
 }
