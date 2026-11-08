@@ -48,37 +48,63 @@ export function AuthLayout({ children, variant = 'default' }: AuthLayoutProps) {
   }
 
   return (
-    <main className="min-h-screen bg-brand-surface font-inter lg:grid lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
+    <main className="min-h-screen bg-brand-surface font-inter lg:grid lg:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)] xl:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)] p-3 lg:p-4 gap-4">
       <ScrollToTop />
-      <aside className="relative hidden flex-col justify-between lg:flex overflow-hidden bg-brand-navy p-8 text-white lg:p-16">
-        <Link
-          to="/"
-          className="flex items-center gap-3 font-sora text-xl font-bold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white rounded-lg p-1 transition-colors"
-        >
-          <img
-            src="/image-smart-parking-hub.png"
-            alt="Smart Parking Hub Logo"
-            className="w-8 h-8 rounded-lg object-contain shrink-0"
-          />
-          SMARTTRUCK HUB
-        </Link>
-        <div className="py-12 lg:py-24">
-          <p className="mb-6 font-mono text-xs tracking-[.3em] text-brand-orange">
-            KẾT NỐI MỌI ĐIỂM ĐỖ
-          </p>
-          <h2 className="max-w-xl font-sora text-4xl leading-tight lg:text-6xl">
-            Một điểm đỗ.
-            <br />
-            <span className="text-brand-orange">Ngàn hành trình.</span>
-          </h2>
-          <p className="mt-8 max-w-md text-sm leading-7 text-slate-300">
-            Quản lý bãi đỗ, đặt chỗ và vận hành cổng trong cùng một hệ thống
-            dành cho cộng đồng vận tải.
-          </p>
-        </div>
-        <div className="flex items-center gap-3 border-t border-slate-700 pt-6 text-sm text-slate-300">
-          <ShieldCheck className="text-brand-orange" />
-          An tâm trên từng chặng đường
+      {/* Cột bên trái: Khung nền ảnh xe tải với viền bo góc tạo hình dáng cabin xe tải và Card modal kính mờ */}
+      <aside className="relative hidden lg:flex flex-col justify-center overflow-hidden rounded-3xl lg:rounded-[36px] xl:rounded-tr-[90px] xl:rounded-br-[40px] border border-slate-800/80 bg-slate-950 p-6 xl:p-10 shadow-2xl ring-1 ring-brand-orange/20">
+        {/* Ảnh nền chiếc xe tải độ nét cao */}
+        <img
+          src="/images/auth-truck-bg.jpg"
+          alt="SmartTruck Hub Logistics Fleet"
+          className="absolute inset-0 h-full w-full object-cover object-[65%_center] transition-transform duration-700 ease-out hover:scale-105"
+        />
+
+        {/* Lớp phủ đa tầng tạo chiều sâu điện ảnh và đảm bảo tương phản */}
+        <div className="absolute inset-0 bg-gradient-to-r from-slate-950/90 via-slate-950/65 to-transparent pointer-events-none" />
+        <div className="absolute inset-0 bg-gradient-to-t from-slate-950/95 via-transparent to-slate-950/60 pointer-events-none" />
+        
+        {/* Dải LED viền khí động học phong cách cabin xe tải */}
+        <div className="absolute top-0 right-0 w-44 h-44 bg-gradient-to-bl from-brand-orange/30 via-transparent to-transparent pointer-events-none rounded-tr-[90px]" />
+        <div className="absolute bottom-0 left-0 w-60 h-28 bg-gradient-to-tr from-brand-orange/20 via-transparent to-transparent pointer-events-none" />
+
+        {/* Khối modal nổi (ảnh 2) thu nhỏ lại, đặt ở phía bên trái, phong cách Glassmorphism trong suốt */}
+        <div className="relative z-10 max-w-[420px] w-full rounded-2xl xl:rounded-3xl bg-slate-950/65 backdrop-blur-xl border border-white/15 p-6 xl:p-8 shadow-2xl shadow-black/80 flex flex-col justify-between space-y-6">
+          {/* Header với Logo */}
+          <Link
+            to="/"
+            className="inline-flex items-center gap-3 font-sora text-lg font-bold text-white hover:text-brand-orange transition-colors w-fit focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-orange rounded-lg p-1 -m-1"
+          >
+            <img
+              src="/image-smart-parking-hub.png"
+              alt="Smart Parking Hub Logo"
+              className="w-8 h-8 rounded-lg object-contain shrink-0 ring-1 ring-white/20"
+            />
+            <span>SMARTTRUCK HUB</span>
+          </Link>
+
+          {/* Phần nội dung chính của Modal */}
+          <div className="space-y-3.5">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-orange/15 border border-brand-orange/30 font-mono text-[11px] font-semibold tracking-wider text-brand-orange">
+              <span className="w-1.5 h-1.5 rounded-full bg-brand-orange animate-pulse" />
+              KẾT NỐI MỌI ĐIỂM ĐỖ
+            </div>
+
+            <h2 className="font-sora text-2xl xl:text-3xl font-extrabold leading-snug tracking-tight text-white">
+              Một điểm đỗ.
+              <br />
+              <span className="text-brand-orange">Ngàn hành trình.</span>
+            </h2>
+
+            <p className="text-xs xl:text-sm leading-relaxed text-slate-300 font-normal">
+              Quản lý bãi đỗ, đặt chỗ và vận hành cổng trong cùng một hệ thống dành cho cộng đồng vận tải.
+            </p>
+          </div>
+
+          {/* Footer của Modal */}
+          <div className="flex items-center gap-2.5 border-t border-white/10 pt-4 text-xs font-medium text-slate-300">
+            <ShieldCheck className="w-4 h-4 text-brand-orange shrink-0" />
+            <span>An tâm trên từng chặng đường</span>
+          </div>
         </div>
       </aside>
       <section className="flex items-center justify-center px-6 py-12 md:px-14 md:py-16 xl:px-20 2xl:px-28">
