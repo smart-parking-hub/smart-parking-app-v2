@@ -15,17 +15,17 @@ export function LoginPage() {
       <div className="mb-6">
         <Link
           to="/"
-          className="inline-flex items-center gap-3 font-sora text-xl font-bold text-white mb-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d95f00] rounded-lg p-1 -m-1 transition-colors group"
+          className="inline-flex items-center gap-3 font-sora text-xl font-bold text-brand-navy mb-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d95f00] rounded-lg p-1 -m-1 transition-colors group"
         >
           <img
             src="/image-smart-parking-hub.png"
             alt="Smart Parking Hub Logo"
-            className="w-9 h-9 rounded-xl object-contain shrink-0 shadow-xs group-hover:scale-105 transition-transform ring-1 ring-white/20"
+            className="w-9 h-9 rounded-xl object-contain shrink-0 shadow-xs group-hover:scale-105 transition-transform"
           />
-          <span className="tracking-tight text-white">SMARTTRUCK HUB</span>
+          <span className="tracking-tight text-brand-navy">SMARTTRUCK HUB</span>
         </Link>
-        <h1 className="font-sora text-2xl lg:text-3xl font-bold tracking-tight text-white">Chào mừng trở lại.</h1>
-        <p className="mt-1 text-sm text-slate-300">Đăng nhập để tiếp tục công việc của bạn.</p>
+        <h1 className="font-sora text-2xl lg:text-3xl font-bold tracking-tight text-brand-navy">Chào mừng trở lại.</h1>
+        <p className="mt-1 text-sm text-brand-muted">Đăng nhập để tiếp tục công việc của bạn.</p>
       </div>
       <LoginForm />
     </AuthLayout>

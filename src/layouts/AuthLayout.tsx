@@ -80,9 +80,9 @@ export function AuthLayout({ children, variant = 'default' }: AuthLayoutProps) {
           <span>An tâm trên từng chặng đường</span>
         </div>
 
-        {/* 2. PHẦN MODE (MODAL FORM): NẰM BÊN TRÁI, NỀN TRONG SUỐT NHÌN MỜ MỜ ẢNH BÃI ĐỖ XE PHÍA SAU (CHUẨN ẢNH 1 CROMABANK) */}
+        {/* 2. PHẦN MODE (MODAL FORM): NẰM BÊN TRÁI, NỀN TRẮNG TRONG SUỐT NHÌN MỜ MỜ ẢNH BÃI ĐỖ XE PHÍA SAU */}
         <section className="relative z-10 w-full max-w-[430px] my-auto lg:ml-6 xl:ml-10">
-          <div className="w-full max-h-[88vh] overflow-y-auto bg-slate-950/50 backdrop-blur-2xl rounded-[28px] sm:rounded-[32px] p-6 sm:p-8 shadow-2xl shadow-black/70 border border-white/15 text-white">
+          <div className="w-full max-h-[88vh] overflow-y-auto bg-white/70 backdrop-blur-xl rounded-[28px] sm:rounded-[32px] p-6 sm:p-8 shadow-2xl shadow-slate-950/30 border border-white/80 text-brand-navy">
             {children}
           </div>
         </section>
