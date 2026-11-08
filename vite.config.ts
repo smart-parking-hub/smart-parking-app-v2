@@ -18,6 +18,9 @@ export default defineConfig({
       '^/api(?:/|$)': { target: 'http://localhost:8088', changeOrigin: true },
     },
   },
+  optimizeDeps: {
+    include: ['qrcode.react'],
+  },
   build: {
     rollupOptions: {
       output: {

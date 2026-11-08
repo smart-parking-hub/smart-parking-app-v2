@@ -7,12 +7,12 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { useMutation } from '@tanstack/react-query'
-import { ArrowUpRight, Check, Eye, EyeOff, LoaderCircle } from 'lucide-react'
+import { ArrowUpRight, Check, Eye, EyeOff, LoaderCircle, Store, Truck } from 'lucide-react'
 import { errorMessage, sendData } from '@/shared/api/resources'
 import { AuthLayout } from '@/layouts/AuthLayout'
+import { Select, type SelectOption } from '@/shared/components/Select'
 import {
   control,
-  Field,
   Notice,
 } from '@/shared/components/Workspace'
 
@@ -21,6 +21,21 @@ export type { Role } from './model/session'
 export { RequireRole } from './components/RequireRole'
 export { LoginPage } from './pages/LoginPage'
 export { ForgotPasswordPage } from './pages/ForgotPasswordPage'
+
+const ROLE_OPTIONS: SelectOption[] = [
+  {
+    value: 'DRIVER',
+    label: 'Tài xế',
+    description: 'Tìm kiếm và đặt bến bãi đỗ xe',
+    icon: <Truck size={18} className="text-[#d95f00] shrink-0" />,
+  },
+  {
+    value: 'MERCHANT',
+    label: 'Chủ bãi',
+    description: 'Quản lý bãi đỗ và điều phối doanh thu',
+    icon: <Store size={18} className="text-[#d95f00] shrink-0" />,
+  },
+]
 
 export function AuthPage({ mode }: { mode: 'login' | 'register' | 'forgot' }) {
   if (mode === 'login') return <LoginPage />
@@ -71,7 +86,10 @@ function LegacyAuthPage({ mode }: { mode: 'login' | 'register' | 'forgot' }) {
 
   const submit = useMutation({
     mutationFn: async (data: AuthFields) => {
-      if (mode === 'register')
+      if (mode === 'register') {
+        if (data.confirmPassword && data.confirmPassword !== data.password) {
+          throw new Error('Mật khẩu xác nhận không trùng khớp.')
+        }
         await sendData('post', '/api/v1/auth/register', {
           phone: data.phone,
           password: data.password,
@@ -87,12 +105,13 @@ function LegacyAuthPage({ mode }: { mode: 'login' | 'register' | 'forgot' }) {
               }
             : {}),
         })
-      else
+      } else {
         await sendData('post', '/api/v1/auth/forgot-password/reset', {
           email: data.email.trim().toLowerCase(),
           otpCode: data.otpCode,
           newPassword: data.newPassword,
         })
+      }
     },
   })
 
@@ -105,18 +124,21 @@ function LegacyAuthPage({ mode }: { mode: 'login' | 'register' | 'forgot' }) {
   ) => {
     const isPassword = type === 'password'
     return (
-      <Field label={label}>
+      <div className="space-y-1.5">
+        <label htmlFor={`auth-${name}`} className="block text-sm sm:text-base font-semibold text-black">
+          {label}
+        </label>
         <div className="relative">
           <input
             id={`auth-${name}`}
-            className={`${control} min-h-12 sm:min-h-14 text-base bg-white border border-slate-300 text-slate-900 placeholder:text-slate-400 focus:border-[#d95f00] focus:ring-2 focus:ring-[#d95f00]/20 focus-visible:ring-2 focus-visible:ring-[#d95f00] focus-visible:ring-offset-1 rounded-xl px-4 py-3 shadow-2xs transition-colors`}
+            className={`${control} min-h-12 sm:min-h-14 text-base bg-white border border-slate-300 text-black font-normal placeholder:font-normal placeholder:text-slate-400 hover:border-slate-400 focus:border-[#d95f00] focus:ring-2 focus:ring-[#d95f00]/20 focus-visible:ring-2 focus-visible:ring-[#d95f00] focus-visible:ring-offset-1 rounded-xl px-4 py-3 shadow-2xs transition-colors`}
             disabled={submit.isPending}
             aria-invalid={Boolean(form.formState.errors[name])}
             aria-describedby={form.formState.errors[name] ? `auth-${name}-error` : undefined}
             type={isPassword && showPassword[name] ? 'text' : type}
             placeholder={placeholder}
             autoComplete={
-              name === 'password'
+              name === 'password' || name === 'confirmPassword'
                 ? mode === 'login'
                   ? 'current-password'
                   : 'new-password'
@@ -131,7 +153,7 @@ function LegacyAuthPage({ mode }: { mode: 'login' | 'register' | 'forgot' }) {
                         : 'off'
             }
             {...form.register(name, {
-              required: true,
+              required: name !== 'citizenId' && name !== 'confirmPassword',
               ...options,
               ...(name === 'phone' ? { setValueAs: (value: string) => value.replace(/\s/g, '') } : {}),
             })}
@@ -139,20 +161,20 @@ function LegacyAuthPage({ mode }: { mode: 'login' | 'register' | 'forgot' }) {
           {isPassword && (
             <button
               type="button"
-              className="absolute right-3 top-1/2 -translate-y-1/2 p-2 text-slate-400 hover:text-slate-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d95f00] rounded-lg transition-colors cursor-pointer"
+              className="absolute right-3 top-1/2 -translate-y-1/2 p-2 text-slate-400 hover:text-black focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d95f00] rounded-lg transition-colors cursor-pointer"
               onClick={() => setShowPassword((prev) => ({ ...prev, [name]: !prev[name] }))}
-              aria-label={showPassword[name] ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'}
+              aria-label={showPassword[name] ? (name === 'confirmPassword' ? 'Ẩn xác nhận mật khẩu' : 'Ẩn mật khẩu') : (name === 'confirmPassword' ? 'Hiện xác nhận mật khẩu' : 'Hiện mật khẩu')}
             >
               {showPassword[name] ? <EyeOff size={18} /> : <Eye size={18} />}
             </button>
           )}
         </div>
         {form.formState.errors[name] && (
-          <span id={`auth-${name}-error`} role="alert" className="text-xs text-red-700 font-medium">
-            Thông tin chưa hợp lệ.
+          <span id={`auth-${name}-error`} role="alert" className="text-xs text-red-700 font-normal">
+            {form.formState.errors[name]?.message || 'Thông tin chưa hợp lệ.'}
           </span>
         )}
-      </Field>
+      </div>
     )
   }
 
@@ -161,19 +183,19 @@ function LegacyAuthPage({ mode }: { mode: 'login' | 'register' | 'forgot' }) {
       <div className="mb-6 sm:mb-8 flex flex-col items-center text-center">
         <Link
           to="/"
-          className="inline-flex items-center gap-3.5 font-sora text-xl sm:text-2xl font-bold text-brand-navy mb-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d95f00] rounded-2xl p-1.5 transition-all hover:scale-105 group"
+          className="inline-flex items-center gap-3.5 font-sora text-xl sm:text-2xl font-bold text-black mb-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d95f00] rounded-2xl p-1.5 transition-all hover:scale-105 group"
         >
           <img
             src="/image-smart-parking-hub.png"
             alt="Smart Parking Hub Logo"
             className="w-11 h-11 sm:w-12 sm:h-12 rounded-2xl object-contain shrink-0 shadow-md ring-1 ring-white/60 group-hover:shadow-lg transition-all"
           />
-          <span className="tracking-tight text-brand-navy font-extrabold text-xl sm:text-2xl group-hover:text-brand-orange transition-colors">SMARTTRUCK HUB</span>
+          <span className="tracking-tight text-black font-bold text-xl sm:text-2xl group-hover:text-[#d95f00] transition-colors">SMARTTRUCK HUB</span>
         </Link>
-        <h1 className="font-sora text-3xl sm:text-4xl font-extrabold tracking-tight text-brand-navy drop-shadow-xs">
+        <h1 className="font-sora text-3xl sm:text-4xl font-bold tracking-tight text-black drop-shadow-xs">
           {title}
         </h1>
-        <p className="mt-2 text-base sm:text-lg text-slate-700 font-medium">
+        <p className="mt-2 text-sm sm:text-base text-black font-normal">
           {mode === 'login'
             ? 'Đăng nhập để tiếp tục công việc của bạn.'
             : 'Thông tin được xác thực bởi hệ thống SmartTruck Hub.'}
@@ -184,34 +206,37 @@ function LegacyAuthPage({ mode }: { mode: 'login' | 'register' | 'forgot' }) {
         <AuthSuccess mode={mode} />
       ) : (
         <form
-          className="space-y-4 [&_input:not([role='combobox'])]:min-h-12 [&_input:not([role='combobox'])]:sm:min-h-14 [&_input:not([role='combobox'])]:text-base [&_input:not([role='combobox'])]:rounded-xl [&_input:not([role='combobox'])]:px-4 [&_select]:min-h-12 [&_select]:sm:min-h-14 [&_select]:text-base [&_select]:rounded-xl [&_select]:px-4 [&_label]:gap-1.5 [&_label]:text-sm [&_label]:sm:text-base [&_label]:text-brand-navy [&_label]:font-bold"
+          className="space-y-4 [&_input:not([role='combobox'])]:min-h-12 [&_input:not([role='combobox'])]:sm:min-h-14 [&_input:not([role='combobox'])]:text-base [&_input:not([role='combobox'])]:rounded-xl [&_input:not([role='combobox'])]:px-4 [&_select]:min-h-12 [&_select]:sm:min-h-14 [&_select]:text-base [&_select]:rounded-xl [&_select]:px-4 [&_label]:gap-1.5"
           onSubmit={form.handleSubmit((data) => submit.mutate(data))}
         >
           {mode === 'register' && (
-            <div className="flex items-center justify-center gap-2 mb-2">
+            <div className="grid grid-cols-2 gap-1.5 p-1 bg-black/5 rounded-2xl border border-black/10 mb-3">
               <button
                 type="button"
                 onClick={() => setRegisterStep(1)}
-                className={`flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer ${
+                className={`py-2 px-3 text-xs sm:text-sm rounded-xl font-normal transition-all flex items-center justify-center gap-2 cursor-pointer ${
                   registerStep === 1
-                    ? 'bg-[#d95f00] text-white shadow-xs ring-2 ring-[#d95f00]/30'
-                    : 'bg-white/80 border border-slate-300 text-slate-700 hover:border-[#d95f00] hover:text-brand-orange'
+                    ? 'bg-white text-black shadow-xs font-semibold'
+                    : 'text-black hover:bg-white/40'
                 }`}
               >
-                <span className="flex size-4 items-center justify-center rounded-full bg-white/20 text-[10px]">1</span>
-                <span>Thông tin &amp; vai trò</span>
+                <span className={`flex size-5 items-center justify-center rounded-full text-[11px] font-bold ${
+                  registerStep === 1 ? 'bg-[#d95f00] text-white' : 'bg-black/10 text-black'
+                }`}>1</span>
+                <span>Thông tin cá nhân</span>
               </button>
-              <div className="h-0.5 w-6 bg-slate-300" />
               <button
                 type="button"
                 onClick={() => setRegisterStep(2)}
-                className={`flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer ${
+                className={`py-2 px-3 text-xs sm:text-sm rounded-xl font-normal transition-all flex items-center justify-center gap-2 cursor-pointer ${
                   registerStep === 2
-                    ? 'bg-[#d95f00] text-white shadow-xs ring-2 ring-[#d95f00]/30'
-                    : 'bg-white/80 border border-slate-300 text-slate-700 hover:border-[#d95f00] hover:text-brand-orange'
+                    ? 'bg-white text-black shadow-xs font-semibold'
+                    : 'text-black hover:bg-white/40'
                 }`}
               >
-                <span className="flex size-4 items-center justify-center rounded-full bg-white/20 text-[10px]">2</span>
+                <span className={`flex size-5 items-center justify-center rounded-full text-[11px] font-bold ${
+                  registerStep === 2 ? 'bg-[#d95f00] text-white' : 'bg-black/10 text-black'
+                }`}>2</span>
                 <span>Xác thực &amp; Mật khẩu</span>
               </button>
             </div>
@@ -220,16 +245,22 @@ function LegacyAuthPage({ mode }: { mode: 'login' | 'register' | 'forgot' }) {
           {/* STEP 1: Vai trò & Thông tin cơ bản */}
           <div className={mode === 'register' && registerStep !== 1 ? 'sr-only' : 'space-y-4'}>
             {mode === 'register' && (
-              <Field label="Bạn tham gia với vai trò">
-                <select
+              <div className="space-y-1.5">
+                <label id="auth-role-label" htmlFor="auth-role" className="block text-sm sm:text-base font-semibold text-black">
+                  Bạn tham gia với vai trò
+                </label>
+                <Select
                   id="auth-role"
-                  className={`${control} min-h-12 sm:min-h-14 text-base bg-white border border-slate-300 text-slate-900 rounded-xl px-4 py-3 shadow-2xs focus-visible:ring-2 focus-visible:ring-[#d95f00] focus-visible:ring-offset-1`}
-                  {...form.register('role')}
-                >
-                  <option value="DRIVER">Tài xế</option>
-                  <option value="MERCHANT">Chủ bãi</option>
-                </select>
-              </Field>
+                  triggerAriaHidden={true}
+                  value={form.watch('role')}
+                  onChange={(val) => form.setValue('role', val as 'DRIVER' | 'MERCHANT', { shouldValidate: true })}
+                  options={ROLE_OPTIONS}
+                  variant="default"
+                  size="lg"
+                  triggerClassName="min-h-12 sm:min-h-14 text-base bg-white border border-slate-300 text-black rounded-xl px-4 py-3 shadow-2xs hover:border-[#d95f00] hover:bg-orange-50/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d95f00] focus-visible:ring-offset-1 transition-all cursor-pointer font-normal"
+                  dropdownClassName="border border-slate-200 shadow-xl rounded-xl z-50 bg-white"
+                />
+              </div>
             )}
             {mode === 'register' ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
@@ -278,7 +309,7 @@ function LegacyAuthPage({ mode }: { mode: 'login' | 'register' | 'forgot' }) {
           <div className={mode === 'register' && registerStep !== 2 ? 'sr-only' : 'space-y-4'}>
             {mode !== 'login' && (
               <div className="space-y-1.5">
-                <label htmlFor="auth-email" className="block text-sm sm:text-base font-bold text-brand-navy">
+                <label htmlFor="auth-email" className="block text-sm sm:text-base font-semibold text-black">
                   Email nhận mã xác thực
                 </label>
                 <div className="flex items-center gap-2 sm:gap-2.5">
@@ -291,7 +322,7 @@ function LegacyAuthPage({ mode }: { mode: 'login' | 'register' | 'forgot' }) {
                       disabled={submit.isPending}
                       aria-invalid={Boolean(form.formState.errors.email)}
                       aria-describedby={form.formState.errors.email ? 'auth-email-error' : undefined}
-                      className={`${control} min-h-12 sm:min-h-14 text-base bg-white border border-slate-300 text-slate-900 placeholder:text-slate-400 focus:border-[#d95f00] focus:ring-2 focus:ring-[#d95f00]/20 rounded-xl px-4 py-3 shadow-2xs transition-colors w-full`}
+                      className={`${control} min-h-12 sm:min-h-14 text-base bg-white border border-slate-300 text-black font-normal placeholder:font-normal placeholder:text-slate-400 hover:border-slate-400 focus:border-[#d95f00] focus:ring-2 focus:ring-[#d95f00]/20 rounded-xl px-4 py-3 shadow-2xs transition-colors w-full`}
                       {...form.register('email', { required: true })}
                     />
                   </div>
@@ -300,7 +331,7 @@ function LegacyAuthPage({ mode }: { mode: 'login' | 'register' | 'forgot' }) {
                     aria-label={otp.isPending ? 'Đang gửi…' : countdown ? `Gửi lại sau ${countdown}s` : 'Gửi mã qua email'}
                     disabled={otp.isPending || countdown > 0}
                     onClick={() => otp.mutate()}
-                    className="shrink-0 min-h-12 sm:min-h-14 px-3 sm:px-4 rounded-xl border border-slate-300 bg-white text-xs sm:text-sm font-bold text-brand-navy hover:bg-orange-50 hover:border-[#d95f00] hover:text-brand-orange focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d95f00] focus-visible:ring-offset-1 disabled:opacity-50 transition-all shadow-2xs cursor-pointer flex items-center justify-center gap-1.5 whitespace-nowrap"
+                    className="shrink-0 min-h-12 sm:min-h-14 px-3.5 sm:px-4 rounded-xl border border-slate-300 bg-white text-xs sm:text-sm font-semibold text-black hover:bg-orange-50 hover:border-[#d95f00] hover:text-[#d95f00] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d95f00] focus-visible:ring-offset-1 disabled:opacity-50 transition-all shadow-2xs cursor-pointer flex items-center justify-center gap-1.5 whitespace-nowrap"
                   >
                     {otp.isPending ? (
                       <>
@@ -315,7 +346,7 @@ function LegacyAuthPage({ mode }: { mode: 'login' | 'register' | 'forgot' }) {
                   </button>
                 </div>
                 {form.formState.errors.email && (
-                  <span id="auth-email-error" role="alert" className="text-xs text-red-700 font-medium">
+                  <span id="auth-email-error" role="alert" className="text-xs text-red-700 font-normal">
                     Thông tin chưa hợp lệ.
                   </span>
                 )}
@@ -324,20 +355,20 @@ function LegacyAuthPage({ mode }: { mode: 'login' | 'register' | 'forgot' }) {
 
             {sentValid && (
               <div className="flex items-start gap-3 rounded-xl border border-brand-border bg-brand-surface p-3 sm:p-3.5 text-xs">
-                <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-brand-orange text-white">
+                <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#d95f00] text-white">
                   <Check size={18} strokeWidth={2.5} aria-hidden="true" />
                 </span>
                 <div className="min-w-0">
-                  <p className="font-sora text-xs sm:text-sm font-semibold leading-5 text-brand-navy">
+                  <p className="font-sora text-xs sm:text-sm font-semibold leading-5 text-black">
                     {mode === 'forgot' ? 'Kiểm tra hộp thư của bạn' : 'Mã xác thực đã được gửi'}
                   </p>
-                  <p className="mt-0.5 text-xs leading-relaxed text-brand-muted">
+                  <p className="mt-0.5 text-xs leading-relaxed text-black/70">
                     {mode === 'forgot' ? (
                       'Nếu email đã đăng ký, bạn sẽ nhận được mã. '
                     ) : (
                       <>
                         Gửi đến{' '}
-                        <strong className="break-all font-medium text-brand-navy">
+                        <strong className="break-all font-semibold text-black">
                           {otp.data?.email || form.getValues('email')}
                         </strong>
                         .{' '}
@@ -351,7 +382,7 @@ function LegacyAuthPage({ mode }: { mode: 'login' | 'register' | 'forgot' }) {
 
             {mode !== 'login' && (
               <div className="space-y-1.5">
-                <label htmlFor="auth-otpCode" className="block text-sm sm:text-base font-bold text-brand-navy">
+                <label htmlFor="auth-otpCode" className="block text-sm sm:text-base font-semibold text-black">
                   Mã xác thực email (6 số)
                 </label>
                 <div className="relative max-w-[360px] mx-auto py-1">
@@ -385,8 +416,8 @@ function LegacyAuthPage({ mode }: { mode: 'login' | 'register' | 'forgot' }) {
                             isActive
                               ? 'border-[#d95f00] ring-2 ring-[#d95f00]/30 bg-orange-50/70 text-[#d95f00]'
                               : char
-                                ? 'border-slate-400 bg-white text-brand-navy'
-                                : 'border-slate-300 bg-white/90 text-slate-300'
+                                ? 'border-slate-400 bg-white text-black'
+                                : 'border-slate-300 bg-white/90 text-slate-300 font-normal'
                           }`}
                         >
                           {char}
@@ -396,7 +427,7 @@ function LegacyAuthPage({ mode }: { mode: 'login' | 'register' | 'forgot' }) {
                   </div>
                 </div>
                 {form.formState.errors.otpCode && (
-                  <p id="auth-otpCode-error" role="alert" className="text-xs text-red-700 font-medium text-center">
+                  <p id="auth-otpCode-error" role="alert" className="text-xs text-red-700 font-normal text-center">
                     Thông tin chưa hợp lệ.
                   </p>
                 )}
@@ -408,6 +439,11 @@ function LegacyAuthPage({ mode }: { mode: 'login' | 'register' | 'forgot' }) {
                 minLength: 6,
                 maxLength: 50,
               }, 'Mật khẩu từ 6 đến 50 ký tự')}
+
+            {mode === 'register' &&
+              input('confirmPassword', 'Xác nhận mật khẩu', 'password', {
+                validate: (val) => !val || val === form.watch('password') || 'Mật khẩu xác nhận không khớp.',
+              }, 'Nhập lại mật khẩu để xác nhận')}
 
             {mode === 'forgot' &&
               input('newPassword', 'Mật khẩu mới', 'password', {
@@ -426,7 +462,7 @@ function LegacyAuthPage({ mode }: { mode: 'login' | 'register' | 'forgot' }) {
                 <button
                   type="button"
                   onClick={() => setRegisterStep(1)}
-                  className="inline-flex min-h-12 sm:min-h-14 px-4 items-center justify-center rounded-xl border border-slate-300 bg-white text-sm sm:text-base font-bold text-slate-700 hover:bg-slate-100 hover:border-slate-400 transition-colors shadow-2xs cursor-pointer shrink-0"
+                  className="inline-flex min-h-12 sm:min-h-14 px-4 items-center justify-center rounded-xl border border-slate-300 bg-white text-sm sm:text-base font-semibold text-black hover:bg-slate-100 hover:border-slate-400 transition-colors shadow-2xs cursor-pointer shrink-0"
                 >
                   Quay lại
                 </button>
@@ -452,7 +488,7 @@ function LegacyAuthPage({ mode }: { mode: 'login' | 'register' | 'forgot' }) {
               <button
                 type="submit"
                 disabled={submit.isPending}
-                className="inline-flex min-h-14 w-full items-center justify-center gap-2 rounded-xl bg-[#d95f00] px-5 py-3 text-base font-semibold text-white hover:bg-[#b84e00] active:bg-[#9e4300] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d95f00] focus-visible:ring-offset-2 disabled:opacity-50 transition-colors shadow-xs cursor-pointer"
+                className="inline-flex min-h-14 w-full items-center justify-center gap-2 rounded-xl bg-[#d95f00] px-5 py-3 text-base font-bold text-white hover:bg-[#b84e00] active:bg-[#9e4300] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d95f00] focus-visible:ring-offset-2 disabled:opacity-50 transition-colors shadow-xs cursor-pointer"
               >
                 {submit.isPending ? (
                   <>
@@ -472,13 +508,13 @@ function LegacyAuthPage({ mode }: { mode: 'login' | 'register' | 'forgot' }) {
           </div>
         </form>
       )}
-      <nav aria-label="Tài khoản" className="mt-5 flex flex-wrap items-center justify-between gap-3 text-sm sm:text-base text-slate-700 font-medium">
+      <nav aria-label="Tài khoản" className="mt-5 flex flex-wrap items-center justify-between gap-3 text-sm sm:text-base text-black font-normal">
         {mode !== 'login' && (
           <div>
             <span>Đã có tài khoản? </span>
             <Link
               to="/login"
-              className="font-bold text-brand-orange hover:text-[#9e4300] hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d95f00] rounded-xs transition-colors"
+              className="font-bold text-[#d95f00] hover:text-[#9e4300] hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d95f00] rounded-xs transition-colors"
             >
               Đăng nhập
             </Link>
@@ -489,7 +525,7 @@ function LegacyAuthPage({ mode }: { mode: 'login' | 'register' | 'forgot' }) {
             <span>Chưa có tài khoản? </span>
             <Link
               to="/register"
-              className="font-bold text-brand-orange hover:text-[#9e4300] hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d95f00] rounded-xs transition-colors"
+              className="font-bold text-[#d95f00] hover:text-[#9e4300] hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d95f00] rounded-xs transition-colors"
             >
               Tạo tài khoản
             </Link>
@@ -498,7 +534,7 @@ function LegacyAuthPage({ mode }: { mode: 'login' | 'register' | 'forgot' }) {
         {mode !== 'forgot' && (
           <Link
             to="/forgot-password"
-            className="font-semibold text-brand-orange hover:text-[#9e4300] hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d95f00] rounded-xs transition-colors"
+            className="font-semibold text-[#d95f00] hover:text-[#9e4300] hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d95f00] rounded-xs transition-colors"
           >
             Quên mật khẩu?
           </Link>

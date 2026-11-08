@@ -93,7 +93,7 @@ export function ForgotPasswordResetForm({
 
   return (
     <div className="space-y-6" id="form-step-2">
-      <div className="p-4 rounded bg-[#eff4ff] flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="p-4 rounded-2xl bg-black/5 border border-black/10 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-start gap-2.5 min-w-0">
           <MailCheck
             size={20}
@@ -101,11 +101,11 @@ export function ForgotPasswordResetForm({
             aria-hidden="true"
           />
           <div className="min-w-0">
-            <p className="text-xs font-semibold text-[#0d1c2e]">
+            <p className="text-xs font-semibold text-black">
               Nếu email đã đăng ký, mã OTP 6 chữ số đã được gửi tới:
             </p>
             <p
-              className="font-inter text-xs leading-4 tracking-[0.06em] text-[#0d1c2e] font-semibold break-all mt-0.5"
+              className="font-inter text-xs leading-4 tracking-[0.06em] text-black font-semibold break-all mt-0.5"
               id="display-user-email"
             >
               {email}
@@ -114,14 +114,14 @@ export function ForgotPasswordResetForm({
               type="button"
               disabled={isBusy}
               onClick={onChangeEmail}
-              className="mt-1.5 font-inter text-xs leading-4 font-medium tracking-[0.06em] text-[#45464d] hover:text-[#0d1c2e] underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d95f00] rounded-sm disabled:opacity-50 cursor-pointer"
+              className="mt-1.5 font-inter text-xs leading-4 font-normal tracking-[0.06em] text-black hover:text-[#d95f00] underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d95f00] rounded-sm disabled:opacity-50 cursor-pointer"
             >
               Nhập email khác
             </button>
           </div>
         </div>
         <div
-          className="flex items-center gap-1.5 bg-white px-3 py-1.5 rounded self-start sm:self-center shadow-xs shrink-0"
+          className="flex items-center gap-1.5 bg-white px-3 py-1.5 rounded-xl border border-black/10 self-start sm:self-center shadow-xs shrink-0"
           aria-label="Thời gian hiệu lực mã OTP"
         >
           <Timer
@@ -130,13 +130,13 @@ export function ForgotPasswordResetForm({
             aria-hidden="true"
           />
           <span
-            className="font-inter text-xs leading-4 tracking-[0.04em] font-bold text-[#0d1c2e] tabular-nums"
+            className="font-inter text-xs leading-4 tracking-[0.04em] font-bold text-black tabular-nums"
             id="countdown-timer"
             data-testid="otp-ttl-timer"
           >
             {formatOtpCountdown(ttlRemainingSeconds)}
           </span>
-          <span className="font-inter text-[11px] font-medium tracking-[0.06em] text-[#45464d]">
+          <span className="font-inter text-[11px] font-normal tracking-[0.06em] text-black/70">
             {ttlRemainingSeconds > 0 ? 'CÒN LẠI' : 'HẾT HẠN'}
           </span>
         </div>
@@ -146,7 +146,7 @@ export function ForgotPasswordResetForm({
         <div
           role="status"
           aria-live="polite"
-          className="px-3.5 py-2.5 rounded bg-[#eff4ff] border border-[#b5d0fd] text-xs font-medium text-[#0d1c2e]"
+          className="px-3.5 py-2.5 rounded-xl bg-orange-50 border border-orange-200 text-xs font-normal text-black"
         >
           {resendNotice}
         </div>
@@ -162,15 +162,15 @@ export function ForgotPasswordResetForm({
           <div className="space-y-1.5">
             <div className="flex items-center justify-between gap-2">
               <label
-                className="block text-xs font-semibold text-[#0d1c2e] uppercase tracking-wider"
+                className="block text-xs font-semibold text-black uppercase tracking-wider"
                 htmlFor="input-otp"
               >
                 Mã OTP xác thực (6 chữ số){' '}
-                <span className="text-[#ba1a1a]" aria-hidden="true">
+                <span className="text-[#d95f00]" aria-hidden="true">
                   *
                 </span>
               </label>
-              <span className="font-inter text-xs leading-4 font-medium tracking-[0.06em] text-[#45464d]">
+              <span className="font-inter text-xs leading-4 font-normal tracking-[0.06em] text-black/70">
                 Tối đa 5 lần thử
               </span>
             </div>
@@ -186,7 +186,7 @@ export function ForgotPasswordResetForm({
                 aria-describedby={
                   errors.otpCode ? 'input-otp-error' : 'input-otp-hint'
                 }
-                className="w-full h-14 text-center tracking-[0.5em] font-sora text-xl font-semibold rounded border border-[#c6c6cd] bg-[#eff4ff] text-[#0d1c2e] focus:outline-none focus:border-[#d95f00] focus:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d95f00] focus-visible:ring-offset-1 disabled:opacity-60 transition-colors"
+                className="w-full h-14 text-center tracking-[0.5em] font-sora text-xl font-normal rounded-xl border border-black/15 bg-white text-black placeholder:font-normal placeholder:text-slate-400 focus:outline-none focus:border-[#d95f00] focus:ring-2 focus:ring-[#d95f00] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d95f00] focus-visible:ring-offset-1 disabled:opacity-60 transition-colors"
                 {...form.register('otpCode')}
               />
             </div>
@@ -194,7 +194,7 @@ export function ForgotPasswordResetForm({
               <p
                 id="input-otp-error"
                 role="alert"
-                className="text-xs font-medium text-[#ba1a1a] pt-1"
+                className="text-xs font-medium text-red-600 pt-1"
               >
                 {errors.otpCode.message}
               </p>
@@ -202,7 +202,7 @@ export function ForgotPasswordResetForm({
             <div className="flex flex-wrap items-center justify-between gap-2 pt-1">
               <span
                 id="input-otp-hint"
-                className="font-inter text-xs leading-4 font-medium tracking-[0.06em] text-[#45464d]"
+                className="font-inter text-xs leading-4 font-normal tracking-[0.06em] text-black/70"
               >
                 Không nhận được mã? Kiểm tra hộp thư Spam
               </span>
@@ -239,11 +239,11 @@ export function ForgotPasswordResetForm({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-1">
             <div className="space-y-1.5">
               <label
-                className="block text-xs font-semibold text-[#0d1c2e] uppercase tracking-wider"
+                className="block text-xs font-semibold text-black uppercase tracking-wider"
                 htmlFor="new-password"
               >
                 Mật khẩu mới{' '}
-                <span className="text-[#ba1a1a]" aria-hidden="true">
+                <span className="text-[#d95f00]" aria-hidden="true">
                   *
                 </span>
               </label>
@@ -259,7 +259,7 @@ export function ForgotPasswordResetForm({
                       ? 'new-password-error'
                       : 'password-rules-hint'
                   }
-                  className="w-full h-12 px-3.5 pr-11 rounded border border-[#c6c6cd] bg-white text-[#0d1c2e] text-sm focus:outline-none focus:border-[#d95f00] focus:bg-[#eff4ff]/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d95f00] focus-visible:ring-offset-1 disabled:opacity-60 transition-colors"
+                  className="w-full h-12 px-3.5 pr-11 rounded-xl border border-black/15 bg-white text-black font-normal placeholder:font-normal placeholder:text-slate-400 text-sm focus:outline-none focus:border-[#d95f00] focus:ring-2 focus:ring-[#d95f00] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d95f00] focus-visible:ring-offset-1 disabled:opacity-60 transition-colors"
                   {...form.register('newPassword')}
                 />
                 <button
@@ -270,7 +270,7 @@ export function ForgotPasswordResetForm({
                   aria-controls="new-password"
                   aria-pressed={showNewPassword}
                   onClick={() => setShowNewPassword((prev) => !prev)}
-                  className="absolute inset-y-0 right-1 px-2.5 flex items-center text-[#45464d] hover:text-[#0d1c2e] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d95f00] rounded cursor-pointer"
+                  className="absolute inset-y-0 right-1 px-2.5 flex items-center text-black/60 hover:text-black focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d95f00] rounded cursor-pointer"
                 >
                   {showNewPassword ? (
                     <EyeOff size={18} aria-hidden="true" />
@@ -283,7 +283,7 @@ export function ForgotPasswordResetForm({
                 <p
                   id="new-password-error"
                   role="alert"
-                  className="text-xs font-medium text-[#ba1a1a] pt-1"
+                  className="text-xs font-medium text-red-600 pt-1"
                 >
                   {errors.newPassword.message}
                 </p>
@@ -292,11 +292,11 @@ export function ForgotPasswordResetForm({
 
             <div className="space-y-1.5">
               <label
-                className="block text-xs font-semibold text-[#0d1c2e] uppercase tracking-wider"
+                className="block text-xs font-semibold text-black uppercase tracking-wider"
                 htmlFor="confirm-password"
               >
                 Xác nhận mật khẩu{' '}
-                <span className="text-[#ba1a1a]" aria-hidden="true">
+                <span className="text-[#d95f00]" aria-hidden="true">
                   *
                 </span>
               </label>
@@ -312,7 +312,7 @@ export function ForgotPasswordResetForm({
                       ? 'confirm-password-error'
                       : 'password-rules-hint'
                   }
-                  className="w-full h-12 px-3.5 pr-11 rounded border border-[#c6c6cd] bg-white text-[#0d1c2e] text-sm focus:outline-none focus:border-[#d95f00] focus:bg-[#eff4ff]/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d95f00] focus-visible:ring-offset-1 disabled:opacity-60 transition-colors"
+                  className="w-full h-12 px-3.5 pr-11 rounded-xl border border-black/15 bg-white text-black font-normal placeholder:font-normal placeholder:text-slate-400 text-sm focus:outline-none focus:border-[#d95f00] focus:ring-2 focus:ring-[#d95f00] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d95f00] focus-visible:ring-offset-1 disabled:opacity-60 transition-colors"
                   {...form.register('confirmPassword')}
                 />
                 <button
@@ -325,7 +325,7 @@ export function ForgotPasswordResetForm({
                   aria-controls="confirm-password"
                   aria-pressed={showConfirmPassword}
                   onClick={() => setShowConfirmPassword((prev) => !prev)}
-                  className="absolute inset-y-0 right-1 px-2.5 flex items-center text-[#45464d] hover:text-[#0d1c2e] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d95f00] rounded cursor-pointer"
+                  className="absolute inset-y-0 right-1 px-2.5 flex items-center text-black/60 hover:text-black focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d95f00] rounded cursor-pointer"
                 >
                   {showConfirmPassword ? (
                     <EyeOff size={18} aria-hidden="true" />
@@ -338,7 +338,7 @@ export function ForgotPasswordResetForm({
                 <p
                   id="confirm-password-error"
                   role="alert"
-                  className="text-xs font-medium text-[#ba1a1a] pt-1"
+                  className="text-xs font-medium text-red-600 pt-1"
                 >
                   {errors.confirmPassword.message}
                 </p>
@@ -348,9 +348,9 @@ export function ForgotPasswordResetForm({
 
           <div
             id="password-rules-hint"
-            className="p-3 rounded bg-[#eff4ff] text-[#45464d] font-inter text-xs leading-4 font-medium tracking-[0.06em] space-y-1"
+            className="p-3 rounded-xl bg-black/5 text-black font-inter text-xs leading-4 font-normal tracking-[0.06em] space-y-1"
           >
-            <p className="font-semibold text-[#0d1c2e] flex items-center gap-1.5">
+            <p className="font-semibold text-black flex items-center gap-1.5">
               <BadgeCheck
                 size={15}
                 className="text-[#d95f00] shrink-0"
@@ -377,7 +377,7 @@ export function ForgotPasswordResetForm({
           <button
             type="submit"
             disabled={isBusy}
-            className="w-full h-12 py-3 rounded bg-[#d95f00] hover:bg-[#b84e00] active:bg-[#9e4300] text-white font-sora text-base font-semibold flex items-center justify-center gap-2 shadow-md transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d95f00] focus-visible:ring-offset-2 disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer"
+            className="w-full h-12 py-3 rounded-xl bg-[#d95f00] hover:bg-[#b84e00] active:bg-[#9e4300] text-white font-sora text-base font-bold flex items-center justify-center gap-2 shadow-md transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d95f00] focus-visible:ring-offset-2 disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer"
           >
             {isResetPending ? (
               <>
