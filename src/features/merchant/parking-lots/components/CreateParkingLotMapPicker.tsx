@@ -29,10 +29,10 @@ export function CreateParkingLotMapPicker({ latitude, longitude, accuracy, onCoo
     instance.on('click', (event: L.LeafletMouseEvent) => {
       onChange.current(Number(event.latlng.lat.toFixed(7)), Number(event.latlng.lng.toFixed(7)))
     })
-    const observer = new ResizeObserver(() => instance.invalidateSize())
-    observer.observe(container.current)
+    const observer = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(() => instance.invalidateSize()) : null
+    if (observer && container.current) observer.observe(container.current)
     return () => {
-      observer.disconnect()
+      observer?.disconnect()
       instance.remove()
       map.current = null
       marker.current = null

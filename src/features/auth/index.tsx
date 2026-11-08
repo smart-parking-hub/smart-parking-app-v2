@@ -1,4 +1,7 @@
+import type { AuthFields } from './model/authFields'
 import { LoginPage } from './pages/LoginPage'
+import { BankField } from './components/BankField'
+import { requestEmailOtp } from './api/emailOtp'
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
@@ -21,19 +24,9 @@ export function AuthPage({ mode }: { mode: 'login' | 'register' | 'forgot' }) {
   return mode === 'login' ? <LoginPage /> : <LegacyAuthPage mode={mode} />
 }
 
-interface AuthFields {
-  phone: string
-  password: string
-  email: string
-  fullName: string
-  citizenId: string
-  otpCode: string
-  newPassword: string
-  role: 'DRIVER' | 'MERCHANT'
-}
-
 function LegacyAuthPage({ mode }: { mode: 'login' | 'register' | 'forgot' }) {
   const form = useForm<AuthFields>({ defaultValues: { role: 'DRIVER' } })
+  const emailValue = (form.watch('email') ?? '').trim().toLowerCase()
   const [sent, setSent] = useState(false)
   const [countdown, setCountdown] = useState(0)
   const [showPassword, setShowPassword] = useState<Record<string, boolean>>({})
@@ -53,20 +46,22 @@ function LegacyAuthPage({ mode }: { mode: 'login' | 'register' | 'forgot' }) {
 
   const otp = useMutation({
     mutationFn: async () => {
-      const key = mode === 'register' ? 'phone' : 'email'
-      if (!(await form.trigger(key)))
-        throw new Error('Kiểm tra thông tin nhận OTP.')
-      return sendData<{ expiresInSeconds: number }>(
-        'post',
-        `/api/v1/auth/${mode === 'register' ? 'otp/send' : 'forgot-password/otp'}`,
-        { [key]: form.getValues(key) },
+      const email = form.getValues('email')?.trim()
+      const valid = Boolean(email && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))
+      if (!valid)
+        throw new Error('Nhập email hợp lệ để nhận mã.')
+      return requestEmailOtp(
+        mode === 'register' ? 'register' : 'forgot',
+        email.toLowerCase(),
       )
     },
     onSuccess: (data) => {
       setSent(true)
-      setCountdown(Math.max(1, data.expiresInSeconds || 60))
+      setCountdown(Math.max(1, data.resendAfterSeconds || data.expiresInSeconds || 60))
     },
   })
+
+  const sentValid = sent && otp.data?.email === emailValue
 
   const submit = useMutation({
     mutationFn: async (data: AuthFields) => {
@@ -74,15 +69,21 @@ function LegacyAuthPage({ mode }: { mode: 'login' | 'register' | 'forgot' }) {
         await sendData('post', '/api/v1/auth/register', {
           phone: data.phone,
           password: data.password,
-          email: data.email,
+          email: data.email.trim().toLowerCase(),
           role: data.role,
           fullName: data.fullName,
           citizenId: data.citizenId,
           otpCode: data.otpCode,
+          ...(data.role === 'MERCHANT' && data.bankName
+            ? {
+                bankName: data.bankName,
+                bankAccountNum: data.bankAccountNum,
+              }
+            : {}),
         })
       else
         await sendData('post', '/api/v1/auth/forgot-password/reset', {
-          email: data.email,
+          email: data.email.trim().toLowerCase(),
           otpCode: data.otpCode,
           newPassword: data.newPassword,
         })
@@ -169,7 +170,7 @@ function LegacyAuthPage({ mode }: { mode: 'login' | 'register' | 'forgot' }) {
             input('phone', 'Số điện thoại', 'tel', {
               pattern: /^(0|\+84)[35789][0-9]{8}$/,
             })}
-          {mode !== 'login' && input('email', 'Email', 'email')}
+          {mode !== 'login' && input('email', 'Email nhận mã xác thực', 'email')}
           {mode === 'register' && (
             <>
               <Field label="Bạn tham gia với vai trò">
@@ -186,6 +187,14 @@ function LegacyAuthPage({ mode }: { mode: 'login' | 'register' | 'forgot' }) {
                 required: false,
                 pattern: /^$|^(?:[0-9]{9}|[0-9]{12})$/,
               })}
+              {form.watch('role') === 'MERCHANT' && (
+                <>
+                  <BankField control={form.control} disabled={submit.isPending} />
+                  {input('bankAccountNum', 'Số tài khoản ngân hàng', 'text', {
+                    required: true,
+                  })}
+                </>
+              )}
             </>
           )}
           {mode !== 'forgot' &&
@@ -209,15 +218,36 @@ function LegacyAuthPage({ mode }: { mode: 'login' | 'register' | 'forgot' }) {
                 ) : countdown ? (
                   `Gửi lại sau ${countdown}s`
                 ) : (
-                  'Gửi mã OTP'
+                  'Gửi mã qua email'
                 )}
               </button>
-              {sent && (
-                <Notice>
-                  Yêu cầu OTP đã được gửi. Kiểm tra kênh nhận mã của bạn.
-                </Notice>
+              {sentValid && (
+                <div className="flex items-start gap-3 rounded-xl border border-brand-border bg-brand-surface p-4 text-xs">
+                  <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-brand-orange text-white">
+                    <Check size={20} strokeWidth={2.5} aria-hidden="true" />
+                  </span>
+                  <div className="min-w-0">
+                    <p className="font-sora text-sm font-semibold leading-5">
+                      {mode === 'forgot' ? 'Kiểm tra hộp thư của bạn' : 'Mã xác thực đã được gửi'}
+                    </p>
+                    <p className="mt-1 text-sm leading-5 text-brand-muted">
+                      {mode === 'forgot' ? (
+                        'Nếu email đã đăng ký, bạn sẽ nhận được mã. '
+                      ) : (
+                        <>
+                          Gửi đến{' '}
+                          <strong className="break-all font-medium text-brand-navy">
+                            {otp.data?.email || form.getValues('email')}
+                          </strong>
+                          .{' '}
+                        </>
+                      )}
+                      Mã gồm 6 số, có hiệu lực 5 phút. Kiểm tra cả thư rác.
+                    </p>
+                  </div>
+                </div>
               )}
-              {input('otpCode', 'Mã OTP 6 chữ số', 'text', {
+              {input('otpCode', 'Mã xác thực email (6 số)', 'text', {
                 pattern: /^\d{6}$/,
               })}
               {mode === 'forgot' &&

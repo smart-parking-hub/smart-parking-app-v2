@@ -42,6 +42,17 @@ describe('SCR-029: CreateMerchantParkingLotPage (Tạo bãi đỗ mới)', () =>
     vi.clearAllMocks()
     localStorage.clear()
 
+    // Provide default valid draft so multi-step wizard passes step validation
+    localStorage.setItem(
+      'merchant_lot_registration_draft',
+      JSON.stringify({
+        name: 'Depot Container Tân Cảng - Phú Hữu (Cơ Sở 2)',
+        address: 'Đường Gò Cát, P. Phú Hữu, TP. Thủ Đức',
+        latitude: 10.770624,
+        longitude: 106.788215,
+      }),
+    )
+
     // Mock window.scrollTo
     window.scrollTo = vi.fn()
 
@@ -87,7 +98,7 @@ describe('SCR-029: CreateMerchantParkingLotPage (Tạo bãi đỗ mới)', () =>
 
     // Photo inspection card
     expect(screen.getByText(/Album Ảnh Hiện Trường Kiểm Định/i)).toBeInTheDocument()
-    expect(screen.getByText(/Ảnh Đại Diện Bìa/i)).toBeInTheDocument()
+    expect(screen.getByText(/Tải lên tối đa 05 tư liệu hình ảnh/i)).toBeInTheDocument()
 
     // AI Copilot widget on the right
     expect(screen.getByText(/Trợ Lý AI Hỗ Trợ Khai Báo/i)).toBeInTheDocument()
@@ -115,7 +126,7 @@ describe('SCR-029: CreateMerchantParkingLotPage (Tạo bãi đỗ mới)', () =>
     expect(screen.getByText(/Kinh Độ \(Longitude · 7 số thập phân\)/i)).toBeInTheDocument()
 
     // Map viewfinder canvas & sync button
-    expect(screen.getByText(/Bản Đồ Định Vị Số Ranh Giới & Trọng Tải Tiếp Cận/i)).toBeInTheDocument()
+    expect(screen.getByText(/Khai Báo Tọa Độ Chuẩn Xác/i)).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /ĐỒNG BỘ VỊ TRÍ/i })).toBeInTheDocument()
   })
 

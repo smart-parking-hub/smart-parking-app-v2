@@ -49,9 +49,9 @@ describe('BATCH-14A: Authentication & Access Control Pages Integration', () => {
     expect(screen.getByRole('combobox', { name: 'Bạn tham gia với vai trò' })).toBeInTheDocument()
     expect(screen.getByLabelText('Họ và tên')).toBeInTheDocument()
     expect(screen.getByLabelText('Số điện thoại')).toBeInTheDocument()
-    expect(screen.getByLabelText('Email')).toBeInTheDocument()
+    expect(screen.getByLabelText('Email nhận mã xác thực')).toBeInTheDocument()
     expect(screen.getByLabelText('Mật khẩu')).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Gửi mã OTP' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /Gửi mã/i })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Tạo tài khoản' })).toBeInTheDocument()
 
     // Password visibility toggle
@@ -64,9 +64,9 @@ describe('BATCH-14A: Authentication & Access Control Pages Integration', () => {
     renderWithContext(<AuthPage mode="forgot" />, '/forgot-password')
 
     expect(screen.getByRole('heading', { name: 'Khôi phục quyền truy cập.' })).toBeInTheDocument()
-    expect(screen.getByLabelText('Email')).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Gửi mã OTP' })).toBeInTheDocument()
-    expect(screen.getByLabelText('Mã OTP 6 chữ số')).toBeInTheDocument()
+    expect(screen.getByLabelText('Email nhận mã xác thực')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /Gửi mã/i })).toBeInTheDocument()
+    expect(screen.getByLabelText('Mã xác thực email (6 số)')).toBeInTheDocument()
     expect(screen.getByLabelText('Mật khẩu mới')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Đặt lại mật khẩu' })).toBeInTheDocument()
 

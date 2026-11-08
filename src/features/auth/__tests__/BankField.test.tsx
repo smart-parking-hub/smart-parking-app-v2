@@ -85,5 +85,5 @@ it('sends the selected bankName through the actual merchant registration form',a
  await userEvent.type(screen.getByLabelText('Mã xác thực email (6 số)'),'123456')
  await userEvent.click(screen.getByRole('button',{name:'Tạo tài khoản'}))
  await waitFor(()=>expect(request).toHaveBeenCalledWith(expect.objectContaining({method:'post',url:'/api/v1/auth/register',data:expect.objectContaining({role:'MERCHANT',bankName:'Vietcombank',bankAccountNum:'123456789'})})))
- expect(await screen.findByRole('heading',{name:'Đăng ký thành công'})).toBeInTheDocument()
+ expect(await screen.findByRole('heading',{name:/Đăng ký thành công/i})).toBeInTheDocument()
 })
