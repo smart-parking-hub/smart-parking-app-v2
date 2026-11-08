@@ -34,6 +34,8 @@ function LegacyAuthPage({ mode }: { mode: 'login' | 'register' | 'forgot' }) {
   const [sent, setSent] = useState(false)
   const [countdown, setCountdown] = useState(0)
   const [showPassword, setShowPassword] = useState<Record<string, boolean>>({})
+  const [registerStep, setRegisterStep] = useState<1 | 2>(1)
+  const [isOtpFocused, setIsOtpFocused] = useState(false)
 
   useEffect(() => {
     if (!countdown) return
@@ -182,18 +184,45 @@ function LegacyAuthPage({ mode }: { mode: 'login' | 'register' | 'forgot' }) {
         <AuthSuccess mode={mode} />
       ) : (
         <form
-          className="space-y-5 [&_input:not([role='combobox'])]:min-h-12 [&_input:not([role='combobox'])]:sm:min-h-14 [&_input:not([role='combobox'])]:text-base [&_input:not([role='combobox'])]:rounded-xl [&_input:not([role='combobox'])]:px-4 [&_select]:min-h-12 [&_select]:sm:min-h-14 [&_select]:text-base [&_select]:rounded-xl [&_select]:px-4 [&_label]:gap-2 [&_label]:text-sm [&_label]:sm:text-base [&_label]:text-brand-navy [&_label]:font-bold"
+          className="space-y-4 [&_input:not([role='combobox'])]:min-h-12 [&_input:not([role='combobox'])]:sm:min-h-14 [&_input:not([role='combobox'])]:text-base [&_input:not([role='combobox'])]:rounded-xl [&_input:not([role='combobox'])]:px-4 [&_select]:min-h-12 [&_select]:sm:min-h-14 [&_select]:text-base [&_select]:rounded-xl [&_select]:px-4 [&_label]:gap-1.5 [&_label]:text-sm [&_label]:sm:text-base [&_label]:text-brand-navy [&_label]:font-bold"
           onSubmit={form.handleSubmit((data) => submit.mutate(data))}
         >
-          {mode !== 'forgot' &&
-            input('phone', 'Số điện thoại', 'tel', {
-              pattern: /^(0|\+84)[35789][0-9]{8}$/,
-            }, 'Ví dụ: 0918239485')}
-          {mode !== 'login' && input('email', 'Email nhận mã xác thực', 'email', {}, 'Ví dụ: taixe.nguyen@gmail.com')}
           {mode === 'register' && (
-            <>
+            <div className="flex items-center justify-center gap-2 mb-2">
+              <button
+                type="button"
+                onClick={() => setRegisterStep(1)}
+                className={`flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer ${
+                  registerStep === 1
+                    ? 'bg-[#d95f00] text-white shadow-xs ring-2 ring-[#d95f00]/30'
+                    : 'bg-white/80 border border-slate-300 text-slate-700 hover:border-[#d95f00] hover:text-brand-orange'
+                }`}
+              >
+                <span className="flex size-4 items-center justify-center rounded-full bg-white/20 text-[10px]">1</span>
+                <span>Thông tin &amp; vai trò</span>
+              </button>
+              <div className="h-0.5 w-6 bg-slate-300" />
+              <button
+                type="button"
+                onClick={() => setRegisterStep(2)}
+                className={`flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer ${
+                  registerStep === 2
+                    ? 'bg-[#d95f00] text-white shadow-xs ring-2 ring-[#d95f00]/30'
+                    : 'bg-white/80 border border-slate-300 text-slate-700 hover:border-[#d95f00] hover:text-brand-orange'
+                }`}
+              >
+                <span className="flex size-4 items-center justify-center rounded-full bg-white/20 text-[10px]">2</span>
+                <span>Xác thực &amp; Mật khẩu</span>
+              </button>
+            </div>
+          )}
+
+          {/* STEP 1: Vai trò & Thông tin cơ bản */}
+          <div className={mode === 'register' && registerStep !== 1 ? 'sr-only' : 'space-y-4'}>
+            {mode === 'register' && (
               <Field label="Bạn tham gia với vai trò">
                 <select
+                  id="auth-role"
                   className={`${control} min-h-12 sm:min-h-14 text-base bg-white border border-slate-300 text-slate-900 rounded-xl px-4 py-3 shadow-2xs focus-visible:ring-2 focus-visible:ring-[#d95f00] focus-visible:ring-offset-1`}
                   {...form.register('role')}
                 >
@@ -201,129 +230,275 @@ function LegacyAuthPage({ mode }: { mode: 'login' | 'register' | 'forgot' }) {
                   <option value="MERCHANT">Chủ bãi</option>
                 </select>
               </Field>
-              {input('fullName', 'Họ và tên', 'text', { maxLength: 100 }, 'Ví dụ: Nguyễn Văn Hùng')}
-              {input('citizenId', 'CCCD / CMND', 'text', {
+            )}
+            {mode === 'register' ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                {input('fullName', 'Họ và tên', 'text', { maxLength: 100 }, 'Ví dụ: Nguyễn Văn Hùng')}
+                {input('phone', 'Số điện thoại', 'tel', {
+                  pattern: /^(0|\+84)[35789][0-9]{8}$/,
+                }, 'Ví dụ: 0918239485')}
+              </div>
+            ) : mode !== 'forgot' ? (
+              input('phone', 'Số điện thoại', 'tel', {
+                pattern: /^(0|\+84)[35789][0-9]{8}$/,
+              }, 'Ví dụ: 0918239485')
+            ) : null}
+            {mode === 'register' &&
+              input('citizenId', 'CCCD / CMND', 'text', {
                 required: false,
                 pattern: /^$|^(?:[0-9]{9}|[0-9]{12})$/,
               }, 'Ví dụ: 079123456789 (9 hoặc 12 số)')}
-              {form.watch('role') === 'MERCHANT' && (
-                <>
-                  <BankField control={form.control} disabled={submit.isPending} />
-                  {input('bankAccountNum', 'Số tài khoản ngân hàng', 'text', {
-                    required: true,
-                  }, 'Ví dụ: 19036789123456')}
-                </>
-              )}
-            </>
-          )}
-          {mode !== 'forgot' &&
-            input('password', 'Mật khẩu', 'password', {
-              minLength: 6,
-              maxLength: 50,
-            }, 'Mật khẩu từ 6 đến 50 ký tự')}
-          {mode !== 'login' && (
-            <>
+            {mode === 'register' && form.watch('role') === 'MERCHANT' && (
+              <div className="space-y-3.5">
+                <BankField control={form.control} disabled={submit.isPending} />
+                {input('bankAccountNum', 'Số tài khoản ngân hàng', 'text', {
+                  required: true,
+                }, 'Ví dụ: 19036789123456')}
+              </div>
+            )}
+            {mode === 'register' && (
               <button
                 type="button"
-                disabled={otp.isPending || countdown > 0}
-                className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-5 py-3 text-sm sm:text-base font-semibold text-brand-navy hover:bg-orange-50/50 hover:border-[#d95f00] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d95f00] focus-visible:ring-offset-2 disabled:opacity-50 transition-colors shadow-2xs cursor-pointer"
-                onClick={() => otp.mutate()}
+                onClick={async () => {
+                  const fieldsToValidate = form.watch('role') === 'MERCHANT'
+                    ? (['phone', 'fullName', 'citizenId', 'bankName', 'bankAccountNum'] as const)
+                    : (['phone', 'fullName', 'citizenId'] as const)
+                  const valid = await form.trigger(fieldsToValidate as any)
+                  if (valid) setRegisterStep(2)
+                }}
+                className="inline-flex min-h-12 sm:min-h-14 w-full items-center justify-center gap-2 rounded-xl bg-[#d95f00] px-5 py-3 text-base font-bold text-white hover:bg-[#b84e00] active:bg-[#9e4300] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d95f00] focus-visible:ring-offset-2 transition-all shadow-md cursor-pointer"
               >
-                {otp.isPending ? (
-                  <>
-                    <LoaderCircle className="animate-spin" size={16} />
-                    Đang gửi…
-                  </>
-                ) : countdown ? (
-                  `Gửi lại sau ${countdown}s`
-                ) : (
-                  'Gửi mã qua email'
-                )}
+                <span>Tiếp tục bước 2</span>
+                <ArrowUpRight size={18} />
               </button>
-              {sentValid && (
-                <div className="flex items-start gap-3 rounded-xl border border-brand-border bg-brand-surface p-4 text-xs">
-                  <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-brand-orange text-white">
-                    <Check size={20} strokeWidth={2.5} aria-hidden="true" />
+            )}
+          </div>
+
+          {/* STEP 2: Xác thực Email, OTP và Mật khẩu */}
+          <div className={mode === 'register' && registerStep !== 2 ? 'sr-only' : 'space-y-4'}>
+            {mode !== 'login' && (
+              <div className="space-y-1.5">
+                <label htmlFor="auth-email" className="block text-sm sm:text-base font-bold text-brand-navy">
+                  Email nhận mã xác thực
+                </label>
+                <div className="flex items-center gap-2 sm:gap-2.5">
+                  <div className="relative flex-1">
+                    <input
+                      id="auth-email"
+                      type="email"
+                      autoComplete="email"
+                      placeholder="Ví dụ: taixe.nguyen@gmail.com"
+                      disabled={submit.isPending}
+                      aria-invalid={Boolean(form.formState.errors.email)}
+                      aria-describedby={form.formState.errors.email ? 'auth-email-error' : undefined}
+                      className={`${control} min-h-12 sm:min-h-14 text-base bg-white border border-slate-300 text-slate-900 placeholder:text-slate-400 focus:border-[#d95f00] focus:ring-2 focus:ring-[#d95f00]/20 rounded-xl px-4 py-3 shadow-2xs transition-colors w-full`}
+                      {...form.register('email', { required: true })}
+                    />
+                  </div>
+                  <button
+                    type="button"
+                    aria-label={otp.isPending ? 'Đang gửi…' : countdown ? `Gửi lại sau ${countdown}s` : 'Gửi mã qua email'}
+                    disabled={otp.isPending || countdown > 0}
+                    onClick={() => otp.mutate()}
+                    className="shrink-0 min-h-12 sm:min-h-14 px-3 sm:px-4 rounded-xl border border-slate-300 bg-white text-xs sm:text-sm font-bold text-brand-navy hover:bg-orange-50 hover:border-[#d95f00] hover:text-brand-orange focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d95f00] focus-visible:ring-offset-1 disabled:opacity-50 transition-all shadow-2xs cursor-pointer flex items-center justify-center gap-1.5 whitespace-nowrap"
+                  >
+                    {otp.isPending ? (
+                      <>
+                        <LoaderCircle className="animate-spin" size={16} />
+                        <span>Gửi…</span>
+                      </>
+                    ) : countdown ? (
+                      <span>{countdown}s</span>
+                    ) : (
+                      <span>Gửi mã OTP</span>
+                    )}
+                  </button>
+                </div>
+                {form.formState.errors.email && (
+                  <span id="auth-email-error" role="alert" className="text-xs text-red-700 font-medium">
+                    Thông tin chưa hợp lệ.
                   </span>
-                  <div className="min-w-0">
-                    <p className="font-sora text-sm font-semibold leading-5">
-                      {mode === 'forgot' ? 'Kiểm tra hộp thư của bạn' : 'Mã xác thực đã được gửi'}
-                    </p>
-                    <p className="mt-1 text-sm leading-5 text-brand-muted">
-                      {mode === 'forgot' ? (
-                        'Nếu email đã đăng ký, bạn sẽ nhận được mã. '
-                      ) : (
-                        <>
-                          Gửi đến{' '}
-                          <strong className="break-all font-medium text-brand-navy">
-                            {otp.data?.email || form.getValues('email')}
-                          </strong>
-                          .{' '}
-                        </>
-                      )}
-                      Mã gồm 6 số, có hiệu lực 5 phút. Kiểm tra cả thư rác.
-                    </p>
+                )}
+              </div>
+            )}
+
+            {sentValid && (
+              <div className="flex items-start gap-3 rounded-xl border border-brand-border bg-brand-surface p-3 sm:p-3.5 text-xs">
+                <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-brand-orange text-white">
+                  <Check size={18} strokeWidth={2.5} aria-hidden="true" />
+                </span>
+                <div className="min-w-0">
+                  <p className="font-sora text-xs sm:text-sm font-semibold leading-5 text-brand-navy">
+                    {mode === 'forgot' ? 'Kiểm tra hộp thư của bạn' : 'Mã xác thực đã được gửi'}
+                  </p>
+                  <p className="mt-0.5 text-xs leading-relaxed text-brand-muted">
+                    {mode === 'forgot' ? (
+                      'Nếu email đã đăng ký, bạn sẽ nhận được mã. '
+                    ) : (
+                      <>
+                        Gửi đến{' '}
+                        <strong className="break-all font-medium text-brand-navy">
+                          {otp.data?.email || form.getValues('email')}
+                        </strong>
+                        .{' '}
+                      </>
+                    )}
+                    Mã gồm 6 số, có hiệu lực 5 phút.
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {mode !== 'login' && (
+              <div className="space-y-1.5">
+                <label htmlFor="auth-otpCode" className="block text-sm sm:text-base font-bold text-brand-navy">
+                  Mã xác thực email (6 số)
+                </label>
+                <div className="relative max-w-[360px] mx-auto py-1">
+                  <input
+                    id="auth-otpCode"
+                    type="text"
+                    inputMode="numeric"
+                    autoComplete="one-time-code"
+                    maxLength={6}
+                    placeholder="123456"
+                    aria-invalid={Boolean(form.formState.errors.otpCode)}
+                    aria-describedby={form.formState.errors.otpCode ? 'auth-otpCode-error' : undefined}
+                    className="absolute inset-0 z-10 w-full h-full opacity-0 cursor-pointer caret-transparent"
+                    {...form.register('otpCode', {
+                      required: true,
+                      pattern: /^\d{6}$/,
+                    })}
+                    onFocus={() => setIsOtpFocused(true)}
+                    onBlur={() => setIsOtpFocused(false)}
+                  />
+                  <div className="grid grid-cols-6 gap-2 sm:gap-2.5 pointer-events-none">
+                    {[0, 1, 2, 3, 4, 5].map((index) => {
+                      const val = form.watch('otpCode') || ''
+                      const char = val[index] || ''
+                      const activeIdx = Math.min(val.length, 5)
+                      const isActive = isOtpFocused && index === activeIdx
+                      return (
+                        <div
+                          key={index}
+                          className={`h-11 sm:h-13 rounded-xl border flex items-center justify-center text-lg sm:text-xl font-bold transition-all shadow-2xs ${
+                            isActive
+                              ? 'border-[#d95f00] ring-2 ring-[#d95f00]/30 bg-orange-50/70 text-[#d95f00]'
+                              : char
+                                ? 'border-slate-400 bg-white text-brand-navy'
+                                : 'border-slate-300 bg-white/90 text-slate-300'
+                          }`}
+                        >
+                          {char}
+                        </div>
+                      )
+                    })}
                   </div>
                 </div>
-              )}
-              {input('otpCode', 'Mã xác thực email (6 số)', 'text', {
-                pattern: /^\d{6}$/,
-              }, 'Ví dụ: 123456')}
-              {mode === 'forgot' &&
-                input('newPassword', 'Mật khẩu mới', 'password', {
-                  minLength: 6,
-                }, 'Mật khẩu mới từ 6 đến 50 ký tự')}
-            </>
-          )}
-          {otp.isError && <Notice error>{errorMessage(otp.error)}</Notice>}
-          {submit.isError && (
-            <Notice error>
-              {errorMessage(submit.error)}
-            </Notice>
-          )}
-          <button
-            disabled={submit.isPending}
-            className="inline-flex min-h-14 w-full items-center justify-center gap-2 rounded-xl bg-[#d95f00] px-5 py-3 text-base font-semibold text-white hover:bg-[#b84e00] active:bg-[#9e4300] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d95f00] focus-visible:ring-offset-2 disabled:opacity-50 transition-colors shadow-xs cursor-pointer"
-          >
-            {submit.isPending ? (
-              <>
-                <LoaderCircle className="animate-spin" size={18} aria-hidden="true" />
-                Đang xử lý…
-              </>
-            ) : (
-              <>
-                {mode === 'login'
-                  ? 'Đăng nhập'
-                  : mode === 'register'
-                    ? 'Tạo tài khoản'
-                    : 'Đặt lại mật khẩu'}
-                <ArrowUpRight size={18} />
-              </>
+                {form.formState.errors.otpCode && (
+                  <p id="auth-otpCode-error" role="alert" className="text-xs text-red-700 font-medium text-center">
+                    Thông tin chưa hợp lệ.
+                  </p>
+                )}
+              </div>
             )}
-          </button>
+
+            {mode !== 'forgot' &&
+              input('password', 'Mật khẩu', 'password', {
+                minLength: 6,
+                maxLength: 50,
+              }, 'Mật khẩu từ 6 đến 50 ký tự')}
+
+            {mode === 'forgot' &&
+              input('newPassword', 'Mật khẩu mới', 'password', {
+                minLength: 6,
+              }, 'Mật khẩu mới từ 6 đến 50 ký tự')}
+
+            {otp.isError && <Notice error>{errorMessage(otp.error)}</Notice>}
+            {submit.isError && (
+              <Notice error>
+                {errorMessage(submit.error)}
+              </Notice>
+            )}
+
+            {mode === 'register' ? (
+              <div className="flex items-center gap-3 pt-1">
+                <button
+                  type="button"
+                  onClick={() => setRegisterStep(1)}
+                  className="inline-flex min-h-12 sm:min-h-14 px-4 items-center justify-center rounded-xl border border-slate-300 bg-white text-sm sm:text-base font-bold text-slate-700 hover:bg-slate-100 hover:border-slate-400 transition-colors shadow-2xs cursor-pointer shrink-0"
+                >
+                  Quay lại
+                </button>
+                <button
+                  type="submit"
+                  disabled={submit.isPending}
+                  className="inline-flex min-h-12 sm:min-h-14 flex-1 items-center justify-center gap-2 rounded-xl bg-[#d95f00] px-5 py-3 text-base font-bold text-white hover:bg-[#b84e00] active:bg-[#9e4300] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d95f00] focus-visible:ring-offset-2 disabled:opacity-50 transition-colors shadow-md cursor-pointer"
+                >
+                  {submit.isPending ? (
+                    <>
+                      <LoaderCircle className="animate-spin" size={18} aria-hidden="true" />
+                      Đang xử lý…
+                    </>
+                  ) : (
+                    <>
+                      Tạo tài khoản
+                      <ArrowUpRight size={18} />
+                    </>
+                  )}
+                </button>
+              </div>
+            ) : (
+              <button
+                type="submit"
+                disabled={submit.isPending}
+                className="inline-flex min-h-14 w-full items-center justify-center gap-2 rounded-xl bg-[#d95f00] px-5 py-3 text-base font-semibold text-white hover:bg-[#b84e00] active:bg-[#9e4300] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d95f00] focus-visible:ring-offset-2 disabled:opacity-50 transition-colors shadow-xs cursor-pointer"
+              >
+                {submit.isPending ? (
+                  <>
+                    <LoaderCircle className="animate-spin" size={18} aria-hidden="true" />
+                    Đang xử lý…
+                  </>
+                ) : (
+                  <>
+                    {mode === 'login'
+                      ? 'Đăng nhập'
+                      : 'Đặt lại mật khẩu'}
+                    <ArrowUpRight size={18} />
+                  </>
+                )}
+              </button>
+            )}
+          </div>
         </form>
       )}
-      <nav aria-label="Tài khoản" className="mt-5 flex flex-wrap gap-5 text-sm text-slate-300">
+      <nav aria-label="Tài khoản" className="mt-5 flex flex-wrap items-center justify-between gap-3 text-sm sm:text-base text-slate-700 font-medium">
         {mode !== 'login' && (
-          <Link
-            to="/login"
-            className="text-brand-orange hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d95f00] rounded-sm transition-colors"
-          >
-            Đăng nhập
-          </Link>
+          <div>
+            <span>Đã có tài khoản? </span>
+            <Link
+              to="/login"
+              className="font-bold text-brand-orange hover:text-[#9e4300] hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d95f00] rounded-xs transition-colors"
+            >
+              Đăng nhập
+            </Link>
+          </div>
         )}
         {mode !== 'register' && (
-          <Link
-            to="/register"
-            className="text-brand-orange hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d95f00] rounded-sm transition-colors"
-          >
-            Tạo tài khoản
-          </Link>
+          <div>
+            <span>Chưa có tài khoản? </span>
+            <Link
+              to="/register"
+              className="font-bold text-brand-orange hover:text-[#9e4300] hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d95f00] rounded-xs transition-colors"
+            >
+              Tạo tài khoản
+            </Link>
+          </div>
         )}
         {mode !== 'forgot' && (
           <Link
             to="/forgot-password"
-            className="text-brand-orange hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d95f00] rounded-sm transition-colors"
+            className="font-semibold text-brand-orange hover:text-[#9e4300] hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d95f00] rounded-xs transition-colors"
           >
             Quên mật khẩu?
           </Link>

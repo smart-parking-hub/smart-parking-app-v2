@@ -80,7 +80,7 @@ export function AuthLayout({ children, variant = 'default' }: AuthLayoutProps) {
 
       {/* 2. PHẦN MODE (MODAL FORM): NẰM LỆCH PHẢI XÍCH VÀO GIỮA, RỘNG RÃI, NỀN KÍNH TRONG SUỐT TĨNH KHÔNG ĐỔI MÀU KHI HOVER */}
       <section className="relative z-20 w-full max-w-[540px] sm:max-w-[560px] lg:max-w-[580px] my-auto mx-auto sm:mx-0 sm:mr-10 md:mr-14 lg:mr-20 xl:mr-28 2xl:mr-36 p-3 sm:p-0">
-        <div className="w-full max-h-[92vh] overflow-y-auto bg-white/60 backdrop-blur-2xl rounded-[32px] sm:rounded-[36px] p-7 sm:p-9 lg:p-10 shadow-[0_25px_60px_rgba(0,0,0,0.4)] border border-white/70 ring-1 ring-white/40 text-brand-navy">
+        <div className="w-full max-h-[94vh] overflow-y-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden bg-white/60 backdrop-blur-2xl rounded-[32px] sm:rounded-[36px] p-6 sm:p-8 lg:p-9 shadow-[0_25px_60px_rgba(0,0,0,0.4)] border border-white/70 ring-1 ring-white/40 text-brand-navy">
           {children}
         </div>
       </section>

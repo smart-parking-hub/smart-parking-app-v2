@@ -61,7 +61,7 @@ export function LoginForm() {
           form.setValue('phone', phone, { shouldValidate: true })
           form.setValue('password', 'password123', { shouldValidate: true })
           login.reset()
-        }} className={`group flex items-center gap-2.5 rounded-xl border p-2 sm:p-2.5 text-left transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d95f00] focus-visible:ring-offset-1 disabled:opacity-50 ${selectedPhone === phone ? 'border-[#d95f00] bg-orange-100 ring-2 ring-[#d95f00] shadow-sm' : 'border-slate-200 bg-white hover:border-[#d95f00] hover:bg-orange-50/70 hover:shadow-sm hover:scale-[1.01] active:scale-[0.99]'}`}>
+        }} className={`group flex items-center gap-2.5 rounded-xl border p-2 sm:p-2.5 text-left transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d95f00] focus-visible:ring-offset-1 disabled:opacity-50 cursor-pointer ${selectedPhone === phone ? 'border-[#d95f00] bg-orange-100 ring-2 ring-[#d95f00] shadow-sm' : 'border-slate-200 bg-white hover:border-[#d95f00] hover:bg-orange-50/70 hover:shadow-sm hover:scale-[1.01] active:scale-[0.99]'}`}>
           <span className="flex size-8 sm:size-9 shrink-0 items-center justify-center rounded-lg bg-brand-navy text-white shadow-xs group-hover:scale-105 transition-transform"><Icon size={16} aria-hidden="true" /></span>
           <span className="min-w-0 flex-1">
             <span className="block truncate text-xs sm:text-sm font-bold text-brand-navy group-hover:text-brand-orange transition-colors">{name}</span>
@@ -83,7 +83,7 @@ export function LoginForm() {
           <label htmlFor="login-password" className="block text-sm sm:text-base font-bold text-brand-navy">Mật khẩu</label>
           <div className="relative">
           <input id="login-password" className={`${control} min-h-12 sm:min-h-14 pr-14 text-base bg-white border border-slate-300 text-slate-900 placeholder:text-slate-400 hover:border-slate-400 focus:border-[#d95f00] focus:ring-2 focus:ring-[#d95f00]/20 rounded-xl px-4 py-3 shadow-2xs transition-all`} type={showPassword ? 'text' : 'password'} autoComplete="current-password" placeholder="Nhập mật khẩu (từ 6 đến 50 ký tự)" aria-invalid={Boolean(form.formState.errors.password)} aria-describedby={form.formState.errors.password ? 'login-password-error' : undefined} {...form.register('password')} />
-            <button type="button" aria-label={showPassword ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'} aria-controls="login-password" aria-pressed={showPassword} onClick={() => setShowPassword(!showPassword)} className="absolute inset-y-0 right-1.5 flex w-11 items-center justify-center rounded-xl text-slate-400 hover:text-brand-navy hover:bg-slate-100 focus-visible:outline-2 focus-visible:outline-orange-600 active:scale-95 transition-all">
+            <button type="button" aria-label={showPassword ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'} aria-controls="login-password" aria-pressed={showPassword} onClick={() => setShowPassword(!showPassword)} className="absolute inset-y-0 right-1.5 flex w-11 items-center justify-center rounded-xl text-slate-400 hover:text-brand-navy hover:bg-slate-100 focus-visible:outline-2 focus-visible:outline-orange-600 active:scale-95 transition-all cursor-pointer">
               {showPassword ? <EyeOff size={20} aria-hidden="true" /> : <Eye size={20} aria-hidden="true" />}
             </button>
           </div>
