@@ -1,6 +1,6 @@
 import type { CSSProperties, ReactNode } from 'react'
 import { Link } from 'react-router-dom'
-import { ShieldCheck, Truck } from 'lucide-react'
+import { ShieldCheck } from 'lucide-react'
 import { ScrollToTop } from '@/shared/components/ScrollToTop'
 
 export interface AuthLayoutProps {
@@ -55,7 +55,11 @@ export function AuthLayout({ children, variant = 'default' }: AuthLayoutProps) {
           to="/"
           className="flex items-center gap-3 font-sora text-xl font-bold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white rounded-lg p-1 transition-colors"
         >
-          <Truck className="text-brand-orange" />
+          <img
+            src="/image-smart-parking-hub.png"
+            alt="Smart Parking Hub Logo"
+            className="w-8 h-8 rounded-lg object-contain shrink-0"
+          />
           SMARTTRUCK HUB
         </Link>
         <div className="py-12 lg:py-24">
@@ -83,7 +87,11 @@ export function AuthLayout({ children, variant = 'default' }: AuthLayoutProps) {
             to="/"
             className="mb-8 inline-flex items-center gap-3 font-sora text-lg font-bold text-brand-navy lg:hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d95f00] rounded-lg p-1 transition-colors"
           >
-            <Truck className="text-brand-orange" />
+            <img
+            src="/image-smart-parking-hub.png"
+            alt="Smart Parking Hub Logo"
+            className="w-8 h-8 rounded-lg object-contain shrink-0"
+          />
             SMARTTRUCK HUB
           </Link>
           {children}

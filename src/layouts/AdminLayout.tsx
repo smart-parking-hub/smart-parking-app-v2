@@ -4,7 +4,6 @@ import { NavLink, Outlet, useNavigate, useLocation } from 'react-router-dom'
 import { useQueryClient } from '@tanstack/react-query'
 import { ScrollToTop } from '@/shared/components/ScrollToTop'
 import {
-  ShieldCheck,
   Menu,
   X,
   LogOut,
@@ -114,9 +113,11 @@ export function AdminLayout() {
             onClick={() => setOpen(false)}
             className="flex items-center gap-2.5 font-sora font-bold text-white hover:text-orange-300 transition-colors"
           >
-            <div className="w-8 h-8 rounded-lg bg-[#341100] border border-[#d95f00]/30 flex items-center justify-center text-[#d95f00]">
-              <ShieldCheck className="w-5 h-5 text-[#d95f00]" />
-            </div>
+            <img
+              src="/image-smart-parking-hub.png"
+              alt="Smart Parking Hub Logo"
+              className="w-8 h-8 rounded-lg object-contain shrink-0"
+            />
             <div>
               <span className="font-sora text-sm font-bold text-white tracking-tight">
                 SMARTTRUCK <span className="text-[#d95f00]">HUB</span>

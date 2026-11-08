@@ -1,7 +1,6 @@
 import { useEffect } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import {
-  Truck,
   LayoutGrid,
   Warehouse,
   Ticket,
@@ -97,9 +96,11 @@ export function MerchantSidebar({ mobileOpen = false, onCloseMobile, collapsed =
               title="Smart Parking Hub"
               onClick={onCloseMobile}
             >
-              <div className="w-9 h-9 rounded-xl border border-brand-orange/30 flex items-center justify-center shrink-0">
-                <Truck className="w-[22px] h-[22px] text-brand-orange" aria-hidden="true" />
-              </div>
+              <img
+                src="/image-smart-parking-hub.png"
+                alt="Smart Parking Hub Logo"
+                className="w-9 h-9 rounded-xl object-contain shrink-0"
+              />
               <div className={cn('flex flex-col', collapsed && 'lg:hidden')}>
                 <span className="font-sora text-sm font-bold text-white tracking-tight leading-none">
                   Smart Parking <span className="text-brand-orange">Hub</span>

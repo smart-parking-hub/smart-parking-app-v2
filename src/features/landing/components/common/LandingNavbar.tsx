@@ -226,9 +226,11 @@ export function LandingNavbar() {
           className="flex items-center gap-2.5 shrink-0 group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-orange rounded-xl p-1"
           aria-label="SmartTruckHub Trang chủ"
         >
-          <div className="w-10 h-10 rounded-xl bg-brand-orange flex items-center justify-center text-[#060D1A] transition-transform group-hover:scale-105 shadow-xs">
-            <Truck className="h-6 w-6 text-[#060D1A]" aria-hidden="true" />
-          </div>
+          <img
+            src="/image-smart-parking-hub.png"
+            alt="Smart Parking Hub Logo"
+            className="w-10 h-10 rounded-xl object-contain shadow-xs transition-transform group-hover:scale-105"
+          />
           <div className="flex items-center gap-1.5">
             <span
               className={cn(
