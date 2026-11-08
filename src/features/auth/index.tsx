@@ -7,7 +7,7 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { useMutation } from '@tanstack/react-query'
-import { ArrowRight, ArrowUpRight, Check, Eye, EyeOff, LoaderCircle, ShieldCheck, Store, Truck } from 'lucide-react'
+import { ArrowRight, Check, Eye, EyeOff, LoaderCircle, ShieldCheck, Store, Truck } from 'lucide-react'
 import { errorMessage, sendData } from '@/shared/api/resources'
 import { AuthLayout } from '@/layouts/AuthLayout'
 import { Select, type SelectOption } from '@/shared/components/Select'
@@ -80,6 +80,11 @@ function LegacyAuthPage({ mode }: { mode: 'login' | 'register' | 'forgot' }) {
           { key: 'email' as const, label: 'Xác thực', stepNumber: 2 },
           { key: 'password' as const, label: 'Mật khẩu', stepNumber: 3 },
         ]
+
+  const currentStepNumber =
+    registerSteps.find((s) => s.key === registerStepKey)?.stepNumber ?? 1
+  const totalSteps = registerSteps.length
+  const progressPercent = Math.round((currentStepNumber / totalSteps) * 100)
 
   const title =
     mode === 'login'
@@ -204,6 +209,20 @@ function LegacyAuthPage({ mode }: { mode: 'login' | 'register' | 'forgot' }) {
   return (
     <AuthLayout>
       <div className="animate-auth-fade-in transition-all duration-300">
+        {mode === 'register' && (
+          <div className="h-1.5 w-full bg-black/10 rounded-full overflow-hidden mb-5">
+            <div
+              className="h-full bg-[#d95f00] transition-all duration-500 rounded-full"
+              style={{ width: `${progressPercent}%` }}
+              role="progressbar"
+              aria-valuenow={progressPercent}
+              aria-valuemin={0}
+              aria-valuemax={100}
+              aria-label={`Tiến trình đăng ký bước ${currentStepNumber} trên ${totalSteps}`}
+            />
+          </div>
+        )}
+
         <div className="mb-6 sm:mb-8 flex flex-col items-center text-center">
           <Link
             to="/"
@@ -239,36 +258,39 @@ function LegacyAuthPage({ mode }: { mode: 'login' | 'register' | 'forgot' }) {
               <div
                 className={`grid ${
                   selectedRole === 'MERCHANT' ? 'grid-cols-4' : 'grid-cols-3'
-                } gap-1 p-1 bg-black/5 rounded-2xl border border-black/10 mb-4 transition-all duration-300`}
-                role="tablist"
+                } gap-1 p-1 bg-black/5 rounded-2xl border border-black/10 mb-4 transition-all duration-300 select-none`}
+                role="list"
                 aria-label="Các bước đăng ký tài khoản"
               >
                 {registerSteps.map((s) => {
                   const isActive = registerStepKey === s.key
+                  const isCompleted = s.stepNumber < currentStepNumber
                   return (
-                    <button
+                    <div
                       key={s.key}
-                      type="button"
-                      role="tab"
-                      aria-selected={isActive}
-                      onClick={() => setRegisterStepKey(s.key)}
-                      className={`py-2 px-1 sm:px-2 text-[11px] sm:text-xs rounded-xl transition-all duration-300 flex items-center justify-center gap-1.5 cursor-pointer ${
+                      role="listitem"
+                      aria-current={isActive ? 'step' : undefined}
+                      className={`py-2 px-1 sm:px-2 text-[11px] sm:text-xs rounded-xl transition-all duration-300 flex items-center justify-center gap-1.5 ${
                         isActive
                           ? 'bg-white text-black shadow-xs font-semibold scale-[1.02]'
-                          : 'text-black/70 hover:text-black hover:bg-white/40 font-normal'
+                          : isCompleted
+                            ? 'text-black/80 font-medium'
+                            : 'text-black/60 font-normal'
                       }`}
                     >
                       <span
                         className={`flex size-4.5 sm:size-5 items-center justify-center rounded-full text-[10px] sm:text-[11px] font-bold shrink-0 transition-colors ${
                           isActive
                             ? 'bg-[#d95f00] text-white shadow-xs'
-                            : 'bg-black/10 text-black'
+                            : isCompleted
+                              ? 'bg-black/10 text-black font-semibold'
+                              : 'bg-black/10 text-black'
                         }`}
                       >
                         {s.stepNumber}
                       </span>
                       <span className="truncate">{s.label}</span>
-                    </button>
+                    </div>
                   )
                 })}
               </div>
@@ -358,7 +380,7 @@ function LegacyAuthPage({ mode }: { mode: 'login' | 'register' | 'forgot' }) {
                       ? 'Tiếp tục: Kết nối ngân hàng'
                       : 'Tiếp tục: Xác thực Email'}
                   </span>
-                  <ArrowUpRight size={18} />
+                  <ArrowRight size={18} />
                 </button>
               )}
             </div>
@@ -410,7 +432,7 @@ function LegacyAuthPage({ mode }: { mode: 'login' | 'register' | 'forgot' }) {
                     className="inline-flex min-h-12 sm:min-h-14 flex-1 items-center justify-center gap-2 rounded-xl bg-[#d95f00] px-5 py-3 text-base font-bold text-white hover:bg-[#b84e00] active:bg-[#9e4300] hover:scale-[1.01] active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d95f00] focus-visible:ring-offset-2 transition-all shadow-md cursor-pointer"
                   >
                     <span>Tiếp tục: Xác thực Email</span>
-                    <ArrowUpRight size={18} />
+                    <ArrowRight size={18} />
                   </button>
                 </div>
               </div>
@@ -589,7 +611,7 @@ function LegacyAuthPage({ mode }: { mode: 'login' | 'register' | 'forgot' }) {
                     className="inline-flex min-h-12 sm:min-h-14 flex-1 items-center justify-center gap-2 rounded-xl bg-[#d95f00] px-5 py-3 text-base font-bold text-white hover:bg-[#b84e00] active:bg-[#9e4300] hover:scale-[1.01] active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d95f00] focus-visible:ring-offset-2 transition-all shadow-md cursor-pointer"
                   >
                     <span>Tiếp tục: Thiết lập mật khẩu</span>
-                    <ArrowUpRight size={18} />
+                    <ArrowRight size={18} />
                   </button>
                 </div>
               )}
@@ -693,7 +715,7 @@ function LegacyAuthPage({ mode }: { mode: 'login' | 'register' | 'forgot' }) {
                     ) : (
                       <>
                         <span>Tạo tài khoản</span>
-                        <ArrowUpRight size={18} />
+                        <ArrowRight size={18} />
                       </>
                     )}
                   </button>
@@ -712,7 +734,7 @@ function LegacyAuthPage({ mode }: { mode: 'login' | 'register' | 'forgot' }) {
                   ) : (
                     <>
                       {mode === 'login' ? 'Đăng nhập' : 'Đặt lại mật khẩu'}
-                      <ArrowUpRight size={18} />
+                      <ArrowRight size={18} />
                     </>
                   )}
                 </button>
@@ -792,7 +814,7 @@ export function AuthSuccess({
         to="/login"
       >
         Đến trang đăng nhập
-        <ArrowUpRight size={20} />
+        <ArrowRight size={20} />
       </Link>
     </section>
   )
