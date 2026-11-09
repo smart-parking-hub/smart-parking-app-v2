@@ -1,5 +1,9 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { getDrivingRoute, searchLocations } from './mapProvider'
+import {
+  autocompleteLocations,
+  getDrivingRoute,
+  searchLocations,
+} from './mapProvider'
 import { fetchParkingLots } from './parkingSearchApi'
 import { apiClient } from '@/shared/api/client'
 afterEach(() => {
@@ -72,6 +76,67 @@ describe('Real OpenStreetMap services', () => {
       { id: '1', label: 'Cát Lái', latitude: 10.7, longitude: 106.7 },
     ])
     expect(fetchMock.mock.calls[0][0]).toContain('countrycodes=vn')
+  })
+  it('filters Photon autocomplete results to Vietnam and falls back to Nominatim on failure', async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          features: [
+            {
+              geometry: { coordinates: [106.7865, 10.7715] },
+              properties: {
+                osm_id: 10,
+                osm_type: 'N',
+                name: 'Cảng Cát Lái',
+                district: 'Phường Cát Lái',
+                city: 'TP. Thủ Đức',
+                countrycode: 'VN',
+              },
+            },
+            {
+              geometry: { coordinates: [100.5, 13.7] },
+              properties: {
+                osm_id: 11,
+                name: 'Outside VN',
+                countrycode: 'TH',
+              },
+            },
+          ],
+        }),
+      })
+      .mockResolvedValueOnce({ ok: false, status: 503 })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => [
+          {
+            place_id: 99,
+            display_name: 'KCN Sóng Thần, Dĩ An, Bình Dương',
+            lat: '10.8924',
+            lon: '106.7725',
+          },
+        ],
+      })
+    vi.stubGlobal('fetch', fetchMock)
+
+    const live = await autocompleteLocations('Cát Lái')
+    expect(live).toHaveLength(1)
+    expect(live[0]).toMatchObject({
+      label: 'Cảng Cát Lái, Phường Cát Lái, TP. Thủ Đức',
+      latitude: 10.7715,
+      longitude: 106.7865,
+    })
+
+    const fallback = await autocompleteLocations('Sóng Thần')
+    expect(fallback).toEqual([
+      {
+        id: '99',
+        label: 'KCN Sóng Thần, Dĩ An, Bình Dương',
+        latitude: 10.8924,
+        longitude: 106.7725,
+      },
+    ])
   })
   it('preserves zero capacity and prices and sends real search coordinates to the backend', async () => {
     const request = vi
