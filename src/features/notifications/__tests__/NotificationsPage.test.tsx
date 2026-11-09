@@ -402,7 +402,7 @@ describe('SCR-025: NotificationsPage (Trung Tâm Thông Báo Driver Ops)', () =>
     expect(paymentsLink).toHaveAttribute('href', '/payments')
 
     const passwordLink = screen.getByText('Đổi mật khẩu bảo mật').closest('a')
-    expect(passwordLink).toHaveAttribute('href', '/change-password')
+    expect(passwordLink).toHaveAttribute('href', '/profile#bao-mat')
 
     // Notifications tab is active, not an anchor tag
     const notifActive = screen.getByText('Thiết lập thông báo hệ thống')

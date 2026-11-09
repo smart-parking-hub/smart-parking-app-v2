@@ -1,0 +1,44 @@
+name: Frontend Quality Gate (Zero-Error)
+
+on:
+  pull_request:
+    branches: [main, develop]
+  push:
+    branches: [main, develop]
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  quality-gate:
+    name: Frontend Quality Gate & Validation
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 22 with NPM Cache
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: "npm"
+          cache-dependency-path: package-lock.json
+
+      - name: Install Clean Dependencies (npm ci)
+        run: npm ci
+
+      - name: Step 1 - TypeScript Typecheck (0 Errors)
+        run: npm run typecheck
+
+      - name: Step 2 - ESLint Code Style & Conventions (0 Warnings)
+        run: npm run lint
+
+      - name: Step 3 - Vitest Unit & Integration Test Suite
+        run: npm run test
+
+      - name: Step 4 - Production Build Verification
+        run: npm run build
