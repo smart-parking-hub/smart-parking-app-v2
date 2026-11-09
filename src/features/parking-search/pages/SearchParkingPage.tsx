@@ -73,82 +73,86 @@ export function SearchParkingPage() {
   }
 
   return (
-    <div className="w-full min-h-[calc(100vh-140px)] bg-brand-surface font-inter">
-      <div className="mx-auto w-full max-w-[1800px] px-5 py-8 sm:px-8 lg:px-12 lg:py-10 2xl:px-14">
-        <header className="mb-8 flex flex-wrap items-end justify-between gap-5">
-          <div>
-            <p className="mb-3 text-xs font-semibold tracking-[.2em] text-brand-muted">
-              SMARTTRUCK / TÌM ĐIỂM ĐỖ
-            </p>
-            <h1 className="font-sora text-3xl font-semibold leading-snug tracking-tight text-brand-navy lg:text-4xl">
-              Điểm đỗ phù hợp. Hành trình an tâm.
-            </h1>
-            <p className="mt-3 text-base text-brand-muted">
-              Chọn phương tiện, khám phá bãi đỗ và giữ chỗ trước khi đến.
-            </p>
-          </div>
-          <span className="rounded-full border border-brand-border bg-white px-4 py-2 text-sm text-brand-muted">
-            Bản đồ OpenStreetMap
-          </span>
-        </header>
-
-        {/* Top Control Filter Bar: 3 Evenly Spaced Columns (Phương tiện -> Sắp xếp -> Bán kính) */}
-        <TopFilterBar
-          filters={filters}
-          vehicles={vehicleOptions}
-          onChangeFilters={handleFilterChange}
-        />
-
-        {/* Full-width Search & Result Stats Bar with 'Hiện bãi đã đầy' Toggle */}
-        <div className="w-full mb-5">
-          <SmartLocationBar
-            value={searchText}
-            onChange={(text) => parkingSearchStore.setSearchText(text)}
-            onLocateMe={handleLocateMe}
-            onSelectPlace={handleSelectPlace}
-            totalResults={lots.length}
-            radiusKm={filters.radiusKm}
-            includeFull={filters.includeFull}
-            onToggleIncludeFull={(includeFull) =>
-              handleFilterChange({ includeFull })
-            }
+    <div className="relative w-full bg-brand-surface font-inter">
+      {/* Full-bleed Map Stage (occupies remaining screen height below DriverHeader while preserving DriverFooter below) */}
+      <div className="relative isolate z-0 w-full lg:h-[calc(100dvh-var(--driver-header-height))] lg:min-h-[600px] flex flex-col lg:block lg:overflow-hidden">
+        {/* Background Full-Bleed Map Canvas */}
+        <div className="order-2 lg:order-none lg:absolute lg:inset-0 z-0 mt-2 lg:mt-0">
+          <InteractiveMapCanvas
+            lots={lots}
+            selectedLot={selectedLot}
+            origin={origin}
+            onSelectLot={(lot) => parkingSearchStore.setSelectedLotId(lot.id)}
+            onQuickBook={handleOpenQuickBook}
           />
         </div>
 
-        {/* Loading State */}
-        {isLoading ? (
-          <SearchParkingSkeleton />
-        ) : error ? (
-          /* Error State (Mã lỗi: ERR_GEO_DISPATCH_TIMEOUT) */
-          <div
-            role="alert"
-            className="bg-rose-50 border border-rose-200 rounded-2xl p-6 text-center my-6"
-          >
-            <AlertCircle className="w-10 h-10 text-rose-600 mx-auto mb-2" />
-            <h4 className="font-sora text-base font-bold text-rose-900">
-              Không thể tải dữ liệu bản đồ bãi xe (Mã lỗi: ERR_GEO_DISPATCH_TIMEOUT)
-            </h4>
-            <p className="text-xs text-rose-700 mt-1 mb-4">
-              Hệ thống tìm kiếm định vị tạm thời gián đoạn. Vui lòng kiểm tra
-              mạng hoặc thử lại.
-            </p>
-            <button
-              type="button"
-              onClick={() => void refetch()}
-              disabled={isRefetching}
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-brand-orange text-white text-xs font-semibold hover:bg-brand-orange-hover transition-colors cursor-pointer disabled:opacity-50"
-            >
-              <RefreshCw
-                className={`w-4 h-4 ${isRefetching ? 'animate-spin' : ''}`}
-              />
-              <span>{isRefetching ? 'Đang thử lại...' : 'Tải lại bãi xe'}</span>
-            </button>
+        {/* Top-Right Compact Search Bar Floating Over Map */}
+        <div className="order-1 lg:order-none px-3 pt-3 lg:p-0 lg:absolute lg:top-4 lg:right-4 lg:z-30 lg:w-[min(490px,calc(100%-460px))] xl:w-[min(530px,calc(100%-492px))]">
+          <SmartLocationBar
+            value={searchText}
+            onChange={(text) => {
+              if (text === '') {
+                parkingSearchStore.clearLocation()
+              } else {
+                parkingSearchStore.setSearchText(text)
+              }
+            }}
+            onClear={() => parkingSearchStore.clearLocation()}
+            onLocateMe={handleLocateMe}
+            onSelectPlace={handleSelectPlace}
+            parkingLots={lots}
+            onSelectLot={(lot) => parkingSearchStore.setSelectedLotId(lot.id)}
+          />
+        </div>
+
+        {/* Left Floating Dock: Filter Panel on Top + Enclosing Div for Yard Cards Below */}
+        <div className="order-3 lg:order-none p-3 lg:p-0 lg:absolute lg:top-4 lg:bottom-4 lg:left-4 lg:z-20 lg:w-[400px] xl:w-[432px] flex flex-col gap-2.5 lg:pointer-events-none">
+          <div className="lg:pointer-events-auto relative z-20 shrink-0">
+            <TopFilterBar
+              filters={filters}
+              vehicles={vehicleOptions}
+              onChangeFilters={handleFilterChange}
+              totalResults={lots.length}
+              onToggleIncludeFull={(includeFull) =>
+                handleFilterChange({ includeFull })
+              }
+            />
           </div>
-        ) : (
-          /* Split View Workbench: Left Yard List and Right Map */
-          <div className="grid grid-cols-1 xl:grid-cols-[minmax(380px,0.8fr)_minmax(0,1.35fr)] gap-7 2xl:gap-10 items-start mt-2">
-            {/* Left Column: Operational Yard List (5 cols ~ 42%) */}
-            <div className="min-w-0 flex flex-col gap-4">
+
+          {/* Enclosing Card Container for All Parking Yard Cards */}
+          <div
+            data-testid="parking-lots-container"
+            className="lg:pointer-events-auto relative z-10 flex-1 min-h-0 flex flex-col rounded-2xl border border-brand-border/90 bg-white/95 backdrop-blur-md shadow-xl p-2 overflow-hidden"
+          >
+            {isLoading ? (
+              <SearchParkingSkeleton />
+            ) : error ? (
+              <div
+                role="alert"
+                className="bg-rose-50 border border-rose-200 rounded-xl p-5 text-center my-auto"
+              >
+                <AlertCircle className="w-9 h-9 text-rose-600 mx-auto mb-2" />
+                <h4 className="font-sora text-sm font-bold text-rose-900">
+                  Không thể tải dữ liệu bản đồ bãi xe (Mã lỗi: ERR_GEO_DISPATCH_TIMEOUT)
+                </h4>
+                <p className="text-xs text-rose-700 mt-1 mb-4">
+                  Hệ thống tìm kiếm định vị tạm thời gián đoạn. Vui lòng kiểm tra
+                  mạng hoặc thử lại.
+                </p>
+                <button
+                  type="button"
+                  onClick={() => void refetch()}
+                  disabled={isRefetching}
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-brand-orange text-white text-xs font-semibold hover:bg-brand-orange-hover transition-colors cursor-pointer disabled:opacity-50"
+                >
+                  <RefreshCw
+                    className={`w-4 h-4 ${isRefetching ? 'animate-spin' : ''}`}
+                  />
+                  <span>{isRefetching ? 'Đang thử lại...' : 'Tải lại bãi xe'}</span>
+                </button>
+              </div>
+            ) : (
               <YardCardList
                 lots={lots}
                 selectedLotId={selectedLot?.id}
@@ -163,28 +167,17 @@ export function SearchParkingPage() {
                 }
                 onResetFilters={() => parkingSearchStore.resetFilters()}
               />
-            </div>
-
-            {/* Right Column: Interactive Leaflet Map Canvas (7 cols ~ 58%) */}
-            <div className="min-w-0">
-              <InteractiveMapCanvas
-                lots={lots}
-                selectedLot={selectedLot}
-                origin={origin}
-                onSelectLot={(lot) => parkingSearchStore.setSelectedLotId(lot.id)}
-                onQuickBook={handleOpenQuickBook}
-              />
-            </div>
+            )}
           </div>
-        )}
-
-        {/* GAP-04: Inline Quick Reservation Drawer Panel (SCR-MOD-06) */}
-        <InlineQuickBookPanel
-          open={quickBookOpen}
-          onClose={() => parkingSearchStore.closeQuickBook()}
-          lot={quickBookLot || undefined}
-        />
+        </div>
       </div>
+
+      {/* GAP-04: Inline Quick Reservation Drawer Panel (SCR-MOD-06) */}
+      <InlineQuickBookPanel
+        open={quickBookOpen}
+        onClose={() => parkingSearchStore.closeQuickBook()}
+        lot={quickBookLot || undefined}
+      />
     </div>
   )
 }

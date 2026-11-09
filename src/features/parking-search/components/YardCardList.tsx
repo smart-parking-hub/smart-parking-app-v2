@@ -40,8 +40,8 @@ export function YardCardList({
   }
 
   return (
-    /* Shows card stream with comfortable gap and responsive scroll */
-    <div className="flex flex-col gap-4 xl:max-h-[1050px] xl:overflow-y-auto xl:pr-2 custom-scrollbar">
+    /* Shows card stream inside the enclosing left container with padded scrollport so rounded borders are never clipped */
+    <div className="flex flex-col gap-2 flex-1 min-h-0 lg:overflow-y-auto p-1 pr-1.5 custom-scrollbar">
       {lots.map((lot) => (
         <YardCardItem
           key={lot.id}
