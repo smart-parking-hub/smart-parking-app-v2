@@ -271,6 +271,22 @@ export function AdminUsersPage() {
           Quản trị
         </Link>
       )}
+      renderMobileCard={(r) => (
+        <Link to={`/admin/users/${r.id}`} className="admin-user-card" aria-label={`Quản trị tài khoản #${r.id}`}>
+          <div className="admin-user-card-top">
+            <div className="admin-user-identity">
+              <span className="admin-user-avatar" aria-hidden="true">{r.fullName?.trim().charAt(0).toLocaleUpperCase('vi') || '#'}</span>
+              <div><strong>{r.fullName || `Tài khoản #${r.id}`}</strong><small>#{r.id} · {date(r.createdAt)}</small></div>
+            </div>
+            <Badge value={r.status} />
+          </div>
+          <dl>
+            <div><dt>Điện thoại</dt><dd>{r.phone || '—'}</dd></div>
+            <div><dt>Email</dt><dd>{r.email || '—'}</dd></div>
+          </dl>
+          <div className="admin-user-card-bottom"><Badge value={r.role} /><span>Quản trị tài khoản →</span></div>
+        </Link>
+      )}
     />
   )
 }

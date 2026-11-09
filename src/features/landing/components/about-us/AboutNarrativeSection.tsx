@@ -62,13 +62,9 @@ export function AboutNarrativeSection() {
           <div className="relative rounded-lg overflow-hidden bg-[#060D1A] border border-slate-700 shadow-xl">
             {/* Terminal Image */}
             <div
-              className="w-full h-80 bg-cover bg-center"
+              className="w-full h-80 bg-cover bg-center bg-[url('https://lh3.googleusercontent.com/aida-public/AB6AXuCuKVa-E2rp1M9hj0PP-6kqRRJjxiTqKlxWC4dwwsbqQgIOrW8pn1ef0siZ8KhXXp7pvBwghdNBL3pgGpMzNEYIXj3qt1Vbo3Ux4_ceWieR5e-Ia0CceRZ6-Stk1nYRPR4DZhHQxr5xpkJ1ugIJDshFiafnj9JaOPQ_QGJfa8CNVFD8A40IGSFGpT8wa3FHH8IW_Giq8UkYj7l1S9Ao_PA8ziN6XVhoFSgAIWZUO4yB')]"
               role="img"
               aria-label="Bãi đỗ xe container hiện đại tại cụm cảng Cát Lái về đêm, dàn đèn cao áp chiếu sáng các vạch đỗ tiêu chuẩn rộng rãi, xe đầu kéo xếp thẳng hàng dưới sự điều phối của hệ thống camera giám sát thông minh và barie tự động, tông màu xanh navy thẫm và ánh cam công nghiệp"
-              style={{
-                backgroundImage:
-                  "url('https://lh3.googleusercontent.com/aida-public/AB6AXuCuKVa-E2rp1M9hj0PP-6kqRRJjxiTqKlxWC4dwwsbqQgIOrW8pn1ef0siZ8KhXXp7pvBwghdNBL3pgGpMzNEYIXj3qt1Vbo3Ux4_ceWieR5e-Ia0CceRZ6-Stk1nYRPR4DZhHQxr5xpkJ1ugIJDshFiafnj9JaOPQ_QGJfa8CNVFD8A40IGSFGpT8wa3FHH8IW_Giq8UkYj7l1S9Ao_PA8ziN6XVhoFSgAIWZUO4yB')",
-              }}
             />
 
             {/* Philosophy Overlay Quote */}

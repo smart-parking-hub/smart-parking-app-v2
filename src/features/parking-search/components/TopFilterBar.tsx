@@ -141,7 +141,7 @@ export function TopFilterBar({
             }
             className="w-full custom-range-slider"
             style={{
-              background: `linear-gradient(to right, #d95f00 0%, #d95f00 ${radiusPercent}%, #e2e8f0 ${radiusPercent}%, #e2e8f0 100%)`,
+              background: `linear-gradient(to right, var(--color-brand-orange) 0%, var(--color-brand-orange) ${radiusPercent}%, var(--color-brand-border) ${radiusPercent}%, var(--color-brand-border) 100%)`,
             }}
             aria-label="Bán kính quét"
           />

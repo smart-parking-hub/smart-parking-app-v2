@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import { Navigation, LocateFixed, MapPin, ArrowUpRight } from 'lucide-react'
+import { createParkingMapIcon } from '@/entities/parking-lot/parkingMapIcon'
 import type { ParkingLotItem } from '../types/parkingSearchTypes'
 import {
   getDrivingRoute,
@@ -87,60 +88,48 @@ export function InteractiveMapCanvas({
     const instance = map.current
     if (!instance || !ready) return
     const layer = L.layerGroup().addTo(instance)
-    let selectedMarker: L.Marker | null = null
 
     for (const lot of lots.filter(validCoordinates)) {
       const isSelected = lot.id === selectedLot?.id
-      const label = document.createElement('span')
-      label.className = 'parking-pin-label'
-      label.dataset.selected = String(isSelected)
-      label.dataset.full = String(lot.isFull || lot.availableSlots === 0)
-      label.textContent = `${new Intl.NumberFormat('vi-VN').format(lot.hourlyRate / 1000)}K · ${lot.availableSlots} chỗ`
-
-      const marker = L.marker([lot.latitude, lot.longitude], {
-        icon: L.divIcon({
-          html: label,
-          className: 'parking-pin',
-          iconSize: [130, 42],
-          iconAnchor: [65, 42],
+      L.marker([lot.latitude, lot.longitude], {
+        icon: createParkingMapIcon({
+          hourlyRate: lot.hourlyRate,
+          availableSlots: lot.availableSlots,
+          selected: isSelected,
+          full: lot.isFull || lot.availableSlots === 0,
         }),
         title: lot.name,
         keyboard: true,
         zIndexOffset: isSelected ? 1000 : 100,
       })
-        .bindPopup(
-          `<div style="font-family: inherit; min-width: 200px; padding: 2px;">
-            <div style="font-weight: 700; font-size: 13px; color: #0d1c2e; margin-bottom: 3px;">${lot.name}</div>
-            <div style="font-size: 11px; color: #64748b; margin-bottom: 6px; line-height: 1.4;">${lot.address}</div>
-            <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #e2e8f0; padding-top: 5px; font-size: 11px;">
-              <span style="color: ${lot.availableSlots > 0 ? '#10b981' : '#f43f5e'}; font-weight: 700;">
-                ${lot.availableSlots > 0 ? `Còn ${lot.availableSlots} chỗ` : 'Hết chỗ'}
-              </span>
-              <span style="font-weight: 700; color: #0d1c2e; font-family: monospace;">
-                ${new Intl.NumberFormat('vi-VN').format(lot.hourlyRate)} đ/h
-              </span>
-            </div>
-          </div>`,
-          { offset: [0, -32], closeButton: true }
-        )
+        .bindPopup(() => {
+          const popup = document.createElement('div')
+          popup.className = 'parking-map-popup'
+          const name = document.createElement('strong')
+          name.textContent = lot.name
+          const address = document.createElement('p')
+          address.textContent = lot.address
+          const details = document.createElement('p')
+          details.textContent = `${lot.availableSlots > 0 ? `Còn ${lot.availableSlots} chỗ` : 'Hết chỗ'} · ${new Intl.NumberFormat('vi-VN').format(lot.hourlyRate)} đ/h`
+          popup.append(name, address, details)
+          return popup
+        }, { closeButton: true })
         .on('click', () => select.current(lot))
+        .on('keydown', (event: L.LeafletKeyboardEvent) => {
+          if (event.originalEvent.key === 'Enter' || event.originalEvent.key === ' ') {
+            event.originalEvent.preventDefault()
+            select.current(lot)
+          }
+        })
         .addTo(layer)
-
-      if (isSelected) {
-        selectedMarker = marker
-      }
-    }
-
-    if (selectedMarker) {
-      selectedMarker.openPopup()
     }
 
     if (origin && validCoordinates(origin)) {
       L.circleMarker([origin.latitude, origin.longitude], {
         radius: 9,
-        color: 'white',
+        color: 'var(--color-surface)',
         weight: 3,
-        fillColor: 'var(--color-map-route)',
+        fillColor: 'var(--color-status-info)',
         fillOpacity: 1,
       })
         .bindTooltip('Điểm xuất phát của bạn')
@@ -159,7 +148,7 @@ export function InteractiveMapCanvas({
       instance.flyTo(
         [selectedLot.latitude, selectedLot.longitude],
         Math.max(instance.getZoom(), 15),
-        { duration: 0.5 },
+        { duration: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 0.5 },
       )
     } else {
       const points = lots
@@ -192,17 +181,29 @@ export function InteractiveMapCanvas({
   useEffect(() => {
     const instance = map.current
     if (!instance || !route.data) return
+    const routeLayer = L.layerGroup().addTo(instance)
+    L.polyline(route.data.points, {
+      color: 'var(--color-surface)',
+      weight: 9,
+      opacity: 1,
+      lineCap: 'round',
+      lineJoin: 'round',
+      interactive: false,
+    }).addTo(routeLayer)
     const line = L.polyline(route.data.points, {
       color: 'var(--color-map-route)',
-      weight: 5,
-      opacity: 0.9,
-    }).addTo(instance)
+      weight: 4,
+      opacity: 1,
+      lineCap: 'round',
+      lineJoin: 'round',
+      interactive: false,
+    }).addTo(routeLayer)
     instance.fitBounds(line.getBounds(), {
       paddingTopLeft: [55, 90],
       paddingBottomRight: [55, 100],
     })
     return () => {
-      line.remove()
+      routeLayer.remove()
     }
   }, [route.data, ready])
 

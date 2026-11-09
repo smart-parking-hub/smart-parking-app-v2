@@ -61,11 +61,7 @@ export function ContactStationsSection() {
           {/* Interactive Map Visual Canvas (7 Cols) */}
           <div className="lg:col-span-7 bg-white rounded-xl overflow-hidden shadow-sm flex flex-col border border-slate-200">
             <div
-              className="w-full h-80 md:h-96 bg-cover bg-center relative"
-              style={{
-                backgroundImage:
-                  "url('https://lh3.googleusercontent.com/aida-public/AB6AXuBUyytv_LZd6mZcRmOPSluJPy5OfkSUvFOVl6IkMaTz-x7B4T136X-6o2Brbjh7HXQ3JugovUjXreHR767a5bh1Jju2PDnLK5Lhzt0TyRPsk_8Vbv4fjaxKORwjjNoKhemPirf2gZ3Uv6zIBiAdUP7KmOh5918GT9D4VXj1JeCK96vulCVpDp6eBtqCvnK9SpfIY-TOG7vT-x_SOR3VWBrM6BfDIiMNNg_Aey811PjG')",
-              }}
+              className="w-full h-80 md:h-96 bg-cover bg-center relative bg-[url('https://lh3.googleusercontent.com/aida-public/AB6AXuBUyytv_LZd6mZcRmOPSluJPy5OfkSUvFOVl6IkMaTz-x7B4T136X-6o2Brbjh7HXQ3JugovUjXreHR767a5bh1Jju2PDnLK5Lhzt0TyRPsk_8Vbv4fjaxKORwjjNoKhemPirf2gZ3Uv6zIBiAdUP7KmOh5918GT9D4VXj1JeCK96vulCVpDp6eBtqCvnK9SpfIY-TOG7vT-x_SOR3VWBrM6BfDIiMNNg_Aey811PjG')]"
             >
               {/* Overlay Dispatch Status */}
               <div className="absolute top-4 left-4 bg-[#060D1A]/90 backdrop-blur-md p-3.5 rounded-lg text-white shadow-md border border-slate-700">

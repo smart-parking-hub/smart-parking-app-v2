@@ -34,15 +34,15 @@ export function ProfilePage() {
     </header>
     {query.isPending ? <div role="status" className="space-y-5 motion-safe:animate-pulse"><p>Đang tải hồ sơ…</p><div className="h-40 rounded-2xl bg-brand-border" /><div className="h-72 rounded-2xl bg-brand-border" /></div>
       : query.isError ? <Notice error><div><p>{errorMessage(query.error)}</p><button className={`${accountButton} mt-4`} type="button" disabled={query.isFetching} onClick={() => void query.refetch()}>Thử lại</button></div></Notice>
-      : !profile ? <Notice>Chưa có thông tin hồ sơ.</Notice>
-      : <div className="grid items-start gap-6 lg:grid-cols-[260px_minmax(0,1fr)]">
-        <aside aria-label="Tóm tắt tài khoản" className="lg:sticky lg:top-[calc(var(--driver-header-height)+24px)]">
-          <ProfileSidebarNav compact activeTab="profile" />
-        </aside>
-        <div className="min-w-0 space-y-6">
-          <DriverContactForm profile={profile} onUpdated={data => { cache.setQueryData(driverProfileKey, data); void cache.invalidateQueries({ queryKey: ['current-user', 'header'] }) }} />
-          <DriverPasswordForm />
-        </div>
-      </div>}
+        : !profile ? <Notice>Chưa có thông tin hồ sơ.</Notice>
+          : <div className="grid items-start gap-6 lg:grid-cols-[260px_minmax(0,1fr)]">
+            <aside aria-label="Tóm tắt tài khoản" className="lg:sticky lg:top-[calc(var(--driver-header-height)+24px)]">
+              <ProfileSidebarNav compact activeTab="profile" />
+            </aside>
+            <div className="min-w-0 space-y-6">
+              <DriverContactForm profile={profile} onUpdated={data => { cache.setQueryData(driverProfileKey, data); void cache.invalidateQueries({ queryKey: ['current-user', 'header'] }) }} />
+              <DriverPasswordForm />
+            </div>
+          </div>}
   </div>
 }

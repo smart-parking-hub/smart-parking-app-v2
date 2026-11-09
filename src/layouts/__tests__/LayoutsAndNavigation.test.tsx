@@ -227,7 +227,7 @@ describe('Layouts and Navigation System Comprehensive Tests', () => {
         </QueryClientProvider>
       )
 
-      expect(screen.getByText('ADMIN SYSTEM')).toBeInTheDocument()
+      expect(screen.getByText('KHÔNG GIAN QUẢN TRỊ')).toBeInTheDocument()
       expect(screen.getByRole('link', { name: /Tổng quan/ })).toBeInTheDocument()
       expect(screen.getByRole('link', { name: /Kiểm duyệt bãi/ })).toBeInTheDocument()
       expect(screen.getByRole('link', { name: /Người dùng/ })).toBeInTheDocument()
@@ -236,7 +236,7 @@ describe('Layouts and Navigation System Comprehensive Tests', () => {
       expect(screen.getByRole('link', { name: /Tranh chấp/ })).toBeInTheDocument()
       expect(screen.getByRole('link', { name: /Nhật ký kiểm toán/ })).toBeInTheDocument()
       expect(screen.getByRole('link', { name: /Thông báo/ })).toBeInTheDocument()
-      expect(screen.getByRole('link', { name: /Hồ sơ quản trị/ })).toBeInTheDocument()
+      expect(screen.getAllByRole('link', { name: /Hồ sơ quản trị/ })).toHaveLength(2)
 
       expect(screen.getByRole('button', { name: /Đăng xuất/ })).toBeInTheDocument()
     })

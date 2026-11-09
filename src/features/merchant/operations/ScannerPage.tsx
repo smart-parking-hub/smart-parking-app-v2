@@ -170,7 +170,7 @@ export function MerchantScannerPage() {
             video.current.srcObject = null
           }
         }
-      } catch (error) {
+      } catch {
         if (stopped) return
         setCameraError(
           'Không thể khởi động camera. Hãy kiểm tra quyền camera hoặc dùng kết nối HTTPS / localhost.',
