@@ -763,9 +763,8 @@ describe('SCR-012 ForgotPasswordPage (Khôi phục mật khẩu qua OTP)', () =>
     expect(step1Label.className).toContain('font-inter')
     expect(step1Label.className).not.toContain('font-mono')
 
-    const footerBar = screen.getByText(/SMARTTRUCK HUB — BẢO MẬT TÀI KHOẢN/i).parentElement?.parentElement
-    expect(footerBar?.className).toContain('font-inter')
-    expect(footerBar?.className).not.toContain('font-mono')
+    const footerBar = screen.queryByText(/SMARTTRUCK HUB — BẢO MẬT TÀI KHOẢN/i)
+    expect(footerBar).toBeNull()
 
     // Transition to Step 2 and check timer, email display, and password rules box
     fireEvent.change(screen.getByLabelText(/Email nhận mã xác thực/i), {

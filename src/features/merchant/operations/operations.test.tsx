@@ -21,7 +21,7 @@ import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import type { ReactNode } from 'react'
 import { getData, sendData } from '@/shared/api/resources'
 import { MerchantScannerPage } from './ScannerPage'
-import { MerchantBookingsPage } from './BookingsPages'
+import { MerchantBookingsPage, MerchantBookingDetailPage } from './BookingsPages'
 import { MerchantWithdrawalsPage } from './FinancePages'
 import { RequireRole, sessionRole } from '@/features/auth'
 import { DecisionDialog } from '@/features/admin'
@@ -495,5 +495,74 @@ describe('Merchant bookings dispatch and notifications center', () => {
     expect(send).toHaveBeenCalledTimes(1)
     resolveRead(null)
     await waitFor(() => expect(markAllBtn).not.toBeDisabled())
+  })
+
+  it('renders booking journey details using GET /api/v1/merchant/bookings/:id', async () => {
+    get.mockResolvedValueOnce({
+      id: 88,
+      bookingCode: 'BK-MERCHANT-88',
+      vehiclePlate: '51C-88888',
+      vehicleType: 'CONTAINER',
+      parkingLotId: 12,
+      parkingLotName: 'Bãi kiểm thử',
+      parkingLotAddress: '123 Quốc lộ 1A',
+      status: 'PENDING_CHECKIN',
+      advanceDeposit: 100000,
+      totalAmount: 300000,
+      expectedCheckInTime: '2026-11-10T10:00:00Z',
+      expectedCheckOutTime: '2026-11-10T18:00:00Z',
+      createdAt: '2026-11-09T08:00:00Z',
+    })
+
+    show(
+      <Routes>
+        <Route
+          path="/merchant/bookings/:id"
+          element={<MerchantBookingDetailPage />}
+        />
+      </Routes>,
+      '/merchant/bookings/88',
+    )
+
+    expect(await screen.findByText('BK-MERCHANT-88')).toBeInTheDocument()
+    expect(get).toHaveBeenCalledWith('/api/v1/merchant/bookings/88')
+    expect(screen.getByText('51C-88888')).toBeInTheDocument()
+    expect(screen.getByText('Đầu kéo / Container')).toBeInTheDocument()
+    expect(screen.getByText('123 Quốc lộ 1A')).toBeInTheDocument()
+    expect(
+      screen.getByRole('link', { name: 'Xử lý tại trạm QR →' }),
+    ).toHaveAttribute('href', '/merchant/qr-scanner?code=BK-MERCHANT-88&lot=12')
+  })
+
+  it('renders error notice when merchant is forbidden (403) from accessing another merchant lot', async () => {
+    const error = Object.assign(
+      new Error('Bạn không có quyền truy cập thông tin booking này'),
+      {
+        isAxiosError: true,
+        response: {
+          status: 403,
+          data: {
+            message: 'Bạn không có quyền truy cập thông tin booking này',
+          },
+        },
+      },
+    )
+    get.mockRejectedValueOnce(error)
+
+    show(
+      <Routes>
+        <Route
+          path="/merchant/bookings/:id"
+          element={<MerchantBookingDetailPage />}
+        />
+      </Routes>,
+      '/merchant/bookings/999',
+    )
+
+    expect(
+      await screen.findByText(
+        'Bạn không có quyền truy cập thông tin booking này',
+      ),
+    ).toBeInTheDocument()
   })
 })

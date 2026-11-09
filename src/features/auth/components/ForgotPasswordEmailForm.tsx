@@ -59,42 +59,34 @@ export function ForgotPasswordEmailForm({
   }
 
   return (
-    <div className="space-y-6" id="form-step-1">
-      <div className="p-4 rounded bg-[#eff4ff] flex items-start gap-2.5">
+    <div className="space-y-5" id="form-step-1">
+      <div className="p-3.5 rounded-xl bg-black/5 border border-black/10 flex items-start gap-2.5">
         <Shield
-          size={20}
-          className="text-[#45464d] shrink-0 mt-0.5"
+          size={18}
+          className="text-[#d95f00] shrink-0 mt-0.5"
           aria-hidden="true"
         />
-        <p className="text-sm text-[#45464d] leading-relaxed">
-          Nhập địa chỉ email đã đăng ký với tài khoản của bạn. Cơ chế{' '}
-          <span className="font-semibold text-[#0d1c2e]">
-            bảo mật chống dò tìm tài khoản
-          </span>{' '}
-          được áp dụng: hệ thống luôn phản hồi đồng nhất và chỉ gửi mã OTP nếu
-          email đã đăng ký.
+        <p className="text-xs text-black font-normal leading-relaxed">
+          Nhập địa chỉ email đã đăng ký. Hệ thống sẽ gửi mã OTP gồm 6 chữ số nếu email tồn tại trên hệ thống.
         </p>
       </div>
 
       <form
         noValidate
-        className="space-y-6"
+        className="space-y-5"
         onSubmit={handleSubmit}
         aria-busy={isPending}
       >
-        <fieldset disabled={isPending} className="space-y-6">
+        <fieldset disabled={isPending} className="space-y-5">
           <div className="space-y-1.5">
             <label
-              className="block text-xs font-semibold text-[#0d1c2e] uppercase tracking-wider"
+              className="block text-sm sm:text-base font-semibold text-black"
               htmlFor="input-email"
             >
-              Email nhận mã xác thực{' '}
-              <span className="text-[#ba1a1a]" aria-hidden="true">
-                *
-              </span>
+              Email nhận mã xác thực
             </label>
             <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-[#45464d]">
+              <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
                 <AtSign size={18} aria-hidden="true" />
               </div>
               <input
@@ -102,12 +94,12 @@ export function ForgotPasswordEmailForm({
                 type="email"
                 inputMode="email"
                 autoComplete="email"
-                placeholder="vidu: tai-khoan@example.com"
+                placeholder="Ví dụ: taixe.nguyen@gmail.com"
                 aria-invalid={Boolean(emailError)}
                 aria-describedby={
                   emailError ? 'input-email-error' : 'input-email-hint'
                 }
-                className="w-full h-12 pl-11 pr-4 rounded border border-[#c6c6cd] bg-white text-[#0d1c2e] text-sm focus:outline-none focus:border-[#d95f00] focus:bg-[#eff4ff]/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d95f00] focus-visible:ring-offset-1 disabled:opacity-60 transition-colors"
+                className="w-full min-h-12 sm:min-h-14 pl-11 pr-4 rounded-xl border border-slate-300 bg-white text-black font-normal placeholder:font-normal placeholder:text-slate-400 hover:border-slate-400 focus:outline-none focus:border-[#d95f00] focus:ring-2 focus:ring-[#d95f00]/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d95f00] focus-visible:ring-offset-1 disabled:opacity-60 transition-colors"
                 {...emailRegister}
               />
             </div>
@@ -115,19 +107,18 @@ export function ForgotPasswordEmailForm({
               <p
                 id="input-email-error"
                 role="alert"
-                className="text-xs font-medium text-[#ba1a1a] pt-1"
+                className="text-xs font-normal text-red-700 pt-1"
               >
                 {emailError}
               </p>
             )}
             <p
               id="input-email-hint"
-              className="font-inter text-xs leading-4 font-medium tracking-[0.06em] text-[#45464d] flex items-center gap-1.5 pt-1"
+              className="font-inter text-xs text-black font-normal flex items-center gap-1.5 pt-1"
             >
-              <Info size={14} className="shrink-0" aria-hidden="true" />
+              <Info size={14} className="shrink-0 text-slate-400" aria-hidden="true" />
               <span>
-                Hỗ trợ địa chỉ email đã liên kết với tài khoản SmartTruck Hub
-                (tối đa 100 ký tự).
+                Hỗ trợ địa chỉ email đã liên kết với tài khoản SmartTruck Hub.
               </span>
             </p>
           </div>
@@ -135,13 +126,13 @@ export function ForgotPasswordEmailForm({
           <button
             type="submit"
             disabled={isPending}
-            className="w-full h-12 rounded bg-[#d95f00] hover:bg-[#b84e00] active:bg-[#9e4300] text-white text-sm font-semibold flex items-center justify-center gap-2 shadow-md transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d95f00] focus-visible:ring-offset-2 disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer"
+            className="w-full min-h-12 sm:min-h-14 rounded-xl bg-[#d95f00] hover:bg-[#b84e00] active:bg-[#9e4300] hover:scale-[1.01] active:scale-[0.99] text-white text-base font-bold flex items-center justify-center gap-2.5 shadow-md transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d95f00] focus-visible:ring-offset-2 disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer"
           >
             {isPending ? (
               <>
                 <LoaderCircle
-                  size={18}
-                  className="animate-spin"
+                  size={20}
+                  className="animate-spin text-white"
                   aria-hidden="true"
                 />
                 <span>Đang gửi mã OTP…</span>

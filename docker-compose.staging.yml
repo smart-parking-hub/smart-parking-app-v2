@@ -1,0 +1,28 @@
+version: '3.8'
+
+services:
+  smart-parking-frontend-v2:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: ghcr.io/smart-parking-hub/smart-parking-app-v2:staging
+    container_name: smart-parking-frontend-v2
+    restart: unless-stopped
+    ports:
+      - "3000:80"
+    environment:
+      - NODE_ENV=production
+      - VITE_API_BASE_URL=/api
+    healthcheck:
+      test: ["CMD-SHELL", "wget --quiet --tries=1 --spider http://127.0.0.1:80/ || exit 1"]
+      interval: 15s
+      timeout: 3s
+      retries: 3
+      start_period: 5s
+    networks:
+      - smart-parking-staging-net
+
+networks:
+  smart-parking-staging-net:
+    name: smart-parking-staging-net
+    driver: bridge

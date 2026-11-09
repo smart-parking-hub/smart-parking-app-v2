@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { Link, useParams } from 'react-router-dom'
 import type { Booking } from '@/entities/operations'
+import { vehicleLabels } from '@/entities/operations'
 import { getData, type Page } from '@/shared/api/resources'
 import { QueryState } from '@/shared/components/QueryState'
 import {
@@ -13,6 +14,7 @@ import {
   date,
   money,
   button,
+  secondary,
 } from '@/shared/components/Workspace'
 export function MerchantBookingsPage() {
   const [page, setPage] = useState(0)
@@ -141,16 +143,23 @@ export function MerchantBookingDetailPage() {
   const { id } = useParams()
   const query = useQuery({
     queryKey: ['merchant-booking', id],
-    queryFn: () => getData<Booking>(`/api/v1/bookings/${id}`),
+    queryFn: () => getData<Booking>(`/api/v1/merchant/bookings/${id}`),
     retry: false,
   })
   return (
     <Workspace
       title={`Hồ sơ đặt chỗ #${id}`}
+      eyebrow="CHI TIẾT VÉ / MERCHANT"
+      description="Xem hành trình xe, thông tin biển số, thời gian ra vào và chi tiết thanh toán cọc."
       actions={
-        <Link className={button} to="/merchant/bookings">
-          Danh sách đặt chỗ
-        </Link>
+        <div className="flex items-center gap-2">
+          <Link className={secondary} to="/merchant/bookings">
+            ← Danh sách đặt chỗ
+          </Link>
+          <Link className={button} to="/merchant/qr-scanner">
+            Mở trạm quét QR
+          </Link>
+        </div>
       }
     >
       <QueryState query={query}>
@@ -160,25 +169,30 @@ export function MerchantBookingDetailPage() {
               items={[
                 { label: 'Mã vé', value: data.bookingCode },
                 { label: 'Trạng thái', value: <Badge value={data.status} /> },
-                { label: 'Đặt cọc', value: money(data.advanceDeposit) },
-                { label: 'Tổng phí', value: money(data.totalAmount) },
+                { label: 'Tiền cọc đã giữ', value: money(data.advanceDeposit) },
+                { label: 'Tổng cước dự kiến', value: money(data.totalAmount) },
               ]}
             />
             <div className="grid gap-6 lg:grid-cols-[2fr_1fr]">
-              <Panel title="Hành trình phương tiện">
+              <Panel title="Hành trình phương tiện & Bãi đỗ">
                 <dl className="grid gap-5 sm:grid-cols-2">
                   {Object.entries({
                     'Biển kiểm soát':
                       data.vehicleLicensePlate || data.vehiclePlate,
+                    'Phân loại xe':
+                      (data.vehicleType && vehicleLabels[data.vehicleType]) || data.vehicleType || 'Không xác định',
                     'Bãi đỗ': data.parkingLotName,
+                    'Địa chỉ bãi đỗ': data.parkingLotAddress || 'Theo hồ sơ bãi đỗ',
                     'Dự kiến đến': date(data.expectedCheckInTime),
                     'Dự kiến rời': date(data.expectedCheckOutTime),
-                    'Đã vào bãi': date(data.checkInTime),
-                    'Đã rời bãi': date(data.checkOutTime),
+                    'Thời điểm tạo vé': date(data.createdAt),
+                    'Thực tế vào bãi': date(data.checkInTime),
+                    'Thực tế rời bãi': date(data.checkOutTime),
+                    ...(data.cancellationReason ? { 'Lý do hủy đơn': data.cancellationReason } : {}),
                   }).map(([label, value]) => (
                     <div key={label}>
                       <dt className="text-xs text-brand-muted">{label}</dt>
-                      <dd className="mt-2 font-medium">{value}</dd>
+                      <dd className="mt-1.5 font-medium text-slate-900">{value}</dd>
                     </div>
                   ))}
                 </dl>
@@ -189,7 +203,7 @@ export function MerchantBookingDetailPage() {
                   khi xác nhận xe vào, xe ra hoặc thu tiền mặt.
                 </p>
                 <Link
-                  className={button}
+                  className={`${button} w-full flex items-center justify-center gap-2`}
                   to={`/merchant/qr-scanner?code=${encodeURIComponent(data.bookingCode)}&lot=${data.parkingLotId}`}
                 >
                   Xử lý tại trạm QR →

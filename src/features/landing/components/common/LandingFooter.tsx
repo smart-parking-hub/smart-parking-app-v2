@@ -1,5 +1,4 @@
 import { Link } from 'react-router-dom'
-import { Truck } from 'lucide-react'
 
 export function LandingFooter() {
   return (
@@ -9,9 +8,11 @@ export function LandingFooter() {
           {/* Col 1: Brand & Status */}
           <div>
             <Link to="/" className="inline-flex items-center gap-2 mb-4 group" aria-label="SmartTruckHub Trang chủ">
-              <div className="w-8 h-8 rounded-lg bg-brand-orange flex items-center justify-center text-[#060D1A] transition-transform group-hover:scale-105">
-                <Truck className="h-5 w-5 text-[#060D1A]" aria-hidden="true" />
-              </div>
+              <img
+                src="/image-smart-parking-hub.png"
+                alt="Smart Parking Hub Logo"
+                className="w-8 h-8 rounded-lg object-contain transition-transform group-hover:scale-105"
+              />
               <span className="font-sora font-bold text-lg text-white">
                 SMART<span className="text-brand-orange">TRUCK</span>
               </span>

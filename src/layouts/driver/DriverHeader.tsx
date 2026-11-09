@@ -86,9 +86,11 @@ export function DriverHeader() {
             onClick={closeMenus}
             className="driver-header-brand flex shrink-0 items-center gap-3"
           >
-            <span className="hidden h-10 w-10 items-center justify-center rounded-xl border border-brand-orange/30 text-brand-orange sm:flex">
-              <Truck size={22} />
-            </span>
+            <img
+              src="/image-smart-parking-hub.png"
+              alt="Smart Parking Hub Logo"
+              className="hidden h-10 w-10 rounded-xl object-contain sm:flex"
+            />
             <span>
               <span className="block font-sora text-[14px] font-bold tracking-tight sm:text-lg">
                 Smart Parking <span className="text-brand-orange">Hub</span>

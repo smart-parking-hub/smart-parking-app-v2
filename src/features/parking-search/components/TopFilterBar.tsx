@@ -1,4 +1,4 @@
-import { Truck } from 'lucide-react'
+import { Check, Truck } from 'lucide-react'
 import type {
   SearchFilterState,
   VehicleClassification,
@@ -15,6 +15,8 @@ interface TopFilterBarProps {
   filters: SearchFilterState
   vehicles: VehicleOption[]
   onChangeFilters: (updated: Partial<SearchFilterState>) => void
+  totalResults?: number
+  onToggleIncludeFull?: (value: boolean) => void
 }
 
 const STANDARD_CLASSIFICATIONS: {
@@ -39,6 +41,8 @@ export function TopFilterBar({
   filters,
   vehicles,
   onChangeFilters,
+  totalResults = 0,
+  onToggleIncludeFull,
 }: TopFilterBarProps) {
   const handleSelectVehicle = (val: string) => {
     if (val.startsWith('type:')) {
@@ -85,27 +89,40 @@ export function TopFilterBar({
   const radiusPercent = Math.round(((filters.radiusKm - 1) / (50 - 1)) * 100)
 
   return (
-    <section className="w-full bg-white shadow-sm rounded-2xl p-5 lg:p-7 mb-6 border border-brand-border [&_span]:leading-relaxed [&_button]:min-h-8">
-      {/* 3 Even Columns: 1. Phương tiện điều hành -> 2. Sắp xếp theo -> 3. Bán kính quét */}
-      <div className="grid grid-cols-1 md:grid-cols-[1.25fr_1fr_1fr] gap-6 lg:gap-10 items-start">
-        {/* 1. Phương tiện điều hành */}
-        <div className="flex flex-col w-full">
-          <span className="text-xs text-[#45464d] block mb-1.5 font-medium">
+    <section
+      aria-label="Bộ lọc tìm bãi đỗ"
+      className="w-full bg-white/95 backdrop-blur-md shadow-lg rounded-2xl p-3.5 sm:p-4 border border-brand-border/90 [&_span]:leading-relaxed"
+    >
+      <div className="flex items-center justify-between gap-2 pb-2.5 mb-2.5 border-b border-slate-100">
+        <div className="min-w-0">
+          <h1 className="font-sora text-sm font-bold tracking-tight text-brand-navy truncate">
+            Điểm đỗ phù hợp. Hành trình an tâm.
+          </h1>
+        </div>
+        <span className="shrink-0 rounded-full border border-brand-border bg-brand-surface px-2.5 py-0.5 text-[11px] font-medium text-brand-muted">
+          Bản đồ OpenStreetMap
+        </span>
+      </div>
+
+      {/* 2 Compact Columns: Phương tiện điều hành + Sắp xếp theo */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 items-start">
+        <div className="flex flex-col w-full min-w-0">
+          <span className="text-[11px] text-[#45464d] block mb-1 font-semibold">
             Phương tiện điều hành
           </span>
           <Select
             value={selectValue}
             onChange={handleSelectVehicle}
             groups={vehicleGroups}
-            prefixIcon={<Truck className="w-4 h-4 text-[#455f87] shrink-0" />}
+            prefixIcon={<Truck className="w-3.5 h-3.5 text-[#455f87] shrink-0" />}
             ariaLabel="Phương tiện điều hành"
             variant="subtle"
+            size="sm"
           />
         </div>
 
-        {/* 2. Sắp xếp theo */}
-        <div className="flex flex-col w-full">
-          <span className="text-xs text-[#45464d] block mb-1.5 font-medium">
+        <div className="flex flex-col w-full min-w-0">
+          <span className="text-[11px] text-[#45464d] block mb-1 font-semibold">
             Sắp xếp theo
           </span>
           <Select
@@ -118,19 +135,23 @@ export function TopFilterBar({
             options={SORT_OPTIONS}
             ariaLabel="Tiêu chí sắp xếp"
             variant="subtle"
+            size="sm"
           />
         </div>
+      </div>
 
-        {/* 3. Bán kính quét */}
-        <div className="flex flex-col w-full">
-          <div className="flex items-center justify-between mb-1">
-            <span className="text-xs text-[#45464d] font-medium">
-              Bán kính quét:
-            </span>
-            <span className="font-mono text-[#d95f00] font-bold text-xs bg-orange-50 border border-orange-200/60 px-2 py-0.5 rounded-full">
-              {filters.radiusKm} km
-            </span>
-          </div>
+      {/* Radius Slider */}
+      <div className="mt-2.5 flex flex-col w-full">
+        <div className="flex items-center justify-between gap-2 mb-1">
+          <span className="text-[11px] text-[#45464d] font-semibold">
+            Bán kính quét:
+          </span>
+          <span className="tabular-nums text-[#d95f00] font-bold text-[11px] bg-orange-50 border border-orange-200/70 px-2 py-0.5 rounded-full">
+            {filters.radiusKm} km
+          </span>
+        </div>
+
+        <div className="py-1.5 flex items-center">
           <input
             type="range"
             min="1"
@@ -145,23 +166,86 @@ export function TopFilterBar({
             }}
             aria-label="Bán kính quét"
           />
-          <div className="flex items-center justify-between text-[11px] text-slate-400 mt-1 font-medium">
-            {[5, 15, 30, 50].map((km) => (
+        </div>
+
+        {/* Positioned km milestones aligned directly below their slider track positions */}
+        <div className="relative h-5 w-full mt-0.5">
+          {[5, 15, 30, 50].map((km) => {
+            const isMax = km === 50
+            const ratio = (km - 1) / (50 - 1)
+            return (
               <button
                 key={km}
                 type="button"
                 onClick={() => onChangeFilters({ radiusKm: km })}
+                style={
+                  isMax
+                    ? { right: 0 }
+                    : { left: `calc(7px + (100% - 14px) * ${ratio})` }
+                }
                 className={cn(
-                  'px-1.5 py-0.5 rounded hover:text-[#d95f00] transition-colors cursor-pointer',
-                  filters.radiusKm === km &&
-                    'font-bold text-[#d95f00] bg-orange-50',
+                  'absolute top-0 flex flex-col items-center tabular-nums text-[10px] leading-none transition-colors cursor-pointer rounded px-1 py-0.5',
+                  !isMax && '-translate-x-1/2',
+                  filters.radiusKm === km
+                    ? 'font-bold text-[#d95f00]'
+                    : 'font-medium text-slate-400 hover:text-[#d95f00]',
                 )}
               >
-                {km}km
+                <span
+                  aria-hidden="true"
+                  className={cn(
+                    'mb-0.5 h-1 w-px',
+                    filters.radiusKm === km ? 'bg-[#d95f00]' : 'bg-slate-300',
+                  )}
+                />
+                <span>{km}km</span>
               </button>
-            ))}
-          </div>
+            )
+          })}
         </div>
+      </div>
+
+      {/* Results Count + Circular Include Full Toggle */}
+      <div className="mt-2 pt-2 border-t border-slate-100 flex flex-wrap items-center justify-between gap-2 text-xs text-brand-muted">
+        <p className="tabular-nums">
+          Tìm thấy{' '}
+          <strong className="font-semibold text-brand-navy">
+            {totalResults} bãi xe
+          </strong>{' '}
+          trong{' '}
+          <span className="font-semibold text-brand-navy">
+            {filters.radiusKm} km
+          </span>
+        </p>
+        <label className="inline-flex items-center gap-2 text-xs font-semibold text-brand-navy cursor-pointer select-none group">
+          <span className="relative inline-flex items-center justify-center">
+            <input
+              type="checkbox"
+              checked={filters.includeFull}
+              onChange={(event) => {
+                if (onToggleIncludeFull) {
+                  onToggleIncludeFull(event.target.checked)
+                } else {
+                  onChangeFilters({ includeFull: event.target.checked })
+                }
+              }}
+              className="peer sr-only"
+            />
+            <span
+              aria-hidden="true"
+              className={cn(
+                'flex h-4.5 w-4.5 items-center justify-center rounded-full border transition-all',
+                'peer-focus-visible:ring-2 peer-focus-visible:ring-brand-orange/40 peer-focus-visible:ring-offset-1',
+                filters.includeFull
+                  ? 'border-brand-orange bg-brand-orange text-white shadow-2xs'
+                  : 'border-slate-300 bg-white text-transparent group-hover:border-brand-orange/70',
+              )}
+            >
+              <Check size={11} strokeWidth={3} />
+            </span>
+          </span>
+          <span>Hiện bãi đã đầy</span>
+        </label>
       </div>
     </section>
   )

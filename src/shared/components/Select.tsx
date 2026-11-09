@@ -27,6 +27,8 @@ export interface SelectProps {
   dropdownClassName?: string
   disabled?: boolean
   ariaLabel?: string
+  ariaLabelledBy?: string
+  triggerAriaHidden?: boolean
   id?: string
   variant?: 'subtle' | 'default' | 'solid'
   size?: 'sm' | 'md' | 'lg'
@@ -44,6 +46,8 @@ export function Select({
   dropdownClassName,
   disabled = false,
   ariaLabel,
+  ariaLabelledBy,
+  triggerAriaHidden = false,
   id,
   variant = 'subtle',
   size = 'md',
@@ -117,12 +121,11 @@ export function Select({
       {/* Hidden Native Select for Screen Readers, Testing Library and Form Compatibility */}
       <select
         id={selectId}
-        aria-label={ariaLabel}
         value={value}
         onChange={(e) => onChange(e.target.value)}
         disabled={disabled}
         tabIndex={-1}
-        className="sr-only"
+        className="sr-only focus-visible:ring-2 focus-visible:ring-[#d95f00]"
       >
         {placeholder && (
           <option value="" disabled>
@@ -152,10 +155,12 @@ export function Select({
       <button
         type="button"
         id={`${selectId}-trigger`}
-        role="combobox"
+        role={triggerAriaHidden ? undefined : 'combobox'}
+        aria-hidden={triggerAriaHidden ? 'true' : undefined}
         aria-expanded={isOpen}
         aria-haspopup="listbox"
-        aria-label={ariaLabel}
+        aria-label={triggerAriaHidden ? undefined : ariaLabel}
+        aria-labelledby={triggerAriaHidden ? undefined : ariaLabelledBy}
         disabled={disabled}
         onClick={() => !disabled && setIsOpen((prev) => !prev)}
         className={cn(

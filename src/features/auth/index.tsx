@@ -7,12 +7,12 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { useMutation } from '@tanstack/react-query'
-import { ArrowUpRight, Check, Eye, EyeOff, LoaderCircle } from 'lucide-react'
+import { ArrowRight, Check, Eye, EyeOff, LoaderCircle, ShieldCheck, Store, Truck } from 'lucide-react'
 import { errorMessage, sendData } from '@/shared/api/resources'
 import { AuthLayout } from '@/layouts/AuthLayout'
+import { Select, type SelectOption } from '@/shared/components/Select'
 import {
   control,
-  Field,
   Notice,
 } from '@/shared/components/Workspace'
 
@@ -21,6 +21,21 @@ export type { Role } from './model/session'
 export { RequireRole } from './components/RequireRole'
 export { LoginPage } from './pages/LoginPage'
 export { ForgotPasswordPage } from './pages/ForgotPasswordPage'
+
+const ROLE_OPTIONS: SelectOption[] = [
+  {
+    value: 'DRIVER',
+    label: 'Tài xế',
+    description: 'Tìm kiếm và đặt bến bãi đỗ xe',
+    icon: <Truck size={18} className="text-[#d95f00] shrink-0" />,
+  },
+  {
+    value: 'MERCHANT',
+    label: 'Chủ bãi',
+    description: 'Quản lý bãi đỗ và điều phối doanh thu',
+    icon: <Store size={18} className="text-[#d95f00] shrink-0" />,
+  },
+]
 
 export function AuthPage({ mode }: { mode: 'login' | 'register' | 'forgot' }) {
   if (mode === 'login') return <LoginPage />
@@ -31,15 +46,45 @@ export function AuthPage({ mode }: { mode: 'login' | 'register' | 'forgot' }) {
 function LegacyAuthPage({ mode }: { mode: 'login' | 'register' | 'forgot' }) {
   const form = useForm<AuthFields>({ defaultValues: { role: 'DRIVER' } })
   const emailValue = (form.watch('email') ?? '').trim().toLowerCase()
+  const selectedRole = form.watch('role')
   const [sent, setSent] = useState(false)
   const [countdown, setCountdown] = useState(0)
   const [showPassword, setShowPassword] = useState<Record<string, boolean>>({})
+  type RegisterStepKey = 'info' | 'bank' | 'email' | 'password'
+  const [registerStepKey, setRegisterStepKey] = useState<RegisterStepKey>('info')
+  const [isOtpFocused, setIsOtpFocused] = useState(false)
 
   useEffect(() => {
     if (!countdown) return
     const timer = setTimeout(() => setCountdown(countdown - 1), 1000)
     return () => clearTimeout(timer)
   }, [countdown])
+
+  // Automatically adjust step if switching role from MERCHANT to DRIVER while on bank step
+  useEffect(() => {
+    if (selectedRole === 'DRIVER' && registerStepKey === 'bank') {
+      setRegisterStepKey('email')
+    }
+  }, [selectedRole, registerStepKey])
+
+  const registerSteps =
+    selectedRole === 'MERCHANT'
+      ? [
+          { key: 'info' as const, label: 'Cá nhân', stepNumber: 1 },
+          { key: 'bank' as const, label: 'Ngân hàng', stepNumber: 2 },
+          { key: 'email' as const, label: 'Xác thực', stepNumber: 3 },
+          { key: 'password' as const, label: 'Mật khẩu', stepNumber: 4 },
+        ]
+      : [
+          { key: 'info' as const, label: 'Cá nhân', stepNumber: 1 },
+          { key: 'email' as const, label: 'Xác thực', stepNumber: 2 },
+          { key: 'password' as const, label: 'Mật khẩu', stepNumber: 3 },
+        ]
+
+  const currentStepNumber =
+    registerSteps.find((s) => s.key === registerStepKey)?.stepNumber ?? 1
+  const totalSteps = registerSteps.length
+  const progressPercent = Math.round((currentStepNumber / totalSteps) * 100)
 
   const title =
     mode === 'login'
@@ -69,7 +114,10 @@ function LegacyAuthPage({ mode }: { mode: 'login' | 'register' | 'forgot' }) {
 
   const submit = useMutation({
     mutationFn: async (data: AuthFields) => {
-      if (mode === 'register')
+      if (mode === 'register') {
+        if (data.confirmPassword && data.confirmPassword !== data.password) {
+          throw new Error('Mật khẩu xác nhận không trùng khớp.')
+        }
         await sendData('post', '/api/v1/auth/register', {
           phone: data.phone,
           password: data.password,
@@ -85,12 +133,13 @@ function LegacyAuthPage({ mode }: { mode: 'login' | 'register' | 'forgot' }) {
               }
             : {}),
         })
-      else
+      } else {
         await sendData('post', '/api/v1/auth/forgot-password/reset', {
           email: data.email.trim().toLowerCase(),
           otpCode: data.otpCode,
           newPassword: data.newPassword,
         })
+      }
     },
   })
 
@@ -99,20 +148,25 @@ function LegacyAuthPage({ mode }: { mode: 'login' | 'register' | 'forgot' }) {
     label: string,
     type = 'text',
     options: Parameters<typeof form.register>[1] = {},
+    placeholder?: string,
   ) => {
     const isPassword = type === 'password'
     return (
-      <Field label={label}>
+      <div className="space-y-1.5">
+        <label htmlFor={`auth-${name}`} className="block text-sm sm:text-base font-semibold text-black">
+          {label}
+        </label>
         <div className="relative">
           <input
             id={`auth-${name}`}
-            className={`${control} min-h-14 text-base focus-visible:ring-2 focus-visible:ring-[#d95f00] focus-visible:ring-offset-1`}
+            className={`${control} min-h-12 sm:min-h-14 text-base bg-white border border-slate-300 text-black font-normal placeholder:font-normal placeholder:text-slate-400 hover:border-slate-400 focus:border-[#d95f00] focus:ring-2 focus:ring-[#d95f00]/20 focus-visible:ring-2 focus-visible:ring-[#d95f00] focus-visible:ring-offset-1 rounded-xl px-4 py-3 shadow-2xs transition-colors`}
             disabled={submit.isPending}
             aria-invalid={Boolean(form.formState.errors[name])}
             aria-describedby={form.formState.errors[name] ? `auth-${name}-error` : undefined}
             type={isPassword && showPassword[name] ? 'text' : type}
+            placeholder={placeholder}
             autoComplete={
-              name === 'password'
+              name === 'password' || name === 'confirmPassword'
                 ? mode === 'login'
                   ? 'current-password'
                   : 'new-password'
@@ -127,7 +181,7 @@ function LegacyAuthPage({ mode }: { mode: 'login' | 'register' | 'forgot' }) {
                         : 'off'
             }
             {...form.register(name, {
-              required: true,
+              required: name !== 'citizenId' && name !== 'confirmPassword',
               ...options,
               ...(name === 'phone' ? { setValueAs: (value: string) => value.replace(/\s/g, '') } : {}),
             })}
@@ -135,185 +189,590 @@ function LegacyAuthPage({ mode }: { mode: 'login' | 'register' | 'forgot' }) {
           {isPassword && (
             <button
               type="button"
-              className="absolute right-3 top-1/2 -translate-y-1/2 p-2 text-slate-400 hover:text-slate-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d95f00] rounded-lg transition-colors cursor-pointer"
+              className="absolute right-3 top-1/2 -translate-y-1/2 p-2 text-slate-400 hover:text-black focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d95f00] rounded-lg transition-colors cursor-pointer"
               onClick={() => setShowPassword((prev) => ({ ...prev, [name]: !prev[name] }))}
-              aria-label={showPassword[name] ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'}
+              aria-label={showPassword[name] ? (name === 'confirmPassword' ? 'Ẩn xác nhận mật khẩu' : 'Ẩn mật khẩu') : (name === 'confirmPassword' ? 'Hiện xác nhận mật khẩu' : 'Hiện mật khẩu')}
             >
               {showPassword[name] ? <EyeOff size={18} /> : <Eye size={18} />}
             </button>
           )}
         </div>
         {form.formState.errors[name] && (
-          <span id={`auth-${name}-error`} role="alert" className="text-xs text-red-700 font-medium">
-            Thông tin chưa hợp lệ.
+          <span id={`auth-${name}-error`} role="alert" className="text-xs text-red-700 font-normal">
+            {form.formState.errors[name]?.message || 'Thông tin chưa hợp lệ.'}
           </span>
         )}
-      </Field>
+      </div>
     )
   }
 
   return (
     <AuthLayout>
-      <h1 className="font-sora text-3xl font-semibold leading-snug tracking-tight text-brand-navy xl:text-4xl">
-        {title}
-      </h1>
-      <p className="mb-10 mt-4 text-base leading-7 text-brand-muted">
-        {mode === 'login'
-          ? 'Đăng nhập để tiếp tục công việc của bạn.'
-          : 'Thông tin được xác thực bởi hệ thống SmartTruck Hub.'}
-      </p>
+      <div>
+        {mode === 'register' && (
+          <div className="h-1.5 w-full bg-black/10 rounded-full overflow-hidden mb-5">
+            <div
+              className="h-full bg-[#d95f00] transition-all duration-500 rounded-full"
+              style={{ width: `${progressPercent}%` }}
+              role="progressbar"
+              aria-valuenow={progressPercent}
+              aria-valuemin={0}
+              aria-valuemax={100}
+              aria-label={`Tiến trình đăng ký bước ${currentStepNumber} trên ${totalSteps}`}
+            />
+          </div>
+        )}
 
-      {submit.isSuccess && mode !== 'login' ? (
-        <AuthSuccess mode={mode} />
-      ) : (
-        <form
-          className="space-y-6 [&_input]:min-h-14 [&_input]:text-base [&_select]:min-h-14 [&_label]:gap-3 [&_label]:text-base"
-          onSubmit={form.handleSubmit((data) => submit.mutate(data))}
-        >
-          {mode !== 'forgot' &&
-            input('phone', 'Số điện thoại', 'tel', {
-              pattern: /^(0|\+84)[35789][0-9]{8}$/,
-            })}
-          {mode !== 'login' && input('email', 'Email nhận mã xác thực', 'email')}
-          {mode === 'register' && (
-            <>
-              <Field label="Bạn tham gia với vai trò">
-                <select
-                  className={`${control} focus-visible:ring-2 focus-visible:ring-[#d95f00] focus-visible:ring-offset-1`}
-                  {...form.register('role')}
-                >
-                  <option value="DRIVER">Tài xế</option>
-                  <option value="MERCHANT">Chủ bãi</option>
-                </select>
-              </Field>
-              {input('fullName', 'Họ và tên', 'text', { maxLength: 100 })}
-              {input('citizenId', 'CCCD / CMND', 'text', {
-                required: false,
-                pattern: /^$|^(?:[0-9]{9}|[0-9]{12})$/,
-              })}
-              {form.watch('role') === 'MERCHANT' && (
-                <>
-                  <BankField control={form.control} disabled={submit.isPending} />
-                  {input('bankAccountNum', 'Số tài khoản ngân hàng', 'text', {
-                    required: true,
-                  })}
-                </>
-              )}
-            </>
-          )}
-          {mode !== 'forgot' &&
-            input('password', 'Mật khẩu', 'password', {
-              minLength: 6,
-              maxLength: 50,
-            })}
-          {mode !== 'login' && (
-            <>
-              <button
-                type="button"
-                disabled={otp.isPending || countdown > 0}
-                className="inline-flex items-center justify-center gap-2 rounded-xl border border-brand-border bg-white px-4 py-3 text-sm font-semibold text-brand-navy hover:bg-brand-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d95f00] focus-visible:ring-offset-2 disabled:opacity-50 transition-colors shadow-xs cursor-pointer"
-                onClick={() => otp.mutate()}
+        <div className="mb-6 sm:mb-8 flex flex-col items-center text-center">
+          <Link
+            to="/"
+            className="inline-flex items-center gap-3.5 font-sora text-xl sm:text-2xl font-bold text-black mb-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d95f00] rounded-2xl p-1.5 transition-all hover:scale-105 group"
+          >
+            <img
+              src="/image-smart-parking-hub.png"
+              alt="Smart Parking Hub Logo"
+              className="w-11 h-11 sm:w-12 sm:h-12 rounded-2xl object-contain shrink-0 shadow-md ring-1 ring-white/60 group-hover:shadow-lg transition-all"
+            />
+            <span className="tracking-tight text-black font-bold text-xl sm:text-2xl group-hover:text-[#d95f00] transition-colors">
+              SMARTTRUCK HUB
+            </span>
+          </Link>
+          <h1 className="font-sora text-3xl sm:text-4xl font-bold tracking-tight text-black drop-shadow-xs">
+            {title}
+          </h1>
+          <p className="mt-2 text-sm sm:text-base text-black font-normal">
+            {mode === 'login'
+              ? 'Đăng nhập để tiếp tục công việc của bạn.'
+              : 'Thông tin được xác thực bởi hệ thống SmartTruck Hub.'}
+          </p>
+        </div>
+
+        {submit.isSuccess && mode !== 'login' ? (
+          <AuthSuccess mode={mode} />
+        ) : (
+          <form
+            className="space-y-4 [&_input:not([role='combobox'])]:min-h-12 [&_input:not([role='combobox'])]:sm:min-h-14 [&_input:not([role='combobox'])]:text-base [&_input:not([role='combobox'])]:rounded-xl [&_input:not([role='combobox'])]:px-4 [&_select]:min-h-12 [&_select]:sm:min-h-14 [&_select]:text-base [&_select]:rounded-xl [&_select]:px-4 [&_label]:gap-1.5"
+            onSubmit={form.handleSubmit((data) => submit.mutate(data))}
+          >
+            {mode === 'register' && (
+              <div
+                className={`grid ${
+                  selectedRole === 'MERCHANT' ? 'grid-cols-4' : 'grid-cols-3'
+                } gap-1 p-1 bg-black/5 rounded-2xl border border-black/10 mb-4 transition-all duration-300 select-none`}
+                role="list"
+                aria-label="Các bước đăng ký tài khoản"
               >
-                {otp.isPending ? (
-                  <>
-                    <LoaderCircle className="animate-spin" size={16} />
-                    Đang gửi…
-                  </>
-                ) : countdown ? (
-                  `Gửi lại sau ${countdown}s`
-                ) : (
-                  'Gửi mã qua email'
+                {registerSteps.map((s) => {
+                  const isActive = registerStepKey === s.key
+                  const isCompleted = s.stepNumber < currentStepNumber
+                  return (
+                    <div
+                      key={s.key}
+                      role="listitem"
+                      aria-current={isActive ? 'step' : undefined}
+                      className={`py-2 px-1 sm:px-2 text-[11px] sm:text-xs rounded-xl transition-all duration-300 flex items-center justify-center gap-1.5 ${
+                        isActive
+                          ? 'bg-white text-black shadow-xs font-semibold scale-[1.02]'
+                          : isCompleted
+                            ? 'text-black/80 font-medium'
+                            : 'text-black/60 font-normal'
+                      }`}
+                    >
+                      <span
+                        className={`flex size-4.5 sm:size-5 items-center justify-center rounded-full text-[10px] sm:text-[11px] font-bold shrink-0 transition-colors ${
+                          isActive
+                            ? 'bg-[#d95f00] text-white shadow-xs'
+                            : isCompleted
+                              ? 'bg-black/10 text-black font-semibold'
+                              : 'bg-black/10 text-black'
+                        }`}
+                      >
+                        {s.stepNumber}
+                      </span>
+                      <span className="truncate">{s.label}</span>
+                    </div>
+                  )
+                })}
+              </div>
+            )}
+
+            {/* STEP 1: Vai trò & Thông tin cơ bản */}
+            <div
+              className={
+                mode === 'register' && registerStepKey !== 'info'
+                  ? 'sr-only'
+                  : 'space-y-4'
+              }
+            >
+              {mode === 'register' && (
+                <div className="space-y-1.5">
+                  <label
+                    id="auth-role-label"
+                    htmlFor="auth-role"
+                    className="block text-sm sm:text-base font-semibold text-black"
+                  >
+                    Bạn tham gia với vai trò
+                  </label>
+                  <Select
+                    id="auth-role"
+                    triggerAriaHidden={true}
+                    value={form.watch('role')}
+                    onChange={(val) => {
+                      form.setValue('role', val as 'DRIVER' | 'MERCHANT', {
+                        shouldValidate: true,
+                      })
+                    }}
+                    options={ROLE_OPTIONS}
+                    variant="default"
+                    size="lg"
+                    triggerClassName="min-h-12 sm:min-h-14 text-base bg-white border border-slate-300 text-black rounded-xl px-4 py-3 shadow-2xs hover:border-[#d95f00] hover:bg-orange-50/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d95f00] focus-visible:ring-offset-1 transition-all cursor-pointer font-normal"
+                    dropdownClassName="border border-slate-200 shadow-xl rounded-xl z-50 bg-white"
+                  />
+                </div>
+              )}
+
+              {mode === 'register' ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                  {input('fullName', 'Họ và tên', 'text', { maxLength: 100 }, 'Ví dụ: Nguyễn Văn Hùng')}
+                  {input(
+                    'phone',
+                    'Số điện thoại',
+                    'tel',
+                    { pattern: /^(0|\+84)[35789][0-9]{8}$/ },
+                    'Ví dụ: 0918239485',
+                  )}
+                </div>
+              ) : mode !== 'forgot' ? (
+                input(
+                  'phone',
+                  'Số điện thoại',
+                  'tel',
+                  { pattern: /^(0|\+84)[35789][0-9]{8}$/ },
+                  'Ví dụ: 0918239485',
+                )
+              ) : null}
+
+              {mode === 'register' &&
+                input(
+                  'citizenId',
+                  'CCCD / CMND',
+                  'text',
+                  {
+                    required: false,
+                    pattern: /^$|^(?:[0-9]{9}|[0-9]{12})$/,
+                  },
+                  'Ví dụ: 079123456789 (9 hoặc 12 số)',
                 )}
-              </button>
+
+              {mode === 'register' && (
+                <button
+                  type="button"
+                  onClick={async () => {
+                    const valid = await form.trigger(['phone', 'fullName', 'citizenId'])
+                    if (valid) {
+                      setRegisterStepKey(selectedRole === 'MERCHANT' ? 'bank' : 'email')
+                    }
+                  }}
+                  className="inline-flex min-h-12 sm:min-h-14 w-full items-center justify-center gap-2 rounded-xl bg-[#d95f00] px-5 py-3 text-base font-bold text-white hover:bg-[#b84e00] active:bg-[#9e4300] hover:scale-[1.01] active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d95f00] focus-visible:ring-offset-2 transition-all shadow-md cursor-pointer"
+                >
+                  <span>
+                    {selectedRole === 'MERCHANT'
+                      ? 'Tiếp tục: Kết nối ngân hàng'
+                      : 'Tiếp tục: Xác thực Email'}
+                  </span>
+                  <ArrowRight size={18} />
+                </button>
+              )}
+            </div>
+
+            {/* STEP 2: Kết nối tài khoản ngân hàng (Dành riêng cho Chủ bãi) */}
+            {mode === 'register' && selectedRole === 'MERCHANT' && (
+              <div
+                className={
+                  registerStepKey !== 'bank'
+                    ? 'sr-only'
+                    : 'space-y-4'
+                }
+              >
+                <div className="p-3.5 rounded-xl bg-orange-50/70 border border-orange-200/70 flex items-start gap-2.5 text-xs text-black">
+                  <Store size={18} className="text-[#d95f00] shrink-0 mt-0.5" />
+                  <div>
+                    <p className="font-semibold text-black">Tài khoản nhận doanh thu cho Chủ bãi</p>
+                    <p className="text-black/70 mt-0.5 font-normal">
+                      Doanh thu đặt bãi đỗ sẽ được hệ thống SmartTruck Hub quyết toán về tài khoản này.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="space-y-3.5">
+                  <BankField control={form.control} disabled={submit.isPending} />
+                  {input(
+                    'bankAccountNum',
+                    'Số tài khoản ngân hàng',
+                    'text',
+                    { required: selectedRole === 'MERCHANT' },
+                    'Ví dụ: 19036789123456',
+                  )}
+                </div>
+
+                <div className="flex items-center gap-3 pt-1">
+                  <button
+                    type="button"
+                    onClick={() => setRegisterStepKey('info')}
+                    className="inline-flex min-h-12 sm:min-h-14 px-4 items-center justify-center rounded-xl border border-slate-300 bg-white text-sm sm:text-base font-semibold text-black hover:bg-slate-100 hover:border-slate-400 transition-colors shadow-2xs cursor-pointer shrink-0"
+                  >
+                    Quay lại
+                  </button>
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      const valid = await form.trigger(['bankName', 'bankAccountNum'])
+                      if (valid) setRegisterStepKey('email')
+                    }}
+                    className="inline-flex min-h-12 sm:min-h-14 flex-1 items-center justify-center gap-2 rounded-xl bg-[#d95f00] px-5 py-3 text-base font-bold text-white hover:bg-[#b84e00] active:bg-[#9e4300] hover:scale-[1.01] active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d95f00] focus-visible:ring-offset-2 transition-all shadow-md cursor-pointer"
+                  >
+                    <span>Tiếp tục: Xác thực Email</span>
+                    <ArrowRight size={18} />
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* STEP 3 (hoặc 2 cho Tài xế): Xác thực Email & OTP */}
+            <div
+              className={
+                mode === 'register' && registerStepKey !== 'email'
+                  ? 'sr-only'
+                  : 'space-y-4'
+              }
+            >
+              {mode !== 'login' && (
+                <div className="space-y-1.5">
+                  <label htmlFor="auth-email" className="block text-sm sm:text-base font-semibold text-black">
+                    Email nhận mã xác thực
+                  </label>
+                  <div className="flex items-center gap-2 sm:gap-2.5">
+                    <div className="relative flex-1">
+                      <input
+                        id="auth-email"
+                        type="email"
+                        autoComplete="email"
+                        placeholder="Ví dụ: taixe.nguyen@gmail.com"
+                        disabled={submit.isPending}
+                        aria-invalid={Boolean(form.formState.errors.email)}
+                        aria-describedby={form.formState.errors.email ? 'auth-email-error' : undefined}
+                        className={`${control} min-h-12 sm:min-h-14 text-base bg-white border border-slate-300 text-black font-normal placeholder:font-normal placeholder:text-slate-400 hover:border-slate-400 focus:border-[#d95f00] focus:ring-2 focus:ring-[#d95f00]/20 rounded-xl px-4 py-3 shadow-2xs transition-colors w-full`}
+                        {...form.register('email', { required: true })}
+                      />
+                    </div>
+                    <button
+                      type="button"
+                      aria-label={
+                        otp.isPending
+                          ? 'Đang gửi…'
+                          : countdown
+                            ? `Gửi lại sau ${countdown}s`
+                            : 'Gửi mã qua email'
+                      }
+                      disabled={otp.isPending || countdown > 0}
+                      onClick={() => otp.mutate()}
+                      className="shrink-0 min-h-12 sm:min-h-14 px-3.5 sm:px-4 rounded-xl border border-slate-300 bg-white text-xs sm:text-sm font-semibold text-black hover:bg-orange-50 hover:border-[#d95f00] hover:text-[#d95f00] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d95f00] focus-visible:ring-offset-1 disabled:opacity-50 transition-all shadow-2xs cursor-pointer flex items-center justify-center gap-2 whitespace-nowrap"
+                    >
+                      {otp.isPending ? (
+                        <>
+                          <LoaderCircle
+                            className="animate-spin text-[#d95f00] shrink-0"
+                            size={18}
+                            aria-hidden="true"
+                          />
+                          <span className="text-[#d95f00] font-semibold">
+                            Đang gửi mã…
+                          </span>
+                        </>
+                      ) : countdown ? (
+                        <span className="text-black/70 font-semibold">{countdown}s</span>
+                      ) : (
+                        <>
+                          <span>Gửi mã OTP</span>
+                          <ArrowRight size={14} className="text-[#d95f00]" />
+                        </>
+                      )}
+                    </button>
+                  </div>
+                  {form.formState.errors.email && (
+                    <span id="auth-email-error" role="alert" className="text-xs text-red-700 font-normal">
+                      Thông tin chưa hợp lệ.
+                    </span>
+                  )}
+                </div>
+              )}
+
               {sentValid && (
-                <div className="flex items-start gap-3 rounded-xl border border-brand-border bg-brand-surface p-4 text-xs">
-                  <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-brand-orange text-white">
-                    <Check size={20} strokeWidth={2.5} aria-hidden="true" />
+                <div className="flex items-start gap-3 rounded-xl border border-brand-border bg-brand-surface p-3 sm:p-3.5 text-xs">
+                  <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#d95f00] text-white">
+                    <Check size={18} strokeWidth={2.5} aria-hidden="true" />
                   </span>
                   <div className="min-w-0">
-                    <p className="font-sora text-sm font-semibold leading-5">
+                    <p className="font-sora text-xs sm:text-sm font-semibold leading-5 text-black">
                       {mode === 'forgot' ? 'Kiểm tra hộp thư của bạn' : 'Mã xác thực đã được gửi'}
                     </p>
-                    <p className="mt-1 text-sm leading-5 text-brand-muted">
+                    <p className="mt-0.5 text-xs leading-relaxed text-black/70">
                       {mode === 'forgot' ? (
                         'Nếu email đã đăng ký, bạn sẽ nhận được mã. '
                       ) : (
                         <>
                           Gửi đến{' '}
-                          <strong className="break-all font-medium text-brand-navy">
+                          <strong className="break-all font-semibold text-black">
                             {otp.data?.email || form.getValues('email')}
                           </strong>
                           .{' '}
                         </>
                       )}
-                      Mã gồm 6 số, có hiệu lực 5 phút. Kiểm tra cả thư rác.
+                      Mã gồm 6 số, có hiệu lực 5 phút.
                     </p>
                   </div>
                 </div>
               )}
-              {input('otpCode', 'Mã xác thực email (6 số)', 'text', {
-                pattern: /^\d{6}$/,
-              })}
+
+              {mode !== 'login' && (
+                <div className="space-y-1.5">
+                  <label htmlFor="auth-otpCode" className="block text-sm sm:text-base font-semibold text-black">
+                    Mã xác thực email (6 số)
+                  </label>
+                  <div className="relative max-w-[360px] mx-auto py-1">
+                    <input
+                      id="auth-otpCode"
+                      type="text"
+                      inputMode="numeric"
+                      autoComplete="one-time-code"
+                      maxLength={6}
+                      placeholder="123456"
+                      aria-invalid={Boolean(form.formState.errors.otpCode)}
+                      aria-describedby={form.formState.errors.otpCode ? 'auth-otpCode-error' : undefined}
+                      className="absolute inset-0 z-10 w-full h-full opacity-0 cursor-pointer caret-transparent"
+                      {...form.register('otpCode', {
+                        required: true,
+                        pattern: /^\d{6}$/,
+                      })}
+                      onFocus={() => setIsOtpFocused(true)}
+                      onBlur={() => setIsOtpFocused(false)}
+                    />
+                    <div className="grid grid-cols-6 gap-2 sm:gap-2.5 pointer-events-none">
+                      {[0, 1, 2, 3, 4, 5].map((index) => {
+                        const val = form.watch('otpCode') || ''
+                        const char = val[index] || ''
+                        const activeIdx = Math.min(val.length, 5)
+                        const isActive = isOtpFocused && index === activeIdx
+                        return (
+                          <div
+                            key={index}
+                            className={`h-11 sm:h-13 rounded-xl border flex items-center justify-center text-lg sm:text-xl font-bold transition-all shadow-2xs ${
+                              isActive
+                                ? 'border-[#d95f00] ring-2 ring-[#d95f00]/30 bg-orange-50/70 text-[#d95f00] scale-105'
+                                : char
+                                  ? 'border-slate-400 bg-white text-black'
+                                  : 'border-slate-300 bg-white/90 text-slate-300 font-normal'
+                            }`}
+                          >
+                            {char}
+                          </div>
+                        )
+                      })}
+                    </div>
+                  </div>
+                  {form.formState.errors.otpCode && (
+                    <p id="auth-otpCode-error" role="alert" className="text-xs text-red-700 font-normal text-center">
+                      Thông tin chưa hợp lệ.
+                    </p>
+                  )}
+                </div>
+              )}
+
+              {mode === 'register' && (
+                <div className="flex items-center gap-3 pt-1">
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setRegisterStepKey(selectedRole === 'MERCHANT' ? 'bank' : 'info')
+                    }
+                    className="inline-flex min-h-12 sm:min-h-14 px-4 items-center justify-center rounded-xl border border-slate-300 bg-white text-sm sm:text-base font-semibold text-black hover:bg-slate-100 hover:border-slate-400 transition-colors shadow-2xs cursor-pointer shrink-0"
+                  >
+                    Quay lại
+                  </button>
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      const valid = await form.trigger(['email', 'otpCode'])
+                      if (valid) setRegisterStepKey('password')
+                    }}
+                    className="inline-flex min-h-12 sm:min-h-14 flex-1 items-center justify-center gap-2 rounded-xl bg-[#d95f00] px-5 py-3 text-base font-bold text-white hover:bg-[#b84e00] active:bg-[#9e4300] hover:scale-[1.01] active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d95f00] focus-visible:ring-offset-2 transition-all shadow-md cursor-pointer"
+                  >
+                    <span>Tiếp tục: Thiết lập mật khẩu</span>
+                    <ArrowRight size={18} />
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {/* STEP 4 (hoặc 3 cho Tài xế): Thiết lập mật khẩu & Submit */}
+            <div
+              className={
+                mode === 'register' && registerStepKey !== 'password'
+                  ? 'sr-only'
+                  : 'space-y-4'
+              }
+            >
+              {mode !== 'forgot' &&
+                input(
+                  'password',
+                  'Mật khẩu',
+                  'password',
+                  { minLength: 6, maxLength: 50 },
+                  'Mật khẩu từ 6 đến 50 ký tự',
+                )}
+
+              {mode === 'register' &&
+                input(
+                  'confirmPassword',
+                  'Xác nhận mật khẩu',
+                  'password',
+                  {
+                    validate: (val) =>
+                      !val ||
+                      val === form.watch('password') ||
+                      'Mật khẩu xác nhận không khớp.',
+                  },
+                  'Nhập lại mật khẩu để xác nhận',
+                )}
+
               {mode === 'forgot' &&
-                input('newPassword', 'Mật khẩu mới', 'password', {
-                  minLength: 6,
-                })}
-            </>
+                input(
+                  'newPassword',
+                  'Mật khẩu mới',
+                  'password',
+                  { minLength: 6 },
+                  'Mật khẩu mới từ 6 đến 50 ký tự',
+                )}
+
+              {/* Password rules hint box */}
+              {mode === 'register' && (
+                <div className="p-3 rounded-xl bg-black/5 text-black font-inter text-xs leading-4 font-normal tracking-[0.06em] space-y-1">
+                  <p className="font-semibold text-black flex items-center gap-1.5">
+                    <ShieldCheck size={15} className="text-[#d95f00] shrink-0" />
+                    <span>Quy định mật khẩu trên hệ thống:</span>
+                  </p>
+                  <div className="grid grid-cols-3 gap-2 pt-1 text-[10.5px] sm:text-[11px] text-black/75">
+                    <span className="flex items-center gap-1.5 whitespace-nowrap">
+                      <span className="w-1.5 h-1.5 rounded-full bg-[#d95f00] shrink-0" />
+                      <span>Từ 6 đến 50 ký tự</span>
+                    </span>
+                    <span className="flex items-center gap-1.5 whitespace-nowrap">
+                      <span className="w-1.5 h-1.5 rounded-full bg-[#d95f00] shrink-0" />
+                      <span>Không chỉ khoảng trắng</span>
+                    </span>
+                    <span className="flex items-center gap-1.5 whitespace-nowrap">
+                      <span className="w-1.5 h-1.5 rounded-full bg-[#d95f00] shrink-0" />
+                      <span>Mật khẩu trùng khớp</span>
+                    </span>
+                  </div>
+                </div>
+              )}
+
+              {otp.isError && <Notice error>{errorMessage(otp.error)}</Notice>}
+              {submit.isError && (
+                <Notice error>{errorMessage(submit.error)}</Notice>
+              )}
+
+              {mode === 'register' ? (
+                <div className="flex items-center gap-3 pt-1">
+                  <button
+                    type="button"
+                    onClick={() => setRegisterStepKey('email')}
+                    className="inline-flex min-h-12 sm:min-h-14 px-4 items-center justify-center rounded-xl border border-slate-300 bg-white text-sm sm:text-base font-semibold text-black hover:bg-slate-100 hover:border-slate-400 transition-colors shadow-2xs cursor-pointer shrink-0"
+                  >
+                    Quay lại
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={submit.isPending}
+                    className="inline-flex min-h-12 sm:min-h-14 flex-1 items-center justify-center gap-2 rounded-xl bg-[#d95f00] px-5 py-3 text-base font-bold text-white hover:bg-[#b84e00] active:bg-[#9e4300] hover:scale-[1.01] active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d95f00] focus-visible:ring-offset-2 disabled:opacity-50 transition-all shadow-md cursor-pointer"
+                  >
+                    {submit.isPending ? (
+                      <>
+                        <LoaderCircle
+                          className="animate-spin text-white"
+                          size={18}
+                          aria-hidden="true"
+                        />
+                        <span>Đang xử lý…</span>
+                      </>
+                    ) : (
+                      <>
+                        <span>Tạo tài khoản</span>
+                        <ArrowRight size={18} />
+                      </>
+                    )}
+                  </button>
+                </div>
+              ) : (
+                <button
+                  type="submit"
+                  disabled={submit.isPending}
+                  className="inline-flex min-h-14 w-full items-center justify-center gap-2 rounded-xl bg-[#d95f00] px-5 py-3 text-base font-bold text-white hover:bg-[#b84e00] active:bg-[#9e4300] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d95f00] focus-visible:ring-offset-2 disabled:opacity-50 transition-colors shadow-xs cursor-pointer"
+                >
+                  {submit.isPending ? (
+                    <>
+                      <LoaderCircle className="animate-spin" size={18} aria-hidden="true" />
+                      Đang xử lý…
+                    </>
+                  ) : (
+                    <>
+                      {mode === 'login' ? 'Đăng nhập' : 'Đặt lại mật khẩu'}
+                      <ArrowRight size={18} />
+                    </>
+                  )}
+                </button>
+              )}
+            </div>
+          </form>
+        )}
+
+        <nav
+          aria-label="Tài khoản"
+          className="mt-5 flex flex-wrap items-center justify-between gap-3 text-sm sm:text-base text-black font-normal"
+        >
+          {mode !== 'login' && (
+            <div>
+              <span>Đã có tài khoản? </span>
+              <Link
+                to="/login"
+                className="font-bold text-[#d95f00] hover:text-[#9e4300] hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d95f00] rounded-xs transition-colors"
+              >
+                Đăng nhập
+              </Link>
+            </div>
           )}
-          {otp.isError && <Notice error>{errorMessage(otp.error)}</Notice>}
-          {submit.isError && (
-            <Notice error>
-              {errorMessage(submit.error)}
-            </Notice>
+          {mode !== 'register' && (
+            <div>
+              <span>Chưa có tài khoản? </span>
+              <Link
+                to="/register"
+                className="font-bold text-[#d95f00] hover:text-[#9e4300] hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d95f00] rounded-xs transition-colors"
+              >
+                Tạo tài khoản
+              </Link>
+            </div>
           )}
-          <button
-            disabled={submit.isPending}
-            className="inline-flex min-h-14 w-full items-center justify-center gap-2 rounded-xl bg-[#d95f00] px-5 py-3 text-base font-semibold text-white hover:bg-[#b84e00] active:bg-[#9e4300] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d95f00] focus-visible:ring-offset-2 disabled:opacity-50 transition-colors shadow-xs cursor-pointer"
-          >
-            {submit.isPending ? (
-              <>
-                <LoaderCircle className="animate-spin" size={18} aria-hidden="true" />
-                Đang xử lý…
-              </>
-            ) : (
-              <>
-                {mode === 'login'
-                  ? 'Đăng nhập'
-                  : mode === 'register'
-                    ? 'Tạo tài khoản'
-                    : 'Đặt lại mật khẩu'}
-                <ArrowUpRight size={18} />
-              </>
-            )}
-          </button>
-        </form>
-      )}
-      <nav aria-label="Tài khoản" className="mt-7 flex flex-wrap gap-5 text-sm text-brand-muted">
-        {mode !== 'login' && (
-          <Link
-            to="/login"
-            className="hover:text-[#d95f00] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d95f00] rounded-sm transition-colors"
-          >
-            Đăng nhập
-          </Link>
-        )}
-        {mode !== 'register' && (
-          <Link
-            to="/register"
-            className="hover:text-[#d95f00] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d95f00] rounded-sm transition-colors"
-          >
-            Tạo tài khoản
-          </Link>
-        )}
-        {mode !== 'forgot' && (
-          <Link
-            to="/forgot-password"
-            className="hover:text-[#d95f00] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d95f00] rounded-sm transition-colors"
-          >
-            Quên mật khẩu?
-          </Link>
-        )}
-      </nav>
+          {mode !== 'forgot' && (
+            <Link
+              to="/forgot-password"
+              className="font-semibold text-[#d95f00] hover:text-[#9e4300] hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d95f00] rounded-xs transition-colors"
+            >
+              Quên mật khẩu?
+            </Link>
+          )}
+        </nav>
+      </div>
     </AuthLayout>
   )
 }
@@ -349,7 +808,7 @@ export function AuthSuccess({
         to="/login"
       >
         Đến trang đăng nhập
-        <ArrowUpRight size={20} />
+        <ArrowRight size={20} />
       </Link>
     </section>
   )

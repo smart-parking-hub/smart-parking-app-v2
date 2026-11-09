@@ -107,6 +107,20 @@ export const parkingSearchStore = {
     }
     emitChange()
   },
+  clearLocation: () => {
+    state = {
+      ...state,
+      origin: undefined,
+      searchText: '',
+      filters: {
+        ...state.filters,
+        latitude: undefined,
+        longitude: undefined,
+        keyword: '',
+      },
+    }
+    emitChange()
+  },
   resetFilters: () => {
     state = {
       ...state,
