@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
+import { createParkingMapIcon } from '@/entities/parking-lot/parkingMapIcon'
 
 export function MerchantLotLocationMap({ latitude, longitude }: { latitude: number; longitude: number }) {
   const container = useRef<HTMLDivElement>(null)
@@ -14,8 +15,10 @@ export function MerchantLotLocationMap({ latitude, longitude }: { latitude: numb
       attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
     }).addTo(map)
     tiles.on('tileerror', () => setTileError(true))
-    const color = getComputedStyle(container.current).getPropertyValue('--color-brand-primary').trim()
-    L.circleMarker([latitude, longitude], { radius: 10, color, fillColor: color, fillOpacity: 0.9, weight: 3 }).addTo(map)
+    L.marker([latitude, longitude], {
+      icon: createParkingMapIcon({ selected: true }),
+      title: 'Nhà xe · Vị trí bãi đỗ',
+    }).bindTooltip('Nhà xe · Vị trí bãi đỗ', { direction: 'top' }).addTo(map)
     const observer = new ResizeObserver(() => map.invalidateSize())
     observer.observe(container.current)
     return () => { observer.disconnect(); map.remove() }

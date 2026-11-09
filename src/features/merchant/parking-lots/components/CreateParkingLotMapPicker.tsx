@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
+import { createParkingMapIcon } from '@/entities/parking-lot/parkingMapIcon'
 
 interface CreateParkingLotMapPickerProps {
   latitude: number
@@ -12,7 +13,7 @@ interface CreateParkingLotMapPickerProps {
 export function CreateParkingLotMapPicker({ latitude, longitude, accuracy, onCoordinatesChange }: CreateParkingLotMapPickerProps) {
   const container = useRef<HTMLDivElement>(null)
   const map = useRef<L.Map | null>(null)
-  const marker = useRef<L.CircleMarker | null>(null)
+  const marker = useRef<L.Marker | null>(null)
   const onChange = useRef(onCoordinatesChange)
   const [tileError, setTileError] = useState(false)
   useEffect(() => { onChange.current = onCoordinatesChange }, [onCoordinatesChange])
@@ -43,7 +44,7 @@ export function CreateParkingLotMapPicker({ latitude, longitude, accuracy, onCoo
     if (!map.current || !Number.isFinite(latitude) || !Number.isFinite(longitude) || Math.abs(latitude) > 90 || Math.abs(longitude) > 180) return
     const position: L.LatLngExpression = [latitude, longitude]
     if (marker.current) marker.current.setLatLng(position)
-    else marker.current = L.circleMarker(position, { radius: 10, color: '#d95f00', fillColor: '#d95f00', fillOpacity: 0.8 }).addTo(map.current)
+    else marker.current = L.marker(position, { icon: createParkingMapIcon({ selected: true }), title: 'Nhà xe · Vị trí đang chọn' }).addTo(map.current)
     map.current.setView(position, 16)
   }, [latitude, longitude])
 

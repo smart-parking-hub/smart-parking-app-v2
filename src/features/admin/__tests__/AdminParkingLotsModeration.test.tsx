@@ -282,7 +282,7 @@ describe('GROUP 10 - Admin Parking Lots Moderation & Dashboard', () => {
   })
 
   describe('AdminLayout Harmonization', () => {
-    it('renders header logout button and active sidebar item with brand orange (#d95f00)', () => {
+    it('renders header logout button and identifies the active sidebar destination', () => {
       render(
         <QueryClientProvider client={createTestQueryClient()}>
           <MemoryRouter initialEntries={['/admin/dashboard']}>
@@ -294,13 +294,10 @@ describe('GROUP 10 - Admin Parking Lots Moderation & Dashboard', () => {
       // Logout button in header
       const logoutBtn = screen.getByRole('button', { name: /Đăng xuất/i })
       expect(logoutBtn).toBeInTheDocument()
-      expect(logoutBtn.className).toContain('bg-[#d95f00]')
-      expect(logoutBtn.className).toContain('text-white')
 
       // Active sidebar item "Tổng quan"
       const activeLink = screen.getByRole('link', { name: 'Tổng quan' })
-      expect(activeLink.className).toContain('bg-[#d95f00]')
-      expect(activeLink.className).toContain('text-white')
+      expect(activeLink).toHaveAttribute('aria-current', 'page')
     })
   })
 })

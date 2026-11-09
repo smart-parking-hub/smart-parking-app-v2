@@ -33,12 +33,8 @@ export function EditMerchantMapViewerCard({
       {/* Simulated Satellite/Map Canvas */}
       <div className="relative w-full h-72 rounded-xl overflow-hidden bg-[#131b2e] border border-slate-300 shadow-inner group">
         <div
-          className="w-full h-full bg-cover bg-center transition-transform duration-500 group-hover:scale-105"
+          className="w-full h-full bg-cover bg-center transition-transform duration-500 group-hover:scale-105 bg-[url('https://images.unsplash.com/photo-1578575437130-527eed3abbec?auto=format&fit=crop&w=1000&q=80')]"
           data-location={locationName}
-          style={{
-            backgroundImage:
-              'url("https://images.unsplash.com/photo-1578575437130-527eed3abbec?auto=format&fit=crop&w=1000&q=80")',
-          }}
         />
 
         {/* Dark Tactical Logistics Overlay */}

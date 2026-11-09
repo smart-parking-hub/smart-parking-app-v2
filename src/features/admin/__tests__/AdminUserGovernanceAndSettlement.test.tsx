@@ -203,9 +203,10 @@ describe('GROUP 11 - Admin User Governance & Financial Settlement Ledger', () =>
         </QueryClientProvider>,
       )
 
-      expect(await screen.findByText(/#202/)).toBeInTheDocument()
-      expect(screen.getByText('0988776655')).toBeInTheDocument()
-      expect(screen.getByText('driver.hoang@example.com')).toBeInTheDocument()
+      expect(await screen.findByRole('cell', { name: '#202 · Hoàng Văn Nam' })).toBeInTheDocument()
+      expect(screen.getByRole('cell', { name: '0988776655' })).toBeInTheDocument()
+      expect(screen.getByRole('cell', { name: 'driver.hoang@example.com' })).toBeInTheDocument()
+      expect(screen.getByRole('link', { name: 'Quản trị tài khoản #202' })).toHaveAttribute('href', '/admin/users/202')
 
       const manageLink = screen.getByRole('link', { name: 'Quản trị' })
       expect(manageLink).toBeInTheDocument()

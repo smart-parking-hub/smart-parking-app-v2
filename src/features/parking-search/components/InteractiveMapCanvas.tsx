@@ -10,6 +10,7 @@ import {
   Plus,
   Minus,
 } from 'lucide-react'
+import { createParkingMapIcon } from '@/entities/parking-lot/parkingMapIcon'
 import type { ParkingLotItem } from '../types/parkingSearchTypes'
 import {
   getDrivingRoute,
@@ -55,6 +56,12 @@ function resolveRouteColor(element: HTMLElement | null): string {
     .getPropertyValue('--color-map-route')
     .trim()
   return value || '#ea580c'
+}
+
+/** Respect the user's reduced-motion preference for map fly animations. */
+function flyDuration(): number {
+  if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return 0.5
+  return window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 0.5
 }
 
 export function InteractiveMapCanvas({
@@ -160,39 +167,38 @@ export function InteractiveMapCanvas({
 
     for (const lot of lots.filter(validCoordinates)) {
       const isSelected = lot.id === selectedLot?.id
-      const label = document.createElement('span')
-      label.className = 'parking-pin-label'
-      label.dataset.selected = String(isSelected)
-      label.dataset.full = String(lot.isFull || lot.availableSlots === 0)
-      label.textContent = `${new Intl.NumberFormat('vi-VN').format(lot.hourlyRate / 1000)}K · ${lot.availableSlots} chỗ`
 
       const marker = L.marker([lot.latitude, lot.longitude], {
-        icon: L.divIcon({
-          html: label,
-          className: 'parking-pin',
-          iconSize: [130, 42],
-          iconAnchor: [65, 42],
+        icon: createParkingMapIcon({
+          hourlyRate: lot.hourlyRate,
+          availableSlots: lot.availableSlots,
+          selected: isSelected,
+          full: lot.isFull || lot.availableSlots === 0,
         }),
         title: lot.name,
         keyboard: true,
         zIndexOffset: isSelected ? 1000 : 100,
       })
-        .bindPopup(
-          `<div style="font-family: inherit; min-width: 200px; padding: 2px;">
-            <div style="font-weight: 700; font-size: 13px; color: #0d1c2e; margin-bottom: 3px;">${lot.name}</div>
-            <div style="font-size: 11px; color: #64748b; margin-bottom: 6px; line-height: 1.4;">${lot.address}</div>
-            <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #e2e8f0; padding-top: 5px; font-size: 11px;">
-              <span style="color: ${lot.availableSlots > 0 ? '#10b981' : '#f43f5e'}; font-weight: 700;">
-                ${lot.availableSlots > 0 ? `Còn ${lot.availableSlots} chỗ` : 'Hết chỗ'}
-              </span>
-              <span style="font-weight: 700; color: #0d1c2e; font-variant-numeric: tabular-nums;">
-                ${new Intl.NumberFormat('vi-VN').format(lot.hourlyRate)} đ/h
-              </span>
-            </div>
-          </div>`,
-          { offset: [0, -32], closeButton: true, autoPan: false }
-        )
+        // Build the popup with DOM nodes + textContent so lot data is never parsed as HTML.
+        .bindPopup(() => {
+          const popup = document.createElement('div')
+          popup.className = 'parking-map-popup'
+          const name = document.createElement('strong')
+          name.textContent = lot.name
+          const address = document.createElement('p')
+          address.textContent = lot.address
+          const details = document.createElement('p')
+          details.textContent = `${lot.availableSlots > 0 ? `Còn ${lot.availableSlots} chỗ` : 'Hết chỗ'} · ${new Intl.NumberFormat('vi-VN').format(lot.hourlyRate)} đ/h`
+          popup.append(name, address, details)
+          return popup
+        }, { closeButton: true, autoPan: false })
         .on('click', () => select.current(lot))
+        .on('keydown', (event: L.LeafletKeyboardEvent) => {
+          if (event.originalEvent.key === 'Enter' || event.originalEvent.key === ' ') {
+            event.originalEvent.preventDefault()
+            select.current(lot)
+          }
+        })
         .addTo(layer)
 
       if (isSelected) {
@@ -266,18 +272,18 @@ export function InteractiveMapCanvas({
           projected.subtract([215, 0]),
           targetZoom,
         )
-        instance.flyTo(offsetLatLng, targetZoom, { duration: 0.5 })
+        instance.flyTo(offsetLatLng, targetZoom, { duration: flyDuration() })
       } else {
         instance.flyTo(
           [selectedLot.latitude, selectedLot.longitude],
           targetZoom,
-          { duration: 0.5 },
+          { duration: flyDuration() },
         )
       }
     } else if (validLots.length > 0) {
       fitAllParkingLots(instance, validLots)
     } else if (hasOrigin && origin) {
-      instance.flyTo([origin.latitude, origin.longitude], 13, { duration: 0.5 })
+      instance.flyTo([origin.latitude, origin.longitude], 13, { duration: flyDuration() })
     }
   }, [selectedLot, lots, origin, ready])
 

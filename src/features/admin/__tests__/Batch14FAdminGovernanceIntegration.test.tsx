@@ -411,9 +411,9 @@ describe('BATCH-14F: Admin Governance, Lot Moderation & User Enforcement (SCR-03
 
       expect(await screen.findByText(/#305 · Lê Văn Trọng/)).toBeInTheDocument()
       expect(screen.getByText('Quản lý người dùng')).toBeInTheDocument()
-      expect(screen.getByText('0912345678')).toBeInTheDocument()
-      expect(screen.getByText('merchant.le@example.com')).toBeInTheDocument()
-      expect(screen.getByText('Hoạt động')).toBeInTheDocument()
+      expect(screen.getByRole('cell', { name: '0912345678' })).toBeInTheDocument()
+      expect(screen.getByRole('cell', { name: 'merchant.le@example.com' })).toBeInTheDocument()
+      expect(screen.getByRole('cell', { name: 'Hoạt động' })).toBeInTheDocument()
 
       const manageBtn = screen.getByRole('link', { name: 'Quản trị' })
       expect(manageBtn).toBeInTheDocument()

@@ -57,3 +57,8 @@ Real-data capacity summary/category bars, Vietnamese pricing cards, read-only lo
 - Tổng quan shows the profile, images, capacity/location and current price summary. Cấu hình chỗ đỗ and Bảng giá open the existing editors; only the selected route's content renders. The active link uses aria-current and supports keyboard activation.
 - Status-based configuration/edit visibility and the lot-specific QR scanner link are preserved. Narrow screens scroll the navigation horizontally without widening the page.
 - Validation: typecheck, lint and build passed; complete Vitest suite: 48 files / 344 tests passed (existing tests emitted network stderr). Browser evidence and outcomes: see `lot-navigation-report.md`.
+
+> 2026-11-08 — SCR-045: user-requested Admin navigation and responsive user-card redesign. [Implementation and verification](./admin-users-navigation-redesign.md). Scoped Admin/layout: 57 tests pass; responsive browser: 3 pass. Repository-wide acceptance remains open.
+
+
+> 2026-11-08: Driver/merchant map presentation updated with depot markers and outlined routes. Capability parity and verification: [map presentation report](./map-presentation-2026-11-08.md).

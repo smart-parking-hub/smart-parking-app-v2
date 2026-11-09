@@ -18,7 +18,7 @@ describe('SCR-025: NotificationsPage (Trung Tâm Thông Báo Driver Ops)', () =>
   beforeEach(() => {
     vi.clearAllMocks(); localStorage.clear()
     window.HTMLElement.prototype.scrollIntoView = vi.fn()
-    vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {})
+    vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => { })
     if (!window.URL.createObjectURL) {
       window.URL.createObjectURL = vi.fn(() => 'blob:mock-url')
     }

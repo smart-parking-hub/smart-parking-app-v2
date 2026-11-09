@@ -1,0 +1,78 @@
+.parking-map-marker {
+  border: 0;
+  background: transparent;
+}
+
+.parking-map-pin {
+  --pin-surface: var(--color-surface);
+  --pin-ink: var(--color-brand-navy);
+  --pin-accent: var(--color-brand-primary);
+  --pin-muted: var(--color-text-muted);
+  display: block;
+  position: relative;
+  width: 156px;
+  height: 64px;
+  color: var(--pin-ink);
+  filter: drop-shadow(0 3px 4px color-mix(in srgb, var(--color-brand-navy) 22%, transparent));
+}
+
+.parking-map-pin::after {
+  content: '';
+  position: absolute;
+  left: 15px;
+  bottom: 3px;
+  width: 12px;
+  height: 12px;
+  background: var(--pin-surface);
+  border-right: 2px solid var(--color-surface);
+  border-bottom: 2px solid var(--color-surface);
+  transform: rotate(45deg);
+}
+
+.parking-map-pin__badge {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  box-sizing: border-box;
+  height: 54px;
+  padding: 7px;
+  border: 2px solid var(--color-surface);
+  border-radius: 14px;
+  background: var(--pin-surface);
+}
+
+.parking-map-pin__symbol {
+  display: grid;
+  place-items: center;
+  flex: 0 0 32px;
+  height: 32px;
+  border-radius: 9px;
+  color: var(--pin-accent);
+  background: var(--color-brand-primary-subtle);
+}
+
+.parking-map-pin__symbol svg { width: 24px; height: 24px; }
+.parking-map-pin__info { display: grid; gap: 2px; white-space: nowrap; }
+.parking-map-pin__price { font: 600 12px/16px var(--font-heading); font-variant-numeric: tabular-nums; }
+.parking-map-pin__capacity { color: var(--pin-muted); font: 600 12px/14px var(--font-body); }
+.parking-map-pin[data-selected='true'] {
+  --pin-surface: var(--color-brand-navy);
+  --pin-ink: var(--color-text-inverse);
+  --pin-muted: var(--color-brand-border);
+}
+.parking-map-pin[data-selected='true'] .parking-map-pin__symbol {
+  background: var(--color-brand-primary);
+  color: var(--color-text-inverse);
+}
+.parking-map-pin[data-full='true'] { --pin-muted: var(--color-status-danger); }
+.parking-map-pin[data-full='true'][data-selected='true'] { --pin-muted: var(--color-status-danger-border); }
+.parking-map-pin[data-full='true'] .parking-map-pin__symbol {
+  background: var(--color-surface-muted);
+  color: var(--color-text-muted);
+}
+.parking-map-pin[data-compact='true'] { width: 44px; height: 52px; }
+.parking-map-pin[data-compact='true'] .parking-map-pin__badge { height: 42px; padding: 3px; border-radius: 12px; }
+.parking-map-marker:focus-visible { outline: none; }
+.parking-map-marker:focus-visible .parking-map-pin__badge { outline: 3px solid var(--color-border-focus); outline-offset: 3px; }

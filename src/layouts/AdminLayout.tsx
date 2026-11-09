@@ -3,32 +3,47 @@ import { useState, useEffect } from 'react'
 import { NavLink, Outlet, useNavigate, useLocation } from 'react-router-dom'
 import { useQueryClient } from '@tanstack/react-query'
 import { ScrollToTop } from '@/shared/components/ScrollToTop'
-import {
-  Menu,
-  X,
-  LogOut,
-  LayoutDashboard,
-  Warehouse,
-  Users,
-  CreditCard,
-  ArrowDownToLine,
-  Scale,
-  ScrollText,
-  Bell,
-  UserCheck,
-} from 'lucide-react'
+import { Dialog } from '@/shared/components/Dialog'
+import { ShieldCheck, Menu, LogOut, LayoutDashboard, Warehouse, Users, CreditCard, ArrowDownToLine, Scale, ScrollText, Bell, UserCheck, ChevronRight, ArrowUpRight } from 'lucide-react'
+import './admin-layout.css'
 
-const navItems = [
-  { path: 'dashboard', label: 'Tổng quan', icon: LayoutDashboard },
-  { path: 'parking-lots', label: 'Kiểm duyệt bãi', icon: Warehouse },
-  { path: 'users', label: 'Người dùng', icon: Users },
-  { path: 'transactions', label: 'Giao dịch', icon: CreditCard },
-  { path: 'withdrawals', label: 'Duyệt rút tiền', icon: ArrowDownToLine },
-  { path: 'disputes', label: 'Tranh chấp', icon: Scale },
-  { path: 'audit-logs', label: 'Nhật ký kiểm toán', icon: ScrollText },
-  { path: 'notifications', label: 'Thông báo', icon: Bell },
-  { path: 'profile', label: 'Hồ sơ quản trị', icon: UserCheck },
+const navGroups = [
+  { label: 'ĐIỀU HÀNH', items: [
+    { path: 'dashboard', label: 'Tổng quan', icon: LayoutDashboard },
+    { path: 'parking-lots', label: 'Kiểm duyệt bãi', icon: Warehouse },
+    { path: 'users', label: 'Người dùng', icon: Users },
+  ] },
+  { label: 'TÀI CHÍNH & KIỂM SOÁT', items: [
+    { path: 'transactions', label: 'Giao dịch', icon: CreditCard },
+    { path: 'withdrawals', label: 'Duyệt rút tiền', icon: ArrowDownToLine },
+    { path: 'disputes', label: 'Tranh chấp', icon: Scale },
+  ] },
+  { label: 'HỆ THỐNG', items: [
+    { path: 'audit-logs', label: 'Nhật ký kiểm toán', icon: ScrollText },
+    { path: 'notifications', label: 'Thông báo', icon: Bell },
+    { path: 'profile', label: 'Hồ sơ quản trị', icon: UserCheck },
+  ] },
 ]
+
+function AdminNavigation({ onNavigate }: { onNavigate?: () => void }) {
+  return <>
+    <NavLink to="/admin/dashboard" className="admin-brand" onClick={onNavigate}>
+      <img src="/image-smart-parking-hub.png" alt="" className="admin-brand-logo" />
+      <span><strong>SMARTTRUCK<span>HUB</span></strong><small>KHÔNG GIAN QUẢN TRỊ</small></span>
+    </NavLink>
+    <nav aria-label="Quản trị" className="admin-navigation">
+      {navGroups.map(group => <div className="admin-nav-group" key={group.label}>
+        <p>{group.label}</p>
+        {group.items.map(({ path, label, icon: Icon }) => <NavLink key={path} to={`/admin/${path}`} onClick={onNavigate} className={({ isActive }) => `admin-nav-link${isActive ? ' is-active' : ''}`}>
+          <Icon size={18} aria-hidden="true" /><span>{label}</span><ChevronRight size={14} className="admin-nav-arrow" aria-hidden="true" />
+        </NavLink>)}
+      </div>)}
+    </nav>
+    <div className="admin-sidebar-footer">
+      <ShieldCheck size={18} aria-hidden="true" /><div><strong>Quản trị có trách nhiệm</strong><p>Thao tác được lưu trong nhật ký</p></div>
+    </div>
+  </>
+}
 
 export function AdminLayout() {
   const [open, setOpen] = useState(false)
@@ -37,143 +52,39 @@ export function AdminLayout() {
   const cache = useQueryClient()
 
   useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && open) {
-        setOpen(false)
-      }
-    }
-    window.addEventListener('keydown', handleKeyDown)
-    return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [open])
+    if (typeof window.matchMedia !== 'function') return
+    const breakpoint = window.matchMedia('(min-width: 1024px)')
+    const closeOnDesktop = () => { if (breakpoint.matches) setOpen(false) }
+    breakpoint.addEventListener('change', closeOnDesktop)
+    return () => breakpoint.removeEventListener('change', closeOnDesktop)
+  }, [])
 
-  const currentItem = navItems.find((item) =>
-    location.pathname.startsWith(`/admin/${item.path}`)
-  )
+  const currentItem = navGroups.flatMap(group => group.items).find(item => location.pathname.startsWith(`/admin/${item.path}`))
 
-  return (
-    <div className="min-h-screen bg-brand-surface font-inter text-slate-800">
-      <ScrollToTop />
-      {/* Top Header */}
-      <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-slate-700 bg-brand-navy px-5 text-white lg:pl-[calc(16rem+2rem)] lg:pr-8">
-        <div className="flex items-center gap-3">
-          <button
-            type="button"
-            onClick={() => setOpen(!open)}
-            className="lg:hidden p-1.5 rounded-lg text-slate-300 hover:text-white hover:bg-slate-800 transition-colors"
-            aria-label="Mở menu quản trị"
-            aria-expanded={open}
-          >
-            {open ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-          </button>
-          <div className="flex items-center gap-2">
-            <span className="font-mono text-xs tracking-widest text-brand-orange uppercase">
-              ADMIN
-            </span>
-            <span className="text-slate-500 text-xs">/</span>
-            <span className="font-sora text-xs font-semibold text-slate-200">
-              {currentItem ? currentItem.label : 'Command Center'}
-            </span>
-          </div>
+  return <div className="admin-shell">
+    <ScrollToTop />
+    <a className="admin-skip-link" href="#admin-content">Đến nội dung chính</a>
+    <aside className="admin-sidebar"><AdminNavigation /></aside>
+    <div className="admin-body">
+      <header className="admin-topbar">
+        <div className="admin-topbar-title">
+          <button type="button" className="admin-menu-button" onClick={() => setOpen(true)} aria-label="Mở menu quản trị" aria-expanded={open} aria-haspopup="dialog"><Menu size={21} /></button>
+          <span className="admin-breadcrumb-label">Không gian quản trị</span><ChevronRight size={14} className="admin-breadcrumb-label" aria-hidden="true" />
+          <span className="admin-current-page">{currentItem?.label ?? 'Tổng quan'}</span>
         </div>
-
-        <button
-          type="button"
-          className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#d95f00] px-3.5 py-2 text-xs font-semibold text-white hover:bg-[#b84e00] active:bg-[#9e4300] transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#d95f00] cursor-pointer shadow-xs"
-          onClick={() => {
+        <div className="admin-topbar-actions">
+          <NavLink to="/admin/profile" className="admin-account" aria-label="Hồ sơ quản trị"><span>AD</span><div><strong>Quản trị viên</strong><small>SmartTruck Hub</small></div></NavLink>
+          <button type="button" className="admin-logout" onClick={() => {
             clearSession()
             localStorage.removeItem('smart-truck-parking.auth')
             cache.clear()
             navigate('/login')
-          }}
-        >
-          <LogOut className="w-4 h-4" aria-hidden="true" />
-          <span>Đăng xuất</span>
-        </button>
+          }}><LogOut size={17} aria-hidden="true" /><span>Đăng xuất</span></button>
+        </div>
       </header>
-
-      {/* Mobile Backdrop */}
-      {open && (
-        <div
-          role="presentation"
-          aria-label="Đóng menu quản trị"
-          className="fixed inset-0 z-30 bg-black/60 backdrop-blur-xs lg:hidden"
-          onClick={() => setOpen(false)}
-        />
-      )}
-
-      {/* Left Sidebar */}
-      <aside
-        className={`fixed inset-y-0 left-0 z-40 flex w-64 flex-col border-r border-slate-700 bg-brand-navy p-5 text-white transition-transform duration-200 ${
-          open ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
-        }`}
-      >
-        <div className="mb-6 flex items-center justify-between border-b border-slate-700/80 pb-4">
-          <NavLink
-            to="/admin/dashboard"
-            onClick={() => setOpen(false)}
-            className="flex items-center gap-2.5 font-sora font-bold text-white hover:text-orange-300 transition-colors"
-          >
-            <img
-              src="/image-smart-parking-hub.png"
-              alt="Smart Parking Hub Logo"
-              className="w-8 h-8 rounded-lg object-contain shrink-0"
-            />
-            <div>
-              <span className="font-sora text-sm font-bold text-white tracking-tight">
-                SMARTTRUCK <span className="text-[#d95f00]">HUB</span>
-              </span>
-              <span className="block font-mono text-[9px] text-slate-400 font-semibold tracking-wider uppercase">
-                ADMIN SYSTEM
-              </span>
-            </div>
-          </NavLink>
-
-          <button
-            type="button"
-            onClick={() => setOpen(false)}
-            className="lg:hidden p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800"
-            aria-label="Đóng menu"
-          >
-            <X className="w-4 h-4" />
-          </button>
-        </div>
-
-        <nav aria-label="Quản trị" className="flex-1 space-y-1.5 overflow-y-auto pr-1">
-          {navItems.map((item) => {
-            const Icon = item.icon
-            return (
-              <NavLink
-                onClick={() => setOpen(false)}
-                key={item.path}
-                to={`/admin/${item.path}`}
-                className={({ isActive }) =>
-                  `flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-xs sm:text-sm font-medium transition-colors ${
-                    isActive
-                      ? 'bg-[#d95f00] font-semibold text-white shadow-xs'
-                      : 'text-slate-300 hover:bg-slate-800 hover:text-white'
-                  }`
-                }
-              >
-                <Icon className="w-4 h-4 shrink-0" aria-hidden="true" />
-                <span className="truncate">{item.label}</span>
-              </NavLink>
-            )
-          })}
-        </nav>
-
-        <div className="mt-4 border-t border-slate-700/80 pt-4 text-xs leading-5 text-slate-400 font-mono">
-          <div className="flex items-center gap-2 text-emerald-400 mb-1">
-            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-            <span className="font-semibold">Bảo mật kết nối SSL/TLS</span>
-          </div>
-          <p className="text-[11px] text-slate-400">Ghi nhận toàn bộ Audit Logs</p>
-        </div>
-      </aside>
-
-      {/* Main Content Area */}
-      <main className="lg:pl-64">
-        <Outlet />
-      </main>
+      <main id="admin-content" className="admin-main" tabIndex={-1}><Outlet /></main>
+      <footer className="admin-page-footer"><span>SMARTTRUCK HUB <span aria-hidden="true">/</span> ADMIN</span><NavLink to="/admin/audit-logs">Nhật ký hoạt động <ArrowUpRight size={13} aria-hidden="true" /></NavLink></footer>
     </div>
-  )
+    {open && <Dialog title="Điều hướng quản trị" onClose={() => setOpen(false)} className="admin-mobile-drawer"><AdminNavigation onNavigate={() => setOpen(false)} /></Dialog>}
+  </div>
 }

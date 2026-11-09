@@ -269,3 +269,8 @@ Real-data capacity summary/category bars, Vietnamese pricing cards, read-only lo
 | Stale async protection, email change reset, and secret non-persistence | Sequence token ref & form key reset in `ForgotPasswordPage.tsx` | Server-side SMTP & BCrypt OTP verification | **Hardened (No EmailJS/response OTP/storage)** |
 | Success state (`role="status"`) & return to `/login` without auto-login | `ForgotPasswordPage.tsx` (`#state-success` + `Toast`) | Returns `200 OK` (`data: null`) | **Implemented** |
 | Stitch Variant 1 visual shell with neutral copy adjustments | Removed simulator bar, demo email/OTP, and unverified ISO/AES/SSO/hotline claims | Verified against `identity-service` | **Documented in module record** |
+
+> 2026-11-08 — SCR-045 Admin: all nine navigation destinations, logout, paged users, user fields, detail links and existing state/permission handling preserved. [Detailed capability parity](./admin-users-navigation-redesign.md).
+
+
+> 2026-11-08: Driver/merchant map presentation updated with depot markers and outlined routes. Capability parity and verification: [map presentation report](./map-presentation-2026-11-08.md).
