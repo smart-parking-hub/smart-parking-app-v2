@@ -6,11 +6,9 @@ import {
   AlertCircle,
   ArrowLeft,
   Check,
-  KeyRound,
   LockOpen,
   LogIn,
   RefreshCw,
-  Truck,
 } from 'lucide-react'
 import { AuthLayout } from '@/layouts/AuthLayout'
 import { errorMessage } from '@/shared/api/resources'
@@ -407,8 +405,6 @@ export function ForgotPasswordPage() {
 
   const isExpiredStep2 =
     step === 'reset' && Boolean(challenge) && ttlRemainingSeconds === 0
-  const hasStep2ErrorState =
-    step === 'reset' && (Boolean(errorBanner) || isExpiredStep2)
 
   const activeErrorBanner: RecoveryErrorBanner | null =
     errorBanner ??
@@ -435,105 +431,67 @@ export function ForgotPasswordPage() {
         </div>
       )}
 
-      <div className="w-full max-w-2xl bg-white rounded-xl shadow-xl overflow-hidden relative">
-        <div className="h-1.5 w-full bg-[#e6eeff]">
+      <div className="w-full bg-transparent relative">
+        <div className="h-1.5 w-full bg-black/10 rounded-full overflow-hidden mb-5">
           <div
             className={`h-full bg-[#d95f00] transition-all duration-500 ${progressWidth}`}
             id="top-progress-bar"
           />
         </div>
 
-        <div className="p-6 md:p-9">
-          <div className="flex items-center justify-between gap-4 pb-6 mb-6 border-b border-[#e6eeff]">
+        <div className="w-full">
+          <div className="mb-5 flex flex-col items-center text-center">
             <Link
               to="/"
-              className="flex items-center gap-2.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d95f00] rounded p-0.5 transition-colors"
+              className="inline-flex items-center gap-3.5 font-sora text-xl sm:text-2xl font-bold text-black mb-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d95f00] rounded-2xl p-1.5 transition-all hover:scale-105 group"
             >
-              <div className="w-10 h-10 rounded bg-[#131b2e] flex items-center justify-center text-white shrink-0">
-                <Truck size={22} aria-hidden="true" />
-              </div>
-              <div>
-                <div className="flex items-center gap-1.5">
-                  <span className="font-sora text-xl font-semibold text-[#0d1c2e] uppercase tracking-tight">
-                    SmartTruck
-                  </span>
-                  <span className="bg-[#e6eeff] text-[#45464d] text-[10px] font-inter tracking-[0.06em] px-1.5 py-0.5 rounded font-semibold uppercase">
-                    Hub
-                  </span>
-                </div>
-                <p className="font-inter text-xs leading-4 font-medium tracking-[0.06em] text-[#45464d]">
-                  HỆ THỐNG BÃI ĐỖ &amp; ĐIỀU PHỐI XE TẢI
-                </p>
-              </div>
+              <img
+                src="/image-smart-parking-hub.png"
+                alt="Smart Parking Hub Logo"
+                className="w-11 h-11 sm:w-12 sm:h-12 rounded-2xl object-contain shrink-0 shadow-md ring-1 ring-white/60 group-hover:shadow-lg transition-all"
+              />
+              <span className="tracking-tight text-black font-bold text-xl sm:text-2xl group-hover:text-[#d95f00] transition-colors">
+                SMARTTRUCK HUB
+              </span>
             </Link>
 
-            <div className="hidden sm:flex flex-col items-end font-inter text-xs leading-4 font-medium tracking-[0.06em] text-[#45464d]">
-              <span className="flex items-center gap-1.5 font-medium text-[#0d1c2e]">
-                <span
-                  className="w-2 h-2 rounded-full bg-[#d95f00]"
-                  aria-hidden="true"
-                />
-                KHÔI PHỤC TÀI KHOẢN
-              </span>
-              <span className="text-[11px] opacity-80">
-                XÁC THỰC QUA EMAIL OTP
-              </span>
-            </div>
-          </div>
-
-          <div className="mb-6">
-            <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded bg-[#e6eeff] text-[#45464d] font-inter text-xs leading-4 font-medium tracking-[0.06em] mb-2">
-              <KeyRound size={14} aria-hidden="true" />
-              <span>MÃ MÀN HÌNH: SCR-012</span>
-            </div>
-            <h1 className="font-sora text-3xl md:text-4xl font-bold text-[#0d1c2e] tracking-tight mb-2">
+            <h1 className="font-sora text-2xl sm:text-3xl font-bold text-black tracking-tight mb-1 drop-shadow-xs">
               Khôi Phục Mật Khẩu
             </h1>
-            <p className="text-sm text-[#45464d] leading-relaxed">
-              Quy trình tự phục vụ 2 bước bằng mã OTP xác thực qua email để đặt
-              lại mật khẩu đăng nhập tài khoản SmartTruck Hub.
-            </p>
           </div>
 
           <div
-            className="grid grid-cols-2 gap-2 mb-8 bg-[#eff4ff] p-1.5 rounded-lg"
+            className="grid grid-cols-2 gap-1.5 mb-5 bg-black/5 p-1 rounded-2xl border border-black/10"
             role="list"
             aria-label="Các bước khôi phục mật khẩu"
           >
             <div
               role="listitem"
               aria-current={step === 'email' ? 'step' : undefined}
-              className={`flex items-center gap-2.5 px-3 sm:px-4 py-2.5 rounded transition-all duration-300 ${
+              className={`flex items-center justify-center gap-2 py-2 px-3 rounded-xl transition-all ${
                 step === 'email'
-                  ? 'bg-white shadow-xs'
-                  : 'bg-[#eff4ff] opacity-90'
+                  ? 'bg-white shadow-xs text-black font-semibold'
+                  : 'text-black opacity-80 font-normal'
               }`}
               id="stepper-step-1"
             >
               <div
-                className={`w-7 h-7 rounded flex items-center justify-center text-xs font-semibold shrink-0 ${
+                className={`size-5 rounded-full flex items-center justify-center text-[11px] font-bold shrink-0 ${
                   step === 'email'
                     ? 'bg-[#d95f00] text-white'
-                    : 'bg-[#e6eeff] text-[#0d1c2e]'
+                    : 'bg-black/10 text-black'
                 }`}
                 id="step-1-badge"
               >
                 {step === 'email' ? (
                   '1'
                 ) : (
-                  <Check size={16} aria-hidden="true" />
+                  <Check size={14} aria-hidden="true" />
                 )}
               </div>
               <div className="min-w-0">
-                <p className="font-inter text-[10px] font-medium text-[#45464d] uppercase tracking-wider">
-                  BƯỚC 1
-                </p>
-                <p
-                  className={`text-xs text-[#0d1c2e] truncate ${
-                    step === 'email' ? 'font-semibold' : 'font-medium'
-                  }`}
-                  id="step-1-text"
-                >
+                <p className="font-inter sr-only">BƯỚC 1</p>
+                <p className="text-xs sm:text-sm truncate" id="step-1-text">
                   Xác Nhận Email
                 </p>
               </div>
@@ -542,50 +500,31 @@ export function ForgotPasswordPage() {
             <div
               role="listitem"
               aria-current={step === 'reset' ? 'step' : undefined}
-              className={`flex items-center gap-2.5 px-3 sm:px-4 py-2.5 rounded transition-all duration-300 ${
+              className={`flex items-center justify-center gap-2 py-2 px-3 rounded-xl transition-all ${
                 step === 'reset'
-                  ? 'bg-white shadow-xs'
+                  ? 'bg-white shadow-xs text-black font-semibold'
                   : step === 'success'
-                    ? 'bg-[#eff4ff] opacity-90'
-                    : 'text-[#45464d] opacity-75'
+                    ? 'bg-white/80 text-black font-semibold'
+                    : 'text-black opacity-80 font-normal'
               }`}
               id="stepper-step-2"
             >
               <div
-                className={`w-7 h-7 rounded flex items-center justify-center text-xs font-semibold shrink-0 ${
-                  hasStep2ErrorState
-                    ? 'bg-[#ba1a1a] text-white'
-                    : step === 'reset'
-                      ? 'bg-[#d95f00] text-white'
-                      : step === 'success'
-                        ? 'bg-[#e6eeff] text-[#0d1c2e]'
-                        : 'bg-[#e6eeff] text-[#45464d]'
+                className={`size-5 rounded-full flex items-center justify-center text-[11px] font-bold shrink-0 ${
+                  step === 'reset'
+                    ? 'bg-[#d95f00] text-white'
+                    : step === 'success'
+                      ? 'bg-black/10 text-black'
+                      : 'bg-black/10 text-black'
                 }`}
                 id="step-2-badge"
               >
-                {step === 'success' ? (
-                  <Check size={16} aria-hidden="true" />
-                ) : (
-                  '2'
-                )}
+                2
               </div>
               <div className="min-w-0">
-                <p className="font-inter text-[10px] font-medium text-[#45464d] uppercase tracking-wider">
-                  BƯỚC 2
-                </p>
-                <p
-                  className={`text-xs truncate ${
-                    hasStep2ErrorState
-                      ? 'text-[#ba1a1a] font-semibold'
-                      : step === 'reset'
-                        ? 'text-[#0d1c2e] font-semibold'
-                        : step === 'success'
-                          ? 'text-[#0d1c2e] font-medium'
-                          : 'text-[#45464d]'
-                  }`}
-                  id="step-2-text"
-                >
-                  OTP &amp; Đặt Mật Khẩu
+                <p className="font-inter sr-only">BƯỚC 2</p>
+                <p className="text-xs sm:text-sm truncate" id="step-2-text">
+                  Đặt Lại Mật Khẩu
                 </p>
               </div>
             </div>
@@ -727,33 +666,22 @@ export function ForgotPasswordPage() {
             </section>
           )}
 
-          <div className="mt-8 pt-4 border-t border-[#e6eeff] flex flex-col sm:flex-row items-center justify-between gap-2 text-[#45464d]">
+          <div className="mt-6 pt-4 border-t border-black/10 flex flex-wrap items-center justify-between gap-3 text-sm text-black font-normal">
             <Link
               to="/login"
-              className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#0d1c2e] hover:text-[#d95f00] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d95f00] rounded-sm transition-colors"
+              className="inline-flex items-center gap-1.5 font-bold text-[#d95f00] hover:text-[#9e4300] hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d95f00] rounded-xs transition-colors"
             >
               <ArrowLeft size={16} aria-hidden="true" />
               <span>Quay lại trang Đăng Nhập</span>
             </Link>
             <Link
               to="/register"
-              className="font-inter text-xs leading-4 font-medium tracking-[0.06em] text-[#45464d] hover:text-[#d95f00] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d95f00] rounded-sm transition-colors"
+              className="font-bold text-[#d95f00] hover:text-[#9e4300] hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d95f00] rounded-xs transition-colors"
             >
-              Chưa có tài khoản? Tạo tài khoản
+              Tạo tài khoản mới
             </Link>
           </div>
         </div>
-      </div>
-
-      <div className="w-full max-w-2xl mt-4 flex flex-col sm:flex-row items-center justify-between gap-2 px-2 font-inter text-xs leading-4 font-medium tracking-[0.06em] text-[#45464d]">
-        <div className="flex items-center gap-1.5">
-          <span
-            className="w-2 h-2 rounded-full bg-[#d95f00]"
-            aria-hidden="true"
-          />
-          <span>QUY TRÌNH ĐẶT LẠI MẬT KHẨU BẢO MẬT 2 BƯỚC</span>
-        </div>
-        <span>SMARTTRUCK HUB · SCR-012</span>
       </div>
     </AuthLayout>
   )

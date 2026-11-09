@@ -30,14 +30,14 @@ export function BankField({ control, disabled = false }: { control: Control<Auth
   }
   const options = [...(query.data ?? [])].sort((a, b) => rank(a) - rank(b)).map(bank => bank.shortName)
   return <div className="space-y-2">
-    <label htmlFor={id} className="block text-base font-medium">Tên ngân hàng</label>
+    <label htmlFor={id} className="block text-sm sm:text-base font-bold text-brand-navy">Tên ngân hàng</label>
     <Autocomplete id={id} ref={field.ref} name={field.name} value={field.value} onValueChange={field.onChange} onBlur={field.onBlur}
       disabled={disabled || !query.data || query.isError} aria-required="true" aria-invalid={Boolean(fieldState.error)}
       aria-describedby={[selected ? `${id}-name` : '', fieldState.error ? `${id}-error` : ''].filter(Boolean).join(' ') || undefined} maxLength={100}
       leadingIcon={selected ? <BankLogo key={selected.bin} bank={selected} compact /> : undefined}
-      className={selected ? '!pl-16' : ''}
+      className={selected ? '!pl-16 !pr-10' : '!pl-11 !pr-10'}
       options={options}
-      suggestionHint="Chọn ngân hàng từ danh sách" emptyMessage="Không tìm thấy ngân hàng. Thử tên đầy đủ hoặc tên viết tắt." placeholder={query.isPending ? 'Đang tải ngân hàng…' : 'Tìm tên ngân hàng, mã hoặc tên viết tắt…'}
+      suggestionHint="Chọn ngân hàng từ danh sách" emptyMessage="Không tìm thấy ngân hàng. Thử tên đầy đủ hoặc tên viết tắt." placeholder={query.isPending ? 'Đang tải ngân hàng…' : 'Ví dụ: Vietcombank, MB, Techcombank…'}
       optionSearchText={name => { const bank = banks.get(name); return bank ? `${bank.shortName} ${bank.name} ${bank.code} ${bank.bin}` : name }}
       renderOption={name => {
         const bank = banks.get(name)
