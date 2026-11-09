@@ -50,14 +50,22 @@ export interface Booking {
   vehicleType: VehicleType
   parkingLotId: number
   parkingLotName: string
+  parkingLotAddress?: string
+  merchantId?: number
+  driverId?: number
+  vehicleId?: number
   status: string
   advanceDeposit: number
   totalAmount: number
+  hourlyRate?: number
   expectedCheckInTime: string
   expectedCheckOutTime: string
+  expiresAt?: string
   checkInTime: string
   checkOutTime: string
   createdAt: string
+  cancellationReason?: string
+  cancelledAt?: string
 }
 export interface Settlement {
   bookingCode: string
