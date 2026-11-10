@@ -9,6 +9,7 @@ import {
 } from 'lucide-react'
 import type { BookingItemDto } from '../types/bookingTypes'
 import { Link } from 'react-router-dom'
+import { isBookingEligibleForDispute } from '../schemas/disputeSchemas'
 
 interface BookingActionCommandsProps {
   booking: BookingItemDto
@@ -33,6 +34,7 @@ export function BookingActionCommands({
   const isAwaitingFinal = booking.status === 'AWAITING_FINAL_PAYMENT'
   const isPendingPayment = booking.status === 'PENDING_PAYMENT'
   const isCompleted = booking.status === 'COMPLETED'
+  const canDispute = isBookingEligibleForDispute(booking.status)
   const canCancel =
     booking.status === 'PENDING_PAYMENT' || booking.status === 'PENDING_CHECKIN'
 
@@ -42,7 +44,7 @@ export function BookingActionCommands({
 
   return (
     <div className="flex flex-col gap-3">
-      {isCompleted && (
+      {canDispute && (
         <Link
           to={`/disputes?bookingId=${booking.id}`}
           className="rounded-xl border border-slate-300 bg-white px-4 py-3 text-center text-sm font-semibold text-slate-800 hover:bg-slate-50 transition-colors"
