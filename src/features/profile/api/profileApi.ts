@@ -18,5 +18,14 @@ export async function updateMyProfile(values: UpdateProfileFormData, phone: stri
   return parseProfile(response.data.data)
 }
 export async function changeMyPasswordApi(currentPassword: string, newPassword: string): Promise<void> {
-  await apiClient.post('/api/v1/users/me/password', { currentPassword, newPassword })
+  try {
+    await apiClient.post('/api/v1/users/me/password', { currentPassword, newPassword })
+  } catch (error) {
+    // Clear credential request bodies before errors enter either role's query cache.
+    if (error && typeof error === 'object' && 'config' in error) {
+      const config = error.config
+      if (config && typeof config === 'object' && 'data' in config) config.data = undefined
+    }
+    throw error
+  }
 }

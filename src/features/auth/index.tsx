@@ -1,7 +1,7 @@
 import type { AuthFields } from './model/authFields'
 import { LoginPage } from './pages/LoginPage'
 import { BankField } from './components/BankField'
-import { requestEmailOtp } from './api/emailOtp'
+import { requestEmailOtp, verifyRegisterOtp } from './api/emailOtp'
 import { ForgotPasswordPage } from './pages/ForgotPasswordPage'
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
@@ -104,6 +104,11 @@ function LegacyAuthPage({ mode }: { mode: 'login' | 'register' | 'forgot' }) {
         email.toLowerCase(),
       )
     },
+    onMutate: () => {
+      setSent(false)
+      form.setValue('otpCode', '')
+      form.clearErrors(['email', 'otpCode'])
+    },
     onSuccess: (data) => {
       setSent(true)
       setCountdown(Math.max(1, data.resendAfterSeconds || data.expiresInSeconds || 60))
@@ -111,6 +116,22 @@ function LegacyAuthPage({ mode }: { mode: 'login' | 'register' | 'forgot' }) {
   })
 
   const sentValid = sent && otp.data?.email === emailValue
+
+  const verifyOtp = useMutation({
+    mutationFn: async (data: { email: string; otpCode: string }) => {
+      await verifyRegisterOtp(data.email, data.otpCode)
+      return data
+    },
+    onSuccess: (data) => {
+      if (data.email === form.getValues('email').trim().toLowerCase() &&
+          data.otpCode === form.getValues('otpCode')) {
+        setRegisterStepKey('password')
+      }
+    },
+    onError: (error) => {
+      form.setError('otpCode', { message: errorMessage(error) }, { shouldFocus: true })
+    },
+  })
 
   const submit = useMutation({
     mutationFn: async (data: AuthFields) => {
@@ -141,7 +162,34 @@ function LegacyAuthPage({ mode }: { mode: 'login' | 'register' | 'forgot' }) {
         })
       }
     },
+    onError: (error) => {
+      // Registration rechecks expiry and consumes the code atomically with account creation.
+      if (mode === 'register' && /otp/i.test(errorMessage(error))) {
+        setRegisterStepKey('email')
+        form.setFocus('otpCode')
+      }
+    },
   })
+
+  const advanceRegisterStep = async () => {
+    if (verifyOtp.isPending || submit.isPending) return
+    if (registerStepKey === 'info') {
+      if (await form.trigger(['phone', 'fullName', 'citizenId'])) {
+        setRegisterStepKey(selectedRole === 'MERCHANT' ? 'bank' : 'email')
+      }
+    } else if (registerStepKey === 'bank') {
+      if (await form.trigger(['bankName', 'bankAccountNum'])) setRegisterStepKey('email')
+    } else if (registerStepKey === 'email') {
+      if (!sentValid || otp.isPending) {
+        form.setError('email', { message: 'Vui lòng gửi mã OTP thành công đến email này trước khi tiếp tục.' })
+        return
+      }
+      if (await form.trigger(['email', 'otpCode'])) {
+        submit.reset()
+        verifyOtp.mutate({ email: emailValue, otpCode: form.getValues('otpCode') })
+      }
+    }
+  }
 
   const input = (
     name: keyof AuthFields,
@@ -251,8 +299,23 @@ function LegacyAuthPage({ mode }: { mode: 'login' | 'register' | 'forgot' }) {
           <AuthSuccess mode={mode} />
         ) : (
           <form
+            noValidate
             className="space-y-4 [&_input:not([role='combobox'])]:min-h-12 [&_input:not([role='combobox'])]:sm:min-h-14 [&_input:not([role='combobox'])]:text-base [&_input:not([role='combobox'])]:rounded-xl [&_input:not([role='combobox'])]:px-4 [&_select]:min-h-12 [&_select]:sm:min-h-14 [&_select]:text-base [&_select]:rounded-xl [&_select]:px-4 [&_label]:gap-1.5"
-            onSubmit={form.handleSubmit((data) => submit.mutate(data))}
+            onChange={() => { if (submit.isError) submit.reset() }}
+            onSubmit={(event) => {
+              if (mode === 'register' && registerStepKey !== 'password') {
+                event.preventDefault()
+                void advanceRegisterStep()
+                return
+              }
+              if (mode === 'register' && (!sentValid || otp.isPending)) {
+                event.preventDefault()
+                setRegisterStepKey('email')
+                form.setError('email', { message: 'Vui lòng gửi mã OTP thành công đến email này trước khi tiếp tục.' })
+                return
+              }
+              void form.handleSubmit((data) => submit.mutate(data))(event)
+            }}
           >
             {mode === 'register' && (
               <div
@@ -298,6 +361,7 @@ function LegacyAuthPage({ mode }: { mode: 'login' | 'register' | 'forgot' }) {
 
             {/* STEP 1: Vai trò & Thông tin cơ bản */}
             <div
+              hidden={mode === 'register' && registerStepKey !== 'info'}
               className={
                 mode === 'register' && registerStepKey !== 'info'
                   ? 'sr-only'
@@ -367,12 +431,7 @@ function LegacyAuthPage({ mode }: { mode: 'login' | 'register' | 'forgot' }) {
               {mode === 'register' && (
                 <button
                   type="button"
-                  onClick={async () => {
-                    const valid = await form.trigger(['phone', 'fullName', 'citizenId'])
-                    if (valid) {
-                      setRegisterStepKey(selectedRole === 'MERCHANT' ? 'bank' : 'email')
-                    }
-                  }}
+                  onClick={() => void advanceRegisterStep()}
                   className="inline-flex min-h-12 sm:min-h-14 w-full items-center justify-center gap-2 rounded-xl bg-[#d95f00] px-5 py-3 text-base font-bold text-white hover:bg-[#b84e00] active:bg-[#9e4300] hover:scale-[1.01] active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d95f00] focus-visible:ring-offset-2 transition-all shadow-md cursor-pointer"
                 >
                   <span>
@@ -388,6 +447,7 @@ function LegacyAuthPage({ mode }: { mode: 'login' | 'register' | 'forgot' }) {
             {/* STEP 2: Kết nối tài khoản ngân hàng (Dành riêng cho Chủ bãi) */}
             {mode === 'register' && selectedRole === 'MERCHANT' && (
               <div
+                hidden={registerStepKey !== 'bank'}
                 className={
                   registerStepKey !== 'bank'
                     ? 'sr-only'
@@ -425,10 +485,7 @@ function LegacyAuthPage({ mode }: { mode: 'login' | 'register' | 'forgot' }) {
                   </button>
                   <button
                     type="button"
-                    onClick={async () => {
-                      const valid = await form.trigger(['bankName', 'bankAccountNum'])
-                      if (valid) setRegisterStepKey('email')
-                    }}
+                    onClick={() => void advanceRegisterStep()}
                     className="inline-flex min-h-12 sm:min-h-14 flex-1 items-center justify-center gap-2 rounded-xl bg-[#d95f00] px-5 py-3 text-base font-bold text-white hover:bg-[#b84e00] active:bg-[#9e4300] hover:scale-[1.01] active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d95f00] focus-visible:ring-offset-2 transition-all shadow-md cursor-pointer"
                   >
                     <span>Tiếp tục: Xác thực Email</span>
@@ -440,6 +497,7 @@ function LegacyAuthPage({ mode }: { mode: 'login' | 'register' | 'forgot' }) {
 
             {/* STEP 3 (hoặc 2 cho Tài xế): Xác thực Email & OTP */}
             <div
+              hidden={mode === 'register' && registerStepKey !== 'email'}
               className={
                 mode === 'register' && registerStepKey !== 'email'
                   ? 'sr-only'
@@ -458,11 +516,22 @@ function LegacyAuthPage({ mode }: { mode: 'login' | 'register' | 'forgot' }) {
                         type="email"
                         autoComplete="email"
                         placeholder="Ví dụ: taixe.nguyen@gmail.com"
-                        disabled={submit.isPending}
+                        disabled={submit.isPending || otp.isPending || verifyOtp.isPending}
                         aria-invalid={Boolean(form.formState.errors.email)}
                         aria-describedby={form.formState.errors.email ? 'auth-email-error' : undefined}
                         className={`${control} min-h-12 sm:min-h-14 text-base bg-white border border-slate-300 text-black font-normal placeholder:font-normal placeholder:text-slate-400 hover:border-slate-400 focus:border-[#d95f00] focus:ring-2 focus:ring-[#d95f00]/20 rounded-xl px-4 py-3 shadow-2xs transition-colors w-full`}
-                        {...form.register('email', { required: true })}
+                        {...form.register('email', {
+                          required: 'Nhập email nhận mã xác thực.',
+                          pattern: { value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/, message: 'Nhập email hợp lệ để nhận mã.' },
+                          onChange: () => {
+                            setSent(false)
+                            setCountdown(0)
+                            otp.reset()
+                            verifyOtp.reset()
+                            form.setValue('otpCode', '')
+                            form.clearErrors(['email', 'otpCode'])
+                          },
+                        })}
                       />
                     </div>
                     <button
@@ -474,7 +543,7 @@ function LegacyAuthPage({ mode }: { mode: 'login' | 'register' | 'forgot' }) {
                             ? `Gửi lại sau ${countdown}s`
                             : 'Gửi mã qua email'
                       }
-                      disabled={otp.isPending || countdown > 0}
+                      disabled={otp.isPending || verifyOtp.isPending || countdown > 0}
                       onClick={() => otp.mutate()}
                       className="shrink-0 min-h-12 sm:min-h-14 px-3.5 sm:px-4 rounded-xl border border-slate-300 bg-white text-xs sm:text-sm font-semibold text-black hover:bg-orange-50 hover:border-[#d95f00] hover:text-[#d95f00] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d95f00] focus-visible:ring-offset-1 disabled:opacity-50 transition-all shadow-2xs cursor-pointer flex items-center justify-center gap-2 whitespace-nowrap"
                     >
@@ -501,7 +570,7 @@ function LegacyAuthPage({ mode }: { mode: 'login' | 'register' | 'forgot' }) {
                   </div>
                   {form.formState.errors.email && (
                     <span id="auth-email-error" role="alert" className="text-xs text-red-700 font-normal">
-                      Thông tin chưa hợp lệ.
+                      {form.formState.errors.email.message || 'Thông tin chưa hợp lệ.'}
                     </span>
                   )}
                 </div>
@@ -546,13 +615,18 @@ function LegacyAuthPage({ mode }: { mode: 'login' | 'register' | 'forgot' }) {
                       inputMode="numeric"
                       autoComplete="one-time-code"
                       maxLength={6}
+                      disabled={verifyOtp.isPending || submit.isPending}
                       placeholder="123456"
                       aria-invalid={Boolean(form.formState.errors.otpCode)}
                       aria-describedby={form.formState.errors.otpCode ? 'auth-otpCode-error' : undefined}
                       className="absolute inset-0 z-10 w-full h-full opacity-0 cursor-pointer caret-transparent"
                       {...form.register('otpCode', {
-                        required: true,
-                        pattern: /^\d{6}$/,
+                        onChange: () => {
+                          verifyOtp.reset()
+                          form.clearErrors('otpCode')
+                        },
+                        required: 'Nhập mã OTP được gửi qua email.',
+                        pattern: { value: /^\d{6}$/, message: 'Mã OTP phải gồm 6 chữ số.' },
                       })}
                       onFocus={() => setIsOtpFocused(true)}
                       onBlur={() => setIsOtpFocused(false)}
@@ -582,7 +656,7 @@ function LegacyAuthPage({ mode }: { mode: 'login' | 'register' | 'forgot' }) {
                   </div>
                   {form.formState.errors.otpCode && (
                     <p id="auth-otpCode-error" role="alert" className="text-xs text-red-700 font-normal text-center">
-                      Thông tin chưa hợp lệ.
+                      {form.formState.errors.otpCode.message || 'Mã OTP phải gồm 6 chữ số.'}
                     </p>
                   )}
                 </div>
@@ -592,6 +666,7 @@ function LegacyAuthPage({ mode }: { mode: 'login' | 'register' | 'forgot' }) {
                 <div className="flex items-center gap-3 pt-1">
                   <button
                     type="button"
+                    disabled={verifyOtp.isPending}
                     onClick={() =>
                       setRegisterStepKey(selectedRole === 'MERCHANT' ? 'bank' : 'info')
                     }
@@ -601,21 +676,21 @@ function LegacyAuthPage({ mode }: { mode: 'login' | 'register' | 'forgot' }) {
                   </button>
                   <button
                     type="button"
-                    onClick={async () => {
-                      const valid = await form.trigger(['email', 'otpCode'])
-                      if (valid) setRegisterStepKey('password')
-                    }}
+                    disabled={otp.isPending || verifyOtp.isPending}
+                    onClick={() => void advanceRegisterStep()}
                     className="inline-flex min-h-12 sm:min-h-14 flex-1 items-center justify-center gap-2 rounded-xl bg-[#d95f00] px-5 py-3 text-base font-bold text-white hover:bg-[#b84e00] active:bg-[#9e4300] hover:scale-[1.01] active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d95f00] focus-visible:ring-offset-2 transition-all shadow-md cursor-pointer"
                   >
-                    <span>Tiếp tục: Thiết lập mật khẩu</span>
+                    <span>{verifyOtp.isPending ? 'Đang xác thực OTP…' : 'Tiếp tục: Thiết lập mật khẩu'}</span>
                     <ArrowRight size={18} />
                   </button>
                 </div>
               )}
+              {otp.isError && <Notice error>{errorMessage(otp.error)}</Notice>}
             </div>
 
             {/* STEP 4 (hoặc 3 cho Tài xế): Thiết lập mật khẩu & Submit */}
             <div
+              hidden={mode === 'register' && registerStepKey !== 'password'}
               className={
                 mode === 'register' && registerStepKey !== 'password'
                   ? 'sr-only'
@@ -627,7 +702,12 @@ function LegacyAuthPage({ mode }: { mode: 'login' | 'register' | 'forgot' }) {
                   'password',
                   'Mật khẩu',
                   'password',
-                  { minLength: 6, maxLength: 50 },
+                  {
+                    required: 'Nhập mật khẩu.',
+                    minLength: { value: 6, message: 'Mật khẩu phải có từ 6 đến 50 ký tự.' },
+                    maxLength: { value: 50, message: 'Mật khẩu phải có từ 6 đến 50 ký tự.' },
+                    validate: (value) => Boolean(value?.trim()) || 'Mật khẩu không được chỉ chứa khoảng trắng.',
+                  },
                   'Mật khẩu từ 6 đến 50 ký tự',
                 )}
 
@@ -637,8 +717,8 @@ function LegacyAuthPage({ mode }: { mode: 'login' | 'register' | 'forgot' }) {
                   'Xác nhận mật khẩu',
                   'password',
                   {
+                    required: 'Nhập lại mật khẩu để xác nhận.',
                     validate: (val) =>
-                      !val ||
                       val === form.watch('password') ||
                       'Mật khẩu xác nhận không khớp.',
                   },
@@ -676,11 +756,6 @@ function LegacyAuthPage({ mode }: { mode: 'login' | 'register' | 'forgot' }) {
                     </span>
                   </div>
                 </div>
-              )}
-
-              {otp.isError && <Notice error>{errorMessage(otp.error)}</Notice>}
-              {submit.isError && (
-                <Notice error>{errorMessage(submit.error)}</Notice>
               )}
 
               {mode === 'register' ? (
@@ -734,6 +809,7 @@ function LegacyAuthPage({ mode }: { mode: 'login' | 'register' | 'forgot' }) {
                 </button>
               )}
             </div>
+            {submit.isError && <Notice error>{errorMessage(submit.error)}</Notice>}
           </form>
         )}
 
