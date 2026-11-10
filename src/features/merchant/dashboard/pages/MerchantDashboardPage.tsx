@@ -90,6 +90,11 @@ export function MerchantDashboardPage() {
                 data={currentRevenueSeries}
                 isLoading={lotRevenueQuery.isLoading}
                 parkingLotName={selectedLotName}
+                totalNetRevenue={
+                  selectedLotId !== null
+                    ? (lotRevenueQuery.data?.totalNetRevenue ?? 0)
+                    : data.revenue.totalNetRevenue
+                }
               />
               <div className="mt-4 flex flex-wrap items-center justify-between gap-3 text-xs">
                 <Link to="/merchant/revenue" className="underline font-semibold text-brand-navy">
