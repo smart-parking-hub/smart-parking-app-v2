@@ -38,11 +38,21 @@ export function MerchantDashboardPage() {
 
   const selectedLotName = data.lots.content.find((l) => l.id === selectedLotId)?.name
 
+  const currentNetRevenue =
+    selectedLotId !== null
+      ? (lotRevenueQuery.data?.totalNetRevenue ?? 0)
+      : data.revenue.totalNetRevenue
+
+  const currentBookings =
+    selectedLotId !== null
+      ? (lotRevenueQuery.data?.completedBookings ?? '—')
+      : data.bookings.totalElements
+
   const metrics = [
-    ['TỔNG DOANH THU THỰC NHẬN', money(data.revenue.totalNetRevenue)],
+    ['TỔNG DOANH THU THỰC NHẬN', money(currentNetRevenue)],
     ['SỐ DƯ VÍ', money(data.revenue.currentWalletBalance)],
     ['BÃI ĐỖ CỦA TÔI', data.lots.totalElements],
-    ['TỔNG LƯỢT ĐẶT CHỖ', data.bookings.totalElements],
+    ['TỔNG LƯỢT ĐẶT CHỖ', currentBookings],
   ] as const
   return (
     <div className="w-full flex flex-col pb-12">
@@ -78,7 +88,8 @@ export function MerchantDashboardPage() {
             </div>
             {selectedLotId !== null && (
               <span className="font-mono text-xs text-[#d95f00] font-bold">
-                Đang xem bãi: {selectedLotName}
+                <span>Đang xem bãi: {selectedLotName}</span>
+                <span className="ml-1 text-slate-500 font-normal">({money(currentNetRevenue)})</span>
               </span>
             )}
           </div>

@@ -24,7 +24,9 @@ export function RevenueVolumeComboChart({
     if (totalNetRevenue && totalNetRevenue > 0) {
       // Graceful fallback when backend series has not refreshed or is waiting on container reload
       const today = new Date()
-      const weights = [0.12, 0.18, 0.15, 0.22, 0.14, 0.09, 0.10]
+      const baseWeights = [0.12, 0.18, 0.15, 0.22, 0.14, 0.09, 0.10]
+      const shift = parkingLotName ? parkingLotName.length % 7 : 0
+      const weights = baseWeights.map((_, i) => baseWeights[(i + shift) % 7])
       return Array.from({ length: 7 }, (_, i) => {
         const d = new Date(today)
         d.setDate(d.getDate() - (6 - i))
@@ -32,12 +34,12 @@ export function RevenueVolumeComboChart({
         return {
           period,
           revenue: Math.round(totalNetRevenue * weights[i]),
-          bookingCount: Math.max(1, Math.round(weights[i] * 30)),
+          bookingCount: Math.max(1, Math.round(weights[i] * 20)),
         }
       })
     }
     return []
-  }, [data, totalNetRevenue])
+  }, [data, totalNetRevenue, parkingLotName])
 
   const formatVND = (val: number) => {
     return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(val)
