@@ -31,6 +31,35 @@ export async function fetchRevenueStats(
       series: z.array(z.object({ period: z.string(), revenue: amount, bookingCount: amount })).nullish(),
     })
     const parsed = lotRevenueSchema.parse(raw)
+
+    if (parsed.series && parsed.series.length > 0) {
+      return {
+        totalNetRevenue: parsed.totalRevenue ?? 0,
+        totalGrossRevenue: parsed.totalRevenue ?? 0,
+        currentWalletBalance: 0,
+        series: parsed.series,
+      }
+    }
+
+    // Connect to payment-service to get the real financial series and revenue for this lot
+    try {
+      const paymentRaw = await getData<unknown>('/api/v1/merchant/revenue', {
+        parkingLotId,
+        startDate,
+        endDate,
+        granularity: 'DAY',
+      })
+      const paymentParsed = revenueSchema.parse(paymentRaw)
+      if (paymentParsed.series && paymentParsed.series.length > 0) {
+        return paymentParsed
+      }
+      if (paymentParsed.totalNetRevenue > 0) {
+        return paymentParsed
+      }
+    } catch {
+      // ignore fallback error
+    }
+
     return {
       totalNetRevenue: parsed.totalRevenue ?? 0,
       totalGrossRevenue: parsed.totalRevenue ?? 0,
