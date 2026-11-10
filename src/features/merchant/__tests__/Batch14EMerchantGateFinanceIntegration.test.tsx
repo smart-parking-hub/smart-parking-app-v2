@@ -193,11 +193,10 @@ describe('BATCH-14E: Merchant Gate, Bookings & Financial Settlement Integration 
     expect(await screen.findByRole('heading', { level: 1, name: /Ma trận biểu phí/i })).toBeInTheDocument()
     expect(screen.getByRole('link', { name: /← Danh mục bãi/i })).toBeInTheDocument()
 
-    // 4 tab navigation pills
-    expect(screen.getByRole('link', { name: 'Tổng quan' })).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: 'Hồ sơ' })).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: 'Sức chứa' })).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: 'Biểu phí' })).toBeInTheDocument()
+    // Tab navigation pills
+    expect(await screen.findByRole('link', { name: 'Tổng quan' })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Cấu hình chỗ đỗ' })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Bảng giá' })).toBeInTheDocument()
 
     // Wait for pricing form to render
     expect(await screen.findByText('Biểu phí cho 5 loại phương tiện')).toBeInTheDocument()
@@ -341,7 +340,7 @@ describe('BATCH-14E: Merchant Gate, Bookings & Financial Settlement Integration 
 
     // Submit checkout query
     const submitBtn = screen.getByRole('button', { name: 'Kiểm tra & quyết toán xe ra' })
-    fireEvent.click(submitBtn)
+    fireEvent.submit(submitBtn.closest('form')!)
 
     // Settlement Dialog opens
     expect(await screen.findByText('Quyết toán lượt đỗ')).toBeInTheDocument()
