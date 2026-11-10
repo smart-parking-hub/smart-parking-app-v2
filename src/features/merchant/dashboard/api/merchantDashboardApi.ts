@@ -15,6 +15,38 @@ const bookingSchema = z.object({
   parkingLotName: z.string().nullish(), status: z.string(),
 })
 
+export async function fetchRevenueStats(
+  parkingLotId?: number | null,
+  startDate?: string,
+  endDate?: string,
+) {
+  if (parkingLotId) {
+    const raw = await getData<unknown>(`/api/v1/merchant/parking-lots/${parkingLotId}/revenue`, {
+      startDate,
+      endDate,
+    })
+    const lotRevenueSchema = z.object({
+      totalRevenue: amount.nullish(),
+      completedBookings: z.number().int().nullish(),
+      series: z.array(z.object({ period: z.string(), revenue: amount, bookingCount: amount })).nullish(),
+    })
+    const parsed = lotRevenueSchema.parse(raw)
+    return {
+      totalNetRevenue: parsed.totalRevenue ?? 0,
+      totalGrossRevenue: parsed.totalRevenue ?? 0,
+      currentWalletBalance: 0,
+      series: parsed.series ?? [],
+    }
+  }
+
+  const raw = await getData<unknown>('/api/v1/merchant/revenue', {
+    startDate,
+    endDate,
+    granularity: 'DAY',
+  })
+  return revenueSchema.parse(raw)
+}
+
 export async function fetchMerchantDashboardData() {
   const [revenue, lots, bookings] = await Promise.all([
     getData<unknown>('/api/v1/merchant/revenue'),

@@ -64,4 +64,42 @@ describe('Merchant dashboard real data', () => {
     expect(await screen.findByRole('alert')).toBeInTheDocument()
     expect(screen.queryByText(/Bạn chưa có bãi đỗ nào/)).not.toBeInTheDocument()
   })
+
+  it('GAP-22: filters revenue chart by selected parking lot from dropdown', async () => {
+    vi.mocked(apiClient.get).mockImplementation(async url => ({
+      data: {
+        data: {
+          ...responses,
+          '/api/v1/merchant/revenue': {
+            totalNetRevenue: 500000,
+            currentWalletBalance: 100000,
+            series: [{ period: '2026-11-01', revenue: 500000, bookingCount: 5 }],
+          },
+          '/api/v1/merchant/parking-lots': {
+            content: [
+              { id: 10, name: 'Bãi ICD Tân Cảng', address: 'Quận 9', status: 'APPROVED' },
+              { id: 20, name: 'Bãi Cát Lái B', address: 'Thủ Đức', status: 'APPROVED' },
+            ],
+            totalElements: 2,
+          },
+          '/api/v1/merchant/parking-lots/10/revenue': {
+            totalRevenue: 300000,
+            completedBookings: 3,
+            series: [{ period: '2026-11-01', revenue: 300000, bookingCount: 3 }],
+          },
+        }[url],
+      },
+    }))
+
+    renderPage()
+    expect((await screen.findAllByText('Bãi ICD Tân Cảng')).length).toBeGreaterThan(0)
+
+    const select = screen.getByLabelText('Lọc theo cơ sở bãi đỗ')
+    expect(select).toBeInTheDocument()
+
+    fireEvent.change(select, { target: { value: '10' } })
+
+    expect(await screen.findByText('Đang xem bãi: Bãi ICD Tân Cảng')).toBeInTheDocument()
+    expect(apiClient.get).toHaveBeenCalledWith('/api/v1/merchant/parking-lots/10/revenue', expect.anything())
+  })
 })

@@ -1,14 +1,25 @@
+import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
-import { fetchMerchantDashboardData } from '../api/merchantDashboardApi'
+import { fetchMerchantDashboardData, fetchRevenueStats } from '../api/merchantDashboardApi'
 import { MerchantCommandSurface } from '../components/MerchantCommandSurface'
 import { MerchantDashboardSkeleton } from '../components/MerchantDashboardSkeleton'
+import { RevenueVolumeComboChart } from '../components/RevenueVolumeComboChart'
 import { Notice, Panel, Badge, money, secondary } from '@/shared/components/Workspace'
 
 export function MerchantDashboardPage() {
+  const [selectedLotId, setSelectedLotId] = useState<number | null>(null)
+
   const { data, isLoading, error, refetch, isRefetching } = useQuery({
     queryKey: ['merchant-dashboard-summary'],
     queryFn: fetchMerchantDashboardData,
+    staleTime: 20000,
+  })
+
+  const lotRevenueQuery = useQuery({
+    queryKey: ['merchant-revenue-stats', selectedLotId],
+    queryFn: () => fetchRevenueStats(selectedLotId),
+    enabled: selectedLotId !== null,
     staleTime: 20000,
   })
 
@@ -21,6 +32,11 @@ export function MerchantDashboardPage() {
       </button>
     </div>
   )
+
+  const currentRevenueSeries =
+    selectedLotId !== null ? (lotRevenueQuery.data?.series ?? []) : data.revenue.series
+
+  const selectedLotName = data.lots.content.find((l) => l.id === selectedLotId)?.name
 
   const metrics = [
     ['TỔNG DOANH THU THỰC NHẬN', money(data.revenue.totalNetRevenue)],
@@ -39,15 +55,56 @@ export function MerchantDashboardPage() {
           </Panel>)}
         </div>
         {data.lots.totalElements === 0 && <Notice>Bạn chưa có bãi đỗ nào. Đăng ký bãi mới để bắt đầu quản lý.</Notice>}
+        {data.lots.totalElements > 0 && (
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white px-5 py-3.5 rounded-2xl border border-slate-200/90 shadow-2xs">
+            <div className="flex items-center gap-2 text-sm text-[#0d1c2e] font-semibold">
+              <label htmlFor="lot-filter-select" className="shrink-0">
+                Lọc theo cơ sở bãi đỗ:
+              </label>
+              <select
+                id="lot-filter-select"
+                aria-label="Lọc theo cơ sở bãi đỗ"
+                value={selectedLotId ?? ''}
+                onChange={(e) => setSelectedLotId(e.target.value ? Number(e.target.value) : null)}
+                className="bg-[#eff4ff] border border-blue-100 text-[#0d1c2e] text-xs font-semibold rounded-xl px-3 py-2 outline-none focus:ring-2 focus:ring-[#d95f00]"
+              >
+                <option value="">Tất cả bãi đỗ ({data.lots.totalElements})</option>
+                {data.lots.content.map((lot) => (
+                  <option key={lot.id} value={lot.id}>
+                    {lot.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+            {selectedLotId !== null && (
+              <span className="font-mono text-xs text-[#d95f00] font-bold">
+                Đang xem bãi: {selectedLotName}
+              </span>
+            )}
+          </div>
+        )}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
           <div className="lg:col-span-8 space-y-6">
             <Panel title="Doanh thu theo kỳ">
-              {data.revenue.series.length === 0 ? <Notice>Chưa có dữ liệu biểu đồ doanh thu.</Notice> : <ul className="space-y-3">
-                {data.revenue.series.map(point => <li key={point.period} className="flex justify-between gap-3">
-                  <span>{point.period}</span><span>{money(point.revenue)} · {point.bookingCount} lượt</span>
-                </li>)}
-              </ul>}
-              <Link to="/merchant/revenue" className="mt-4 inline-block underline">Xem báo cáo doanh thu</Link>
+              <RevenueVolumeComboChart
+                data={currentRevenueSeries}
+                isLoading={lotRevenueQuery.isLoading}
+                parkingLotName={selectedLotName}
+              />
+              <div className="mt-4 flex flex-wrap items-center justify-between gap-3 text-xs">
+                <Link to="/merchant/revenue" className="underline font-semibold text-brand-navy">
+                  Xem báo cáo doanh thu
+                </Link>
+                {selectedLotId !== null && (
+                  <button
+                    type="button"
+                    onClick={() => setSelectedLotId(null)}
+                    className="font-mono text-[#d95f00] hover:underline cursor-pointer"
+                  >
+                    ← Trở lại xem tất cả bãi đỗ
+                  </button>
+                )}
+              </div>
             </Panel>
             <Panel title="Đặt chỗ gần nhất">
               {data.bookings.content.length === 0 ? <Notice>Chưa có lượt đặt chỗ.</Notice> : <ul className="space-y-4">
