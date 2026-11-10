@@ -135,7 +135,7 @@ export function MerchantDashboardPage() {
           <div className="lg:col-span-4 space-y-6">
             <Panel title={`Bãi đỗ của tôi (${data.lots.totalElements})`}>
               {data.lots.content.length === 0 ? <p>Chưa có bãi đỗ.</p> : <ul className="space-y-4">
-                {data.lots.content.map(lot => <li key={lot.id} className="space-y-2 border-b border-brand-border pb-3">
+                {data.lots.content.slice(0, 5).map(lot => <li key={lot.id} className="space-y-2 border-b border-brand-border pb-3">
                   <Link to={`/merchant/parking-lots/${lot.id}`} className="font-semibold underline">{lot.name}</Link>
                   <p className="text-sm text-brand-muted">{lot.address || '—'}</p><Badge value={lot.status} />
                 </li>)}

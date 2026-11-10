@@ -91,7 +91,7 @@ export async function fetchRevenueStats(
 export async function fetchMerchantDashboardData() {
   const [revenue, lots, bookings] = await Promise.all([
     getData<unknown>('/api/v1/merchant/revenue'),
-    getData<unknown>('/api/v1/merchant/parking-lots', { page: 0, size: 5 }),
+    getData<unknown>('/api/v1/merchant/parking-lots', { page: 0, size: 50 }),
     getData<unknown>('/api/v1/merchant/bookings', { page: 0, size: 5, sort: 'createdAt,desc' }),
   ])
   return {
