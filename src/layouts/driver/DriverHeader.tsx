@@ -1,4 +1,5 @@
 import { clearSession } from '@/features/auth'
+import { useUnreadCountQuery } from '@/features/notifications/hooks/useNotificationsQuery'
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { getData } from '@/shared/api/resources'
@@ -33,6 +34,8 @@ export function DriverHeader() {
     queryFn: () => getData<{ fullName?: string }>('/api/v1/users/me'),
     staleTime: 60_000,
   })
+  const { data: unreadCount = 0 } = useUnreadCountQuery()
+  const unreadLabel = unreadCount > 99 ? '99+' : String(unreadCount)
   const identity = { name: profile?.fullName?.trim() || 'Tài khoản của bạn', role: 'Tài xế' }
   const initials = identity.name
     .trim()
@@ -53,6 +56,7 @@ export function DriverHeader() {
       )
       : current.startsWith(path)
   }
+  const isNotificationsActive = active('/notifications')
 
   const closeMenus = () => {
     setAccountOpen(false)
@@ -103,10 +107,26 @@ export function DriverHeader() {
           <div className="driver-header-account flex shrink-0 items-center gap-1.5 sm:gap-5">
             <Link
               to="/notifications"
-              aria-label="Thông báo"
-              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-white/10 text-slate-300 hover:bg-white/10 transition-colors"
+              onClick={closeMenus}
+              aria-current={isNotificationsActive ? 'page' : undefined}
+              aria-label={
+                unreadCount > 0 ? `Thông báo (${unreadCount} chưa đọc)` : 'Thông báo'
+              }
+              className={`relative flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-orange ${
+                isNotificationsActive
+                  ? 'border-brand-orange bg-white text-brand-navy'
+                  : 'border-white/10 text-slate-300 hover:bg-white/10 hover:text-white'
+              }`}
             >
-              <Bell size={20} />
+              <Bell size={20} aria-hidden="true" />
+              {unreadCount > 0 && (
+                <span
+                  data-testid="driver-header-unread-badge"
+                  className="absolute -top-1.5 -right-1.5 min-w-[20px] h-5 px-1.5 rounded-full bg-brand-orange text-white font-mono text-[11px] font-bold leading-5 text-center shadow-xs ring-2 ring-brand-navy"
+                >
+                  {unreadLabel}
+                </span>
+              )}
             </Link>
             <div className="relative">
               <button

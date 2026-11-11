@@ -112,5 +112,43 @@ export type {
   QueueStore,
 } from '../queues'
 
+// SCR-025: Driver Operational Notifications Center
+export {
+  NotificationsPage,
+  NotificationsPage as DriverNotificationsPage,
+  NotificationsFilterBar,
+  NotificationRowItem,
+  NotificationDetailModal,
+  NotificationsPagination,
+  NotificationsEmptyState,
+  NotificationsSkeleton,
+  useNotificationStore,
+  getNotificationStoreSnapshot,
+  notificationFilterSchema,
+  notificationQueryKeys,
+  useNotificationsListQuery,
+  useUnreadCountQuery,
+  useMarkNotificationReadMutation,
+  useMarkAllNotificationsReadMutation,
+  fetchNotificationsPageApi,
+  fetchUnreadCountApi,
+  markAsReadApi,
+  markAllAsReadApi,
+} from '../notifications'
+
+export type {
+  NotificationTypeEnum,
+  BackendNotificationDto,
+  NotificationActionTarget,
+  NotificationViewModel,
+  NotificationPage,
+  NotificationStatusFilter,
+  NotificationTypeFilter,
+  NotificationFilterFormData,
+  NotificationStore,
+  NotificationUIState,
+  NotificationUIActions,
+} from '../notifications'
+
 // Shared driver feature components
 export * from './components'

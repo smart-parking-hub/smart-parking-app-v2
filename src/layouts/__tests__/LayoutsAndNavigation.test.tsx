@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, fireEvent } from '@testing-library/react'
+import { apiClient } from '@/shared/api/client'
 import { MemoryRouter, Routes, Route } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { Provider } from 'react-redux'
@@ -170,6 +171,58 @@ describe('Layouts and Navigation System Comprehensive Tests', () => {
 
       fireEvent.click(screen.getByRole('button', { name: 'Menu tài khoản' }))
       expect(screen.getByRole('link', { name: 'Đổi mật khẩu' })).toHaveAttribute('href', '/profile#bao-mat')
+    })
+
+    it('renders unread notification badge on Bell link and caps at 99+', async () => {
+      const getSpy = vi.spyOn(apiClient, 'get').mockImplementation((url: string) => {
+        if (url.includes('/unread-count')) {
+          return Promise.resolve({ data: { code: 200, data: 128 } } as never)
+        }
+        return Promise.resolve({ data: { code: 200, data: { fullName: 'Nguyễn Văn Tài' } } } as never)
+      })
+
+      try {
+        const queryClient = createTestQueryClient()
+        render(
+          <QueryClientProvider client={queryClient}>
+            <MemoryRouter initialEntries={['/notifications']}>
+              <DriverHeader />
+            </MemoryRouter>
+          </QueryClientProvider>
+        )
+
+        const badge = await screen.findByTestId('driver-header-unread-badge')
+        expect(badge).toHaveTextContent('99+')
+
+        const bellLink = screen.getByRole('link', { name: /Thông báo \(128 chưa đọc\)/i })
+        expect(bellLink).toHaveAttribute('href', '/notifications')
+        expect(bellLink).toHaveAttribute('aria-current', 'page')
+      } finally {
+        getSpy.mockRestore()
+      }
+    })
+
+    it('hides unread badge when unread count is 0', async () => {
+      const getSpy = vi.spyOn(apiClient, 'get').mockResolvedValue({
+        data: { code: 200, data: 0 },
+      } as never)
+
+      try {
+        const queryClient = createTestQueryClient()
+        render(
+          <QueryClientProvider client={queryClient}>
+            <MemoryRouter initialEntries={['/dashboard']}>
+              <DriverHeader />
+            </MemoryRouter>
+          </QueryClientProvider>
+        )
+
+        const bellLink = await screen.findByRole('link', { name: 'Thông báo' })
+        expect(bellLink).toHaveAttribute('href', '/notifications')
+        expect(screen.queryByTestId('driver-header-unread-badge')).not.toBeInTheDocument()
+      } finally {
+        getSpy.mockRestore()
+      }
     })
   })
 
