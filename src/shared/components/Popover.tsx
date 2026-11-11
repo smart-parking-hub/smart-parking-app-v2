@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useRef, useEffect, useId } from 'react'
+import React, { createContext, useContext, useState, useRef, useEffect, useId, useCallback } from 'react'
 import { cn } from '@/shared/utils/cn'
 
 interface PopoverContextType {
@@ -32,7 +32,12 @@ export function Popover({ children, className, open: controlledOpen, onOpenChang
     onOpenChange?.(nextVal)
   }
 
-  const close = () => setIsOpen(false)
+  const close = useCallback(() => {
+    if (!isControlled) {
+      setInternalOpen(false)
+    }
+    onOpenChange?.(false)
+  }, [isControlled, onOpenChange])
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -56,7 +61,7 @@ export function Popover({ children, className, open: controlledOpen, onOpenChang
       document.removeEventListener('mousedown', handleClickOutside)
       document.removeEventListener('keydown', handleKeyDown)
     }
-  }, [isOpen])
+  }, [isOpen, close])
 
   return (
     <PopoverContext.Provider value={{ isOpen, setIsOpen, close, popoverId }}>

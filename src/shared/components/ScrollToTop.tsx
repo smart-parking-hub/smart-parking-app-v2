@@ -26,6 +26,7 @@ export function useScrollToTop({
   scrollOnSearchChange = false,
 }: ScrollToTopOptions = {}) {
   const { pathname, search, hash } = useLocation()
+  const searchDependency = scrollOnSearchChange ? search : null
 
   useEffect(() => {
     // 1. If an anchor hash exists (e.g. #faq, #pricing), attempt to scroll to that element
@@ -86,7 +87,7 @@ export function useScrollToTop({
         }
       }
     }
-  }, [pathname, scrollOnSearchChange ? search : null, hash, containerSelector, behavior])
+  }, [pathname, searchDependency, hash, containerSelector, behavior])
 }
 
 export interface ScrollToTopProps extends ScrollToTopOptions {

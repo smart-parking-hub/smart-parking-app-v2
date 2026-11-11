@@ -140,8 +140,8 @@ export function LeaveQueueConfirmModal({
             <Select
               id="leave-reason-select"
               value={selectedReason}
-              onChange={(val) => setValue('reason', val as any, { shouldValidate: true })}
-              options={leaveQueueReasonOptions as any}
+              onChange={(val) => setValue('reason', val as LeaveQueueFormData['reason'], { shouldValidate: true })}
+              options={[...leaveQueueReasonOptions]}
               placeholder="Chọn lý do rời hàng đợi..."
               size="lg"
               disabled={isLeaving}
