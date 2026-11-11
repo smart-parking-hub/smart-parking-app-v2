@@ -97,7 +97,7 @@ test.describe('Flow 1: Giữ chỗ 10 phút & Đặt cọc PayOS (SP-S3-INT-01)'
     )
 
     // Mock Search Parking Lots
-    await page.route('**/api/v1/parking-lots*', (route) =>
+    await page.route(/\/api\/v1\/parking-lots/, (route) =>
       route.fulfill({
         json: {
           data: {
@@ -105,6 +105,7 @@ test.describe('Flow 1: Giữ chỗ 10 phút & Đặt cọc PayOS (SP-S3-INT-01)'
             totalElements: 1,
             totalPages: 1,
           },
+          content: [mockParkingLot],
         },
       }),
     )
@@ -125,7 +126,7 @@ test.describe('Flow 1: Giữ chỗ 10 phút & Đặt cọc PayOS (SP-S3-INT-01)'
     )
 
     // Mock Driver Bookings
-    await page.route('**/api/v1/bookings*', (route) => {
+    await page.route(/\/api\/v1\/bookings/, (route) => {
       if (route.request().method() === 'POST') {
         return route.fulfill({
           json: {

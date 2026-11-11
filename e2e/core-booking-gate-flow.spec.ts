@@ -109,7 +109,7 @@ test.describe('Core E2E Lifecycle: Giữ chỗ 10m -> Barie Check-in -> Barie Ch
     )
 
     // Lots Mock
-    await page.route('**/api/v1/parking-lots*', (route) =>
+    await page.route(/\/api\/v1\/parking-lots/, (route) =>
       route.fulfill({
         json: {
           data: {
@@ -117,6 +117,7 @@ test.describe('Core E2E Lifecycle: Giữ chỗ 10m -> Barie Check-in -> Barie Ch
             totalElements: 1,
             totalPages: 1,
           },
+          content: [mockParkingLot],
         },
       }),
     )
@@ -134,7 +135,7 @@ test.describe('Core E2E Lifecycle: Giữ chỗ 10m -> Barie Check-in -> Barie Ch
     )
 
     // Driver Bookings API Mock
-    await page.route('**/api/v1/bookings*', (route) =>
+    await page.route(/\/api\/v1\/bookings/, (route) =>
       route.fulfill({
         json: {
           data: {
