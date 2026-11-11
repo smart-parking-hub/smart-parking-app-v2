@@ -317,7 +317,7 @@ describe('Finance, disputes and lot configuration', () => {
     get.mockResolvedValue({ ...page, content: [], totalElements: 0 })
     show(<DisputesPage role="driver" />)
     expect(
-      await screen.findByText('Không có dữ liệu phù hợp.'),
+      await screen.findByText('Bạn chưa có hồ sơ khiếu nại nào'),
     ).toBeInTheDocument()
     expect(get).toHaveBeenCalledWith('/api/v1/disputes/me', {
       page: 0,
