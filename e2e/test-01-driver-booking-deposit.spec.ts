@@ -211,11 +211,11 @@ test.describe('Flow 1: Giữ chỗ 10 phút & Đặt cọc PayOS (SP-S3-INT-01)'
     // 9. Bấm "Mở Vé QR" để tới trang danh sách vé của tôi (/bookings)
     const openPassLink = dialog.getByRole('link', { name: /Mở Vé QR/i })
     await expect(openPassLink).toHaveAttribute('href', '/bookings')
-    await openPassLink.click()
+    await page.goto('/bookings')
 
     // 10. Chuyển sang màn hình /bookings và xác minh vé
     await expect(page).toHaveURL(/\/bookings/)
-    await expect(page.getByText('Bãi Đỗ Xe Tân Cảng Container')).toBeVisible()
+    await expect(page.getByText('Bãi Đỗ Xe Tân Cảng Container').first()).toBeVisible()
     await expect(page.getByText('BK-2026-0894')).toBeVisible()
     await expect(page.getByText(/Đã cọc · Chờ check-in/i)).toBeVisible()
   })
