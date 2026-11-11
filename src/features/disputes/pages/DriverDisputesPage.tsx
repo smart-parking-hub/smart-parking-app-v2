@@ -3,6 +3,7 @@ import { Link, useParams, useSearchParams } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import {
   ArrowLeft,
+  Clock,
   ExternalLink,
   FileWarning,
   MapPin,
@@ -27,7 +28,6 @@ import {
 import { CreateDisputeModal, type DisputeBookingSummary } from '@/features/bookings'
 import { formatMoney, statusLabels, type Booking } from '@/features/booking-flow'
 import {
-  disputeTimeLabel,
   fetchBookingSummarySafe,
   fetchDriverBookingsMapSafe,
   fetchDriverDisputeById,
@@ -40,6 +40,7 @@ import { CompensationRecordCard } from '../components/CompensationRecordCard'
 import { DisputeEvidenceGallery } from '../components/DisputeEvidenceGallery'
 import { DisputeMobileCard } from '../components/DisputeMobileCard'
 import { DisputeStatusStepper } from '../components/DisputeStatusStepper'
+import { DisputeTimeDisplay } from '../components/DisputeTimeDisplay'
 
 type StatusFilter = 'ALL' | 'PENDING' | 'RESOLVED' | 'REJECTED'
 
@@ -85,14 +86,12 @@ export function DriverDisputesPage({ detail = false }: { detail?: boolean }) {
     queryKey: ['disputes', 'driver', undefined, page],
     queryFn: () => fetchDriverDisputesPage(page, 20),
     enabled: !detail,
-    retry: false,
   })
 
   const detailQuery = useQuery({
     queryKey: ['disputes', 'driver', id, 0],
     queryFn: () => fetchDriverDisputeById(id ?? ''),
     enabled: detail && Boolean(id),
-    retry: false,
   })
 
   const listRows = useMemo(() => {
@@ -170,7 +169,7 @@ export function DriverDisputesPage({ detail = false }: { detail?: boolean }) {
           ]}
         />
 
-        {detailQuery.isPending ? (
+        {detailQuery.isPending && !detailQuery.data ? (
           <div className="space-y-4">
             <Skeleton variant="card" />
             <div className="grid gap-5 lg:grid-cols-12">
@@ -182,7 +181,7 @@ export function DriverDisputesPage({ detail = false }: { detail?: boolean }) {
               </div>
             </div>
           </div>
-        ) : detailQuery.isError ? (
+        ) : detailQuery.isError && !detailQuery.data ? (
           <Notice error>
             <div className="flex flex-wrap items-center justify-between gap-3 w-full">
               <span>{errorMessage(detailQuery.error)}</span>
@@ -196,7 +195,23 @@ export function DriverDisputesPage({ detail = false }: { detail?: boolean }) {
             </div>
           </Notice>
         ) : detailQuery.data ? (
-          <DriverDisputeDetailContent dispute={detailQuery.data} />
+          <div className="space-y-4">
+            {detailQuery.isError && (
+              <Notice error>
+                <div className="flex flex-wrap items-center justify-between gap-3 w-full">
+                  <span>Không thể làm mới chi tiết hồ sơ: {errorMessage(detailQuery.error)}</span>
+                  <button
+                    type="button"
+                    className={secondary}
+                    onClick={() => void detailQuery.refetch()}
+                  >
+                    Thử lại
+                  </button>
+                </div>
+              </Notice>
+            )}
+            <DriverDisputeDetailContent dispute={detailQuery.data} />
+          </div>
         ) : (
           <Notice>Không tìm thấy thông tin khiếu nại.</Notice>
         )}
@@ -243,7 +258,7 @@ export function DriverDisputesPage({ detail = false }: { detail?: boolean }) {
         </div>
       )}
 
-      {listQuery.isPending ? (
+      {listQuery.isPending && !listQuery.data ? (
         <div className="space-y-5">
           <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
             <Skeleton variant="card" />
@@ -253,7 +268,7 @@ export function DriverDisputesPage({ detail = false }: { detail?: boolean }) {
           </div>
           <Skeleton variant="table" rows={5} />
         </div>
-      ) : listQuery.isError ? (
+      ) : listQuery.isError && !listQuery.data ? (
         <Notice error>
           <div className="flex flex-wrap items-center justify-between gap-3 w-full">
             <span>{errorMessage(listQuery.error)}</span>
@@ -268,6 +283,20 @@ export function DriverDisputesPage({ detail = false }: { detail?: boolean }) {
         </Notice>
       ) : (
         <>
+          {listQuery.isError && listQuery.data && (
+            <Notice error>
+              <div className="flex flex-wrap items-center justify-between gap-3 w-full">
+                <span>Không thể làm mới danh sách khiếu nại: {errorMessage(listQuery.error)}</span>
+                <button
+                  type="button"
+                  className={secondary}
+                  onClick={() => void listQuery.refetch()}
+                >
+                  Thử lại
+                </button>
+              </div>
+            </Notice>
+          )}
           {/* Thẻ KPI gọn, nền trắng chữ đen đồng nhất */}
           <div
             aria-label="Thống kê hồ sơ khiếu nại"
@@ -492,20 +521,9 @@ export function DriverDisputesPage({ detail = false }: { detail?: boolean }) {
                   ),
                 },
                 {
-                  label: 'Tiền bồi thường',
-                  align: 'right',
-                  render: (r) => {
-                    const amt = r.compensationAmount ?? r.amount
-                    return (
-                      <span className="tabular-nums font-medium">
-                        {typeof amt === 'number' && Number.isFinite(amt)
-                          ? `${new Intl.NumberFormat('vi-VN').format(amt)} ₫`
-                          : '—'}
-                      </span>
-                    )
-                  },
+                  label: 'Thời gian',
+                  render: (r) => <DisputeTimeDisplay value={r.createdAt} />,
                 },
-                { label: 'Thời gian', render: (r) => disputeTimeLabel(r.createdAt) },
                 {
                   label: 'Trạng thái',
                   render: (r) => <Badge value={r.status} dot />,
@@ -591,16 +609,65 @@ function DriverDisputeDetailContent({ dispute }: { dispute: Dispute }) {
                 localAttachmentRefs={parsed.localAttachmentRefs}
               />
 
-              <div className="flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 pt-4 text-sm text-slate-600">
-                <span>Ngày gửi: {disputeTimeLabel(dispute.createdAt)}</span>
+              <div className="flex flex-wrap items-start justify-between gap-4 border-t border-slate-100 pt-4 text-sm text-slate-600">
+                <div className="space-y-1">
+                  <p className="text-xs font-medium text-slate-500">Ngày gửi</p>
+                  <DisputeTimeDisplay value={dispute.createdAt} />
+                </div>
                 {dispute.updatedAt && (
-                  <span>Cập nhật: {disputeTimeLabel(dispute.updatedAt)}</span>
+                  <div className="space-y-1 text-left sm:text-right">
+                    <p className="text-xs font-medium text-slate-500">Cập nhật</p>
+                    <DisputeTimeDisplay value={dispute.updatedAt} align="responsive-right" />
+                  </div>
                 )}
               </div>
             </div>
           </Panel>
 
           <CompensationRecordCard dispute={dispute} payments={linkedPayments} />
+
+          {Array.isArray(dispute.timeline) && dispute.timeline.length > 0 && (
+            <Panel title="Lịch sử xử lý & phản hồi">
+              <ol className="space-y-3">
+                {dispute.timeline.map((entry) => {
+                  const actorLabel =
+                    entry.actorRole === 'MERCHANT'
+                      ? 'Chủ bãi phản hồi'
+                      : entry.actorRole === 'ADMIN'
+                        ? 'Phán quyết Quản trị viên'
+                        : entry.actorRole
+                  return (
+                    <li
+                      key={entry.id}
+                      className="rounded-xl border border-slate-200/90 bg-slate-50/70 p-4 space-y-2"
+                    >
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <span className="text-sm font-semibold text-slate-900">
+                          {actorLabel}
+                        </span>
+                        <div className="flex items-center gap-2">
+                          {entry.resultingStatus && (
+                            <Badge value={entry.resultingStatus} size="sm" dot />
+                          )}
+                          <div className="inline-flex items-start gap-1.5 text-xs text-slate-500 tabular-nums">
+                            <Clock className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+                            <DisputeTimeDisplay
+                              value={entry.createdAt}
+                              timeClassName="text-xs font-medium text-slate-700"
+                              dateClassName="text-[11px] text-slate-500"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                      <p className="whitespace-pre-wrap text-sm leading-relaxed text-slate-800">
+                        {entry.message}
+                      </p>
+                    </li>
+                  )
+                })}
+              </ol>
+            </Panel>
+          )}
         </div>
 
         <aside className="lg:col-span-5">
@@ -657,8 +724,12 @@ function DriverDisputeDetailContent({ dispute }: { dispute: Dispute }) {
                   {linkedBooking.expectedCheckInTime && (
                     <div>
                       <dt className="text-sm text-slate-500">Check-in dự kiến</dt>
-                      <dd className="mt-0.5 text-base font-semibold tabular-nums text-slate-900">
-                        {disputeTimeLabel(linkedBooking.expectedCheckInTime)}
+                      <dd className="mt-0.5">
+                        <DisputeTimeDisplay
+                          value={linkedBooking.expectedCheckInTime}
+                          timeClassName="text-base font-semibold text-slate-900"
+                          dateClassName="text-xs text-slate-500"
+                        />
                       </dd>
                     </div>
                   )}

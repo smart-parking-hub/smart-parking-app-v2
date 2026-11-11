@@ -274,3 +274,16 @@ Real-data capacity summary/category bars, Vietnamese pricing cards, read-only lo
 
 
 > 2026-11-08: Driver/merchant map presentation updated with depot markers and outlined routes. Capability parity and verification: [map presentation report](./map-presentation-2026-11-08.md).
+
+---
+
+## SCR-025 — Trung tâm Thông báo Vận hành Tài xế (`DriverNotificationsPage`, Sprint 3 `SP-S3-UI-06`) — 2026-11-11
+
+| Nghiệp vụ / Thành phần | Hiện trạng `v2` sau nâng cấp | Hợp đồng Backend / Browser API | Trạng thái |
+|---|---|---|---|
+| Bố cục Workspace & Danh sách Inbox (`NotificationsPage`, `NotificationRowItem`) | Dùng `@/shared/components/Workspace` (đồng bộ `Lịch sử thanh toán`, `Đội xe`, `Khiếu nại`), danh sách 1 cột dạng dòng gọn (chấm chưa đọc, nhóm, tiêu đề + tóm tắt nội dung, thời gian); phân trang `size=20` (`toSpringPageParams`/`adaptSpringPage`) | `GET /api/v1/notifications?page={0-indexed}&size=20` (`ApiResponse<PageResponse<NotificationDto>>`) | **Verified Contract Match** |
+| Huy hiệu số chưa đọc trên Thanh điều hướng (`DriverHeader`) | `useUnreadCountQuery` hiển thị badge unread trên nút Chuông `/notifications` (giới hạn `99+`), tự invalidate khi đọc tin | `GET /api/v1/notifications/unread-count` (`ApiResponse<Integer>`) | **New / Synced** |
+| Xem chi tiết & Đánh dấu đã đọc (`NotificationDetailModal`) | Bấm dòng mở `NotificationDetailModal` (`Modal`) + tự gọi `POST /{id}/read` (optimistic + rollback + Toast lỗi); nút `Đánh dấu tất cả đã đọc` gọi `POST /read-all` | `POST /api/v1/notifications/{id}/read`, `POST /api/v1/notifications/read-all` | **Preserved + Redesigned** |
+| Bộ lọc & Tìm kiếm (`NotificationsFilterBar`) | Light segmented `tablist` (`Tất cả`, `Chưa đọc`) + chip phân hệ đồng nhất với `Khiếu nại` & `Chờ bãi`; React Hook Form + Zod (`notificationFilterSchema`: max 100 ký tự) + `useNotificationStore` | Client filter + RHF/Zod (`notification-service` chưa hỗ trợ filter param) | **Aligned Project Theme** |
+| Điều hướng có điều kiện (`resolveNotificationAction`) | Chỉ hiển thị nút CTA điều hướng (`/bookings`, `/queues`, `/payments`, `/parking/:id`, `/disputes/:id`) **bên trong modal chi tiết** khi `targetType` & `targetId` hợp lệ; bỏ nút đặt chỗ trên từng dòng và gỡ tích hợp Thông báo khỏi `ProfileSidebarNav`/`ProfilePage` | React Router SPA (`DriverLayout` / `RequireRole DRIVER`) | **Fixed Target Mapping** |
+| 5 Trạng thái UI bắt buộc | Loading (`NotificationsSkeleton`), Error + Retry (`ErrorState` + `Alert`), Empty 3 biến thể (`NotificationsEmptyState`), Feedback (`Toast`), Disabled/Busy (`Button`) | Layer-1 `@/shared/components` | **Verified** |

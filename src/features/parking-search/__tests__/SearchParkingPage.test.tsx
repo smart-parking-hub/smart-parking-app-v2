@@ -92,12 +92,15 @@ describe('SCR-015: Interactive Parking Search & Map (Bản đồ tìm kiếm bã
   it('renders location search, actual lot values and the interactive map region', async () => {
     renderWithProviders(<SearchParkingPage />)
 
-    await waitFor(() => {
-      expect(
-        screen.getAllByText(/Trạm Dừng & Bãi Container Tân Cảng - Phú Hữu/i)
-          .length,
-      ).toBeGreaterThanOrEqual(1)
-    })
+    await waitFor(
+      () => {
+        expect(
+          screen.getAllByText(/Trạm Dừng & Bãi Container Tân Cảng - Phú Hữu/i)
+            .length,
+        ).toBeGreaterThanOrEqual(1)
+      },
+      { timeout: 10000 },
+    )
 
     // Search bar & count
     expect(

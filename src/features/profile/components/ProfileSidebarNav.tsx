@@ -4,7 +4,6 @@ import {
   Truck,
   Receipt,
   KeyRound,
-  BellRing,
   ArrowRight,
   ChevronRight,
   UserRound,
@@ -15,19 +14,16 @@ export type AccountSidebarTab =
   | 'vehicles'
   | 'payments'
   | 'change-password'
-  | 'notifications'
 
 export interface ProfileSidebarNavProps {
   compact?: boolean
   activeTab?: AccountSidebarTab
   onOpenChangePassword?: () => void
-  onOpenNotificationSettings?: () => void
 }
 
 export function ProfileSidebarNav({
   compact = false,
   activeTab = 'profile',
-  onOpenNotificationSettings,
 }: ProfileSidebarNavProps) {
   if (compact) {
     const items = [
@@ -35,7 +31,6 @@ export function ProfileSidebarNav({
       { id: 'vehicles', to: '/vehicles', label: 'Đội xe của tôi', icon: Truck },
       { id: 'payments', to: '/payments', label: 'Lịch sử thanh toán', icon: Receipt },
       { id: 'change-password', to: '/profile#bao-mat', label: 'Bảo mật tài khoản', icon: KeyRound },
-      { id: 'notifications', to: '/notifications', label: 'Thông báo', icon: BellRing },
     ]
     return <div className="overflow-hidden rounded-2xl border border-brand-border bg-white font-inter text-sm text-brand-navy">
       <div className="flex items-center gap-3 border-b border-brand-border p-5">
@@ -47,10 +42,6 @@ export function ProfileSidebarNav({
           const Icon = item.icon
           const current = item.id === activeTab
           return <Link key={item.id} to={item.to} aria-current={current ? 'page' : undefined}
-            onClick={event => {
-              const action = item.id === 'notifications' ? onOpenNotificationSettings : undefined
-              if (action) { event.preventDefault(); action() }
-            }}
             className={`flex min-h-11 items-center gap-3 rounded-lg px-3 py-2.5 font-medium transition-colors focus-visible:outline-2 focus-visible:outline-brand-orange ${current ? 'bg-brand-surface font-semibold text-brand-orange-ink' : 'text-brand-muted hover:bg-brand-surface hover:text-brand-navy'}`}>
             <Icon size={18} aria-hidden="true" /><span className="min-w-0 flex-1">{item.label}</span><ChevronRight size={15} aria-hidden="true" />
           </Link>
@@ -172,33 +163,6 @@ export function ProfileSidebarNav({
           <div className="flex items-center gap-3">
             <KeyRound className="w-5 h-5 text-slate-500" />
             <span className="text-xs md:text-sm font-medium">Đổi mật khẩu bảo mật</span>
-          </div>
-          <ChevronRight className="w-4 h-4 text-slate-400" />
-        </Link>
-      )}
-
-      {/* Nav Link 5: Notifications */}
-      {activeTab === 'notifications' ? (
-        <div className="flex items-center justify-between px-5 py-4 bg-orange-50/60 text-slate-900 border-l-4 border-orange-600 transition-colors">
-          <div className="flex items-center gap-3">
-            <BellRing className="w-5 h-5 text-orange-600" />
-            <span className="text-xs md:text-sm font-bold">
-              Thiết lập thông báo hệ thống
-            </span>
-          </div>
-          <ArrowRight className="w-4 h-4 text-orange-600" />
-        </div>
-      ) : (
-        <Link
-          to="/notifications"
-          onClick={onOpenNotificationSettings}
-          className="flex items-center justify-between px-5 py-4 hover:bg-slate-50 text-slate-600 hover:text-slate-900 border-l-4 border-transparent transition-colors text-left cursor-pointer"
-        >
-          <div className="flex items-center gap-3">
-            <BellRing className="w-5 h-5 text-slate-500" />
-            <span className="text-xs md:text-sm font-medium">
-              Thiết lập thông báo hệ thống
-            </span>
           </div>
           <ChevronRight className="w-4 h-4 text-slate-400" />
         </Link>

@@ -8,11 +8,10 @@ import { VirtualQueuesPage } from '@/features/queues/pages/VirtualQueuesPage'
 import { DriverPaymentsPage } from '@/features/payments/pages/DriverPaymentsPage'
 import { VehiclesPage } from '@/features/vehicles/pages/VehiclesPage'
 import { DisputesPage } from '@/features/disputes'
-import { NotificationsPage } from '@/features/notifications/pages/NotificationsPage'
+import { NotificationsPage, getNotificationStoreSnapshot } from '@/features/notifications'
 import { ProfilePage } from '@/features/profile/pages/ProfilePage'
 import { fallbackActiveQueue } from '@/features/queues/api/queueApi'
 import { fallbackMetrics } from '@/features/payments/api/paymentApi'
-import { fallbackNotificationsList } from '@/features/notifications/api/notificationApi'
 
 // Mock apiClient
 vi.mock('@/shared/api/client', () => ({
@@ -42,6 +41,7 @@ function renderWithProviders(ui: React.ReactElement, initialEntries = ['/']) {
 describe('BATCH-14C: Driver Operations Integration (SCR-018 to SCR-024)', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    getNotificationStoreSnapshot().resetStore()
 
     // Mock window helper functions for canvas/blobs
     window.HTMLElement.prototype.scrollIntoView = vi.fn()
@@ -146,12 +146,44 @@ describe('BATCH-14C: Driver Operations Integration (SCR-018 to SCR-024)', () => 
           },
         })
       }
+      if (url.includes('/notifications/unread-count')) {
+        return Promise.resolve({
+          data: {
+            data: 1,
+          },
+        })
+      }
       if (url.includes('notifications')) {
         return Promise.resolve({
           data: {
             data: {
-              items: fallbackNotificationsList,
-              totalElements: fallbackNotificationsList.length,
+              content: [
+                {
+                  id: 901,
+                  title: 'Đã đến lượt nhận slot hàng đợi ảo tại Cát Lái',
+                  content: 'Vui lòng kiểm tra hàng đợi để xác nhận chỗ đỗ xe.',
+                  type: 'QUEUE',
+                  targetType: 'QUEUE',
+                  targetId: 55,
+                  channel: 'IN_APP',
+                  readAt: null,
+                  createdAt: '2026-11-04T15:48:12Z',
+                },
+                {
+                  id: 902,
+                  title: 'Thanh toán tiền cọc đặt chỗ thành công',
+                  content: 'Đơn đặt chỗ #BK-2026-9081 đã ghi nhận cọc 100.000 đ.',
+                  type: 'PAYMENT',
+                  targetType: 'PAYMENT',
+                  targetId: 9081,
+                  channel: 'PUSH',
+                  readAt: '2026-11-04T10:00:00Z',
+                  createdAt: '2026-11-04T09:50:00Z',
+                },
+              ],
+              totalElements: 2,
+              totalPages: 1,
+              currentPage: 0,
             },
           },
         })
@@ -286,7 +318,13 @@ describe('BATCH-14C: Driver Operations Integration (SCR-018 to SCR-024)', () => 
     expect(await screen.findByText('KN-101')).toBeInTheDocument()
     expect(screen.getByText('#9081')).toBeInTheDocument()
     expect(screen.getByText(/Sai lệch thời gian đỗ thực tế/i)).toBeInTheDocument()
-    expect(screen.getByText('50.000 ₫')).toBeInTheDocument()
+    expect(screen.queryByRole('columnheader', { name: /Tiền bồi thường/i })).not.toBeInTheDocument()
+    expect(screen.queryByText('50.000 ₫')).not.toBeInTheDocument()
+    expect(screen.queryByText(/Đang mở/i)).not.toBeInTheDocument()
+    expect(screen.getAllByText(/Chờ xử lý/i).length).toBeGreaterThanOrEqual(3)
+    expect(screen.getByText('17:00')).toBeInTheDocument()
+    expect(screen.getByText('18/02/2026')).toBeInTheDocument()
+    expect(screen.queryByText(/17:00:00/)).not.toBeInTheDocument()
 
     // Action CTA: + Gửi khiếu nại
     const createBtn = screen.getByRole('button', { name: /\+ Gửi khiếu nại/i })
@@ -299,16 +337,22 @@ describe('BATCH-14C: Driver Operations Integration (SCR-018 to SCR-024)', () => 
   })
 
   // -------------------------------------------------------------
-  // SCR-024: Driver Settings & Notifications
+  // SCR-024 & SCR-025: Driver Settings & Notifications
   // -------------------------------------------------------------
-  it('SCR-024: NotificationsPage and ProfilePage render settings and verified driver details', async () => {
+  it('SCR-024 & SCR-025: NotificationsPage and ProfilePage render Workspace inbox and verified driver details', async () => {
     // 1. Notifications Page
-    renderWithProviders(<NotificationsPage />, ['/dashboard/notifications'])
+    const { unmount: unmountNotifications } = renderWithProviders(
+      <NotificationsPage />,
+      ['/dashboard/notifications'],
+    )
 
-    expect(await screen.findByText(/LUỒNG SỰ KIỆN THỜI GIAN THỰC/i)).toBeInTheDocument()
-    expect(screen.getByRole('heading', { level: 1, name: /Trung Tâm Thông Báo/i })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /ĐÁNH DẤU TẤT CẢ ĐÃ ĐỌC/i })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /BẬT THÔNG BÁO ĐẨY WEB PUSH 24\/7/i })).toBeInTheDocument()
+    expect(await screen.findByText(/TÀI KHOẢN \/ THÔNG BÁO/i)).toBeInTheDocument()
+    expect(screen.getByRole('heading', { level: 1, name: /Trung tâm thông báo/i })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /Đánh dấu tất cả đã đọc/i })).toBeInTheDocument()
+    expect(await screen.findByText('Đã đến lượt nhận slot hàng đợi ảo tại Cát Lái')).toBeInTheDocument()
+    expect(screen.queryByText(/Tài khoản tài xế/i)).not.toBeInTheDocument()
+    expect(screen.queryByText(/Điều Hướng Nghiệp Vụ/i)).not.toBeInTheDocument()
+    unmountNotifications()
 
     // 2. Profile Page
     renderWithProviders(<ProfilePage />, ['/dashboard/profile'])
@@ -317,5 +361,6 @@ describe('BATCH-14C: Driver Operations Integration (SCR-018 to SCR-024)', () => 
     expect(screen.getByText(/Cập nhật thông tin cá nhân/i)).toBeInTheDocument()
     expect(screen.getByText(/Tổng quan/i)).toBeInTheDocument()
     expect(await screen.findByDisplayValue('Trần Quốc Tuấn')).toBeInTheDocument()
+    expect(screen.queryByRole('link', { name: /Thông báo/i })).not.toBeInTheDocument()
   })
 })

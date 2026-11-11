@@ -42,3 +42,19 @@ jobs:
 
       - name: Step 4 - Production Build Verification
         run: npm run build
+
+      - name: Install Playwright Chromium Browser & FFmpeg
+        run: npx playwright install chromium ffmpeg
+
+      - name: Step 5 - Playwright E2E Core Booking & Gate Flows
+        run: npx playwright test e2e/test-01-driver-booking-deposit.spec.ts e2e/test-02-merchant-qr-checkin.spec.ts e2e/test-03-merchant-qr-checkout-cash.spec.ts e2e/core-booking-gate-flow.spec.ts
+
+      - name: Upload Playwright Report & Artifacts on Failure
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: |
+            playwright-report/
+            test-results/
+          retention-days: 7

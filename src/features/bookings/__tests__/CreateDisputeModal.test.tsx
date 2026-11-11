@@ -54,21 +54,39 @@ describe('SCR-MOD-10: CreateDisputeModal', () => {
     cleanup()
   })
 
-  it('pre-fills PENDING_CHECKIN booking context, shows closed-lot hint, attaches receipt photo, and submits with merchantId', async () => {
+  it('pre-fills PENDING_CHECKIN booking context, shows closed-lot hint, uploads receipt photo, and submits evidenceUrls', async () => {
     const user = userEvent.setup()
     const onClose = vi.fn()
     const onSuccess = vi.fn()
-    mockSendData.mockResolvedValue({
-      id: 77,
-      bookingId: 501,
-      merchantId: 88,
-      driverId: 12,
-      reason: 'Thu thêm tiền mặt / phụ phí sai quy định tại cổng',
-      description: 'Bảo vệ thu thêm 50k',
-      status: 'PENDING',
-      resolution: '',
-      createdAt: '2026-11-10T10:00:00Z',
-      updatedAt: '2026-11-10T10:00:00Z',
+    const uploadedUrl = 'http://localhost:8088/api/v1/disputes/evidence/11111111-1111-1111-1111-111111111111.png'
+
+    mockSendData.mockImplementation(async (_method, url) => {
+      if (url === '/api/v1/disputes/evidence') {
+        return [
+          {
+            fileName: '11111111-1111-1111-1111-111111111111.png',
+            originalFileName: 'bien-lai-thu-tien.png',
+            contentType: 'image/png',
+            sizeBytes: 13,
+            contentUrl: '/api/v1/disputes/evidence/11111111-1111-1111-1111-111111111111.png',
+            url: uploadedUrl,
+          },
+        ]
+      }
+      return {
+        id: 77,
+        bookingId: 501,
+        merchantId: 88,
+        parkingLotId: 14,
+        driverId: 12,
+        reason: 'Thu thêm tiền mặt / phụ phí sai quy định tại cổng',
+        description: 'Bảo vệ cổng B thu thêm 50.000đ tiền mặt sai quy định.',
+        evidenceUrls: [uploadedUrl],
+        status: 'OPEN',
+        resolution: '',
+        createdAt: '2026-11-10T10:00:00Z',
+        updatedAt: '2026-11-10T10:00:00Z',
+      }
     })
 
     renderModal(
@@ -105,7 +123,7 @@ describe('SCR-MOD-10: CreateDisputeModal', () => {
 
     expect(await screen.findByText('bien-lai-thu-tien.png')).toBeInTheDocument()
     expect(
-      screen.getByText(/hiện API tạo khiếu nại phía máy chủ chỉ lưu nội dung văn bản/i),
+      screen.getByText(/sẽ được tải lên máy chủ cùng hồ sơ để Admin, Chủ bãi và bạn xem lại trực tiếp/i),
     ).toBeInTheDocument()
 
     await user.click(screen.getByRole('button', { name: 'Gửi khiếu nại' }))
@@ -113,14 +131,22 @@ describe('SCR-MOD-10: CreateDisputeModal', () => {
     await waitFor(() => {
       expect(mockSendData).toHaveBeenCalledWith(
         'post',
+        '/api/v1/disputes/evidence',
+        expect.any(FormData),
+        expect.objectContaining({
+          headers: expect.objectContaining({ 'Content-Type': 'multipart/form-data' }),
+        }),
+      )
+      expect(mockSendData).toHaveBeenCalledWith(
+        'post',
         '/api/v1/disputes',
         expect.objectContaining({
           bookingId: 501,
           merchantId: 88,
+          parkingLotId: 14,
           reason: 'Thu thêm tiền mặt / phụ phí sai quy định tại cổng',
-          description: expect.stringContaining(
-            '[Chứng từ đính kèm trên thiết bị: bien-lai-thu-tien.png',
-          ),
+          description: 'Bảo vệ cổng B thu thêm 50.000đ tiền mặt sai quy định.',
+          evidenceUrls: [uploadedUrl],
         }),
       )
     })
@@ -196,8 +222,12 @@ describe('SCR-MOD-10: CreateDisputeModal', () => {
     expect(mockSendData).not.toHaveBeenCalled()
 
     // Open custom Select combobox trigger button and choose #501 inside opened listbox
-    const combobox = screen.getAllByRole('combobox', { name: /Mở danh sách đơn đỗ xe/i })
-      .find((element) => element instanceof HTMLButtonElement)!
+    const combobox = screen
+      .getAllByRole('combobox', { name: /Mở danh sách đơn đỗ xe/i })
+      .find((element) => element.tagName === 'BUTTON')
+    if (!combobox) {
+      throw new Error('Expected custom Select trigger button combobox to be rendered')
+    }
     await user.click(combobox)
     const listbox = await screen.findByRole('listbox', { name: /Mở danh sách đơn đỗ xe/i })
     const option = within(listbox).getByRole('option', { name: /BK-2026-0501/i })
@@ -232,6 +262,40 @@ describe('SCR-MOD-10: CreateDisputeModal', () => {
     expect(
       screen.getByRole('link', { name: /Đi tới Trung tâm khiếu nại/i }),
     ).toHaveAttribute('href', '/disputes')
+  })
+
+  it('aborts dispute creation and shows error notice if evidence upload fails', async () => {
+    const user = userEvent.setup()
+    mockSendData.mockRejectedValueOnce(new Error('Định dạng ảnh không hợp lệ'))
+
+    renderModal(
+      <CreateDisputeModal
+        isOpen={true}
+        initialBooking={samplePendingCheckinBooking}
+        onClose={vi.fn()}
+      />,
+    )
+
+    await user.click(
+      screen.getByRole('button', {
+        name: 'Thu thêm tiền mặt / phụ phí sai quy định tại cổng',
+      }),
+    )
+
+    const fileInput = screen.getByLabelText(/Đính kèm hình ảnh bằng chứng/i)
+    const receiptFile = new File(['img'], 'receipt.png', { type: 'image/png' })
+    fireEvent.change(fileInput, { target: { files: [receiptFile] } })
+
+    await user.click(screen.getByRole('button', { name: 'Gửi khiếu nại' }))
+
+    expect(await screen.findByText('Định dạng ảnh không hợp lệ')).toBeInTheDocument()
+    expect(mockSendData).toHaveBeenCalledTimes(1)
+    expect(mockSendData).toHaveBeenCalledWith(
+      'post',
+      '/api/v1/disputes/evidence',
+      expect.any(FormData),
+      expect.any(Object),
+    )
   })
 })
 
