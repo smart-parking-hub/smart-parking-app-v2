@@ -169,12 +169,12 @@ export function MerchantBookingDetailPage() {
               items={[
                 { label: 'Mã vé', value: data.bookingCode },
                 { label: 'Trạng thái', value: <Badge value={data.status} /> },
-                { label: 'Tiền cọc đã giữ', value: money(data.advanceDeposit) },
-                { label: 'Tổng cước dự kiến', value: money(data.totalAmount) },
+                { label: 'Đặt cọc', value: money(data.advanceDeposit) },
+                { label: 'Tổng phí', value: money(data.totalAmount) },
               ]}
             />
             <div className="grid gap-6 lg:grid-cols-[2fr_1fr]">
-              <Panel title="Hành trình phương tiện & Bãi đỗ">
+              <Panel title="Hành trình phương tiện">
                 <dl className="grid gap-5 sm:grid-cols-2">
                   {Object.entries({
                     'Biển kiểm soát':

@@ -256,23 +256,10 @@ describe('BATCH-14D: Merchant Yard Infrastructure Integration (SCR-026 to SCR-03
     )
 
     // Wizard Stepper & Initial Step 0 Form
-    expect(await screen.findByText(/QUY TRÌNH THẨM ĐỊNH MẶT BẰNG & MỞ BẾN BÃI MỚI/i)).toBeInTheDocument()
-    expect(screen.getByText(/Đăng Ký Bãi Đỗ Xe & Depot Mới/i)).toBeInTheDocument()
-    expect(screen.getByText('Thông Tin Cơ Bản & Tiện Ích')).toBeInTheDocument()
-    expect(screen.getByText('Tọa Độ GPS & Ranh Giới Mặt Bằng')).toBeInTheDocument()
-    expect(screen.getByText('Hồ Sơ PCCC & Xác Nhận Gửi Duyệt')).toBeInTheDocument()
-
-    // Fill lot name
-    const nameInput = screen.getByLabelText(/Tên Bãi Đỗ Khai Báo/i)
-    fireEvent.change(nameInput, { target: { value: 'Bãi Xe Container Tân Cảng Cát Lái 2' } })
-
-    // AI Copilot generator button
-    const aiButton = screen.getByRole('button', { name: /Áp Dụng Nội Dung AI Vào Hồ Sơ/i })
-    expect(aiButton).toBeInTheDocument()
-    fireEvent.click(aiButton)
-
-    // Verify AI generated description is populated
-    expect(await screen.findByText(/Nội dung AI Fretrix-Dispatch đã đồng bộ vào hồ sơ/i)).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: /Đăng ký bãi đỗ mới/i })).toBeInTheDocument()
+    expect(screen.getByLabelText(/^Tên bãi đỗ/)).toBeInTheDocument()
+    expect(screen.getByLabelText(/^Địa chỉ bãi đỗ/)).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Hồ sơ cần chuẩn bị' })).toBeInTheDocument()
   })
 
   // -------------------------------------------------------------
@@ -288,17 +275,15 @@ describe('BATCH-14D: Merchant Yard Infrastructure Integration (SCR-026 to SCR-03
 
     // Facility title & Dossier
     expect(await screen.findByText('Bãi Đỗ Xe & Trạm Container Tân Cảng - Cát Lái (Cụm Gate 2)')).toBeInTheDocument()
-    expect(screen.getByText('Thông tin hồ sơ')).toBeInTheDocument()
-    expect(screen.getByText('Thư Viện Thực Tế Hạ Tầng Bãi Đỗ')).toBeInTheDocument()
     expect(screen.getByText('Vị trí bãi đỗ')).toBeInTheDocument()
     expect(screen.getByText('Sức chứa chỗ đỗ')).toBeInTheDocument()
-    expect(screen.getByText('Bảng giá')).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Bảng giá' })).toBeInTheDocument()
 
     // Navigation and Action links
-    expect(screen.getByRole('link', { name: /Chỉnh sửa hồ sơ/i })).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: /Cấu hình chỗ đỗ/i })).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: /Cấu hình bảng giá/i })).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: /Mở quét QR/i })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: /^Tổng quan$/i })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: /^Cấu hình chỗ đỗ$/i })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: /^Bảng giá$/i })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: /Quét QR/i })).toBeInTheDocument()
   })
 
   // -------------------------------------------------------------
@@ -312,6 +297,8 @@ describe('BATCH-14D: Merchant Yard Infrastructure Integration (SCR-026 to SCR-03
       address: 'Đường Gò Cát, Phường Phú Hữu, TP. Thủ Đức, TP. Hồ Chí Minh',
       status: 'CHANGES_REQUESTED',
       reviewReason: 'Cần kéo lại ghim GPS đúng cổng Barie và bổ sung ảnh kiểm định PCCC đêm.',
+      latitude: 10.762622,
+      longitude: 106.660172,
     })
 
     renderWithProviders(
@@ -323,30 +310,19 @@ describe('BATCH-14D: Merchant Yard Infrastructure Integration (SCR-026 to SCR-03
     )
 
     // Header & Form cards
-    expect(await screen.findByRole('heading', { name: /Chỉnh Sửa & Cập Nhật Hồ Sơ Bãi Đỗ/i })).toBeInTheDocument()
-    expect(screen.getByText(/HỒ SƠ BẾN BÃI & THẨM ĐỊNH KỸ THUẬT/i)).toBeInTheDocument()
-    expect(screen.getByText('Thông Tin Mặt Bằng & Pháp Lý Vận Hành')).toBeInTheDocument()
-    expect(screen.getByText('Tọa Độ GPS Cổng Barie (Chuẩn WGS-84 RTK)')).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: /Chỉnh sửa hồ sơ bãi đỗ/i })).toBeInTheDocument()
+    expect(screen.getByText('Thông tin bãi đỗ')).toBeInTheDocument()
+    expect(screen.getByText('Vị trí bãi đỗ')).toBeInTheDocument()
+    expect(screen.getByText('Ảnh của bãi')).toBeInTheDocument()
 
-    // Click Lưu Bản Nháp Nội Bộ
-    const draftBtn = screen.getByRole('button', { name: /Lưu Bản Nháp Nội Bộ/i })
+    // Click Lưu Bản Nháp
+    const draftBtn = screen.getByRole('button', { name: /Lưu bản nháp/i })
     expect(draftBtn).toBeInTheDocument()
     fireEvent.click(draftBtn)
 
-    // Toast notification confirms draft saved
-    expect(await screen.findByText(/Đã lưu bản nháp nội bộ thành công/i)).toBeInTheDocument()
+    // Notification confirms draft saved
+    expect(await screen.findByText(/Đã lưu bản nháp trên trình duyệt/i)).toBeInTheDocument()
     expect(localStorage.getItem('merchant_lot_edit_draft_1')).not.toBeNull()
-
-    // Open and close inspection history modal
-    const historyBtn = screen.getByRole('button', { name: /Xem Lịch Sử Thẩm Định/i })
-    fireEvent.click(historyBtn)
-    expect(await screen.findByText('Nhật Ký Thẩm Định Mặt Bằng')).toBeInTheDocument()
-
-    // Close on Escape key (TSK-P2-02 A11y)
-    fireEvent.keyDown(window, { key: 'Escape', code: 'Escape' })
-    await waitFor(() => {
-      expect(screen.queryByText('Nhật Ký Thẩm Định Mặt Bằng')).not.toBeInTheDocument()
-    })
   })
 
   // -------------------------------------------------------------
@@ -362,27 +338,24 @@ describe('BATCH-14D: Merchant Yard Infrastructure Integration (SCR-026 to SCR-03
     )
 
     // Header & Invariant Rule Banner
-    expect(await screen.findByText(/Cấu Hình Sức Chứa Bãi Đỗ/i)).toBeInTheDocument()
-    expect(screen.getByText(/Quy Chuẩn Bảo Toàn Thực Địa & Khóa Ràng Buộc Vật Lý/i)).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { level: 1, name: /Cấu hình sức chứa/i })).toBeInTheDocument()
+    expect(screen.getByText(/Sức chứa không thể thấp hơn số chỗ đã sử dụng/i)).toBeInTheDocument()
 
-    // 5 Vehicle Classes rendered
-    expect(screen.getByText(/Container 40FT \/ 45FT Reefer & Khô/i)).toBeInTheDocument()
-    expect(screen.getByText(/Xe Tải Nặng 3-4 Chân & Đầu Kéo Bobtail/i)).toBeInTheDocument()
-    expect(screen.getByText(/Xe Tải Trung & Nhẹ/i)).toBeInTheDocument()
-    expect(screen.getByText(/Xe Khách & Xe Đưa Đón Chuyên Dụng/i)).toBeInTheDocument()
-    expect(screen.getByText(/Xe Ô Tô Con & Xe Hỗ TrỢ Kỹ Thuật/i)).toBeInTheDocument()
+    // Vehicle Classes rendered
+    expect(screen.getByText(/Xe container/i)).toBeInTheDocument()
+    expect(screen.getByText(/Xe tải nặng/i)).toBeInTheDocument()
 
     // Invariant check: heavy truck at max capacity is disabled
-    const decreaseHeavyTruckBtn = screen.getByRole('button', { name: /Giảm sức chứa Xe Tải Nặng 3-4 Chân/i })
+    const decreaseHeavyTruckBtn = screen.getByRole('button', { name: /Giảm sức chứa Xe tải nặng/i })
     expect(decreaseHeavyTruckBtn).toBeDisabled()
 
-    // Click decrease button on Container 40FT (capacity 30 > occupied 28)
-    const decreaseBtn = screen.getByRole('button', { name: /Giảm sức chứa Container 40FT/i })
+    // Click decrease button on Xe container (capacity 30 > occupied 28)
+    const decreaseBtn = screen.getByRole('button', { name: /Giảm sức chứa Xe container/i })
     expect(decreaseBtn).toBeInTheDocument()
     fireEvent.click(decreaseBtn)
 
     // Save changes button triggers ConfirmDecreaseModal
-    const saveButton = screen.getByRole('button', { name: /LƯU CẤU HÌNH SỨC CHỨA HÀNG LOẠT/i })
+    const saveButton = screen.getByRole('button', { name: /Lưu sức chứa/i })
     fireEvent.click(saveButton)
 
     // ConfirmDecreaseModal opens

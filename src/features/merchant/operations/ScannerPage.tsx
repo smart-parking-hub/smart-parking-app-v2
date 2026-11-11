@@ -319,6 +319,7 @@ export function MerchantScannerPage() {
             <Field label="Bãi kiểm soát">
               <select
                 className={control}
+                value={form.watch('parkingLotId') || ''}
                 {...form.register('parkingLotId', {
                   required: true,
                   valueAsNumber: true,
