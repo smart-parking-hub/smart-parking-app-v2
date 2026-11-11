@@ -105,7 +105,7 @@ export function InlineQuickBookPanel({
         ref={panelRef}
         role="dialog"
         aria-modal="true"
-        aria-label="Panel giữ chỗ nhanh"
+        aria-label="Panel giữ chỗ nhanh 10 phút"
         aria-describedby="quick-hold-description"
         className="quick-hold"
       >

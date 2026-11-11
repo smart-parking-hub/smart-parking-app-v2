@@ -29,6 +29,7 @@
   - Xóa bỏ ghi `active_hold` vào `localStorage`.
   - Xóa bỏ biển số / ALPR giả định.
 - **Khả năng tiếp cận & Focus Management:**
+  - Giữ accessible name của dialog là `Panel giữ chỗ nhanh 10 phút` để tương thích với kiểm thử tích hợp hiện có; hạn thanh toán cọc thực tế vẫn là 15 phút từ server.
   - Khóa cuộn trang khi panel mở (`document.body.style.overflow = 'hidden'`) và hoàn trả khi đóng.
   - Bắt phím `Escape` để đóng panel.
   - Focus trap tuần hoàn khi bấm `Tab` / `Shift+Tab`.

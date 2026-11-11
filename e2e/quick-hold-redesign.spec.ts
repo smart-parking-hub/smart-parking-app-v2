@@ -235,7 +235,7 @@ for (const width of [390, 1440]) {
     const triggerBtn = page.locator('#trigger')
     await triggerBtn.click()
 
-    const dialog = page.getByRole('dialog', { name: 'Panel giữ chỗ nhanh' })
+    const dialog = page.getByRole('dialog', { name: 'Panel giữ chỗ nhanh 10 phút' })
     await expect(dialog).toBeVisible()
     await expect(dialog.getByRole('heading', { level: 2, name: 'Đặt giữ chỗ nhanh' })).toBeVisible()
     await expect(dialog.getByText('Bãi Xe Phía Nam')).toBeVisible()

@@ -171,7 +171,7 @@ describe('InlineQuickBookPanel - Real Server Booking Integration', () => {
       <InlineQuickBookPanel open={true} onClose={onClose} lot={sampleLot} />,
     )
 
-    const dialog = await screen.findByRole('dialog', { name: 'Panel giữ chỗ nhanh' })
+    const dialog = await screen.findByRole('dialog', { name: 'Panel giữ chỗ nhanh 10 phút' })
     expect(dialog).toBeInTheDocument()
     expect(await screen.findByRole('heading', { level: 2, name: 'Đặt giữ chỗ nhanh' })).toBeInTheDocument()
     expect(await screen.findByRole('heading', { level: 2, name: /Bãi Xe Miền Nam/ })).toBeInTheDocument()
