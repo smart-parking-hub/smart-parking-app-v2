@@ -33,6 +33,9 @@ export function AuthLayout({ children }: AuthLayoutProps) {
 
       {/* Thông điệp slogan thương hiệu ở góc trên bên TRÁI trên nền ảnh */}
       <div className="fixed top-6 left-6 sm:top-10 sm:left-12 hidden md:block max-w-[380px] text-left pointer-events-none z-10">
+        <span className="font-sora text-xs uppercase tracking-widest text-[#d95f00] font-bold block mb-1">
+          SMARTTRUCK HUB
+        </span>
         <p className="font-sora text-base sm:text-lg font-bold leading-relaxed text-white drop-shadow-md">
           Một điểm đỗ. <span className="text-[#d95f00]">Ngàn hành trình.</span>
         </p>

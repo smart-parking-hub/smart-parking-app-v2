@@ -155,7 +155,7 @@ test.describe('SCR-012: Khôi phục mật khẩu qua OTP (/forgot-password)', (
     const typographyCheck = await page.evaluate(() => {
       const heading = document.querySelector('h1')
       const stepLabel = document.querySelector('#stepper-step-1 p')
-      const footerBar = document.querySelector('footer > div')
+      const footerBar = document.querySelector('.fixed.bottom-6 span')
       const loadedFamilies = Array.from(document.fonts)
         .filter((f) => f.status === 'loaded')
         .map((f) => f.family.replace(/^["']|["']$/g, ''))
@@ -209,13 +209,18 @@ test.describe('SCR-012: Khôi phục mật khẩu qua OTP (/forgot-password)', (
       }),
     ])
 
-    const footerSpanFonts = await queryPlatformFonts('footer > div span')
+    const footerSpanFonts = await queryPlatformFonts('.fixed.bottom-6 span')
     expect(footerSpanFonts).toEqual([
       expect.objectContaining({
         familyName: 'Inter',
         isCustomFont: true,
       }),
     ])
+
+    await test.info().attach('rendered-fonts-step1', {
+      body: JSON.stringify({ loginHeadingFonts, typographyCheck, h1Fonts, step1TextFonts, footerSpanFonts }, null, 2),
+      contentType: 'application/json',
+    })
 
     await page.screenshot({
       path: '.artifacts/playwright/scr-012/step1-1440.png',
@@ -337,6 +342,10 @@ test.describe('SCR-012: Khôi phục mật khẩu qua OTP (/forgot-password)', (
     })
     const timerFonts = await cdpStep2.send('CSS.getPlatformFontsForNode', {
       nodeId: timerNode.nodeId,
+    })
+    await test.info().attach('rendered-fonts-countdown', {
+      body: JSON.stringify(timerFonts, null, 2),
+      contentType: 'application/json',
     })
     expect(timerFonts.fonts).toEqual([
       expect.objectContaining({

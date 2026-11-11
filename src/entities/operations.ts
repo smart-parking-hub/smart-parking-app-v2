@@ -99,12 +99,15 @@ export interface Withdrawal {
 export interface Dispute {
   id: number
   bookingId: number
-  merchantId: number
+  merchantId: number | null
   driverId: number
   reason: string
   description: string
   status: string
   resolution: string
+  amount?: number | null
+  compensationAmount?: number | null
+  evidenceUrls?: string[]
   createdAt: string
   updatedAt: string
 }

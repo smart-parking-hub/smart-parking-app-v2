@@ -18,6 +18,19 @@ export interface MerchantKpiSummary {
   pendingWithdrawalCount: number
 }
 
+export interface RevenueSeriesPointDto {
+  period: string
+  revenue: number
+  bookingCount: number
+}
+
+export interface RevenueStatsResponse {
+  totalNetRevenue: number
+  totalGrossRevenue?: number
+  currentWalletBalance?: number
+  series: RevenueSeriesPointDto[]
+}
+
 export interface DailyRevenueVolumePoint {
   date: string
   dayLabel: string

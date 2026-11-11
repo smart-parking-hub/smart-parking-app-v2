@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { bookingTimestamp, bookingTimeLabel } from './time'
 import { BookingReview } from './BookingReview'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
@@ -8,6 +8,7 @@ import { errorMessage } from '@/shared/api/resources'
 import { fetchBooking, paymentLink, payDemo, cancelBooking, formatMoney, statusLabels, type Booking } from './api'
 import { QRCodeSVG } from 'qrcode.react'
 import { QrCode, Download, Copy, Check, Clock, ShieldCheck } from 'lucide-react'
+import { PayOsPaymentPanel } from './PayOsPaymentPanel'
 
 function handleDownloadQr(bookingCode: string) {
   const svg = document.getElementById(`qr-checkin-${bookingCode}`) as SVGSVGElement | null
@@ -36,9 +37,17 @@ function handleDownloadQr(bookingCode: string) {
   }
 }
 
-export function BookingStatusPanel({ bookingId, booking }: { bookingId: number; booking?: Booking }) {
+type StatusPanelProps = { bookingId: number; booking?: Booking }
+
+export function BookingStatusPanel(props: StatusPanelProps) {
+  return <BookingStatusContent key={props.bookingId} {...props} />
+}
+
+function BookingStatusContent({ bookingId, booking }: StatusPanelProps) {
   const cache = useQueryClient()
   const [copied, setCopied] = useState(false)
+  const [checkoutIntent, setCheckoutIntent] = useState<string | null>(null)
+
   const query = useQuery({
     queryKey: ['booking', bookingId],
     queryFn: () => fetchBooking(bookingId),
@@ -62,11 +71,29 @@ export function BookingStatusPanel({ bookingId, booking }: { bookingId: number; 
   }
 
   const payment = useMutation({
-    mutationFn: () => paymentLink(bookingId, query.data?.status === 'AWAITING_FINAL_PAYMENT'),
-    onSuccess: (url) => window.location.assign(url),
+    mutationFn: (intent: { bookingId: number; final: boolean }) => paymentLink(intent.bookingId, intent.final),
+    retry: false,
   })
+  const openPayment = (final: boolean) => {
+    payment.mutate({ bookingId, final }, {
+      onSuccess: (url) => {
+        if (new URL(url).origin === window.location.origin) window.location.assign(url)
+        else setCheckoutIntent(`${bookingId}:${final ? 'FINAL_PAYMENT' : 'DEPOSIT'}`)
+      },
+    })
+  }
   const demo = useMutation({ mutationFn: () => payDemo(bookingId), onSuccess: refresh })
   const cancel = useMutation({ mutationFn: () => cancelBooking(bookingId), onSuccess: refresh })
+
+  const data = booking ?? query.data
+  const deadline = data?.status === 'PENDING_PAYMENT' ? bookingTimestamp(data.expiresAt) : NaN
+  const [, tickDeadline] = useState(0)
+  useEffect(() => {
+    if (!Number.isFinite(deadline)) return
+    // Re-evaluate eligibility even when polling returns identical booking data.
+    const timer = window.setTimeout(() => tickDeadline(value => value + 1), Math.max(0, deadline - Date.now()))
+    return () => window.clearTimeout(timer)
+  }, [deadline])
 
   if (!booking && query.isPending) return <p role="status">Đang lấy trạng thái booking…</p>
   if (!booking && query.isError)
@@ -81,11 +108,12 @@ export function BookingStatusPanel({ bookingId, booking }: { bookingId: number; 
       </Notice>
     )
 
-  const data = booking ?? query.data
   if (!data) return <p role="status">Đang lấy trạng thái booking…</p>
 
-  const expired = bookingTimestamp(data.expiresAt) <= Date.now()
+  const expired = !(deadline > Date.now())
   const payable = (data.status === 'PENDING_PAYMENT' && !expired) || data.status === 'AWAITING_FINAL_PAYMENT'
+  const finalPayment = data.status === 'AWAITING_FINAL_PAYMENT'
+  const checkoutOpen = checkoutIntent === `${bookingId}:${finalPayment ? 'FINAL_PAYMENT' : 'DEPOSIT'}`
   const busy = payment.isPending || demo.isPending || cancel.isPending
 
   return (
@@ -226,8 +254,8 @@ export function BookingStatusPanel({ bookingId, booking }: { bookingId: number; 
       </p>
 
       <div className="flex flex-wrap gap-3">
-        {payable && (
-          <button className={button} disabled={busy} onClick={() => payment.mutate()}>
+        {payable && !checkoutOpen && (
+          <button className={button} disabled={busy} onClick={() => openPayment(finalPayment)}>
             {payment.isPending
               ? 'Đang mở thanh toán…'
               : data.status === 'AWAITING_FINAL_PAYMENT'
@@ -259,6 +287,15 @@ export function BookingStatusPanel({ bookingId, booking }: { bookingId: number; 
           Xem các lượt đặt chỗ
         </Link>
       </div>
+
+      {payable && checkoutOpen && payment.data && (
+        <PayOsPaymentPanel
+          key={`${bookingId}:${payment.data}`}
+          bookingId={bookingId}
+          checkoutUrl={payment.data}
+          onClose={() => setCheckoutIntent(null)}
+        />
+      )}
 
       {data.status === 'COMPLETED' && <BookingReview bookingId={data.id} />}
       {demo.isSuccess && data.status === 'PENDING_PAYMENT' && (
