@@ -40,11 +40,11 @@ function renderWithProviders(
 
 describe('SCR-015: Interactive Parking Search & Map (Bản đồ tìm kiếm bãi đỗ)', () => {
   beforeEach(() => {
-    HTMLDialogElement.prototype.showModal = function(){ this.setAttribute('open','') };
-    HTMLDialogElement.prototype.close = function(){ this.removeAttribute('open') };
+    HTMLDialogElement.prototype.showModal = function () { this.setAttribute('open', '') };
+    HTMLDialogElement.prototype.close = function () { this.removeAttribute('open') };
     parkingSearchStore.resetFilters()
     vi.clearAllMocks()
-    vi.mocked(apiClient.get).mockImplementation(async url => String(url).match(/parking-lots\/\d+$/) ? {data:{data:{id:1,name:'Bãi API',address:'Địa chỉ',status:'APPROVED',slots:[],pricingRules:[]}}} : String(url).includes('/vehicles') ? {data:{data:{content:[{id:3,licensePlate:'51C-TEST',vehicleType:'CONTAINER',status:'ACTIVE'}]}}} : {
+    vi.mocked(apiClient.get).mockImplementation(async url => String(url).match(/parking-lots\/\d+$/) ? { data: { data: { id: 1, name: 'Bãi API', address: 'Địa chỉ', status: 'APPROVED', slots: [], pricingRules: [] } } } : String(url).includes('/vehicles') ? { data: { data: { content: [{ id: 3, licensePlate: '51C-TEST', vehicleType: 'CONTAINER', status: 'ACTIVE' }] } } } : {
       data: {
         content: fallbackParkingLots,
         totalElements: fallbackParkingLots.length,
@@ -132,7 +132,7 @@ describe('SCR-015: Interactive Parking Search & Map (Bản đồ tìm kiếm bã
     )
     expect(
       filterSection.compareDocumentPosition(lotsContainer) &
-        Node.DOCUMENT_POSITION_FOLLOWING,
+      Node.DOCUMENT_POSITION_FOLLOWING,
     ).toBeTruthy()
   })
 
@@ -290,20 +290,26 @@ describe('SCR-015: Interactive Parking Search & Map (Bản đồ tìm kiếm bã
     const buttons = await screen.findAllByText(/ĐẶT GIỮ CHỖ 10P|ĐẶT CHỖ/i)
     fireEvent.click(buttons[0])
     expect(screen.getByRole('dialog')).toBeInTheDocument()
-    expect(screen.getByRole('heading', { name: /Đặt giữ chỗ khẩn cấp/i })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: /Đặt giữ chỗ/i })).toBeInTheDocument()
     expect(screen.queryByText('Giữ Chỗ Thành Công!')).not.toBeInTheDocument()
     expect(apiClient.request).not.toHaveBeenCalled()
   })
 
   it('displays empty state when no parking lots match criteria and allows expanding radius', async () => {
-    vi.mocked(apiClient.get).mockImplementation(async url => String(url).includes('/vehicles') ? {data:{data:{content:[]}}} : {
-      data: {
-        content: [],
-        totalElements: 0,
-        totalPages: 0,
-        size: 20,
-        number: 0,
-      },
+    vi.mocked(apiClient.get).mockImplementation(async url => {
+      if (String(url).includes('/vehicles')) return { data: { data: { content: [] } } }
+      if (String(url).match(/\/parking-lots\/\d+/)) {
+        return { data: { data: { id: 1, name: 'Bãi Test', address: 'Địa chỉ', status: 'APPROVED', slots: [], pricingRules: [] } } }
+      }
+      return {
+        data: {
+          content: [],
+          totalElements: 0,
+          totalPages: 0,
+          size: 20,
+          number: 0,
+        },
+      }
     })
 
     renderWithProviders(<SearchParkingPage />)
@@ -325,7 +331,7 @@ describe('SCR-015: Interactive Parking Search & Map (Bản đồ tìm kiếm bã
   })
 
   it('displays error alert with ERR_GEO_DISPATCH_TIMEOUT when server request fails', async () => {
-    vi.mocked(apiClient.get).mockImplementation(async url => {if(String(url).includes('/vehicles'))return {data:{data:{content:[]}}};throw new Error('Network connection timeout')})
+    vi.mocked(apiClient.get).mockImplementation(async url => { if (String(url).includes('/vehicles')) return { data: { data: { content: [] } } }; throw new Error('Network connection timeout') })
 
     renderWithProviders(<SearchParkingPage />)
 

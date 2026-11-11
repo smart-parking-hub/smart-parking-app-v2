@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test'
+import { mockPayOSDeposit } from './fixtures/payos-checkout'
 
 const driverToken = `test.${Buffer.from(
   JSON.stringify({
@@ -23,6 +24,8 @@ const mockParkingLot = {
   name: 'Bãi Đỗ Xe Tân Cảng Container',
   address: 'Cảng Tân Cảng - Phú Hữu, TP. Thủ Đức',
   status: 'APPROVED',
+  slots: [{ vehicleType: 'CONTAINER', availableCapacity: 12, totalCapacity: 50 }],
+  pricingRules: [{ vehicleType: 'CONTAINER', basePricePerHour: 30000, surgeMultiplier: 1, surgeStartTime: null, surgeEndTime: null, overtimePenaltyMultiplier: 2 }],
   hourlyRate: 30000,
   depositAmount: 100000,
   etaMinutes: 15,
@@ -42,12 +45,12 @@ const mockVehicle = {
   isDefault: true,
 }
 
-test.describe('Core E2E Lifecycle: Giữ chỗ 10m -> Barie Check-in -> Barie Check-out (SP-S3-INT-01)', () => {
-  let bookingLifecycleStatus: 'PENDING_CHECKIN' | 'PARKING' | 'COMPLETED' = 'PENDING_CHECKIN'
+test.describe('Core E2E Lifecycle: Booking & cọc PayOS -> Barie Check-in -> Barie Check-out (SP-S3-INT-01)', () => {
+  let bookingLifecycleStatus: 'PENDING_PAYMENT' | 'PENDING_CHECKIN' | 'PARKING' | 'COMPLETED' = 'PENDING_PAYMENT'
   const bookingCode = 'BK-CORE-9999'
 
   test.beforeEach(async ({ page }) => {
-    bookingLifecycleStatus = 'PENDING_CHECKIN'
+    bookingLifecycleStatus = 'PENDING_PAYMENT'
 
     // Driver Profile & Vehicles Mock
     await page.route('**/api/v1/driver/profile', (route) =>
@@ -112,7 +115,7 @@ test.describe('Core E2E Lifecycle: Giữ chỗ 10m -> Barie Check-in -> Barie Ch
     await page.route(/\/api\/v1\/parking-lots/, (route) =>
       route.fulfill({
         json: {
-          data: {
+          data: new URL(route.request().url()).pathname.endsWith('/12') ? mockParkingLot : {
             content: [mockParkingLot],
             totalElements: 1,
             totalPages: 1,
@@ -134,32 +137,33 @@ test.describe('Core E2E Lifecycle: Giữ chỗ 10m -> Barie Check-in -> Barie Ch
       }),
     )
 
-    // Driver Bookings API Mock
-    await page.route(/\/api\/v1\/bookings/, (route) =>
-      route.fulfill({
-        json: {
-          data: {
-            content: [
-              {
-                id: 9999,
-                bookingCode,
-                parkingLotId: 12,
-                parkingLotName: 'Bãi Đỗ Xe Tân Cảng Container',
-                status: bookingLifecycleStatus,
-                depositPaid: 100000,
-                advanceDeposit: 100000,
-                totalAmount: 250000,
-                vehiclePlate: '51D-894.12',
-                createdAt: new Date().toISOString(),
-                expectedCheckInTime: new Date(Date.now() + 600000).toISOString(),
-              },
-            ],
-            totalElements: 1,
-            totalPages: 1,
-          },
-        },
-      }),
-    )
+    // Use the same contract for booking creation, polling and the driver list.
+    const booking = () => ({
+      id: 9999, bookingCode, parkingLotId: 12, merchantId: 101,
+      parkingLotName: mockParkingLot.name, parkingLotAddress: mockParkingLot.address,
+      vehicleId: 3, vehiclePlate: '51D-894.12', status: bookingLifecycleStatus,
+      advanceDeposit: 100000, totalAmount: 500000, hourlyRate: 30000,
+      expectedCheckInTime: new Date(Date.now() + 1800000).toISOString(),
+      expectedCheckOutTime: new Date(Date.now() + 9000000).toISOString(),
+      expiresAt: new Date(Date.now() + 900000).toISOString(),
+    })
+    let created = false
+    await mockPayOSDeposit(page, 9999, () => { bookingLifecycleStatus = 'PENDING_CHECKIN' })
+    await page.route(/\/api\/v1\/bookings/, (route) => {
+      if (route.request().method() === 'POST') {
+        expect(route.request().postDataJSON()).toEqual(expect.objectContaining({
+          parkingLotId: 12, vehicleId: 3, vehicleType: 'CONTAINER', requestId: expect.any(String),
+        }))
+        created = true
+        return route.fulfill({ json: { data: booking() } })
+      }
+      if (new URL(route.request().url()).pathname.endsWith('/9999')) {
+        return route.fulfill({ json: { data: booking() } })
+      }
+      return route.fulfill({ json: { data: {
+        content: created ? [booking()] : [], totalElements: created ? 1 : 0, totalPages: created ? 1 : 0,
+      } } })
+    })
 
     // Barie Check-in API Mock
     await page.route('**/api/v1/merchant/check-in', async (route) => {
@@ -237,15 +241,17 @@ test.describe('Core E2E Lifecycle: Giữ chỗ 10m -> Barie Check-in -> Barie Ch
     )
   })
 
-  test('Vòng đời đơn đỗ: Tài xế giữ chỗ 10m -> Quét check-in xe vào -> Quyết toán lũy tiến xe ra', async ({
+  test('Vòng đời đơn đỗ: Tạo booking & cọc PayOS -> Check-in -> Quyết toán xe ra', async ({
     page,
   }) => {
     // -------------------------------------------------------------
-    // PHASE 1: TÀI XẾ GIỮ CHỖ 10 PHÚT TRÊN BẢN ĐỒ & XÁC NHẬN VÉ QR
+    // PHASE 1: TẠO BOOKING, XÁC NHẬN CỌC QUA SERVER & NHẬN VÉ QR
     // -------------------------------------------------------------
     await page.addInitScript((token) => {
-      localStorage.setItem('access_token', token)
-      localStorage.setItem('token', token)
+      if (!localStorage.getItem('access_token')) {
+        localStorage.setItem('access_token', token)
+        localStorage.setItem('token', token)
+      }
       localStorage.setItem('smart-truck-parking.driver_name', 'Trần Quốc Tuấn')
     }, driverToken)
 
@@ -258,16 +264,21 @@ test.describe('Core E2E Lifecycle: Giữ chỗ 10m -> Barie Check-in -> Barie Ch
 
     const dialog = page.getByRole('dialog', { name: /Panel giữ chỗ nhanh 10 phút/i })
     await expect(dialog).toBeVisible()
-    await expect(dialog.getByRole('timer')).toBeVisible()
-
-    const confirmBtn = dialog.getByRole('button', { name: /Xác nhận giữ chỗ/i })
-    await confirmBtn.click()
-    await expect(dialog.getByText('Giữ Chỗ Thành Công!')).toBeVisible()
+    await expect(dialog.getByRole('combobox', { name: 'Phương tiện của bạn' })).toHaveValue('3')
+    await dialog.getByRole('button', { name: 'Tạo booking và xem tiền cọc' }).click()
+    await expect(dialog.getByText(bookingCode, { exact: true })).toBeVisible()
+    await expect(dialog.getByText('Chờ thanh toán cọc', { exact: true })).toBeVisible()
+    await expect(dialog.getByTestId('checkin-qr-container')).toHaveCount(0)
+    await dialog.getByRole('button', { name: /Thanh toán cọc.*qua PayOS/ }).click()
+    await page.frameLocator('iframe[title="Mã QR thanh toán PayOS"]')
+      .getByRole('button', { name: 'Thông báo đã quét (fixture)' }).click()
+    await expect(dialog.getByRole('img', { name: `Mã QR Check-in ${bookingCode}` })).toBeVisible()
+    await expect(dialog.getByText('Đã cọc · Chờ check-in', { exact: true })).toBeVisible()
 
     // -------------------------------------------------------------
     // PHASE 2: CỔNG BARIE CHECK-IN XE VÀO BÃI (ROLE MERCHANT)
     // -------------------------------------------------------------
-    await page.addInitScript((token) => {
+    await page.evaluate((token) => {
       localStorage.setItem('access_token', token)
       localStorage.setItem('token', token)
     }, merchantToken)

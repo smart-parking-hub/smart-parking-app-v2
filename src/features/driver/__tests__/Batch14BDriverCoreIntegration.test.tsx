@@ -232,7 +232,7 @@ describe('BATCH-14B: Driver Core — Search, Detail & Bookings Integration', () 
       screen.getByRole('dialog', { name: /Panel giữ chỗ nhanh 10 phút/i })
     ).toBeInTheDocument()
     expect(
-      screen.getByText(/Đặt giữ chỗ khẩn cấp \(10 Phút\)/i)
+      screen.getByRole('heading', { name: 'Đặt giữ chỗ nhanh' })
     ).toBeInTheDocument()
 
     // Close drawer
