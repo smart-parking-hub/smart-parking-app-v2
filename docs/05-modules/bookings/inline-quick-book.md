@@ -49,3 +49,11 @@
   - Kiểm tra dialog hiển thị đúng bãi, xe, hạn 15 phút, không tràn ngang (`scrollWidth <= clientWidth`).
   - Thực hiện toàn bộ user journey: Submit booking → hiển thị mã server `BK-SERVER-88` → chuyển sang `/bookings` → thấy booking từ API → không có lỗi console / pageerror.
 
+
+## 4. CI E2E booking & gate regression
+
+- `last_verified`: 2026-11-11; evidence: `e2e/test-01-driver-booking-deposit.spec.ts`, `e2e/core-booking-gate-flow.spec.ts`, `e2e/fixtures/payos-checkout.ts`.
+- The core CI scenarios use separate response shapes for parking-lot detail, booking creation/detail, and paginated lists. Lot detail supplies `status`, `slots`, and `pricingRules`; booking responses satisfy the booking-flow schema.
+- Driver coverage now follows `PENDING_PAYMENT` → PayOS checkout → server sync → `PENDING_CHECKIN`. It verifies that no check-in QR exists before deposit confirmation, then checks the server booking code and QR. The lifecycle scenario continues through merchant check-in, check-out, and cash settlement.
+- SDK and checkout fixtures are shared with the embedded-checkout tests. All payment requests are intercepted; these scenarios do not transfer money.
+- The old pre-submit 10-minute timer, client-generated `BK-HOLD` code, and immediate-success screen belong to the superseded local-only implementation and are no longer E2E acceptance criteria.
