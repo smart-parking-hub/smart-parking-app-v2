@@ -18,3 +18,4 @@ export interface AdminSystemHealthService {
   description: string
   badgeVariant: 'success' | 'info' | 'warning'
 }
+

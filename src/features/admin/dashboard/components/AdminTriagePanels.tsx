@@ -77,3 +77,4 @@ export function AdminTriagePanels({ data }: AdminTriagePanelsProps) {
     </div>
   )
 }
+

@@ -10,3 +10,4 @@ export const ADMIN_DASHBOARD_QUERY_KEY = ['admin-dashboard'] as const
 export async function fetchAdminDashboardData(signal?: AbortSignal): Promise<AdminDashboardData> {
   return getData<AdminDashboardData>('/api/v1/admin/dashboard', undefined, { signal })
 }
+
