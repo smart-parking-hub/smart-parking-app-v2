@@ -162,29 +162,29 @@ describe('Controlled API Contract Verification & Integration Tests', () => {
     it('fetchUnreadCountApi calls /api/v1/notifications/unread-count via apiClient', async () => {
       vi.spyOn(apiClient, 'get').mockResolvedValueOnce({
         data: { code: 200, data: 7 },
-      } as any)
+      } as never)
 
       const count = await fetchUnreadCountApi()
       expect(apiClient.get).toHaveBeenCalledWith('/api/v1/notifications/unread-count')
       expect(count).toBe(7)
     })
 
-    it('markAsReadApi sends PUT to /api/v1/notifications/:id/read', async () => {
-      const putSpy = vi.spyOn(apiClient, 'put').mockResolvedValueOnce({
-        data: { code: 200, message: 'Read' },
-      } as any)
+    it('markAsReadApi sends POST to /api/v1/notifications/:id/read', async () => {
+      const postSpy = vi.spyOn(apiClient, 'post').mockResolvedValueOnce({
+        data: { code: 200, message: 'Đã đọc' },
+      } as never)
 
       await markAsReadApi(42)
-      expect(putSpy).toHaveBeenCalledWith('/api/v1/notifications/42/read')
+      expect(postSpy).toHaveBeenCalledWith('/api/v1/notifications/42/read')
     })
 
-    it('markAllAsReadApi sends PUT to /api/v1/notifications/read-all', async () => {
-      const putSpy = vi.spyOn(apiClient, 'put').mockResolvedValueOnce({
-        data: { code: 200, message: 'All read' },
-      } as any)
+    it('markAllAsReadApi sends POST to /api/v1/notifications/read-all', async () => {
+      const postSpy = vi.spyOn(apiClient, 'post').mockResolvedValueOnce({
+        data: { code: 200, message: 'Đã đọc tất cả' },
+      } as never)
 
       await markAllAsReadApi()
-      expect(putSpy).toHaveBeenCalledWith('/api/v1/notifications/read-all')
+      expect(postSpy).toHaveBeenCalledWith('/api/v1/notifications/read-all')
     })
   })
 

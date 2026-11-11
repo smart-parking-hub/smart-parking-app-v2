@@ -3,6 +3,8 @@ import { cleanup, render, screen, fireEvent, waitFor } from '@testing-library/re
 import { MemoryRouter, Routes, Route } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { getData, sendData } from '@/shared/api/resources'
+import { apiClient } from '@/shared/api/client'
+import { disputeTimeLabel, disputeTimeParts } from '../api/driverDisputesApi'
 import { DisputesPage } from '../index'
 
 vi.mock('@/shared/api/resources', async (importOriginal) => ({
@@ -45,7 +47,7 @@ describe('DRV-DISP-01 & DRV-DISP-02: DisputesPage (Trung tâm khiếu nại tài
     vi.restoreAllMocks()
   })
 
-  it('renders dispute list table with left-aligned Hồ sơ/Booking columns and right-aligned Tiền bồi thường', async () => {
+  it('renders dispute list table with Chờ xử lý badge for OPEN, 2-line HH:mm/date time, and omits Tiền bồi thường column', async () => {
     mockGetData.mockResolvedValue({
       content: [
         {
@@ -71,17 +73,29 @@ describe('DRV-DISP-01 & DRV-DISP-02: DisputesPage (Trung tâm khiếu nại tài
     expect(await screen.findByText('KN-42')).toBeInTheDocument()
     expect(screen.getByText('#9081')).toBeInTheDocument()
     expect(screen.getByText('Bãi đỗ thu phụ phí sai quy định')).toBeInTheDocument()
-    expect(screen.getByText('50.000 ₫')).toBeInTheDocument()
 
-    // Hồ sơ and Booking stay left-aligned; only numeric currency Tiền bồi thường is right-aligned
+    // Status OPEN displays "Chờ xử lý" rather than "Đang mở"
+    expect(screen.queryByText(/Đang mở/i)).not.toBeInTheDocument()
+    expect(screen.getAllByText('Chờ xử lý').length).toBeGreaterThanOrEqual(3)
+
+    // Compensation column and amount are omitted from the list table
+    expect(screen.queryByRole('columnheader', { name: /Tiền bồi thường/i })).not.toBeInTheDocument()
+    expect(screen.queryByText('50.000 ₫')).not.toBeInTheDocument()
+
+    // Time shows HH:mm on line 1 and dd/MM/yyyy on line 2, without seconds
+    const timeEl = screen.getByText('17:00')
+    const dateEl = screen.getByText('18/02/2026')
+    expect(timeEl).toBeInTheDocument()
+    expect(dateEl).toBeInTheDocument()
+    expect(timeEl).not.toBe(dateEl)
+    expect(screen.queryByText(/17:00:00/)).not.toBeInTheDocument()
+
+    // Hồ sơ and Booking stay left-aligned
     const disputeCell = screen.getByText('KN-42').closest('td')
     expect(disputeCell).not.toHaveClass('text-right')
 
     const bookingCell = screen.getByText('#9081').closest('td')
     expect(bookingCell).not.toHaveClass('text-right')
-
-    const amountCell = screen.getByText('50.000 ₫').closest('td')
-    expect(amountCell).toHaveClass('text-right')
   })
 
   it('renders uniform white KPI cards, light segmented status tabs, and omits parking lot name / resolution from list rows', async () => {
@@ -179,6 +193,7 @@ describe('DRV-DISP-01 & DRV-DISP-02: DisputesPage (Trung tâm khiếu nại tài
           description: '',
           status: 'PENDING',
           resolution: '',
+          amount: 50000,
           createdAt: '2026-02-18T10:00:00Z',
           updatedAt: '2026-02-18T10:00:00Z',
         },
@@ -192,13 +207,17 @@ describe('DRV-DISP-01 & DRV-DISP-02: DisputesPage (Trung tâm khiếu nại tài
     expect(await screen.findByText('KN-51')).toBeInTheDocument()
     expect(screen.getByText('Bãi đóng cửa khi xe đã cọc')).toBeInTheDocument()
     expect(screen.queryByRole('table')).not.toBeInTheDocument()
+    expect(screen.queryByText(/Bồi thường:/)).not.toBeInTheDocument()
+    expect(screen.getByText('17:00')).toBeInTheDocument()
+    expect(screen.getByText('18/02/2026')).toBeInTheDocument()
+    expect(screen.queryByText(/17:00:00/)).not.toBeInTheDocument()
     expect(screen.getByRole('link', { name: /Chi tiết/i })).toHaveAttribute('href', '/disputes/51')
   })
 
   it('renders dispute detail view with Admin stepper, compensation record, payment refund match, and linked booking', async () => {
     mockGetData.mockImplementation(async (url) => {
       const target = String(url)
-      if (target.includes('/api/v1/disputes/42')) {
+      if (target.includes('/api/v1/disputes/me/42')) {
         return {
           id: 42,
           bookingId: 9081,
@@ -209,6 +228,7 @@ describe('DRV-DISP-01 & DRV-DISP-02: DisputesPage (Trung tâm khiếu nại tài
             'Bãi xe thu thêm 50k tiền cẩu reefer ngoài biểu phí hợp đồng.\n\n[Chứng từ đính kèm trên thiết bị: bien-lai-cong.png (120 KB)]',
           status: 'RESOLVED',
           resolution: 'Đã hoàn trả 50.000đ vào ví tài xế.',
+          compensationAmount: 50000,
           createdAt: '2026-02-18T10:00:00Z',
           updatedAt: '2026-02-18T12:00:00Z',
         }
@@ -264,12 +284,20 @@ describe('DRV-DISP-01 & DRV-DISP-02: DisputesPage (Trung tâm khiếu nại tài
     // Stepper & Compensation dossier
     expect(screen.getByText('Tiến độ giải quyết của Quản trị viên')).toBeInTheDocument()
     expect(screen.getByText('Mã biên bản: BB-KN-42')).toBeInTheDocument()
+    expect(screen.getByText('50.000 ₫')).toBeInTheDocument()
     expect(await screen.findByText('PAY-REF-9081')).toBeInTheDocument()
     expect(screen.getByText('bien-lai-cong.png (120 KB)')).toBeInTheDocument()
+
+    // Timestamps render HH:mm and dd/MM/yyyy without seconds
+    expect(screen.getAllByText('17:00').length).toBeGreaterThanOrEqual(1)
+    expect(screen.getAllByText('19:00').length).toBeGreaterThanOrEqual(1)
+    expect(screen.getAllByText('18/02/2026').length).toBeGreaterThanOrEqual(2)
+    expect(screen.queryByText(/17:00:00|19:00:00|15:00:00/)).not.toBeInTheDocument()
 
     // Linked booking sidebar
     expect(await screen.findByText('Depot Cát Lái Gate 2')).toBeInTheDocument()
     expect(screen.getByText('51C-999.88')).toBeInTheDocument()
+    expect(screen.getByText('15:00')).toBeInTheDocument()
 
     // Back link renders clean single label without literal arrow character duplication
     const backLink = screen.getByRole('link', { name: 'Danh sách' })
@@ -311,5 +339,121 @@ describe('DRV-DISP-01 & DRV-DISP-02: DisputesPage (Trung tâm khiếu nại tài
         }),
       )
     })
+  })
+
+  it('loads authenticated evidence images via blob XHR, opens lightbox modal, and renders timeline', async () => {
+    const internalEvidenceUrl =
+      'http://localhost:8088/api/v1/disputes/evidence/11111111-1111-1111-1111-111111111111.png'
+    const blobSpy = vi.spyOn(apiClient, 'get').mockResolvedValue({
+      data: new Blob(['fake-png'], { type: 'image/png' }),
+    } as never)
+
+    mockGetData.mockImplementation(async (url) => {
+      if (String(url).includes('/api/v1/disputes/me/77')) {
+        return {
+          id: 77,
+          bookingId: 9099,
+          merchantId: 10,
+          parkingLotId: 2,
+          driverId: 5,
+          reason: 'Thu thêm tiền ngoài cổng',
+          description: 'Ảnh biên lai đã upload',
+          evidenceUrls: [internalEvidenceUrl],
+          status: 'IN_REVIEW',
+          resolution: '',
+          timeline: [
+            {
+              id: 1,
+              eventType: 'MERCHANT_RESPONSE',
+              actorRole: 'MERCHANT',
+              message: 'Chủ bãi đang kiểm tra camera làn vào',
+              resultingStatus: 'IN_REVIEW',
+              createdAt: '2026-11-11T10:15:00Z',
+            },
+          ],
+          createdAt: '2026-11-11T10:00:00Z',
+          updatedAt: '2026-11-11T10:15:00Z',
+        }
+      }
+      return {}
+    })
+
+    renderDisputes(
+      <Routes>
+        <Route path="/disputes/:id" element={<DisputesPage role="driver" detail={true} />} />
+      </Routes>,
+      ['/disputes/77'],
+    )
+
+    expect(await screen.findByText(/Hồ sơ khiếu nại #77/i)).toBeInTheDocument()
+    expect(
+      await screen.findByText('Chủ bãi đang kiểm tra camera làn vào'),
+    ).toBeInTheDocument()
+
+    const thumb = await screen.findByAltText('Bằng chứng khiếu nại 1')
+    expect(thumb).toHaveAttribute('src', 'blob:mock-url')
+    expect(blobSpy).toHaveBeenCalledWith(
+      '/api/v1/disputes/evidence/11111111-1111-1111-1111-111111111111.png',
+      { responseType: 'blob' },
+    )
+
+    fireEvent.click(thumb.closest('button')!)
+    expect(await screen.findByText('Xem ảnh bằng chứng')).toBeInTheDocument()
+    expect(screen.getByAltText('Ảnh bằng chứng phóng to')).toHaveAttribute('src', 'blob:mock-url')
+  })
+
+  it('keeps existing dispute list visible with inline retry banner if background refresh fails', async () => {
+    let calls = 0
+    mockGetData.mockImplementation(async (url) => {
+      if (String(url).includes('/api/v1/disputes/me')) {
+        calls += 1
+        if (calls === 1) {
+          return {
+            content: [
+              {
+                id: 88,
+                bookingId: 9123,
+                merchantId: 10,
+                driverId: 5,
+                reason: 'Hồ sơ đã lưu sẵn',
+                description: '',
+                status: 'OPEN',
+                resolution: '',
+                createdAt: '2026-11-11T10:00:00Z',
+                updatedAt: '2026-11-11T10:00:00Z',
+              },
+            ],
+            totalPages: 1,
+            totalElements: 1,
+          }
+        }
+        throw new Error('Lỗi máy chủ nội bộ. Vui lòng thử lại sau.')
+      }
+      return { content: [] }
+    })
+
+    renderDisputes(<DisputesPage role="driver" />)
+
+    expect(await screen.findByText('KN-88')).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: /Làm mới/i }))
+
+    expect(
+      await screen.findByText(/Không thể làm mới danh sách khiếu nại/i),
+    ).toBeInTheDocument()
+    expect(screen.getByText('KN-88')).toBeInTheDocument()
+  })
+
+  it('formats disputeTimeParts and disputeTimeLabel with HH:mm and dd/MM/yyyy without seconds', () => {
+    expect(disputeTimeParts('2026-11-11T17:34:25')).toEqual({
+      time: '17:34',
+      date: '11/11/2026',
+    })
+    expect(disputeTimeParts('2026-11-11T17:00:59Z')).toEqual({
+      time: '00:00',
+      date: '12/11/2026',
+    })
+    expect(disputeTimeLabel('2026-11-11T17:34:25')).toBe('17:34 11/11/2026')
+    expect(disputeTimeParts(null)).toBeNull()
+    expect(disputeTimeLabel(undefined)).toBe('—')
   })
 })

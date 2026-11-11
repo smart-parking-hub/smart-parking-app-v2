@@ -1,52 +1,24 @@
-export type NotificationType = 'BOOKING' | 'PAYMENT' | 'QUEUE' | 'SYSTEM'
+export type {
+  NotificationTypeEnum,
+  NotificationChannel,
+  NotificationDateValue,
+  BackendNotificationDto,
+  NotificationActionTarget,
+  NotificationViewModel,
+  NotificationPage,
+} from '@/entities/notification'
 
-export type NotificationStatusFilter = 'all' | 'unread' | 'urgent'
+export type {
+  NotificationStatusFilter,
+  NotificationTypeFilter,
+  NotificationFilterFormData,
+} from '../schemas/notificationSchemas'
 
-export type NotificationCategoryFilter =
-  | 'all'
-  | 'queue'
-  | 'gate'
-  | 'payment'
-  | 'route'
+export type NotificationEmptyVariant = 'no-notifications' | 'all-read' | 'filtered'
 
-export interface NotificationItemDto {
+export interface NotificationToastState {
   id: number
-  userId?: number
   title: string
-  content: string
-  channel?: string
-  type: NotificationType
-  category: 'queue' | 'gate' | 'payment' | 'route'
-  targetType?: string
-  targetId?: number
-  readAt: string | null
-  createdAt: string
-  isUrgent?: boolean
-  priorityBadgeText?: string
-  timeLabel: string
-  expiresInSeconds?: number
-  expiresInText?: string
-  actionLabel?: string
-  actionPath?: string
-  actionIcon?: 'arrow_forward' | 'qr_code_2' | 'download'
-  secondaryActionLabel?: string
-  secondaryActionPath?: string
-  secondaryActionIcon?: 'navigation'
-  metaInfo?: string
-  statusBadgeText?: string
-}
-
-export interface DriverNotificationStats {
-  totalCount: number
-  unreadCount: number
-  urgentCount: number
-  barieCheckinsToday: number
-  queueSavedMinutes: number
-  onTimeRatePercent: number
-}
-
-export interface DriverNotificationChannelsConfig {
-  webPushSound: boolean
-  smsEmergency: boolean
-  zaloOaDispatch: boolean
+  message?: string
+  variant: 'success' | 'error' | 'warning' | 'info'
 }

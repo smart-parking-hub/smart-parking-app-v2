@@ -1,172 +1,214 @@
+import { useEffect } from 'react'
+import { Controller, useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { RotateCcw } from 'lucide-react'
+import { SearchField } from '@/shared/components/SearchField'
+import {
+  notificationFilterSchema,
+  type NotificationFilterFormData,
+} from '../schemas/notificationSchemas'
 import type {
   NotificationStatusFilter,
-  NotificationCategoryFilter,
+  NotificationTypeFilter,
 } from '../types/notificationTypes'
 
 interface NotificationsFilterBarProps {
   statusFilter: NotificationStatusFilter
   onStatusFilterChange: (status: NotificationStatusFilter) => void
-  categoryFilter: NotificationCategoryFilter
-  onCategoryFilterChange: (cat: NotificationCategoryFilter) => void
-  totalCount: number
+  typeFilter: NotificationTypeFilter
+  onTypeFilterChange: (type: NotificationTypeFilter) => void
+  searchKeyword: string
+  onSearchKeywordChange: (keyword: string) => void
+  onResetFilters: () => void
+  serverTotalCount: number
+  pageTotalCount: number
   unreadCount: number
-  urgentCount: number
-  refreshSecondsCountdown: number
+  matchedCount: number
 }
+
+const TYPE_CHIPS: Array<{ value: NotificationTypeFilter; label: string }> = [
+  { value: 'ALL', label: 'Tất cả sự kiện' },
+  { value: 'BOOKING', label: 'Đặt chỗ & Barie' },
+  { value: 'PAYMENT', label: 'Thanh toán & Cước' },
+  { value: 'QUEUE', label: 'Hàng đợi ảo' },
+  { value: 'SYSTEM', label: 'Hệ thống & Cảnh báo' },
+]
 
 export function NotificationsFilterBar({
   statusFilter,
   onStatusFilterChange,
-  categoryFilter,
-  onCategoryFilterChange,
-  totalCount,
+  typeFilter,
+  onTypeFilterChange,
+  searchKeyword,
+  onSearchKeywordChange,
+  onResetFilters,
+  serverTotalCount,
+  pageTotalCount,
   unreadCount,
-  urgentCount,
-  refreshSecondsCountdown,
+  matchedCount,
 }: NotificationsFilterBarProps) {
+  const {
+    control,
+    handleSubmit,
+    reset,
+    setValue,
+    formState: { errors },
+  } = useForm<NotificationFilterFormData>({
+    resolver: zodResolver(notificationFilterSchema),
+    mode: 'onChange',
+    defaultValues: {
+      statusFilter,
+      typeFilter,
+      searchKeyword,
+    },
+  })
+
+  useEffect(() => {
+    reset({ statusFilter, typeFilter, searchKeyword })
+  }, [statusFilter, typeFilter, searchKeyword, reset])
+
+  const hasActiveFilter =
+    statusFilter !== 'ALL' || typeFilter !== 'ALL' || searchKeyword.trim().length > 0
+
+  const handleValidSearchSubmit = (data: NotificationFilterFormData) => {
+    onSearchKeywordChange(data.searchKeyword)
+  }
+
   return (
-    <section className="flex flex-col gap-3.5 bg-white p-5 md:p-6 rounded-2xl border border-slate-200 shadow-xs">
-      {/* Row 1: Status Tabs + Auto-refresh ticker */}
-      <div className="flex flex-wrap items-center justify-between gap-4 pb-2 border-b border-slate-100">
-        <div className="flex flex-wrap items-center gap-2">
-          {/* Status: All */}
+    <div aria-label="Bộ lọc thông báo" className="flex flex-col gap-3">
+      {/* Row 1: Light Segmented Status Tabs (matching Disputes & Queues) + SearchField */}
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
+        <div
+          role="tablist"
+          aria-label="Lọc thông báo theo trạng thái"
+          className="inline-flex flex-wrap gap-1 self-start rounded-xl border border-slate-200 bg-slate-100/80 p-1"
+        >
           <button
             type="button"
-            onClick={() => onStatusFilterChange('all')}
-            className={`filter-status-btn px-4 py-2 rounded-xl text-xs md:text-sm font-semibold flex items-center gap-2 transition-colors cursor-pointer ${
-              statusFilter === 'all'
-                ? 'bg-[#131b2e] text-white shadow-xs'
-                : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+            role="tab"
+            aria-selected={statusFilter === 'ALL'}
+            data-status="ALL"
+            onClick={() => onStatusFilterChange('ALL')}
+            className={`inline-flex items-center gap-2 rounded-lg px-4 sm:px-5 py-2.5 text-[15px] font-semibold transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d95f00] ${
+              statusFilter === 'ALL'
+                ? 'bg-white text-slate-900 shadow-sm'
+                : 'text-slate-600 hover:bg-slate-200/60 hover:text-slate-900'
             }`}
-            data-status="all"
           >
             <span>Tất cả</span>
-            <span className="font-mono text-xs opacity-80">({totalCount.toString().padStart(2, '0')})</span>
+            <span className="rounded-full bg-orange-100 px-2.5 py-0.5 text-[13px] font-bold tabular-nums text-orange-700">
+              {serverTotalCount}
+            </span>
           </button>
 
-          {/* Status: Unread */}
           <button
             type="button"
-            onClick={() => onStatusFilterChange('unread')}
-            className={`filter-status-btn px-4 py-2 rounded-xl text-xs md:text-sm font-semibold flex items-center gap-2 transition-colors cursor-pointer ${
-              statusFilter === 'unread'
-                ? 'bg-[#131b2e] text-white shadow-xs'
-                : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+            role="tab"
+            aria-selected={statusFilter === 'UNREAD'}
+            data-status="UNREAD"
+            onClick={() => onStatusFilterChange('UNREAD')}
+            className={`inline-flex items-center gap-2 rounded-lg px-4 sm:px-5 py-2.5 text-[15px] font-semibold transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d95f00] ${
+              statusFilter === 'UNREAD'
+                ? 'bg-white text-slate-900 shadow-sm'
+                : 'text-slate-600 hover:bg-slate-200/60 hover:text-slate-900'
             }`}
-            data-status="unread"
           >
             <span>Chưa đọc</span>
             <span
-              className={`font-mono text-xs px-2 py-0.5 rounded font-bold ${
-                statusFilter === 'unread'
-                  ? 'bg-[#d95f00] text-white'
-                  : 'bg-[#ffeedd] text-[#d95f00]'
+              data-testid="unread-filter-count"
+              className="rounded-full bg-orange-100 px-2.5 py-0.5 text-[13px] font-bold tabular-nums text-orange-700"
+            >
+              {unreadCount}
+            </span>
+          </button>
+        </div>
+
+        <form
+          onSubmit={handleSubmit(handleValidSearchSubmit)}
+          className="w-full lg:w-[420px] flex flex-col"
+          noValidate
+        >
+          <Controller
+            name="searchKeyword"
+            control={control}
+            render={({ field }) => (
+              <SearchField
+                id="notifications-search-input"
+                value={field.value}
+                onChange={(val) => {
+                  field.onChange(val)
+                  if (val.trim().length <= 100) {
+                    onSearchKeywordChange(val)
+                  }
+                }}
+                onSearch={(val) => {
+                  if (val.trim().length <= 100) {
+                    onSearchKeywordChange(val)
+                  }
+                }}
+                onClear={() => {
+                  setValue('searchKeyword', '', { shouldValidate: true })
+                  onSearchKeywordChange('')
+                }}
+                placeholder="Tìm theo tiêu đề hoặc nội dung thông báo..."
+                aria-label="Tìm kiếm thông báo"
+                size="lg"
+              />
+            )}
+          />
+          {errors.searchKeyword && (
+            <p role="alert" className="mt-1.5 text-sm font-medium text-rose-600">
+              {errors.searchKeyword.message}
+            </p>
+          )}
+        </form>
+      </div>
+
+      {/* Row 2: Light Category Filter Chips */}
+      <div
+        className="flex flex-wrap items-center gap-2"
+        role="group"
+        aria-label="Lọc theo phân hệ thông báo"
+      >
+        {TYPE_CHIPS.map((chip) => {
+          const isActive = typeFilter === chip.value
+          return (
+            <button
+              key={chip.value}
+              type="button"
+              onClick={() => onTypeFilterChange(chip.value)}
+              aria-pressed={isActive}
+              data-type={chip.value}
+              className={`min-h-[42px] rounded-lg border px-4 py-2 text-sm font-semibold transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d95f00] ${
+                isActive
+                  ? 'border-orange-200 bg-orange-50 text-orange-800 shadow-2xs'
+                  : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50 hover:text-slate-900'
               }`}
             >
-              {unreadCount.toString().padStart(2, '0')}
-            </span>
-          </button>
+              {chip.label}
+            </button>
+          )
+        })}
+      </div>
 
-          {/* Status: Urgent */}
+      {/* Transparent Client Filter Scope Helper */}
+      {hasActiveFilter && (
+        <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-slate-200/80 bg-white px-4 py-2.5 text-sm text-slate-600">
+          <span>
+            Đang lọc trên <strong className="text-slate-900">{pageTotalCount}</strong> thông báo của trang hiện tại
+            {' · '}
+            <strong className="text-[#d95f00]">{matchedCount}</strong> kết quả khớp
+          </span>
           <button
             type="button"
-            onClick={() => onStatusFilterChange('urgent')}
-            className={`filter-status-btn px-4 py-2 rounded-xl text-xs md:text-sm font-semibold flex items-center gap-2 transition-colors cursor-pointer ${
-              statusFilter === 'urgent'
-                ? 'bg-[#131b2e] text-white shadow-xs'
-                : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
-            }`}
-            data-status="urgent"
+            onClick={onResetFilters}
+            className="inline-flex items-center gap-1.5 font-semibold text-[#9e4300] hover:text-[#d95f00] cursor-pointer focus-visible:outline-none focus-visible:underline"
           >
-            <span>Quan trọng &amp; Khẩn cấp</span>
-            <span className="font-mono text-xs text-slate-500 font-bold">
-              ({urgentCount.toString().padStart(2, '0')})
-            </span>
+            <RotateCcw className="w-4 h-4" aria-hidden="true" />
+            <span>Xóa bộ lọc</span>
           </button>
         </div>
-
-        {/* Real-time ticker badge */}
-        <div className="flex items-center gap-2">
-          <span className="font-mono text-xs text-slate-500 font-semibold uppercase tracking-wider">
-            TỰ ĐỘNG LÀM MỚI:
-          </span>
-          <span className="font-mono text-xs bg-slate-100 px-2.5 py-1 rounded-md text-slate-800 font-bold border border-slate-200">
-            {refreshSecondsCountdown.toString().padStart(2, '0')}s
-          </span>
-        </div>
-      </div>
-
-      {/* Row 2: Event Category Chips */}
-      <div className="flex flex-wrap items-center gap-2 pt-1">
-        <button
-          type="button"
-          onClick={() => onCategoryFilterChange('all')}
-          className={`filter-category-btn px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors cursor-pointer ${
-            categoryFilter === 'all'
-              ? 'bg-[#131b2e] text-white shadow-xs'
-              : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-          }`}
-          data-category="all"
-        >
-          Tất cả sự kiện
-        </button>
-
-        <button
-          type="button"
-          onClick={() => onCategoryFilterChange('queue')}
-          className={`filter-category-btn px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer ${
-            categoryFilter === 'queue'
-              ? 'bg-[#131b2e] text-white shadow-xs'
-              : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-          }`}
-          data-category="queue"
-        >
-          <span className="text-[#d95f00]">⚡</span>
-          <span>Hàng đợi ảo (Queue Alerts)</span>
-        </button>
-
-        <button
-          type="button"
-          onClick={() => onCategoryFilterChange('gate')}
-          className={`filter-category-btn px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer ${
-            categoryFilter === 'gate'
-              ? 'bg-[#131b2e] text-white shadow-xs'
-              : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-          }`}
-          data-category="gate"
-        >
-          <span>🅿️</span>
-          <span>Đặt chỗ &amp; Barie (Booking &amp; Gate)</span>
-        </button>
-
-        <button
-          type="button"
-          onClick={() => onCategoryFilterChange('payment')}
-          className={`filter-category-btn px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer ${
-            categoryFilter === 'payment'
-              ? 'bg-[#131b2e] text-white shadow-xs'
-              : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-          }`}
-          data-category="payment"
-        >
-          <span>💳</span>
-          <span>Thanh toán &amp; HĐĐT (Payments)</span>
-        </button>
-
-        <button
-          type="button"
-          onClick={() => onCategoryFilterChange('route')}
-          className={`filter-category-btn px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer ${
-            categoryFilter === 'route'
-              ? 'bg-[#131b2e] text-white shadow-xs'
-              : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-          }`}
-          data-category="route"
-        >
-          <span className="text-[#d95f00]">⚠️</span>
-          <span>Cảnh báo lộ trình (Road &amp; Fleet)</span>
-        </button>
-      </div>
-    </section>
+      )}
+    </div>
   )
 }

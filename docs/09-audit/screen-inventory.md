@@ -24,7 +24,7 @@
 | `SCR-022` | Driver Change Password & Security Hub (Đổi mật khẩu bảo mật tài khoản) | `/change-password` (`/dashboard/change-password`) | `features/change-password` | Stitch HTML/CSS (`web_standard`) | **IMPLEMENTED** | Sẵn sàng nghiệm thu |
 | `SCR-023` | PayOS Payment Success Callback Hub (Xác nhận & Đồng bộ kết quả thanh toán) | `/payment/success` | `features/payment-return` | Stitch HTML/CSS (`web_standard`) | **IMPLEMENTED** | Sẵn sàng nghiệm thu |
 | `SCR-024` | PayOS Payment Cancel & Berth Preservation Hub (Thông báo hủy thanh toán & Bảo lưu slot) | `/payment/cancel` | `features/payment-cancel` | Stitch HTML/CSS (`web_standard`) | **IMPLEMENTED** | Sẵn sàng nghiệm thu |
-| `SCR-025` | Driver Notifications Center (Trung tâm thông báo & Nhật ký tác vụ) | `/notifications` | `features/notifications` | Stitch HTML/CSS (`web_standard`) | **IMPLEMENTED** | Sẵn sàng nghiệm thu |
+| `SCR-025` | Driver Notifications Center (Trung tâm thông báo vận hành tài xế) | `/notifications` (`/dashboard/notifications`, `/driver/notifications`) | `features/notifications` (`re-exported as DriverNotificationsPage`) | Stitch UI + Real API Sprint 3 (`web_standard`) | **IMPLEMENTED** | Chuẩn hóa API-only, TanStack Query, RHF/Zod, 5 UI states; chờ nghiệm thu backend thực tế |
 | `SCR-026` | Merchant Executive Dashboard (Bảng điều khiển tổng quan vận hành & Doanh thu chủ bãi) | `/merchant`, `/merchant/dashboard` | `features/merchant/dashboard` | Stitch HTML/CSS (`web_dashboard`) | **IMPLEMENTED** | Sẵn sàng nghiệm thu |
 | `SCR-027` | Merchant Legal & Banking Profile (Hồ sơ pháp lý & Tài khoản nhận tiền chủ bãi) | `/merchant/profile` | `features/merchant/profile` | Stitch HTML/CSS (`web_dashboard`) | **IMPLEMENTED** | Sẵn sàng nghiệm thu |
 | `SCR-028` | Merchant Parking Lots Directory (Danh mục bãi đỗ xe sở hữu) | `/merchant/parking-lots` | `features/merchant/parking-lots` | Stitch HTML/CSS (`web_dashboard`) | **IMPLEMENTED** | Sẵn sàng nghiệm thu |
@@ -62,3 +62,12 @@ Real-data capacity summary/category bars, Vietnamese pricing cards, read-only lo
 
 
 > 2026-11-08: Driver/merchant map presentation updated with depot markers and outlined routes. Capability parity and verification: [map presentation report](./map-presentation-2026-11-08.md).
+
+## SCR-025 — Driver Operational Notifications Center (`SP-S3-UI-06`) — 2026-11-11
+
+- **Routes & Layout:** `/notifications`, `/dashboard/notifications`, `/driver/notifications` wrapped in `DriverLayout` (`RequireRole role="DRIVER"`). `DriverHeader` Bell links to `/notifications` with live badge from `GET /api/v1/notifications/unread-count`.
+- **Architecture (4-Layer FSD & Workspace Inbox Redesign):**
+  - Layer 1 (`src/shared/components/`): Reused `Workspace`, `Modal`, `Badge`, `Button`, `Skeleton`, `EmptyState`, `ErrorState`, `Alert`, `Toast`, `Pagination`, `SearchField`.
+  - Layer 2 (`src/entities/notification/`): Extracted `BackendNotificationDto`, `NotificationViewModel`, `normalizeNotificationType`, `parseNotificationDate` (ISO + Jackson arrays), `formatNotificationTime`, strict conditional `resolveNotificationAction`, and `NotificationTypeBadge`.
+  - Layer 3 (`src/features/notifications/` + re-export `DriverNotificationsPage` in `src/features/driver/`): Uses `Workspace` flat header + light segmented filter bar matching Disputes/Queues (`NotificationsFilterBar` + RHF/Zod + `useNotificationStore`), Gmail-style compact rows (`NotificationRowItem`) inside single-column inbox, and click-to-open `NotificationDetailModal` with auto mark-read and conditional entity CTA; removed Profile/QuickNav sidebars, hero card wrapper, `ProfileSidebarNav` notifications tab, `NotificationSettingsModal`, and dummy Web Push/VAT/KPI widgets.
+- **Verification Scope & Limitation:** Verified against `NotificationController` & `NotificationDto` contracts via TypeScript (`tsc --noEmit`), strict ESLint on touched files, Vitest unit/integration suites, and Vite production build; live end-to-end verification against running backend services remains pending.

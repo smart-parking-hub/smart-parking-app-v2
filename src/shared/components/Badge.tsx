@@ -26,7 +26,8 @@ const statusDictionary: Record<string, string> = {
   REJECTED: 'Từ chối',
   SUSPENDED: 'Tạm dừng',
   PAID: 'Đã chi',
-  OPEN: 'Đang mở',
+  OPEN: 'Chờ xử lý',
+  IN_REVIEW: 'Đang xem xét',
   RESOLVED: 'Đã giải quyết',
   ACTIVE: 'Hoạt động',
   BANNED: 'Đã khóa',
@@ -63,7 +64,9 @@ export function Badge({
         resolvedVariant = 'success'
       } else if (/REJECT|BANNED|CANCEL|OVERTIME|SUSPENDED|FAIL/.test(text)) {
         resolvedVariant = 'danger'
-      } else if (/PENDING|HOLD|WAITING/.test(text)) {
+      } else if (/IN_REVIEW/.test(text)) {
+        resolvedVariant = 'info'
+      } else if (/PENDING|OPEN|HOLD|WAITING/.test(text)) {
         resolvedVariant = 'warning'
       } else {
         resolvedVariant = 'default'

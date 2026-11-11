@@ -1,260 +1,311 @@
-import { useState, useEffect, useMemo } from 'react'
-import {
-  fetchNotificationsApi,
-  markAsReadApi,
-  markAllAsReadApi,
-  fetchStoredChannelsConfig,
-  saveStoredChannelsConfig,
-  fallbackNotificationsList,
-  fallbackDriverStats,
-} from '../api/notificationApi'
-import type {
-  NotificationItemDto,
-  NotificationStatusFilter,
-  NotificationCategoryFilter,
-  DriverNotificationChannelsConfig,
-  DriverNotificationStats,
-} from '../types/notificationTypes'
-import { NotificationsHeader } from '../components/NotificationsHeader'
-import { NotificationsFilterBar } from '../components/NotificationsFilterBar'
-import { NotificationCardItem } from '../components/NotificationCardItem'
-import { NotificationChannelsSidebarCard } from '../components/NotificationChannelsSidebarCard'
-import { DailyOperationsKpiSidebarCard } from '../components/DailyOperationsKpiSidebarCard'
-import { DispatchHotlineSupportCard } from '../components/DispatchHotlineSupportCard'
-import { NotificationsPagination } from '../components/NotificationsPagination'
+import { useMemo } from 'react'
+import { CheckCheck, RefreshCw } from 'lucide-react'
+import { errorMessage } from '@/shared/api/resources'
+import { Alert } from '@/shared/components/Alert'
+import { Button } from '@/shared/components/Button'
+import { ErrorState } from '@/shared/components/ErrorState'
+import { Toast } from '@/shared/components/Toast'
+import { Workspace } from '@/shared/components/Workspace'
+import { DEFAULT_NOTIFICATION_PAGE_SIZE } from '../api/notificationApi'
+import { NotificationDetailModal } from '../components/NotificationDetailModal'
+import { NotificationRowItem } from '../components/NotificationRowItem'
 import { NotificationsEmptyState } from '../components/NotificationsEmptyState'
+import { NotificationsFilterBar } from '../components/NotificationsFilterBar'
+import { NotificationsPagination } from '../components/NotificationsPagination'
 import { NotificationsSkeleton } from '../components/NotificationsSkeleton'
-import { ProfileSidebarNav } from '../../profile/components/ProfileSidebarNav'
-import { useNavigate } from 'react-router-dom'
+import {
+  useMarkAllNotificationsReadMutation,
+  useMarkNotificationReadMutation,
+  useNotificationsListQuery,
+  useUnreadCountQuery,
+} from '../hooks/useNotificationsQuery'
+import { useNotificationStore } from '../store/notificationStore'
+import type {
+  NotificationEmptyVariant,
+  NotificationViewModel,
+} from '../types/notificationTypes'
 
 export function NotificationsPage() {
-  const navigate = useNavigate()
-  const [loading, setLoading] = useState(true)
-  const [notifications, setNotifications] = useState<NotificationItemDto[]>(
-    fallbackNotificationsList
-  )
-  const [statusFilter, setStatusFilter] = useState<NotificationStatusFilter>('all')
-  const [categoryFilter, setCategoryFilter] = useState<NotificationCategoryFilter>('all')
-  const [currentPage, setCurrentPage] = useState(1)
-  const pageSize = 5
+  const {
+    statusFilter,
+    typeFilter,
+    searchKeyword,
+    currentPage,
+    selectedNotificationId,
+    toast,
+    setStatusFilter,
+    setTypeFilter,
+    setSearchKeyword,
+    setCurrentPage,
+    setSelectedNotificationId,
+    resetFilters,
+    clearToast,
+  } = useNotificationStore()
 
-  const [refreshCountdown, setRefreshCountdown] = useState(5)
-  const [isMarkingAll, setIsMarkingAll] = useState(false)
-  const [channelsConfig, setChannelsConfig] = useState<DriverNotificationChannelsConfig>(
-    fetchStoredChannelsConfig
+  const listQuery = useNotificationsListQuery(
+    currentPage,
+    DEFAULT_NOTIFICATION_PAGE_SIZE,
   )
-  const [stats, setStats] = useState<DriverNotificationStats>(fallbackDriverStats)
+  const unreadCountQuery = useUnreadCountQuery()
+  const markReadMutation = useMarkNotificationReadMutation()
+  const markAllReadMutation = useMarkAllNotificationsReadMutation()
 
-  // Initial load
-  useEffect(() => {
-    let isMounted = true
-    const loadData = async () => {
+  const pageData = listQuery.data
+  const pageItems = useMemo(() => pageData?.content ?? [], [pageData?.content])
+
+  const pageUnreadCount = useMemo(
+    () => pageItems.filter((item) => item.isUnread).length,
+    [pageItems],
+  )
+
+  const unreadCount =
+    typeof unreadCountQuery.data === 'number'
+      ? unreadCountQuery.data
+      : pageUnreadCount
+
+  const filteredItems = useMemo(() => {
+    const keyword = searchKeyword.trim().toLocaleLowerCase('vi')
+
+    return pageItems.filter((item) => {
+      if (statusFilter === 'UNREAD' && !item.isUnread) {
+        return false
+      }
+      if (typeFilter !== 'ALL' && item.type !== typeFilter) {
+        return false
+      }
+      if (keyword) {
+        const haystack = `${item.title} ${item.content} ${item.typeLabel}`.toLocaleLowerCase('vi')
+        if (!haystack.includes(keyword)) {
+          return false
+        }
+      }
+      return true
+    })
+  }, [pageItems, statusFilter, typeFilter, searchKeyword])
+
+  const selectedNotification = useMemo(
+    () => pageItems.find((item) => item.id === selectedNotificationId) ?? null,
+    [pageItems, selectedNotificationId],
+  )
+
+  const serverTotalCount = pageData?.totalElements ?? pageItems.length
+  const totalPages = pageData?.totalPages ?? 1
+  const resolvedPage = pageData?.currentPage ?? currentPage
+
+  const emptyVariant: NotificationEmptyVariant =
+    serverTotalCount === 0
+      ? 'no-notifications'
+      : statusFilter === 'UNREAD' &&
+          typeFilter === 'ALL' &&
+          !searchKeyword.trim()
+        ? 'all-read'
+        : 'filtered'
+
+  const handleRefresh = () => {
+    void listQuery.refetch()
+    void unreadCountQuery.refetch()
+  }
+
+  const handlePageChange = (nextPage: number) => {
+    setCurrentPage(nextPage)
+    if (typeof window !== 'undefined' && typeof window.scrollTo === 'function') {
       try {
-        setLoading(true)
-        const res = await fetchNotificationsApi({ page: 0, size: 20 })
-        if (isMounted && res.items && res.items.length > 0) {
-          setNotifications(res.items)
-        }
+        window.scrollTo({ top: 0, behavior: 'smooth' })
       } catch {
-        // Fallback initialized
-      } finally {
-        if (isMounted) {
-          setLoading(false)
-        }
+        window.scrollTo(0, 0)
       }
     }
-
-    loadData()
-    return () => {
-      isMounted = false
-    }
-  }, [])
-
-  // Auto-refresh 5-second ticker
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setRefreshCountdown((prev) => {
-        if (prev <= 1) {
-          return 5
-        }
-        return prev - 1
-      })
-    }, 1000)
-
-    return () => clearInterval(timer)
-  }, [])
-
-  // Filtered notifications
-  const filteredNotifications = useMemo(() => {
-    return notifications.filter((item) => {
-      // 1. Status filter
-      let matchStatus = true
-      if (statusFilter === 'unread') {
-        matchStatus = item.readAt === null
-      } else if (statusFilter === 'urgent') {
-        matchStatus = item.isUrgent === true
-      }
-
-      // 2. Category filter
-      let matchCategory = true
-      if (categoryFilter !== 'all') {
-        matchCategory = item.category === categoryFilter
-      }
-
-      return matchStatus && matchCategory
-    })
-  }, [notifications, statusFilter, categoryFilter])
-
-  // Paginated items
-  const paginatedItems = useMemo(() => {
-    const start = (currentPage - 1) * pageSize
-    return filteredNotifications.slice(start, start + pageSize)
-  }, [filteredNotifications, currentPage, pageSize])
-
-  // Dynamic counts
-  const unreadCount = useMemo(() => {
-    return notifications.filter((item) => item.readAt === null).length
-  }, [notifications])
-
-  const urgentCount = useMemo(() => {
-    return notifications.filter((item) => item.isUrgent).length
-  }, [notifications])
-
-  // Update stats dynamically
-  useEffect(() => {
-    setStats((prev) => ({
-      ...prev,
-      totalCount: notifications.length,
-      unreadCount,
-      urgentCount,
-    }))
-  }, [notifications.length, unreadCount, urgentCount])
-
-  // Reset page when filters change
-  const handleStatusChange = (status: NotificationStatusFilter) => {
-    setStatusFilter(status)
-    setCurrentPage(1)
   }
 
-  const handleCategoryChange = (cat: NotificationCategoryFilter) => {
-    setCategoryFilter(cat)
-    setCurrentPage(1)
+  const handleMarkRead = (id: number, notifySuccess = true) => {
+    if (markReadMutation.isPending) return
+    markReadMutation.mutate({ id, notifySuccess })
   }
 
-  // Handlers
-  const handleMarkRead = async (id: number) => {
-    setNotifications((prev) =>
-      prev.map((item) =>
-        item.id === id ? { ...item, readAt: new Date().toISOString() } : item
-      )
-    )
-    await markAsReadApi(id)
-  }
-
-  const handleMarkAllAsRead = async () => {
-    setIsMarkingAll(true)
-    try {
-      setNotifications((prev) =>
-        prev.map((item) => ({ ...item, readAt: new Date().toISOString() }))
-      )
-      await markAllAsReadApi()
-    } finally {
-      setIsMarkingAll(false)
+  const handleSelectNotification = (notification: NotificationViewModel) => {
+    setSelectedNotificationId(notification.id)
+    if (notification.isUnread) {
+      handleMarkRead(notification.id, false)
     }
   }
 
-  const handleToggleChannel = (key: keyof DriverNotificationChannelsConfig) => {
-    setChannelsConfig((prev) => {
-      const updated = { ...prev, [key]: !prev[key] }
-      saveStoredChannelsConfig(updated)
-      return updated
-    })
+  const handleMarkAllAsRead = () => {
+    if (markAllReadMutation.isPending || unreadCount === 0) return
+    markAllReadMutation.mutate()
   }
 
-  const handleClaimSlot = (notification: NotificationItemDto) => {
-    navigate('/queues', { state: { claimBookingId: notification.id } })
-  }
-
-  const handleResetFilters = () => {
-    setStatusFilter('all')
-    setCategoryFilter('all')
-    setCurrentPage(1)
-  }
-
-  if (loading) {
-    return (
-      <main className="min-h-screen bg-[#f8f9ff] py-8 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-[1280px] mx-auto">
-          <NotificationsSkeleton />
-        </div>
-      </main>
-    )
-  }
+  const isRefreshing = listQuery.isFetching || unreadCountQuery.isFetching
 
   return (
-    <main className="min-h-screen bg-[#f8f9ff] py-8 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-[1280px] mx-auto flex flex-col gap-6">
-        {/* Hero Header */}
-        <NotificationsHeader
-          unreadCount={unreadCount}
-          onMarkAllAsRead={handleMarkAllAsRead}
-          isMarkingAll={isMarkingAll}
-        />
+    <Workspace
+      eyebrow="TÀI KHOẢN / THÔNG BÁO"
+      title="Trung tâm thông báo"
+      description="Theo dõi thông báo đặt chỗ, hàng đợi ảo, giao dịch thanh toán và cập nhật hệ thống."
+      actions={
+        <div className="flex flex-wrap items-center gap-2.5">
+          <button
+            type="button"
+            onClick={handleRefresh}
+            disabled={isRefreshing}
+            aria-busy={isRefreshing}
+            aria-label="Làm mới danh sách thông báo"
+            className="inline-flex min-h-[44px] items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-[15px] font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-50 transition-colors shadow-2xs cursor-pointer"
+          >
+            <RefreshCw
+              className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`}
+              aria-hidden="true"
+            />
+            <span>Làm mới</span>
+          </button>
 
-        {/* Dual Filter Bar */}
-        <NotificationsFilterBar
-          statusFilter={statusFilter}
-          onStatusFilterChange={handleStatusChange}
-          categoryFilter={categoryFilter}
-          onCategoryFilterChange={handleCategoryChange}
-          totalCount={notifications.length}
-          unreadCount={unreadCount}
-          urgentCount={urgentCount}
-          refreshSecondsCountdown={refreshCountdown}
+          <button
+            type="button"
+            id="mark-all-read-btn"
+            onClick={handleMarkAllAsRead}
+            disabled={unreadCount === 0 || markAllReadMutation.isPending}
+            aria-busy={markAllReadMutation.isPending}
+            title={
+              unreadCount === 0
+                ? 'Tất cả thông báo đã được đọc'
+                : 'Đánh dấu tất cả thông báo là đã đọc'
+            }
+            className="inline-flex min-h-[44px] items-center justify-center gap-2 rounded-xl bg-[#d95f00] px-4 py-2.5 text-[15px] font-semibold text-white hover:bg-[#b84e00] active:bg-[#9e4300] disabled:opacity-50 disabled:cursor-not-allowed transition-colors shadow-xs cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d95f00] focus-visible:ring-offset-2"
+          >
+            <CheckCheck className="h-4 w-4 shrink-0" aria-hidden="true" />
+            <span>
+              {markAllReadMutation.isPending
+                ? 'Đang cập nhật...'
+                : 'Đánh dấu tất cả đã đọc'}
+            </span>
+          </button>
+        </div>
+      }
+    >
+      {listQuery.isPending && !pageData ? (
+        <NotificationsSkeleton />
+      ) : listQuery.isError && !pageData ? (
+        <ErrorState
+          variant="card"
+          title="Không thể tải thông báo"
+          description="Hệ thống tạm thời chưa thể kết nối để lấy danh sách thông báo vận hành. Vui lòng thử lại."
+          errorDetail={errorMessage(listQuery.error)}
+          onRetry={handleRefresh}
+          isRetrying={listQuery.isFetching}
         />
+      ) : (
+        <>
+          {/* Background Refetch Error Banner */}
+          {listQuery.isError && (
+            <Alert
+              variant="error"
+              title="Không thể làm mới danh sách thông báo"
+              action={
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={handleRefresh}
+                  isLoading={listQuery.isFetching}
+                >
+                  Thử lại
+                </Button>
+              }
+            >
+              {errorMessage(listQuery.error)}
+            </Alert>
+          )}
 
-        {/* 12-Column Responsive Workspace */}
-        <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 items-start">
-          {/* Left Column (8 cols): Event articles list & Pagination */}
-          <div className="xl:col-span-8 flex flex-col gap-4">
-            {paginatedItems.length === 0 ? (
-              <NotificationsEmptyState onResetFilters={handleResetFilters} />
-            ) : (
-              <>
-                {paginatedItems.map((item) => (
-                  <NotificationCardItem
+          {/* Filter & Search Toolbar (React Hook Form + Zod) */}
+          <NotificationsFilterBar
+            statusFilter={statusFilter}
+            onStatusFilterChange={setStatusFilter}
+            typeFilter={typeFilter}
+            onTypeFilterChange={setTypeFilter}
+            searchKeyword={searchKeyword}
+            onSearchKeywordChange={setSearchKeyword}
+            onResetFilters={resetFilters}
+            serverTotalCount={serverTotalCount}
+            pageTotalCount={pageItems.length}
+            unreadCount={unreadCount}
+            matchedCount={filteredItems.length}
+          />
+
+          {/* Compact Gmail-Style Inbox List */}
+          {filteredItems.length === 0 ? (
+            <div className="space-y-4">
+              <NotificationsEmptyState
+                variant={emptyVariant}
+                onResetFilters={resetFilters}
+              />
+              {serverTotalCount > 0 && totalPages > 1 && (
+                <NotificationsPagination
+                  currentPage={resolvedPage}
+                  totalPages={totalPages}
+                  pageSize={DEFAULT_NOTIFICATION_PAGE_SIZE}
+                  totalItems={serverTotalCount}
+                  onPageChange={handlePageChange}
+                />
+              )}
+            </div>
+          ) : (
+            <section
+              aria-label="Hộp thư thông báo"
+              className="overflow-hidden rounded-2xl border border-brand-border bg-white shadow-2xs"
+            >
+              <ul role="list" className="divide-y divide-slate-100">
+                {filteredItems.map((item) => (
+                  <NotificationRowItem
                     key={item.id}
                     notification={item}
-                    onMarkRead={handleMarkRead}
-                    onClaimSlot={handleClaimSlot}
+                    onSelect={handleSelectNotification}
                   />
                 ))}
+              </ul>
 
+              {serverTotalCount > 0 && (
                 <NotificationsPagination
-                  currentPage={currentPage}
-                  pageSize={pageSize}
-                  totalItems={filteredNotifications.length}
-                  onPageChange={setCurrentPage}
+                  embedded
+                  currentPage={resolvedPage}
+                  totalPages={totalPages}
+                  pageSize={DEFAULT_NOTIFICATION_PAGE_SIZE}
+                  totalItems={serverTotalCount}
+                  onPageChange={handlePageChange}
                 />
-              </>
-            )}
-          </div>
+              )}
+            </section>
+          )}
+        </>
+      )}
 
-          {/* Right Column (4 cols): Profile Sidebar Nav, Channels Settings, Daily Stats & Hotline */}
-          <aside className="xl:col-span-4 flex flex-col gap-5">
-            <ProfileSidebarNav activeTab="notifications" />
+      {/* Detail Modal when clicking a notification row */}
+      <NotificationDetailModal
+        notification={selectedNotification}
+        isOpen={Boolean(selectedNotification)}
+        onClose={() => setSelectedNotificationId(null)}
+        onMarkRead={(id) => handleMarkRead(id, true)}
+        isMarkingRead={
+          markReadMutation.isPending &&
+          (typeof markReadMutation.variables === 'number'
+            ? markReadMutation.variables === selectedNotification?.id
+            : markReadMutation.variables?.id === selectedNotification?.id)
+        }
+      />
 
-            <NotificationChannelsSidebarCard
-              config={channelsConfig}
-              onToggleChannel={handleToggleChannel}
-            />
-
-            <DailyOperationsKpiSidebarCard stats={stats} />
-
-            <DispatchHotlineSupportCard />
-          </aside>
+      {/* Live Toast Feedback */}
+      {toast && (
+        <div
+          className="fixed bottom-6 right-6 z-[60] max-w-md w-[calc(100%-3rem)] sm:w-auto"
+          aria-live="polite"
+        >
+          <Toast
+            key={toast.id}
+            title={toast.title}
+            message={toast.message}
+            variant={toast.variant}
+            onClose={clearToast}
+          />
         </div>
-      </div>
-    </main>
+      )}
+    </Workspace>
   )
 }
