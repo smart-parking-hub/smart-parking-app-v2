@@ -138,7 +138,7 @@ test.describe('Flow 3: Check-out Barie, Tính Giá Lũy Tiến & Thu Tiền Mặ
     await expect(page).toHaveURL(/\/merchant\/qr-scanner/)
 
     // 2. Chuyển sang tab "XE RA" (check-out)
-    const checkoutTabBtn = page.getByRole('button', { name: 'XE RA' })
+    const checkoutTabBtn = page.getByRole('button', { name: 'XE RA', exact: true })
     await expect(checkoutTabBtn).toBeVisible()
     await checkoutTabBtn.click()
     await expect(checkoutTabBtn).toHaveAttribute('aria-pressed', 'true')

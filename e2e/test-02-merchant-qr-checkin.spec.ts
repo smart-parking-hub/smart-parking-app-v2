@@ -122,7 +122,7 @@ test.describe('Flow 2: Check-in Barie Cổng Vào (SP-S3-INT-01)', () => {
     await expect(page).toHaveURL(/\/merchant\/qr-scanner/)
 
     // 2. Xác minh đang ở chế độ XE VÀO (check-in)
-    const checkinTabBtn = page.getByRole('button', { name: 'XE VÀO' })
+    const checkinTabBtn = page.getByRole('button', { name: 'XE VÀO', exact: true })
     await expect(checkinTabBtn).toBeVisible()
     await expect(checkinTabBtn).toHaveAttribute('aria-pressed', 'true')
 

@@ -66,6 +66,32 @@ test.describe('Core E2E Lifecycle: Giữ chỗ 10m -> Barie Check-in -> Barie Ch
     await page.route('**/api/v1/driver/vehicles*', (route) =>
       route.fulfill({ json: { data: [mockVehicle] } }),
     )
+    await page.route('**/api/v1/vehicles*', (route) =>
+      route.fulfill({
+        json: {
+          data: {
+            content: [
+              {
+                id: 3,
+                licensePlate: '51D-894.12',
+                vehicleType: 'CONTAINER',
+                status: 'ACTIVE',
+              },
+            ],
+            totalElements: 1,
+            totalPages: 1,
+          },
+          content: [
+            {
+              id: 3,
+              licensePlate: '51D-894.12',
+              vehicleType: 'CONTAINER',
+              status: 'ACTIVE',
+            },
+          ],
+        },
+      }),
+    )
 
     // Merchant Profile Mock
     await page.route('**/api/v1/merchant/profile', (route) =>
@@ -226,7 +252,7 @@ test.describe('Core E2E Lifecycle: Giữ chỗ 10m -> Barie Check-in -> Barie Ch
     const lotCard = page.locator('article', { hasText: 'Bãi Đỗ Xe Tân Cảng Container' }).first()
     await expect(lotCard).toBeVisible({ timeout: 10_000 })
 
-    const quickBookBtn = lotCard.getByRole('button', { name: /ĐẶT GIỮ CHỖ 10P/i })
+    const quickBookBtn = lotCard.locator('button', { hasText: 'ĐẶT GIỮ CHỖ 10P' })
     await quickBookBtn.click()
 
     const dialog = page.getByRole('dialog', { name: /Panel giữ chỗ nhanh 10 phút/i })
@@ -257,7 +283,7 @@ test.describe('Core E2E Lifecycle: Giữ chỗ 10m -> Barie Check-in -> Barie Ch
     // -------------------------------------------------------------
     // PHASE 3: CỔNG BARIE CHECK-OUT XE RA, TÍNH CƯỚC & THU TIỀN MẶT
     // -------------------------------------------------------------
-    await page.getByRole('button', { name: 'XE RA' }).click()
+    await page.getByRole('button', { name: 'XE RA', exact: true }).click()
     await page.getByLabel('Bãi kiểm soát').selectOption({ value: '12' })
     await page.getByLabel('Mã đặt chỗ / Nội dung QR').fill(bookingCode)
     await page.getByRole('button', { name: 'Kiểm tra & quyết toán xe ra' }).click()

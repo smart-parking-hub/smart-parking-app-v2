@@ -14,10 +14,12 @@ const mockParkingLot = {
   name: 'Bãi Đỗ Xe Tân Cảng Container',
   address: 'Cảng Tân Cảng - Phú Hữu, TP. Thủ Đức',
   hourlyRate: 30000,
+  basePricePerHour: 30000,
   depositAmount: 100000,
   etaMinutes: 15,
   slotTypeLabel: 'Còn 12 chỗ Container',
   availableSlots: 12,
+  availableCapacity: 12,
   totalSlots: 50,
   isFull: false,
   latitude: 10.782,
@@ -66,6 +68,32 @@ test.describe('Flow 1: Giữ chỗ 10 phút & Đặt cọc PayOS (SP-S3-INT-01)'
     // Mock Vehicles List
     await page.route('**/api/v1/driver/vehicles*', (route) =>
       route.fulfill({ json: { data: [mockVehicle] } }),
+    )
+    await page.route('**/api/v1/vehicles*', (route) =>
+      route.fulfill({
+        json: {
+          data: {
+            content: [
+              {
+                id: 3,
+                licensePlate: '51D-894.12',
+                vehicleType: 'CONTAINER',
+                status: 'ACTIVE',
+              },
+            ],
+            totalElements: 1,
+            totalPages: 1,
+          },
+          content: [
+            {
+              id: 3,
+              licensePlate: '51D-894.12',
+              vehicleType: 'CONTAINER',
+              status: 'ACTIVE',
+            },
+          ],
+        },
+      }),
     )
 
     // Mock Search Parking Lots
@@ -153,7 +181,7 @@ test.describe('Flow 1: Giữ chỗ 10 phút & Đặt cọc PayOS (SP-S3-INT-01)'
     await expect(lotCard).toBeVisible({ timeout: 10_000 })
 
     // 3. Bấm nút "ĐẶT GIỮ CHỖ 10P"
-    const quickBookBtn = lotCard.getByRole('button', { name: /ĐẶT GIỮ CHỖ 10P/i })
+    const quickBookBtn = lotCard.locator('button', { hasText: 'ĐẶT GIỮ CHỖ 10P' })
     await expect(quickBookBtn).toBeVisible()
     await quickBookBtn.click()
 
