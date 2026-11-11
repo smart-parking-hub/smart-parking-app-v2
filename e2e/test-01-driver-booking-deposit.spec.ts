@@ -173,8 +173,8 @@ test.describe('Flow 1: Giữ chỗ 10 phút & Đặt cọc PayOS (SP-S3-INT-01)'
     page,
   }) => {
     // 1. Điều hướng tới màn hình tìm kiếm bãi xe
-    await page.goto('/search')
-    await expect(page).toHaveURL(/\/search/)
+    await page.goto('/parking')
+    await expect(page).toHaveURL(/\/parking/)
 
     // 2. Chờ danh sách bãi xe xuất hiện
     const lotCard = page.locator('article', { hasText: 'Bãi Đỗ Xe Tân Cảng Container' }).first()

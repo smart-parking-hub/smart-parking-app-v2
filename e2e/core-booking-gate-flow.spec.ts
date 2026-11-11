@@ -248,7 +248,7 @@ test.describe('Core E2E Lifecycle: Giữ chỗ 10m -> Barie Check-in -> Barie Ch
       localStorage.setItem('smart-truck-parking.driver_name', 'Trần Quốc Tuấn')
     }, driverToken)
 
-    await page.goto('/search')
+    await page.goto('/parking')
     const lotCard = page.locator('article', { hasText: 'Bãi Đỗ Xe Tân Cảng Container' }).first()
     await expect(lotCard).toBeVisible({ timeout: 10_000 })
 
@@ -290,7 +290,7 @@ test.describe('Core E2E Lifecycle: Giữ chỗ 10m -> Barie Check-in -> Barie Ch
 
     const settlementModal = page.getByRole('dialog')
     await expect(settlementModal).toBeVisible()
-    await expect(settlementModal.getByText('60.000 ₫')).toBeVisible()
+    await expect(settlementModal.getByText('60.000 ₫', { exact: true })).toBeVisible()
 
     await settlementModal
       .getByRole('button', { name: /Đã nhận đủ tiền mặt · Hoàn tất lượt đỗ/i })

@@ -167,7 +167,7 @@ test.describe('Flow 3: Check-out Barie, Tính Giá Lũy Tiến & Thu Tiền Mặ
     // 7. Xác minh giá lũy tiến: Tổng 160.000 ₫, Cọc 100.000 ₫, Còn phải thu 60.000 ₫
     await expect(dialog.getByText('160.000 ₫')).toBeVisible()
     await expect(dialog.getByText('100.000 ₫')).toBeVisible()
-    await expect(dialog.getByText('60.000 ₫')).toBeVisible()
+    await expect(dialog.getByText('60.000 ₫', { exact: true })).toBeVisible()
 
     // 8. Bấm nút "Đã nhận đủ tiền mặt · Hoàn tất lượt đỗ"
     const confirmCashBtn = dialog.getByRole('button', {
