@@ -198,12 +198,13 @@ describe('BATCH-14D: Merchant Yard Infrastructure Integration (SCR-026 to SCR-03
   // -------------------------------------------------------------
   // SCR-027: Merchant Profile Page
   // -------------------------------------------------------------
-  it('SCR-027: MerchantProfilePage renders verified legal dossier, tax code, and toggles bank account mask', async () => {
+  it('SCR-027: MerchantProfilePage renders profile and security sections and toggles bank account mask', async () => {
     renderWithProviders(<MerchantProfilePage />, ['/merchant/profile'])
 
     // Header & Section
     expect(await screen.findByRole('heading', { level: 1, name: /Hồ sơ chủ bãi/i })).toBeInTheDocument()
-    expect(screen.getByText(/Quản lý thông tin liên hệ, giấy tờ và tài khoản nhận tiền/i)).toBeInTheDocument()
+    expect(await screen.findByRole('region', { name: 'Bảo mật tài khoản' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Cập nhật mật khẩu' })).toBeInTheDocument()
 
     // Form fields
     expect(await screen.findByDisplayValue('Lê Văn Thành')).toBeInTheDocument()
