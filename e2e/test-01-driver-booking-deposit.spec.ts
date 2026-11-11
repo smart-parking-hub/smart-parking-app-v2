@@ -125,21 +125,31 @@ test.describe('Flow 1: Giữ chỗ 10 phút & Đặt cọc PayOS (SP-S3-INT-01)'
       }),
     )
 
+    const mockBookingRecord = {
+      id: 501,
+      bookingCode: 'BK-2026-0894',
+      parkingLotId: 12,
+      merchantId: 101,
+      parkingLotName: 'Bãi Đỗ Xe Tân Cảng Container',
+      parkingLotAddress: 'Cảng Tân Cảng - Phú Hữu, TP. Thủ Đức',
+      vehicleId: 3,
+      vehiclePlate: '51D-894.12',
+      status: 'PENDING_CHECKIN',
+      advanceDeposit: 100000,
+      totalAmount: 250000,
+      hourlyRate: 30000,
+      expectedCheckInTime: new Date(Date.now() + 600000).toISOString(),
+      expectedCheckOutTime: new Date(Date.now() + 14400000).toISOString(),
+      expiresAt: new Date(Date.now() + 600000).toISOString(),
+      createdAt: new Date().toISOString(),
+    }
+
     // Mock Driver Bookings
     await page.route(/\/api\/v1\/bookings/, (route) => {
       if (route.request().method() === 'POST') {
         return route.fulfill({
           json: {
-            data: {
-              id: 501,
-              bookingCode: 'BK-2026-0894',
-              parkingLotId: 12,
-              parkingLotName: 'Bãi Đỗ Xe Tân Cảng Container',
-              status: 'PENDING_CHECKIN',
-              depositPaid: 100000,
-              vehiclePlate: '51D-894.12',
-              createdAt: new Date().toISOString(),
-            },
+            data: mockBookingRecord,
             message: 'Giữ chỗ và đặt cọc thành công',
           },
         })
@@ -147,24 +157,11 @@ test.describe('Flow 1: Giữ chỗ 10 phút & Đặt cọc PayOS (SP-S3-INT-01)'
       return route.fulfill({
         json: {
           data: {
-            content: [
-              {
-                id: 501,
-                bookingCode: 'BK-2026-0894',
-                parkingLotId: 12,
-                parkingLotName: 'Bãi Đỗ Xe Tân Cảng Container',
-                status: 'PENDING_CHECKIN',
-                depositPaid: 100000,
-                advanceDeposit: 100000,
-                totalAmount: 250000,
-                vehiclePlate: '51D-894.12',
-                createdAt: new Date().toISOString(),
-                expectedCheckInTime: new Date(Date.now() + 600000).toISOString(),
-              },
-            ],
+            content: [mockBookingRecord],
             totalElements: 1,
             totalPages: 1,
           },
+          content: [mockBookingRecord],
         },
       })
     })
