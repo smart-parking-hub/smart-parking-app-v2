@@ -35,8 +35,11 @@ const statusDictionary: Record<string, string> = {
   COMPLETED: 'Hoàn tất',
   PENDING_PAYMENT: 'Chờ thanh toán',
   PENDING_CHECKIN: 'Chờ vào bãi',
+  AWAITING_FINAL_PAYMENT: 'Chờ thanh toán cuối',
   CANCELLED: 'Đã hủy',
   OVERTIME: 'Quá giờ',
+  EXPIRED: 'Hết hạn',
+  REVIEWED: 'Đã đánh giá',
   SUCCESS: 'Thành công',
   HOLD: 'Đang giữ slot',
 }
@@ -62,11 +65,11 @@ export function Badge({
     if (!variant) {
       if (/APPROVED|ACTIVE|COMPLETED|SUCCESS|PAID|RESOLVED/.test(text)) {
         resolvedVariant = 'success'
-      } else if (/REJECT|BANNED|CANCEL|OVERTIME|SUSPENDED|FAIL/.test(text)) {
+      } else if (/REJECT|BANNED|CANCEL|OVERTIME|SUSPENDED|FAIL|EXPIRED/.test(text)) {
         resolvedVariant = 'danger'
-      } else if (/IN_REVIEW/.test(text)) {
+      } else if (/IN_REVIEW|REVIEWED|PARKING/.test(text)) {
         resolvedVariant = 'info'
-      } else if (/PENDING|OPEN|HOLD|WAITING/.test(text)) {
+      } else if (/PENDING|AWAITING|OPEN|HOLD|WAITING/.test(text)) {
         resolvedVariant = 'warning'
       } else {
         resolvedVariant = 'default'

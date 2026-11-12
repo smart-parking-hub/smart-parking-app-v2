@@ -47,10 +47,14 @@ const mockVehicle = {
 
 test.describe('Core E2E Lifecycle: Booking & cọc PayOS -> Barie Check-in -> Barie Check-out (SP-S3-INT-01)', () => {
   let bookingLifecycleStatus: 'PENDING_PAYMENT' | 'PENDING_CHECKIN' | 'PARKING' | 'COMPLETED' = 'PENDING_PAYMENT'
+  let recordedCheckInTime: string | null = null
+  let recordedCheckOutTime: string | null = null
   const bookingCode = 'BK-CORE-9999'
 
   test.beforeEach(async ({ page }) => {
     bookingLifecycleStatus = 'PENDING_PAYMENT'
+    recordedCheckInTime = null
+    recordedCheckOutTime = null
 
     // Driver Profile & Vehicles Mock
     await page.route('**/api/v1/driver/profile', (route) =>
@@ -170,13 +174,14 @@ test.describe('Core E2E Lifecycle: Booking & cọc PayOS -> Barie Check-in -> Ba
       const payload = route.request().postDataJSON()
       expect(payload.bookingCode).toBe(bookingCode)
       bookingLifecycleStatus = 'PARKING'
+      recordedCheckInTime = new Date(Date.now() - 45 * 60_000).toISOString()
       return route.fulfill({
         json: {
           data: {
             bookingCode,
             parkingLotId: 12,
             vehiclePlate: '51D-894.12',
-            checkInTime: new Date().toISOString(),
+            checkInTime: recordedCheckInTime,
             status: 'PARKING',
           },
           message: 'Xe đã được ghi nhận vào bãi.',
@@ -188,6 +193,7 @@ test.describe('Core E2E Lifecycle: Booking & cọc PayOS -> Barie Check-in -> Ba
     await page.route('**/api/v1/merchant/check-out', async (route) => {
       const payload = route.request().postDataJSON()
       expect(payload.bookingCode).toBe(bookingCode)
+      recordedCheckOutTime = new Date().toISOString()
       return route.fulfill({
         json: {
           data: {
@@ -213,32 +219,44 @@ test.describe('Core E2E Lifecycle: Booking & cọc PayOS -> Barie Check-in -> Ba
       })
     })
 
-    // Merchant Bookings List Mock
-    await page.route('**/api/v1/merchant/bookings*', (route) =>
-      route.fulfill({
+    // Merchant Bookings List & Detail Mock
+    await page.route(/\/api\/v1\/merchant\/bookings/, (route) => {
+      const merchantBooking = {
+        id: 9999,
+        bookingCode,
+        parkingLotId: 12,
+        merchantId: 101,
+        parkingLotName: 'Bãi Đỗ Xe Tân Cảng Container',
+        parkingLotAddress: mockParkingLot.address,
+        customerName: 'Trần Quốc Tuấn',
+        customerPhone: '0909 128 374',
+        vehiclePlate: '51D-894.12',
+        vehicleLicensePlate: '51D-894.12',
+        vehicleType: 'CONTAINER',
+        status: bookingLifecycleStatus,
+        hourlyRate: 30000,
+        advanceDeposit: 100000,
+        totalAmount: 160000,
+        createdAt: new Date(Date.now() - 3 * 3_600_000).toISOString(),
+        expiresAt: new Date(Date.now() - 2 * 3_600_000).toISOString(),
+        expectedCheckInTime: new Date(Date.now() - 2 * 3_600_000).toISOString(),
+        expectedCheckOutTime: new Date(Date.now() + 2 * 3_600_000).toISOString(),
+        checkInTime: recordedCheckInTime,
+        checkOutTime: recordedCheckOutTime,
+      }
+      if (new URL(route.request().url()).pathname === '/api/v1/merchant/bookings/9999') {
+        return route.fulfill({ json: { data: merchantBooking } })
+      }
+      return route.fulfill({
         json: {
           data: {
-            content: [
-              {
-                id: 9999,
-                bookingCode,
-                parkingLotId: 12,
-                parkingLotName: 'Bãi Đỗ Xe Tân Cảng Container',
-                customerName: 'Trần Quốc Tuấn',
-                customerPhone: '0909 128 374',
-                vehiclePlate: '51D-894.12',
-                status: bookingLifecycleStatus,
-                advanceDeposit: 100000,
-                totalAmount: 160000,
-                createdAt: new Date().toISOString(),
-              },
-            ],
+            content: [merchantBooking],
             totalElements: 1,
             totalPages: 1,
           },
         },
-      }),
-    )
+      })
+    })
   })
 
   test('Vòng đời đơn đỗ: Tạo booking & cọc PayOS -> Check-in -> Quyết toán xe ra', async ({
@@ -316,6 +334,16 @@ test.describe('Core E2E Lifecycle: Booking & cọc PayOS -> Barie Check-in -> Ba
     await page.goto('/merchant/bookings')
     await expect(page.getByText(bookingCode)).toBeVisible()
     await expect(page.getByText('Đã hoàn tất')).toBeVisible()
+
+    // Bấm "Chi tiết" trên bảng SCR-034 -> chuyển thẳng sang trang hồ sơ chi tiết & Nhật ký Barie (SCR-035)
+    await page.getByRole('link', { name: `Xem chi tiết đơn ${bookingCode}` }).click()
+
+    await expect(page).toHaveURL(/\/merchant\/bookings\/9999$/)
+    await expect(page.getByRole('heading', { level: 1, name: /Hồ sơ đặt chỗ #9999/i })).toBeVisible()
+    await expect(page.getByText('Nhật ký Barie & Tiến trình Vận hành')).toBeVisible()
+    await expect(page.getByText('Barie xác nhận xe vào bãi (Check-in)')).toBeVisible()
+    await expect(page.getByText('Barie xác nhận xe ra bãi (Check-out)')).toBeVisible()
+    await expect(page.getByText('Hoàn tất quyết toán & giải phóng chỗ đỗ')).toBeVisible()
   })
 })
 
