@@ -13,7 +13,6 @@ export interface MerchantBookingsUIState {
   statusFilter: MerchantBookingStatusFilter
   parkingLotId: number | null
   searchKeyword: string
-  selectedBookingId: number | null
   toast: MerchantBookingToastState | null
 }
 
@@ -23,7 +22,6 @@ export interface MerchantBookingsUIActions {
   setStatusFilter: (status: MerchantBookingStatusFilter) => void
   setParkingLotId: (lotId: number | null) => void
   setSearchKeyword: (keyword: string) => void
-  setSelectedBookingId: (id: number | null) => void
   resetFilters: () => void
   showToast: (
     title: string,
@@ -42,7 +40,6 @@ const initialState: MerchantBookingsUIState = {
   statusFilter: 'ALL',
   parkingLotId: null,
   searchKeyword: '',
-  selectedBookingId: null,
   toast: null,
 }
 
@@ -53,35 +50,30 @@ let state: MerchantBookingsStore = {
   setPage: (page) => {
     const safePage = Math.max(0, Math.floor(page))
     if (state.page === safePage) return
-    state = { ...state, page: safePage, selectedBookingId: null }
+    state = { ...state, page: safePage }
     emitChange()
   },
   setPageSize: (size) => {
     const safeSize = Math.max(1, Math.floor(size))
     if (state.pageSize === safeSize) return
-    state = { ...state, pageSize: safeSize, page: 0, selectedBookingId: null }
+    state = { ...state, pageSize: safeSize, page: 0 }
     emitChange()
   },
   setStatusFilter: (status) => {
     if (state.statusFilter === status) return
-    state = { ...state, statusFilter: status, page: 0, selectedBookingId: null }
+    state = { ...state, statusFilter: status, page: 0 }
     emitChange()
   },
   setParkingLotId: (lotId) => {
     const normalized =
       typeof lotId === 'number' && Number.isFinite(lotId) && lotId > 0 ? lotId : null
     if (state.parkingLotId === normalized) return
-    state = { ...state, parkingLotId: normalized, page: 0, selectedBookingId: null }
+    state = { ...state, parkingLotId: normalized, page: 0 }
     emitChange()
   },
   setSearchKeyword: (keyword) => {
     if (state.searchKeyword === keyword) return
-    state = { ...state, searchKeyword: keyword, page: 0, selectedBookingId: null }
-    emitChange()
-  },
-  setSelectedBookingId: (id) => {
-    if (state.selectedBookingId === id) return
-    state = { ...state, selectedBookingId: id }
+    state = { ...state, searchKeyword: keyword, page: 0 }
     emitChange()
   },
   resetFilters: () => {
@@ -91,7 +83,6 @@ let state: MerchantBookingsStore = {
       statusFilter: 'ALL',
       parkingLotId: null,
       searchKeyword: '',
-      selectedBookingId: null,
     }
     emitChange()
   },

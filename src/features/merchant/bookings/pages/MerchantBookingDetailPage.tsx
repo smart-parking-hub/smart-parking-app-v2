@@ -1,79 +1,158 @@
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
+import { RefreshCw } from 'lucide-react'
 import { errorMessage } from '@/shared/api/resources'
+import { Alert } from '@/shared/components/Alert'
 import { Badge } from '@/shared/components/Badge'
+import { Button } from '@/shared/components/Button'
+import { EmptyState } from '@/shared/components/EmptyState'
 import { ErrorState } from '@/shared/components/ErrorState'
-import { Skeleton } from '@/shared/components/Skeleton'
+import { Toast } from '@/shared/components/Toast'
 import {
   button,
-  Metrics,
-  Panel,
   secondary,
   Workspace,
 } from '@/shared/components/Workspace'
 import {
+  buildBookingBarrierSummary,
+  computeRemainingBookingAmount,
   formatBookingDateTime,
   formatBookingMoney,
-  formatBookingTimeOnly,
-  resolveBookingDriverName,
-  resolveBookingDriverPhone,
-  resolveBookingPlate,
-  resolveVehicleTypeLabel,
+  parseValidBookingRouteId,
 } from '../api/merchantBookingsApi'
+import { MerchantBookingBarrierTimeline } from '../components/MerchantBookingBarrierTimeline'
+import {
+  MerchantBookingDetailSidebar,
+  MerchantBookingJourneyPanel,
+  MerchantBookingTariffAndRefundPanel,
+} from '../components/MerchantBookingDetailSections'
+import { MerchantBookingDetailSkeleton } from '../components/MerchantBookingDetailSkeleton'
 import { useMerchantBookingDetailQuery } from '../hooks/useMerchantBookingsQuery'
+import type { MerchantBookingToastState } from '../types/merchantBookingsTypes'
 
 export function MerchantBookingDetailPage() {
   const { id } = useParams()
-  const detailQuery = useMerchantBookingDetailQuery(id)
+  const validBookingId = useMemo(() => parseValidBookingRouteId(id), [id])
+  const detailQuery = useMerchantBookingDetailQuery(validBookingId)
   const data = detailQuery.data
 
-  const surgeStart = data ? formatBookingTimeOnly(data.surgeStartTime) : null
-  const surgeEnd = data ? formatBookingTimeOnly(data.surgeEndTime) : null
-  const driverName = data ? resolveBookingDriverName(data) : null
-  const driverPhone = data ? resolveBookingDriverPhone(data) : null
+  const [copiedCode, setCopiedCode] = useState(false)
+  const [toast, setToast] = useState<MerchantBookingToastState | null>(null)
+  const nextToastIdRef = useRef(1)
+  const copyTimerRef = useRef<number | null>(null)
 
-  const hasPricingOrRefundDetails = Boolean(
-    data &&
-      (typeof data.hourlyRate === 'number' ||
-        typeof data.surgeMultiplier === 'number' ||
-        typeof data.overtimePenaltyMultiplier === 'number' ||
-        data.cancelledAt ||
-        data.cancellationReason ||
-        typeof data.refundAmount === 'number' ||
-        typeof data.refundPercentage === 'number' ||
-        data.refundPolicy ||
-        data.refundStatus ||
-        data.refundReference),
+  useEffect(() => {
+    return () => {
+      if (copyTimerRef.current !== null) {
+        window.clearTimeout(copyTimerRef.current)
+      }
+    }
+  }, [])
+
+  const emitToast = (
+    title: string,
+    variant: MerchantBookingToastState['variant'] = 'info',
+    message?: string,
+  ) => {
+    setToast({
+      id: nextToastIdRef.current++,
+      title,
+      message,
+      variant,
+    })
+  }
+
+  const handleCopyBookingCode = async (bookingCode: string) => {
+    try {
+      if (typeof navigator !== 'undefined' && navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(bookingCode)
+      }
+    } catch {
+      // Clipboard API may be unavailable in restricted contexts; still emit feedback toast.
+    }
+
+    setCopiedCode(true)
+    if (copyTimerRef.current !== null) {
+      window.clearTimeout(copyTimerRef.current)
+    }
+    copyTimerRef.current = window.setTimeout(() => {
+      setCopiedCode(false)
+    }, 1800)
+
+    emitToast(
+      'Đã sao chép mã đặt chỗ',
+      'success',
+      'Mã vé đã được lưu vào khay nhớ tạm để tra cứu tại trạm cổng.',
+    )
+  }
+
+  const handleRefresh = async () => {
+    if (validBookingId === null) return
+    setToast(null)
+    const result = await detailQuery.refetch()
+    if (!result.isError && result.data) {
+      emitToast(
+        'Đã cập nhật hồ sơ đặt chỗ',
+        'success',
+        'Dữ liệu đơn và nhật ký barie đã được đồng bộ mới nhất.',
+      )
+    }
+  }
+
+  const remainingAmount = useMemo(
+    () => (data ? computeRemainingBookingAmount(data) : null),
+    [data],
+  )
+  const barrierSummary = useMemo(
+    () => (data ? buildBookingBarrierSummary(data) : null),
+    [data],
   )
 
   return (
     <Workspace
-      title={`Hồ sơ đặt chỗ #${id}`}
+      title={id ? `Hồ sơ đặt chỗ #${id}` : 'Hồ sơ đặt chỗ'}
       eyebrow="CHI TIẾT VÉ / MERCHANT"
-      description="Xem hành trình xe, thông tin biển số, thời gian ra vào và chi tiết thanh toán cọc."
+      description="Xem hành trình xe, nhật ký barie theo mốc thời gian, biểu phí áp dụng và chi tiết hoàn tiền."
       actions={
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2.5">
           <Link className={secondary} to="/merchant/bookings">
             ← Danh sách đặt chỗ
           </Link>
+          {validBookingId !== null && (
+            <button
+              type="button"
+              onClick={() => void handleRefresh()}
+              disabled={detailQuery.isFetching}
+              aria-busy={detailQuery.isFetching}
+              aria-label="Làm mới hồ sơ đặt chỗ"
+              className="inline-flex min-h-[44px] items-center gap-2 rounded-xl border border-brand-border bg-white px-4 py-2.5 text-sm font-semibold text-brand-navy transition-colors hover:bg-slate-50 disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d95f00] cursor-pointer"
+            >
+              <RefreshCw
+                className={`h-4 w-4 ${detailQuery.isFetching ? 'animate-spin' : ''}`}
+                aria-hidden="true"
+              />
+              <span>Làm mới</span>
+            </button>
+          )}
           <Link className={button} to="/merchant/qr-scanner">
             Mở trạm quét QR
           </Link>
         </div>
       }
     >
-      {detailQuery.isPending && !data ? (
-        <div role="status" className="space-y-6" aria-label="Đang tải hồ sơ đặt chỗ">
-          <span className="sr-only">Đang tải hồ sơ đặt chỗ...</span>
-          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-            {[1, 2, 3, 4].map((card) => (
-              <Skeleton key={card} variant="card" className="h-32" />
-            ))}
-          </div>
-          <div className="grid gap-6 lg:grid-cols-[2fr_1fr]">
-            <Skeleton variant="card" className="h-72" />
-            <Skeleton variant="card" className="h-48" />
-          </div>
-        </div>
+      {validBookingId === null ? (
+        <EmptyState
+          variant="card"
+          title="Mã đơn đặt chỗ không hợp lệ"
+          description="Đường dẫn hồ sơ cần chứa mã đơn dạng số nguyên dương (ví dụ: /merchant/bookings/101)."
+          action={
+            <Link className={button} to="/merchant/bookings">
+              Quay về danh sách đặt chỗ
+            </Link>
+          }
+        />
+      ) : detailQuery.isPending && !data ? (
+        <MerchantBookingDetailSkeleton />
       ) : detailQuery.isError && !data ? (
         <ErrorState
           variant="card"
@@ -82,119 +161,123 @@ export function MerchantBookingDetailPage() {
           onRetry={() => void detailQuery.refetch()}
           isRetrying={detailQuery.isFetching}
         />
-      ) : data ? (
-        <>
-          <Metrics
-            items={[
-              { label: 'Mã vé', value: data.bookingCode },
-              { label: 'Trạng thái', value: <Badge value={data.status} dot /> },
-              { label: 'Đặt cọc', value: formatBookingMoney(data.advanceDeposit) },
-              { label: 'Tổng phí', value: formatBookingMoney(data.totalAmount) },
-            ]}
-          />
+      ) : !data || !barrierSummary ? (
+        <EmptyState
+          variant="card"
+          title="Không tìm thấy hồ sơ đặt chỗ"
+          description="Đơn đặt chỗ không tồn tại hoặc máy chủ chưa trả về dữ liệu chi tiết."
+          action={
+            <Link className={button} to="/merchant/bookings">
+              Quay về danh sách đặt chỗ
+            </Link>
+          }
+        />
+      ) : (
+        <div data-testid="merchant-booking-detail-content" className="space-y-6">
+          {detailQuery.isError && (
+            <Alert
+              variant="error"
+              title="Không thể làm mới hồ sơ đặt chỗ"
+              action={
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => void handleRefresh()}
+                  isLoading={detailQuery.isFetching}
+                >
+                  Thử lại
+                </Button>
+              }
+            >
+              {errorMessage(detailQuery.error)}
+            </Alert>
+          )}
 
-          <div className="grid gap-6 lg:grid-cols-[2fr_1fr]">
-            <div className="space-y-6">
-              <Panel title="Hành trình phương tiện">
-                <dl className="grid gap-5 sm:grid-cols-2">
-                  {[
-                    ['Biển kiểm soát', resolveBookingPlate(data)],
-                    ['Phân loại xe', resolveVehicleTypeLabel(data.vehicleType)],
-                    ['Bãi đỗ', data.parkingLotName || '—'],
-                    ['Địa chỉ bãi đỗ', data.parkingLotAddress || 'Theo hồ sơ bãi đỗ'],
-                    ['Dự kiến đến', formatBookingDateTime(data.expectedCheckInTime)],
-                    ['Dự kiến rời', formatBookingDateTime(data.expectedCheckOutTime)],
-                    ['Thời điểm tạo vé', formatBookingDateTime(data.createdAt)],
-                    ['Hạn giữ chỗ / thanh toán', formatBookingDateTime(data.expiresAt)],
-                    ['Thực tế vào bãi', formatBookingDateTime(data.checkInTime)],
-                    ['Thực tế rời bãi', formatBookingDateTime(data.checkOutTime)],
-                    ...(typeof data.vehicleId === 'number'
-                      ? [['Mã phương tiện', `#${data.vehicleId}`]]
-                      : []),
-                    ...(typeof data.driverId === 'number'
-                      ? [['Mã tài xế', `#${data.driverId}`]]
-                      : []),
-                    ...(driverName ? [['Tên tài xế / khách', driverName]] : []),
-                    ...(driverPhone ? [['Số điện thoại', driverPhone]] : []),
-                    ...(data.cancellationReason
-                      ? [['Lý do hủy đơn', data.cancellationReason]]
-                      : []),
-                  ].map(([label, value]) => (
-                    <div key={label}>
-                      <dt className="text-xs text-brand-muted">{label}</dt>
-                      <dd className="mt-1.5 font-medium text-slate-900">{value}</dd>
-                    </div>
-                  ))}
-                </dl>
-              </Panel>
-
-              {hasPricingOrRefundDetails && (
-                <Panel title="Biểu phí áp dụng & Hoàn tiền">
-                  <dl className="grid gap-5 sm:grid-cols-2">
-                    {[
-                      [
-                        'Đơn giá theo giờ',
-                        typeof data.hourlyRate === 'number'
-                          ? `${formatBookingMoney(data.hourlyRate)} / giờ`
-                          : '—',
-                      ],
-                      [
-                        'Hệ số giờ cao điểm',
-                        typeof data.surgeMultiplier === 'number'
-                          ? `x${data.surgeMultiplier}`
-                          : 'Không áp dụng',
-                      ],
-                      [
-                        'Khung giờ cao điểm',
-                        surgeStart && surgeEnd ? `${surgeStart} – ${surgeEnd}` : 'Không áp dụng',
-                      ],
-                      [
-                        'Hệ số phạt quá giờ',
-                        typeof data.overtimePenaltyMultiplier === 'number'
-                          ? `x${data.overtimePenaltyMultiplier}`
-                          : 'Không áp dụng',
-                      ],
-                      ...(data.cancelledAt
-                        ? [['Thời điểm hủy', formatBookingDateTime(data.cancelledAt)]]
-                        : []),
-                      ...(typeof data.refundAmount === 'number'
-                        ? [['Số tiền hoàn', formatBookingMoney(data.refundAmount)]]
-                        : []),
-                      ...(typeof data.refundPercentage === 'number'
-                        ? [['Tỷ lệ hoàn tiền', `${data.refundPercentage}%`]]
-                        : []),
-                      ...(data.refundPolicy ? [['Chính sách hoàn tiền', data.refundPolicy]] : []),
-                      ...(data.refundStatus ? [['Trạng thái hoàn tiền', data.refundStatus]] : []),
-                      ...(data.refundReference
-                        ? [['Mã tham chiếu hoàn tiền', data.refundReference]]
-                        : []),
-                    ].map(([label, value]) => (
-                      <div key={label}>
-                        <dt className="text-xs text-brand-muted">{label}</dt>
-                        <dd className="mt-1.5 font-medium text-slate-900">{value}</dd>
-                      </div>
-                    ))}
-                  </dl>
-                </Panel>
-              )}
+          <div
+            data-testid="merchant-booking-detail-metrics"
+            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5 lg:gap-4"
+          >
+            <div className="rounded-2xl border border-brand-border bg-white p-4 md:p-5 shadow-2xs">
+              <p className="font-mono text-xs uppercase text-brand-muted">Mã vé</p>
+              <p className="mt-2.5 break-all font-mono font-sora text-xl md:text-2xl font-bold text-brand-navy">
+                {data.bookingCode}
+              </p>
+              <p className="mt-1.5 text-xs text-brand-muted tabular-nums">
+                Khởi tạo: {formatBookingDateTime(data.createdAt)}
+              </p>
             </div>
 
-            <Panel title="Kiểm soát tại cổng">
-              <p className="mb-5 text-sm leading-relaxed text-brand-muted">
-                Quét vé hoặc nhập mã đặt chỗ tại trạm. Kiểm tra đúng bãi trước
-                khi xác nhận xe vào, xe ra hoặc thu tiền mặt.
+            <div className="rounded-2xl border border-brand-border bg-white p-4 md:p-5 shadow-2xs">
+              <p className="font-mono text-xs uppercase text-brand-muted">Trạng thái</p>
+              <div className="mt-2.5 flex items-center min-h-[32px]">
+                <Badge value={data.status} dot size="md" />
+              </div>
+              <p className="mt-1.5 text-xs text-brand-muted">
+                Tình trạng xử lý hiện tại tại bãi
               </p>
-              <Link
-                className={`${button} w-full flex items-center justify-center gap-2`}
-                to={`/merchant/qr-scanner?code=${encodeURIComponent(data.bookingCode)}&lot=${data.parkingLotId ?? ''}`}
-              >
-                Xử lý tại trạm QR →
-              </Link>
-            </Panel>
+            </div>
+
+            <div className="rounded-2xl border border-brand-border bg-white p-4 md:p-5 shadow-2xs">
+              <p className="font-mono text-xs uppercase text-brand-muted">Đặt cọc</p>
+              <p className="mt-2.5 font-mono font-sora text-xl md:text-2xl font-bold tabular-nums text-brand-navy">
+                {formatBookingMoney(data.advanceDeposit)}
+              </p>
+              <p className="mt-1.5 text-xs text-brand-muted">
+                Khoản giữ chỗ đã ghi nhận
+              </p>
+            </div>
+
+            <div className="rounded-2xl border border-orange-200/90 bg-orange-50/45 p-4 md:p-5 shadow-2xs">
+              <p className="font-mono text-xs uppercase text-[#9e4300]">Tổng phí</p>
+              <p className="mt-2.5 font-mono font-sora text-xl md:text-2xl font-bold tabular-nums text-[#9e4300]">
+                {formatBookingMoney(data.totalAmount)}
+              </p>
+              {remainingAmount !== null && (
+                <p className="mt-1.5 text-xs font-medium text-[#9e4300]/85 tabular-nums">
+                  Còn lại sau cọc: {formatBookingMoney(remainingAmount)}
+                </p>
+              )}
+            </div>
           </div>
-        </>
-      ) : null}
+
+          <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(310px,1fr)]">
+            <div className="min-w-0 space-y-6">
+              <MerchantBookingBarrierTimeline summary={barrierSummary} />
+              <MerchantBookingJourneyPanel booking={data} />
+              <MerchantBookingTariffAndRefundPanel
+                booking={data}
+                remainingAmount={remainingAmount}
+              />
+            </div>
+
+            <div className="min-w-0 lg:sticky lg:top-6">
+              <MerchantBookingDetailSidebar
+                booking={data}
+                barrierSummary={barrierSummary}
+                copiedCode={copiedCode}
+                isFetching={detailQuery.isFetching}
+                onCopyBookingCode={(code) => void handleCopyBookingCode(code)}
+              />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {toast && (
+        <div
+          className="fixed right-6 bottom-6 z-[60] w-[calc(100%-3rem)] max-w-md sm:w-auto"
+          aria-live="polite"
+        >
+          <Toast
+            key={toast.id}
+            title={toast.title}
+            message={toast.message}
+            variant={toast.variant}
+            onClose={() => setToast(null)}
+          />
+        </div>
+      )}
     </Workspace>
   )
 }
-

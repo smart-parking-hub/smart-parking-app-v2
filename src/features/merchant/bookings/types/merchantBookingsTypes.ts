@@ -123,3 +123,45 @@ export const ALL_STATUS_FILTER_OPTIONS: ReadonlyArray<{
     badge: 'EXPIRED',
   },
 ]
+
+export type BarrierTimelineEventTone =
+  | 'completed'
+  | 'current'
+  | 'warning'
+  | 'danger'
+  | 'upcoming'
+
+export type BarrierTimelineEventCategory =
+  | 'BOOKING'
+  | 'HOLD'
+  | 'GATE_IN'
+  | 'PARKING'
+  | 'GATE_OUT'
+  | 'SETTLEMENT'
+  | 'CANCELLED'
+
+export type BarrierTimelineDeltaTone = 'neutral' | 'success' | 'warning' | 'danger'
+
+export interface BarrierTimelineEvent {
+  id: string
+  category: BarrierTimelineEventCategory
+  tone: BarrierTimelineEventTone
+  title: string
+  description: string
+  timestampLabel: string
+  timeMetaLabel?: string
+  deltaBadge?: {
+    label: string
+    tone: BarrierTimelineDeltaTone
+  } | null
+}
+
+export interface BookingBarrierSummary {
+  events: BarrierTimelineEvent[]
+  parkingDurationLabel: string | null
+  plannedDurationLabel: string | null
+  checkInVarianceLabel: string | null
+  checkOutVarianceLabel: string | null
+  gateModeSummary: string
+}
+

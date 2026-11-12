@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom'
 import { Eye } from 'lucide-react'
 import type { Booking } from '@/entities/operations'
 import { Badge } from '@/shared/components/Badge'
@@ -19,15 +20,11 @@ import {
 
 interface MerchantBookingsTableProps {
   rows: Booking[]
-  selectedBookingId: number | null
-  onViewDetail: (booking: Booking) => void
   isFetching?: boolean
 }
 
 export function MerchantBookingsTable({
   rows,
-  selectedBookingId,
-  onViewDetail,
   isFetching = false,
 }: MerchantBookingsTableProps) {
   return (
@@ -61,7 +58,6 @@ export function MerchantBookingsTable({
 
         <TableBody className={isFetching ? 'opacity-70 transition-opacity' : undefined}>
           {rows.map((row) => {
-            const isSelected = selectedBookingId === row.id
             const plate = resolveBookingPlate(row)
             const hasVehicleType = Boolean(row.vehicleType)
 
@@ -69,16 +65,15 @@ export function MerchantBookingsTable({
               <TableRow
                 key={row.id}
                 data-booking-row-id={row.id}
-                className={
-                  isSelected
-                    ? 'bg-orange-50/50 hover:bg-orange-50/70'
-                    : 'hover:bg-slate-50/90'
-                }
+                className="hover:bg-slate-50/90"
               >
                 <TableCell className="py-2.5 whitespace-nowrap">
-                  <span className="font-mono font-semibold text-slate-900">
+                  <Link
+                    to={`/merchant/bookings/${row.id}`}
+                    className="font-mono font-semibold text-slate-900 hover:text-[#9e4300] hover:underline underline-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d95f00] focus-visible:ring-offset-1 rounded transition-colors"
+                  >
                     {row.bookingCode}
-                  </span>
+                  </Link>
                 </TableCell>
 
                 <TableCell className="py-2.5 whitespace-nowrap">
@@ -122,15 +117,14 @@ export function MerchantBookingsTable({
                 </TableCell>
 
                 <TableCell align="right" className="py-2.5 whitespace-nowrap">
-                  <button
-                    type="button"
-                    onClick={() => onViewDetail(row)}
+                  <Link
+                    to={`/merchant/bookings/${row.id}`}
                     aria-label={`Xem chi tiết đơn ${row.bookingCode}`}
-                    className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-white px-2.5 py-1 text-xs font-semibold text-slate-800 hover:border-[#d95f00]/50 hover:bg-orange-50/70 hover:text-[#9e4300] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d95f00] focus-visible:ring-offset-1 transition-colors cursor-pointer shadow-2xs"
+                    className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-white px-2.5 py-1 text-xs font-semibold text-slate-800 hover:border-[#d95f00]/50 hover:bg-orange-50/70 hover:text-[#9e4300] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d95f00] focus-visible:ring-offset-1 transition-colors shadow-2xs"
                   >
                     <Eye className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
                     <span>Chi tiết</span>
-                  </button>
+                  </Link>
                 </TableCell>
               </TableRow>
             )

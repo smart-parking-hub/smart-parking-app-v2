@@ -10,7 +10,6 @@ import { ErrorState } from '@/shared/components/ErrorState'
 import { Toast } from '@/shared/components/Toast'
 import { button, Workspace } from '@/shared/components/Workspace'
 import { resolveBookingPlate } from '../api/merchantBookingsApi'
-import { MerchantBookingDetailModal } from '../components/MerchantBookingDetailModal'
 import { MerchantBookingsFilterBar } from '../components/MerchantBookingsFilterBar'
 import { MerchantBookingsMetrics } from '../components/MerchantBookingsMetrics'
 import { MerchantBookingsPagination } from '../components/MerchantBookingsPagination'
@@ -49,21 +48,18 @@ export function MerchantBookingsPage() {
   }, [rawLotParam])
 
   const [isUrlSynced, setIsUrlSynced] = useState(() => urlInitialLotId === null)
-  const [cachedRowSnapshot, setCachedRowSnapshot] = useState<Booking | null>(null)
 
   const page = useMerchantBookingsStore((s) => s.page)
   const pageSize = useMerchantBookingsStore((s) => s.pageSize)
   const statusFilter = useMerchantBookingsStore((s) => s.statusFilter)
   const parkingLotId = useMerchantBookingsStore((s) => s.parkingLotId)
   const searchKeyword = useMerchantBookingsStore((s) => s.searchKeyword)
-  const selectedBookingId = useMerchantBookingsStore((s) => s.selectedBookingId)
   const toast = useMerchantBookingsStore((s) => s.toast)
 
   const setPage = useMerchantBookingsStore((s) => s.setPage)
   const setStatusFilter = useMerchantBookingsStore((s) => s.setStatusFilter)
   const setParkingLotId = useMerchantBookingsStore((s) => s.setParkingLotId)
   const setSearchKeyword = useMerchantBookingsStore((s) => s.setSearchKeyword)
-  const setSelectedBookingId = useMerchantBookingsStore((s) => s.setSelectedBookingId)
   const resetFilters = useMerchantBookingsStore((s) => s.resetFilters)
   const showToast = useMerchantBookingsStore((s) => s.showToast)
   const clearToast = useMerchantBookingsStore((s) => s.clearToast)
@@ -175,16 +171,6 @@ export function MerchantBookingsPage() {
     return filteredFullList.slice(0, pageSize)
   }, [hasClientFilter, pageRows, summaryData, filteredFullList, paginationCurrentPage, pageSize])
 
-  const selectedBookingSnapshot = useMemo(() => {
-    if (selectedBookingId === null) return null
-    return (
-      displayedRows.find((row) => row.id === selectedBookingId) ??
-      summaryData?.items.find((row) => row.id === selectedBookingId) ??
-      pageRows.find((row) => row.id === selectedBookingId) ??
-      (cachedRowSnapshot?.id === selectedBookingId ? cachedRowSnapshot : null)
-    )
-  }, [displayedRows, summaryData?.items, pageRows, selectedBookingId, cachedRowSnapshot])
-
   const emptyVariant: MerchantBookingEmptyVariant =
     serverTotalCount === 0 && !normalizedKeyword && statusFilter === 'ALL' && effectiveLotId === null
       ? 'no-bookings'
@@ -211,20 +197,6 @@ export function MerchantBookingsPage() {
         window.scrollTo(0, 0)
       }
     }
-  }
-
-  const handleViewDetail = (booking: Booking) => {
-    setCachedRowSnapshot(booking)
-    setSelectedBookingId(booking.id)
-  }
-
-  const handleCloseDetailModal = () => {
-    setSelectedBookingId(null)
-    setCachedRowSnapshot(null)
-  }
-
-  const handleCopyBookingCode = (bookingCode: string) => {
-    showToast('Đã sao chép mã đặt chỗ', 'success', `Mã vé ${bookingCode} đã sẵn sàng để dán.`)
   }
 
   const isRefreshing = listQuery.isFetching
@@ -361,8 +333,6 @@ export function MerchantBookingsPage() {
                 <>
                   <MerchantBookingsTable
                     rows={displayedRows}
-                    selectedBookingId={selectedBookingId}
-                    onViewDetail={handleViewDetail}
                     isFetching={listQuery.isFetching}
                   />
 
@@ -382,14 +352,6 @@ export function MerchantBookingsPage() {
           </div>
         </div>
       )}
-
-      {/* Full-Details Booking Modal */}
-      <MerchantBookingDetailModal
-        bookingSnapshot={selectedBookingSnapshot}
-        isOpen={Boolean(selectedBookingSnapshot)}
-        onClose={handleCloseDetailModal}
-        onCopyBookingCode={handleCopyBookingCode}
-      />
 
       {/* Live Toast Notifications */}
       {toast && (

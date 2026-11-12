@@ -3,7 +3,13 @@ export { MerchantBookingDetailPage } from './pages/MerchantBookingDetailPage'
 export { MerchantBookingsMetrics } from './components/MerchantBookingsMetrics'
 export { MerchantBookingsFilterBar } from './components/MerchantBookingsFilterBar'
 export { MerchantBookingsTable } from './components/MerchantBookingsTable'
-export { MerchantBookingDetailModal } from './components/MerchantBookingDetailModal'
+export { MerchantBookingBarrierTimeline } from './components/MerchantBookingBarrierTimeline'
+export { MerchantBookingDetailSkeleton } from './components/MerchantBookingDetailSkeleton'
+export {
+  MerchantBookingJourneyPanel,
+  MerchantBookingTariffAndRefundPanel,
+  MerchantBookingDetailSidebar,
+} from './components/MerchantBookingDetailSections'
 export { MerchantBookingsSkeleton } from './components/MerchantBookingsSkeleton'
 export { MerchantBookingsPagination } from './components/MerchantBookingsPagination'
 export {

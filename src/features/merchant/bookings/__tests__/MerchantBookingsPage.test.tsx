@@ -135,7 +135,7 @@ const sampleBookings: Booking[] = [
   },
 ]
 
-describe('SCR-034: MerchantBookingsPage (Table + Full Detail Modal + Filters + States)', () => {
+describe('SCR-034: MerchantBookingsPage (Table + Direct SCR-035 Link + Filters + States)', () => {
   let apiClientGetSpy: { mockRestore: () => void } | undefined
 
   beforeEach(() => {
@@ -159,7 +159,7 @@ describe('SCR-034: MerchantBookingsPage (Table + Full Detail Modal + Filters + S
     apiClientGetSpy?.mockRestore()
   })
 
-  it('renders a compact table with ONLY key columns and excludes detail-only fields until Modal opens', async () => {
+  it('renders a compact table with ONLY key columns and navigates directly to /merchant/bookings/:id on Chi tiết', async () => {
     mockGetData.mockImplementation(async (url: string) => {
       if (url === '/api/v1/merchant/bookings') {
         return {
@@ -169,16 +169,18 @@ describe('SCR-034: MerchantBookingsPage (Table + Full Detail Modal + Filters + S
           totalElements: 3,
         }
       }
-      if (url === '/api/v1/merchant/bookings/801') {
-        return sampleBookings[0]
-      }
-      if (url === '/api/v1/merchant/bookings/803') {
-        return sampleBookings[2]
-      }
       return null
     })
 
-    renderBookingsApp(<MerchantBookingsPage />)
+    renderBookingsApp(
+      <Routes>
+        <Route path="/merchant/bookings" element={<MerchantBookingsPage />} />
+        <Route
+          path="/merchant/bookings/:id"
+          element={<div data-testid="booking-detail-route">Trang chi tiết đơn #801</div>}
+        />
+      </Routes>,
+    )
 
     // Verify 7 clean table headers
     const table = await screen.findByRole('table', {
@@ -192,12 +194,15 @@ describe('SCR-034: MerchantBookingsPage (Table + Full Detail Modal + Filters + S
     expect(within(table).getByRole('columnheader', { name: 'Trạng thái' })).toBeInTheDocument()
     expect(within(table).getByRole('columnheader', { name: 'Thao tác' })).toBeInTheDocument()
 
-    // Key info rendered cleanly in rows
-    expect(within(table).getByText('BK-2026-801')).toBeInTheDocument()
+    // Key info rendered cleanly in rows (both booking code and "Chi tiết" link directly to SCR-035)
+    const bookingCodeLink = within(table).getByRole('link', { name: 'BK-2026-801' })
+    expect(bookingCodeLink).toHaveAttribute('href', '/merchant/bookings/801')
     expect(within(table).getByText('51D-894.12')).toBeInTheDocument()
-    expect(within(table).getAllByRole('button', { name: /Xem chi tiết đơn/i })).toHaveLength(3)
+    const detailLinks = within(table).getAllByRole('link', { name: /Xem chi tiết đơn/i })
+    expect(detailLinks).toHaveLength(3)
+    expect(detailLinks[0]).toHaveAttribute('href', '/merchant/bookings/801')
 
-    // Detail-only info must NOT clutter table rows before clicking "Chi tiết"
+    // Detail-only info must NOT clutter table rows
     expect(
       screen.queryByText('Số 10 Nguyễn Thị Định, P. Cát Lái, TP. Thủ Đức'),
     ).not.toBeInTheDocument()
@@ -206,50 +211,10 @@ describe('SCR-034: MerchantBookingsPage (Table + Full Detail Modal + Filters + S
     expect(screen.queryByText('RF-9981')).not.toBeInTheDocument()
     expect(screen.queryByText('Nguyễn Văn Tài')).not.toBeInTheDocument()
 
-    // Click "Chi tiết" on row BK-2026-801 -> opens Full Detail Modal
-    const detailBtn = screen.getByRole('button', { name: 'Xem chi tiết đơn BK-2026-801' })
-    fireEvent.click(detailBtn)
-
-    const dialog = await screen.findByRole('dialog')
-    expect(within(dialog).getByText('Hồ sơ đơn đặt chỗ #801')).toBeInTheDocument()
-    expect(within(dialog).getByText('BK-2026-801')).toBeInTheDocument()
-    expect(within(dialog).getByText('Số 10 Nguyễn Thị Định, P. Cát Lái, TP. Thủ Đức')).toBeInTheDocument()
-    expect(within(dialog).getByText('Nguyễn Văn Tài')).toBeInTheDocument()
-    expect(within(dialog).getByText('0909123456')).toBeInTheDocument()
-    expect(within(dialog).getByText('x1.5')).toBeInTheDocument()
-    expect(within(dialog).getByText('18:00 – 22:00')).toBeInTheDocument()
-    expect(within(dialog).getByText('x1.75')).toBeInTheDocument()
-    expect(
-      within(dialog).getByRole('link', { name: /Xử lý tại trạm QR/i }),
-    ).toHaveAttribute('href', '/merchant/qr-scanner?code=BK-2026-801&lot=12')
-    expect(
-      within(dialog).getByRole('link', { name: /Mở trang hồ sơ rời/i }),
-    ).toHaveAttribute('href', '/merchant/bookings/801')
-
-    // Copy booking code triggers Toast
-    fireEvent.click(within(dialog).getByRole('button', { name: /Sao chép mã/i }))
-    expect(await screen.findByText('Đã sao chép mã đặt chỗ')).toBeInTheDocument()
-
-    // Close Modal
-    fireEvent.click(within(dialog).getByRole('button', { name: 'Đóng' }))
-    await waitFor(() => {
-      expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
-    })
-
-    // Open Cancelled row BK-2026-803 -> verify Cancellation & Refund fields render
-    fireEvent.click(screen.getByRole('button', { name: 'Xem chi tiết đơn BK-2026-803' }))
-    const cancelDialog = await screen.findByRole('dialog')
-    expect(within(cancelDialog).getByText('Tài xế đổi lịch trình giao hàng')).toBeInTheDocument()
-    expect(within(cancelDialog).getByText('Hoàn 100% trước 24h')).toBeInTheDocument()
-    expect(within(cancelDialog).getByText('100%')).toBeInTheDocument()
-    expect(within(cancelDialog).getByText('REFUNDED')).toBeInTheDocument()
-    expect(within(cancelDialog).getByText('RF-9981')).toBeInTheDocument()
-
-    // Escape key closes Modal
-    fireEvent.keyDown(window, { key: 'Escape' })
-    await waitFor(() => {
-      expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
-    })
+    // Click "Chi tiết" on row BK-2026-801 -> navigates directly to /merchant/bookings/801 (no Modal)
+    fireEvent.click(screen.getByRole('link', { name: 'Xem chi tiết đơn BK-2026-801' }))
+    expect(await screen.findByTestId('booking-detail-route')).toBeInTheDocument()
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
   })
 
   it('validates search input with Zod (max 100 chars) and filters by search, detailed status, and server-side parkingLotId', async () => {
@@ -374,7 +339,7 @@ describe('SCR-034: MerchantBookingsPage (Table + Full Detail Modal + Filters + S
     expect(await screen.findByText('BK-CAP-900')).toBeInTheDocument()
 
     // Max 5 bookings rendered per page
-    expect(screen.getAllByRole('button', { name: /Xem chi tiết đơn/i })).toHaveLength(5)
+    expect(screen.getAllByRole('link', { name: /Xem chi tiết đơn/i })).toHaveLength(5)
     expect(screen.queryByText('BK-CAP-905')).not.toBeInTheDocument()
     expect(screen.queryByText('BK-CAP-906')).not.toBeInTheDocument()
 
@@ -472,7 +437,7 @@ describe('SCR-034: MerchantBookingsPage (Table + Full Detail Modal + Filters + S
     expect(screen.getByRole('tab', { name: /Đã hoàn tất/i })).toHaveTextContent('6')
     expect(screen.getByRole('tab', { name: /Đang đỗ xe/i })).toHaveTextContent('1')
     expect(screen.getByRole('tab', { name: /Chờ vào bãi/i })).toHaveTextContent('5')
-    expect(screen.getAllByRole('button', { name: /Xem chi tiết đơn/i })).toHaveLength(5)
+    expect(screen.getAllByRole('link', { name: /Xem chi tiết đơn/i })).toHaveLength(5)
 
     // Custom Select renders combobox button & opens styled listbox (not native OS dropdown)
     const lotCombobox = screen.getByRole('combobox', { name: 'Mở bộ lọc bãi đỗ' })
@@ -498,11 +463,11 @@ describe('SCR-034: MerchantBookingsPage (Table + Full Detail Modal + Filters + S
 
     fireEvent.click(screen.getByRole('tab', { name: /Đã hoàn tất/i }))
     expect(await screen.findByText('Trang 1 / 2')).toBeInTheDocument()
-    expect(screen.getAllByRole('button', { name: /Xem chi tiết đơn/i })).toHaveLength(5)
+    expect(screen.getAllByRole('link', { name: /Xem chi tiết đơn/i })).toHaveLength(5)
 
     fireEvent.click(screen.getByRole('button', { name: 'Trang sau' }))
     expect(await screen.findByText('Trang 2 / 2')).toBeInTheDocument()
-    expect(screen.getAllByRole('button', { name: /Xem chi tiết đơn/i })).toHaveLength(1)
+    expect(screen.getAllByRole('link', { name: /Xem chi tiết đơn/i })).toHaveLength(1)
   })
 
   it('handles loading skeleton, initial/filtered empty states, initial error retry, background refresh alert, and refresh success toast', async () => {
