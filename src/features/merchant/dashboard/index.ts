@@ -1,3 +1,5 @@
 export * from './pages/MerchantDashboardPage'
 export * from './types/merchantDashboardTypes'
+export * from './types/merchantDashboardSchemas'
+export * from './store/merchantDashboardStore'
 export * from './api/merchantDashboardApi'
