@@ -88,9 +88,17 @@ export async function fetchRevenueStats(
   return revenueSchema.parse(raw)
 }
 
-export async function fetchMerchantDashboardData() {
+export async function fetchMerchantDashboardData(
+  startDate?: string,
+  endDate?: string,
+) {
+  const revenueParams =
+    startDate || endDate
+      ? { startDate, endDate, granularity: 'DAY' }
+      : undefined
+
   const [revenue, lots, bookings] = await Promise.all([
-    getData<unknown>('/api/v1/merchant/revenue'),
+    getData<unknown>('/api/v1/merchant/revenue', revenueParams),
     getData<unknown>('/api/v1/merchant/parking-lots', { page: 0, size: 50 }),
     getData<unknown>('/api/v1/merchant/bookings', { page: 0, size: 5, sort: 'createdAt,desc' }),
   ])

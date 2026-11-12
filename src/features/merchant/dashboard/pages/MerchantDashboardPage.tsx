@@ -1,7 +1,6 @@
-import { useEffect } from 'react'
+import { useMemo } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
-import { CheckCircle2, AlertCircle, Info, X } from 'lucide-react'
 import {
   fetchMerchantDashboardData,
   fetchRevenueStats,
@@ -17,7 +16,9 @@ import {
   money,
   secondary,
 } from '@/shared/components/Workspace'
+import { Toast } from '@/shared/components/Toast'
 import { useMerchantDashboardStore } from '../store/merchantDashboardStore'
+import { computeDateRange } from '../types/merchantDashboardSchemas'
 
 export function MerchantDashboardPage() {
   const selectedLotId = useMerchantDashboardStore((s) => s.selectedLotId)
@@ -28,37 +29,45 @@ export function MerchantDashboardPage() {
   const showToast = useMerchantDashboardStore((s) => s.showToast)
   const clearToast = useMerchantDashboardStore((s) => s.clearToast)
 
+  const dateRange = useMemo(() => computeDateRange(timeRange), [timeRange])
+
   const { data, isLoading, error, refetch, isRefetching } = useQuery({
-    queryKey: ['merchant-dashboard-summary'],
-    queryFn: fetchMerchantDashboardData,
+    queryKey: ['merchant-dashboard-summary', timeRange],
+    queryFn: () =>
+      fetchMerchantDashboardData(dateRange.startDate, dateRange.endDate),
     staleTime: 20000,
   })
 
   const lotRevenueQuery = useQuery({
     queryKey: ['merchant-revenue-stats', selectedLotId, timeRange],
-    queryFn: () => fetchRevenueStats(selectedLotId),
+    queryFn: () =>
+      fetchRevenueStats(selectedLotId, dateRange.startDate, dateRange.endDate),
     enabled: selectedLotId !== null,
     staleTime: 20000,
   })
 
-  // Auto-dismiss toast after 4s
-  useEffect(() => {
-    if (!toast) return
-    const timer = setTimeout(() => {
-      clearToast()
-    }, 4000)
-    return () => clearTimeout(timer)
-  }, [toast, clearToast])
-
   const handleManualRefresh = async () => {
-    await refetch()
-    if (selectedLotId !== null) {
-      await lotRevenueQuery.refetch()
+    try {
+      const summaryRes = await refetch()
+      let lotResSuccess = true
+      if (selectedLotId !== null) {
+        const lotRes = await lotRevenueQuery.refetch()
+        lotResSuccess = !lotRes.isError
+      }
+      if (summaryRes.isError || !lotResSuccess) {
+        showToast(
+          'Không thể làm mới dữ liệu. Vui lòng kiểm tra kết nối.',
+          'error',
+        )
+      } else {
+        showToast(
+          'Dữ liệu bảng điều khiển chủ bãi đã được làm mới thành công!',
+          'success',
+        )
+      }
+    } catch {
+      showToast('Có lỗi xảy ra khi kết nối máy chủ.', 'error')
     }
-    showToast(
-      'Dữ liệu bảng điều khiển chủ bãi đã được làm mới thành công!',
-      'success',
-    )
   }
 
   if (isLoading) return <MerchantDashboardSkeleton />
@@ -111,33 +120,22 @@ export function MerchantDashboardPage() {
       {/* Toast Feedback Notification */}
       {toast && (
         <div
-          role="status"
-          aria-live="polite"
           data-testid="merchant-dashboard-toast"
-          className={`fixed bottom-6 right-6 z-50 flex items-center gap-3 rounded-2xl border px-4 py-3 shadow-lg transition-all animate-in fade-in slide-in-from-bottom-4 ${
-            toast.type === 'success'
-              ? 'border-emerald-200 bg-emerald-50 text-emerald-800'
-              : toast.type === 'error'
-                ? 'border-red-200 bg-red-50 text-red-800'
-                : 'border-slate-200 bg-white text-slate-800'
-          }`}
+          className="fixed bottom-6 right-6 z-50 max-w-sm sm:max-w-md animate-in slide-in-from-bottom-2 duration-200"
         >
-          {toast.type === 'success' ? (
-            <CheckCircle2 className="h-5 w-5 text-emerald-600 shrink-0" />
-          ) : toast.type === 'error' ? (
-            <AlertCircle className="h-5 w-5 text-red-600 shrink-0" />
-          ) : (
-            <Info className="h-5 w-5 text-slate-600 shrink-0" />
-          )}
-          <span className="text-xs font-semibold">{toast.message}</span>
-          <button
-            type="button"
-            onClick={clearToast}
-            aria-label="Đóng thông báo"
-            className="ml-2 text-slate-400 hover:text-slate-600 cursor-pointer"
-          >
-            <X className="h-4 w-4" />
-          </button>
+          <Toast
+            title={
+              toast.type === 'success'
+                ? 'Thành công'
+                : toast.type === 'error'
+                  ? 'Lỗi kết nối'
+                  : 'Thông báo'
+            }
+            message={toast.message}
+            variant={toast.type}
+            onClose={clearToast}
+            duration={4000}
+          />
         </div>
       )}
 

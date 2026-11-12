@@ -1,10 +1,5 @@
-import { useForm } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
 import { RotateCw, Calendar } from 'lucide-react'
-import {
-  merchantDashboardFilterSchema,
-  type MerchantDashboardFilterValues,
-} from '../types/merchantDashboardSchemas'
+import { merchantDashboardFilterSchema } from '../types/merchantDashboardSchemas'
 import type { TimeRangeFilter } from '../store/merchantDashboardStore'
 
 interface ParkingLotOption {
@@ -44,27 +39,26 @@ export function MerchantDashboardFilterForm({
   onManualRefresh,
   isRefetching = false,
 }: MerchantDashboardFilterFormProps) {
-  const { setValue } = useForm<MerchantDashboardFilterValues>({
-    resolver: zodResolver(merchantDashboardFilterSchema),
-    defaultValues: {
-      parkingLotId: selectedLotId,
-      timeRange,
-    },
-  })
-
   const handleLotSelectChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const val = e.target.value ? Number(e.target.value) : null
-    setValue('parkingLotId', val, { shouldValidate: true })
-    onLotChange(val)
+    const rawVal = e.target.value ? Number(e.target.value) : null
+    const result = merchantDashboardFilterSchema.shape.parkingLotId.safeParse(rawVal)
+    if (result.success) {
+      onLotChange(result.data ?? null)
+    }
   }
 
   const handleTimeRangeClick = (range: TimeRangeFilter) => {
-    setValue('timeRange', range, { shouldValidate: true })
-    onTimeRangeChange(range)
+    const result = merchantDashboardFilterSchema.shape.timeRange.safeParse(range)
+    if (result.success) {
+      onTimeRangeChange(result.data)
+    }
   }
 
   return (
-    <div
+    <form
+      role="search"
+      aria-label="Bộ lọc cơ sở bãi đỗ và kỳ báo cáo"
+      onSubmit={(e) => e.preventDefault()}
       data-testid="merchant-dashboard-filter-form"
       className="flex flex-col gap-4 bg-white px-5 py-4 rounded-2xl border border-slate-200/90 shadow-2xs"
     >
@@ -144,7 +138,6 @@ export function MerchantDashboardFilterForm({
           <span>{isRefetching ? 'Đang làm mới...' : 'Làm mới dữ liệu'}</span>
         </button>
       </div>
-    </div>
+    </form>
   )
 }
-
