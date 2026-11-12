@@ -41,3 +41,4 @@ export interface BanDecisionPayload {
   action: 'ban' | 'unban'
   reason: string
 }
+
