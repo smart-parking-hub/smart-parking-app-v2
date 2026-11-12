@@ -50,10 +50,10 @@ const DisputesPage = lazy(() =>
   import('@/features/disputes').then((module) => ({ default: module.DisputesPage })),
 )
 const PortalNotificationsPage = lazy(() =>
-  import('@/features/portal/AccountPages').then((module) => ({ default: module.PortalNotificationsPage })),
+  import('@/features/notifications').then((module) => ({ default: module.PortalNotificationsPage })),
 )
 const AdminProfilePage = lazy(() =>
-  import('@/features/portal/AccountPages').then((module) => ({ default: module.AdminProfilePage })),
+  import('@/features/admin/pages/AdminProfilePage').then((module) => ({ default: module.AdminProfilePage })),
 )
 const AdminDashboardPage = lazy(() =>
   import('@/features/admin').then((module) => ({ default: module.AdminDashboardPage })),

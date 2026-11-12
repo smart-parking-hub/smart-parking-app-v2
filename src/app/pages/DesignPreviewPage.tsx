@@ -32,10 +32,8 @@ import {
   AdminAuditLogsPage,
 } from '@/features/admin'
 import { DisputesPage } from '@/features/disputes'
-import {
-  PortalNotificationsPage,
-  AdminProfilePage,
-} from '@/features/portal/AccountPages'
+import { PortalNotificationsPage } from '@/features/notifications'
+import { AdminProfilePage } from '@/features/admin/pages/AdminProfilePage'
 import { vehicleTypes } from '@/entities/operations'
 import { control } from '@/shared/components/Workspace'
 import { AuthPage, AccessPage } from '@/features/auth'

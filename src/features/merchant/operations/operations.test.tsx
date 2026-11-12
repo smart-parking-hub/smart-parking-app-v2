@@ -28,7 +28,7 @@ import { DecisionDialog } from '@/features/admin'
 import { DisputesPage } from '@/features/disputes'
 import { vehicleTypes } from '@/entities/operations'
 import { MerchantLotPage } from './LotPages'
-import { PortalNotificationsPage } from '@/features/portal/AccountPages'
+import { PortalNotificationsPage } from '@/features/notifications'
 
 vi.mock('@/shared/api/resources', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@/shared/api/resources')>()),

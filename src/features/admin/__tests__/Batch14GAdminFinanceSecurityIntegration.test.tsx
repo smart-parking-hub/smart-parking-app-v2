@@ -9,7 +9,7 @@ import {
   AdminAuditLogsPage,
 } from '../index'
 import { DisputesPage } from '@/features/disputes'
-import { PortalNotificationsPage } from '@/features/portal/AccountPages'
+import { PortalNotificationsPage } from '@/features/notifications'
 import { AdminProfilePage } from '../pages/AdminProfilePage'
 import { getData, sendData } from '@/shared/api/resources'
 

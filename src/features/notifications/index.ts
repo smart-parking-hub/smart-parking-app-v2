@@ -10,3 +10,5 @@ export * from './components/NotificationsPagination'
 export * from './components/NotificationsEmptyState'
 export * from './components/NotificationsSkeleton'
 export * from './pages/NotificationsPage'
+export * from './pages/PortalNotificationsPage'
+
