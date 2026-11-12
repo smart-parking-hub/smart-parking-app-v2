@@ -65,6 +65,9 @@ interface Audit {
 
 export { AdminDashboardPage } from './dashboard/pages/AdminDashboardPage'
 export type { AdminDashboardData, AdminDashboardData as Dashboard } from './dashboard/types/adminDashboardTypes'
+export { AdminUsersPage } from './users/pages/AdminUsersPage'
+export type { AdminUser } from './users/types/adminUsersTypes'
+export type { AdminUserFilterValues } from './users/types/adminUsersSchemas'
 
 function AdminList<T extends { id: number }>({
   title,
@@ -140,69 +143,6 @@ export function AdminParkingLotsPage() {
   )
 }
 
-export function AdminUsersPage() {
-  return (
-    <AdminList<User>
-      title="Quản lý người dùng"
-      path="/api/v1/admin/users"
-      detailLink={(r) => `/admin/users/${r.id}`}
-      columns={[
-        {
-          label: 'Tài khoản',
-          render: (r) => (
-            <div>
-              <Link
-                to={`/admin/users/${r.id}`}
-                className="font-semibold text-brand-navy hover:text-[#d95f00] transition-colors"
-              >
-                #{r.id} {r.fullName ? `· ${r.fullName}` : ''}
-              </Link>
-            </div>
-          ),
-        },
-        {
-          label: 'Điện thoại',
-          render: (r) => <span className="font-mono text-xs">{r.phone}</span>,
-        },
-        { label: 'Email', render: (r) => r.email || '—' },
-        { label: 'Vai trò', render: (r) => <Badge value={r.role} /> },
-        { label: 'Trạng thái', render: (r) => <Badge value={r.status} /> },
-        {
-          label: 'Ngày tham gia',
-          render: (r) => (
-            <span className="whitespace-nowrap text-xs text-brand-muted">
-              {date(r.createdAt)}
-            </span>
-          ),
-        },
-      ]}
-      actions={(r) => (
-        <Link
-          to={`/admin/users/${r.id}`}
-          className="inline-flex items-center gap-1.5 rounded-lg border border-brand-border bg-white px-3 py-1.5 text-xs font-semibold text-brand-navy hover:bg-brand-surface hover:text-[#d95f00] transition-colors shadow-xs"
-        >
-          Quản trị
-        </Link>
-      )}
-      renderMobileCard={(r) => (
-        <Link to={`/admin/users/${r.id}`} className="admin-user-card" aria-label={`Quản trị tài khoản #${r.id}`}>
-          <div className="admin-user-card-top">
-            <div className="admin-user-identity">
-              <span className="admin-user-avatar" aria-hidden="true">{r.fullName?.trim().charAt(0).toLocaleUpperCase('vi') || '#'}</span>
-              <div><strong>{r.fullName || `Tài khoản #${r.id}`}</strong><small>#{r.id} · {date(r.createdAt)}</small></div>
-            </div>
-            <Badge value={r.status} />
-          </div>
-          <dl>
-            <div><dt>Điện thoại</dt><dd>{r.phone || '—'}</dd></div>
-            <div><dt>Email</dt><dd>{r.email || '—'}</dd></div>
-          </dl>
-          <div className="admin-user-card-bottom"><Badge value={r.role} /><span>Quản trị tài khoản →</span></div>
-        </Link>
-      )}
-    />
-  )
-}
 
 export function AdminAuditLogsPage() {
   return (
