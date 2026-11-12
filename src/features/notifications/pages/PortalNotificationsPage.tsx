@@ -16,6 +16,7 @@ import {
   date,
   secondary,
 } from '@/shared/components/Workspace'
+
 interface Notification {
   id: number
   title: string
@@ -24,6 +25,7 @@ interface Notification {
   readAt: string | null
   createdAt: string
 }
+
 export function PortalNotificationsPage() {
   const [page, setPage] = useState(0)
   const cache = useQueryClient()
@@ -126,4 +128,3 @@ export function PortalNotificationsPage() {
     </Workspace>
   )
 }
-export { AdminProfilePage } from '../admin/pages/AdminProfilePage'
