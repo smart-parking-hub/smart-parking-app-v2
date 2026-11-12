@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { apiClient } from '@/shared/api/client'
 import { MerchantDashboardPage } from '../pages/MerchantDashboardPage'
 import { MerchantHeader } from '@/layouts/merchant/MerchantHeader'
+import { getMerchantDashboardStoreSnapshot } from '../store/merchantDashboardStore'
 
 vi.mock('@/shared/api/client', () => ({ apiClient: { get: vi.fn() } }))
 const responses: Record<string, unknown> = {
@@ -20,6 +21,7 @@ function renderPage() {
 }
 beforeEach(() => {
   vi.resetAllMocks()
+  getMerchantDashboardStoreSnapshot().resetStore()
   vi.mocked(apiClient.get).mockImplementation(async url => ({ data: { data: responses[url] } }))
 })
 describe('Merchant dashboard real data', () => {
@@ -101,5 +103,70 @@ describe('Merchant dashboard real data', () => {
 
     expect(await screen.findByText('Đang xem bãi: Bãi ICD Tân Cảng')).toBeInTheDocument()
     expect(apiClient.get).toHaveBeenCalledWith('/api/v1/merchant/parking-lots/10/revenue', expect.anything())
+  })
+
+  it('SP-S3-UI-01: selects time range pills and synchronizes with merchantDashboardStore', async () => {
+    vi.mocked(apiClient.get).mockImplementation(async url => ({
+      data: {
+        data: {
+          ...responses,
+          '/api/v1/merchant/parking-lots': {
+            content: [{ id: 10, name: 'Bãi ICD Tân Cảng', address: 'Quận 9', status: 'APPROVED' }],
+            totalElements: 1,
+          },
+        }[url],
+      },
+    }))
+
+    renderPage()
+    expect((await screen.findAllByText('Bãi ICD Tân Cảng')).length).toBeGreaterThan(0)
+
+    // Default timeRange is ALL
+    expect(getMerchantDashboardStoreSnapshot().timeRange).toBe('ALL')
+
+    // Click "7 ngày qua"
+    const weekBtn = screen.getByRole('button', { name: '7 ngày qua' })
+    fireEvent.click(weekBtn)
+    expect(getMerchantDashboardStoreSnapshot().timeRange).toBe('WEEK')
+
+    // Click "Hôm nay"
+    const todayBtn = screen.getByRole('button', { name: 'Hôm nay' })
+    fireEvent.click(todayBtn)
+    expect(getMerchantDashboardStoreSnapshot().timeRange).toBe('TODAY')
+  })
+
+  it('SP-S3-UI-01: clicks manual refresh button and displays floating success toast', async () => {
+    vi.mocked(apiClient.get).mockImplementation(async url => ({
+      data: {
+        data: {
+          ...responses,
+          '/api/v1/merchant/parking-lots': {
+            content: [{ id: 10, name: 'Bãi ICD Tân Cảng', address: 'Quận 9', status: 'APPROVED' }],
+            totalElements: 1,
+          },
+        }[url],
+      },
+    }))
+
+    renderPage()
+    expect((await screen.findAllByText('Bãi ICD Tân Cảng')).length).toBeGreaterThan(0)
+
+    // Find and click "Làm mới dữ liệu" button
+    const refreshBtn = screen.getByRole('button', { name: /Làm mới dữ liệu/i })
+    expect(refreshBtn).toBeInTheDocument()
+    fireEvent.click(refreshBtn)
+
+    // Assert Toast appears
+    expect(
+      await screen.findByText('Dữ liệu bảng điều khiển chủ bãi đã được làm mới thành công!'),
+    ).toBeInTheDocument()
+    expect(screen.getByTestId('merchant-dashboard-toast')).toBeInTheDocument()
+
+    // Click close on toast
+    const closeToastBtn = screen.getByRole('button', { name: 'Đóng thông báo' })
+    fireEvent.click(closeToastBtn)
+    expect(
+      screen.queryByText('Dữ liệu bảng điều khiển chủ bãi đã được làm mới thành công!'),
+    ).not.toBeInTheDocument()
   })
 })
