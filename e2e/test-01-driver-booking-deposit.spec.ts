@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test'
+import { mockPayOSDeposit } from './fixtures/payos-checkout'
 
 const driverToken = `test.${Buffer.from(
   JSON.stringify({
@@ -11,6 +12,9 @@ const driverToken = `test.${Buffer.from(
 
 const mockParkingLot = {
   id: 12,
+  status: 'APPROVED',
+  slots: [{ vehicleType: 'CONTAINER', availableCapacity: 12, totalCapacity: 50 }],
+  pricingRules: [{ vehicleType: 'CONTAINER', basePricePerHour: 30000, surgeMultiplier: 1, surgeStartTime: null, surgeEndTime: null, overtimePenaltyMultiplier: 2 }],
   name: 'Bãi Đỗ Xe Tân Cảng Container',
   address: 'Cảng Tân Cảng - Phú Hữu, TP. Thủ Đức',
   hourlyRate: 30000,
@@ -34,7 +38,7 @@ const mockVehicle = {
   isDefault: true,
 }
 
-test.describe('Flow 1: Giữ chỗ 10 phút & Đặt cọc PayOS (SP-S3-INT-01)', () => {
+test.describe('Flow 1: Tạo booking & Đặt cọc PayOS (SP-S3-INT-01)', () => {
   test.beforeEach(async ({ page }) => {
     // Inject authenticated DRIVER session
     await page.addInitScript(
@@ -100,27 +104,12 @@ test.describe('Flow 1: Giữ chỗ 10 phút & Đặt cọc PayOS (SP-S3-INT-01)'
     await page.route(/\/api\/v1\/parking-lots/, (route) =>
       route.fulfill({
         json: {
-          data: {
+          data: new URL(route.request().url()).pathname.endsWith('/12') ? mockParkingLot : {
             content: [mockParkingLot],
             totalElements: 1,
             totalPages: 1,
           },
           content: [mockParkingLot],
-        },
-      }),
-    )
-
-    // Mock PayOS Checkout Intent / Deposit
-    await page.route('**/api/v1/payments/**', (route) =>
-      route.fulfill({
-        json: {
-          data: {
-            paymentUrl: 'https://payos.vn/sandbox-checkout-demo',
-            orderCode: 98214,
-            amount: 100000,
-            status: 'PAID',
-          },
-          message: 'Thanh toán cọc thành công',
         },
       }),
     )
@@ -134,87 +123,67 @@ test.describe('Flow 1: Giữ chỗ 10 phút & Đặt cọc PayOS (SP-S3-INT-01)'
       parkingLotAddress: 'Cảng Tân Cảng - Phú Hữu, TP. Thủ Đức',
       vehicleId: 3,
       vehiclePlate: '51D-894.12',
-      status: 'PENDING_CHECKIN',
+      status: 'PENDING_PAYMENT',
       advanceDeposit: 100000,
       totalAmount: 250000,
       hourlyRate: 30000,
       expectedCheckInTime: new Date(Date.now() + 600000).toISOString(),
       expectedCheckOutTime: new Date(Date.now() + 14400000).toISOString(),
-      expiresAt: new Date(Date.now() + 600000).toISOString(),
+      expiresAt: new Date(Date.now() + 900000).toISOString(),
       createdAt: new Date().toISOString(),
     }
 
-    // Mock Driver Bookings
+    let created = false
+    await mockPayOSDeposit(page, mockBookingRecord.id, () => {
+      mockBookingRecord.status = 'PENDING_CHECKIN'
+    })
     await page.route(/\/api\/v1\/bookings/, (route) => {
       if (route.request().method() === 'POST') {
-        return route.fulfill({
-          json: {
-            data: mockBookingRecord,
-            message: 'Giữ chỗ và đặt cọc thành công',
-          },
-        })
+        expect(route.request().postDataJSON()).toEqual(expect.objectContaining({
+          parkingLotId: 12, vehicleId: 3, vehicleType: 'CONTAINER',
+          requestId: expect.any(String),
+          expectedCheckInTime: expect.any(String), expectedCheckOutTime: expect.any(String),
+        }))
+        created = true
+        return route.fulfill({ json: { data: mockBookingRecord } })
       }
-      return route.fulfill({
-        json: {
-          data: {
-            content: [mockBookingRecord],
-            totalElements: 1,
-            totalPages: 1,
-          },
-          content: [mockBookingRecord],
-        },
-      })
+      if (new URL(route.request().url()).pathname.endsWith('/501')) {
+        return route.fulfill({ json: { data: mockBookingRecord } })
+      }
+      return route.fulfill({ json: { data: {
+        content: created ? [mockBookingRecord] : [],
+        totalElements: created ? 1 : 0, totalPages: created ? 1 : 0,
+      } } })
     })
   })
 
-  test('Tài xế tìm bãi, mở giữ chỗ 10 phút, kiểm tra timer và nhận QR Terminal Pass', async ({
-    page,
-  }) => {
-    // 1. Điều hướng tới màn hình tìm kiếm bãi xe
+  test('Tài xế tạo booking, thanh toán cọc PayOS và nhận vé QR từ server', async ({ page }) => {
     await page.goto('/parking')
-    await expect(page).toHaveURL(/\/parking/)
-
-    // 2. Chờ danh sách bãi xe xuất hiện
     const lotCard = page.locator('article', { hasText: 'Bãi Đỗ Xe Tân Cảng Container' }).first()
     await expect(lotCard).toBeVisible({ timeout: 10_000 })
+    await lotCard.getByRole('button', { name: 'ĐẶT GIỮ CHỖ 10P' }).click()
 
-    // 3. Bấm nút "ĐẶT GIỮ CHỖ 10P"
-    const quickBookBtn = lotCard.locator('button', { hasText: 'ĐẶT GIỮ CHỖ 10P' })
-    await expect(quickBookBtn).toBeVisible()
-    await quickBookBtn.click()
-
-    // 4. Panel "Giữ chỗ 10 phút" xuất hiện
     const dialog = page.getByRole('dialog', { name: /Panel giữ chỗ nhanh 10 phút/i })
     await expect(dialog).toBeVisible()
-    await expect(dialog.getByText('Bãi Đỗ Xe Tân Cảng Container')).toBeVisible()
+    await expect(dialog.getByRole('heading', { name: 'Đặt chỗ tại Bãi Đỗ Xe Tân Cảng Container' })).toBeVisible()
+    await expect(dialog.getByRole('combobox', { name: 'Phương tiện của bạn' })).toHaveValue('3')
+    await expect(dialog.getByText('15 phút', { exact: true })).toBeVisible()
+    await dialog.getByRole('button', { name: 'Tạo booking và xem tiền cọc' }).click()
 
-    // 5. Xác minh đồng hồ đếm ngược 10:00 (Hold TTL)
-    const timerElement = dialog.getByRole('timer', { name: /Thời gian còn lại/i })
-    await expect(timerElement).toBeVisible()
-    await expect(timerElement).toHaveText(/10:00|09:59/)
+    await expect(dialog.getByText('BK-2026-0894', { exact: true })).toBeVisible()
+    await expect(dialog.getByText('Chờ thanh toán cọc', { exact: true })).toBeVisible()
+    await expect(dialog.getByTestId('checkin-qr-container')).toHaveCount(0)
+    expect(await page.evaluate(() => localStorage.getItem('smart-truck-parking.active_hold'))).toBeNull()
 
-    // 6. Kiểm tra thông tin xe ALPR và số tiền cọc
-    await expect(dialog.getByText('51D-894.12')).toBeVisible()
-    await expect(dialog.getByText('100.000 ₫')).toBeVisible()
+    await dialog.getByRole('button', { name: /Thanh toán cọc.*qua PayOS/ }).click()
+    const checkout = page.frameLocator('iframe[title="Mã QR thanh toán PayOS"]')
+    await checkout.getByRole('button', { name: 'Thông báo đã quét (fixture)' }).click()
+    await expect(dialog.getByText('Đã cọc · Chờ check-in', { exact: true })).toBeVisible()
+    await expect(dialog.getByRole('img', { name: 'Mã QR Check-in BK-2026-0894' })).toBeVisible()
 
-    // 7. Bấm "Xác nhận giữ chỗ"
-    const confirmBtn = dialog.getByRole('button', { name: /Xác nhận giữ chỗ/i })
-    await confirmBtn.click()
-
-    // 8. Màn hình xác nhận thành công xuất hiện
-    await expect(dialog.getByText('Giữ Chỗ Thành Công!')).toBeVisible()
-    await expect(dialog.getByText(/BK-HOLD-2026/)).toBeVisible()
-
-    // 9. Bấm "Mở Vé QR" để tới trang danh sách vé của tôi (/bookings)
-    const openPassLink = dialog.getByRole('link', { name: /Mở Vé QR/i })
-    await expect(openPassLink).toHaveAttribute('href', '/bookings')
-    await page.goto('/bookings')
-
-    // 10. Chuyển sang màn hình /bookings và xác minh vé
+    await dialog.getByRole('link', { name: 'Xem các lượt đặt chỗ' }).click()
     await expect(page).toHaveURL(/\/bookings/)
-    await expect(page.getByText('Bãi Đỗ Xe Tân Cảng Container').first()).toBeVisible()
     await expect(page.getByText('BK-2026-0894', { exact: true })).toBeVisible()
-    await expect(page.getByText(/Đã cọc · Chờ check-in/i).first()).toBeVisible()
+    await expect(page.getByText('Đã cọc · Chờ check-in', { exact: true }).first()).toBeVisible()
   })
 })
-

@@ -1,5 +1,6 @@
 import { z } from 'zod'
 import { getData, sendData, type Page } from '@/shared/api/resources'
+import { validatePaymentUrl } from './payosCheckout'
 const money = z.coerce.number().finite().nonnegative()
 export const bookingSchema = z.object({
   id: z.number(), bookingCode: z.string(), parkingLotId: z.number(), merchantId: z.number().nullable(),
@@ -20,10 +21,8 @@ export const fetchLot = (id: number) => getData<Lot>(`/api/v1/parking-lots/${id}
 export interface BookingInput { vehicleId: number; parkingLotId: number; vehicleType: Vehicle['vehicleType']; expectedCheckInTime: string; expectedCheckOutTime: string; requestId: string }
 export async function createBooking(input: BookingInput) { return bookingSchema.parse(await sendData<unknown>('post', '/api/v1/bookings', input)) }
 export async function paymentLink(bookingId: number, final = false) {
-  const url = await sendData<string>('post', '/api/v1/payments', { bookingId, paymentType: final ? 'FINAL_PAYMENT' : 'DEPOSIT' })
-  const parsed = new URL(url, window.location.origin)
-  if (!(parsed.protocol === 'https:' && parsed.hostname.endsWith('.payos.vn')) && !(parsed.origin === window.location.origin && parsed.pathname === '/payment/return')) throw new Error('Đường dẫn thanh toán không hợp lệ.')
-  return parsed.href
+  const url = await sendData<unknown>('post', '/api/v1/payments', { bookingId, paymentType: final ? 'FINAL_PAYMENT' : 'DEPOSIT' })
+  return validatePaymentUrl(url)
 }
 export const payDemo = (bookingId: number) => sendData('post', '/api/v1/payments/demo-confirm', { bookingId })
 export const cancelBooking = (id: number) => sendData('post', `/api/v1/bookings/${id}/cancel`, { reason: 'Tài xế chủ động hủy trước check-in' })

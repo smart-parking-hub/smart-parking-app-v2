@@ -127,6 +127,9 @@ describe('Gate settlement contract', () => {
     expect(
       await screen.findByText('Xe đã được ghi nhận vào bãi.'),
     ).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: 'Xác nhận xe vào bãi' }))
+    expect(await screen.findByText(/Chọn XE RA khi cần check-out/)).toBeInTheDocument()
+    expect(send).toHaveBeenCalledTimes(1)
   })
   it('does not confirm cash until the attendant explicitly confirms settlement', async () => {
     send
@@ -155,6 +158,11 @@ describe('Gate settlement contract', () => {
         { bookingCode: 'BK-001', parkingLotId: 12 },
       ),
     )
+    expect(await screen.findByRole('dialog', { name: 'Hoàn tất giao dịch' })).toBeInTheDocument()
+    expect(screen.getByText('Đã hoàn tất checkout và trả chỗ.')).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: 'Hoàn tất' }))
+    expect(screen.queryByRole('dialog', { name: 'Hoàn tất giao dịch' })).not.toBeInTheDocument()
+    expect(screen.getByLabelText('Mã đặt chỗ / Nội dung QR')).toHaveValue('')
   })
   it('prevents duplicate submissions on cash settlement confirmation while mutation is pending', async () => {
     let resolveCash!: (value: null) => void
@@ -184,6 +192,7 @@ describe('Gate settlement contract', () => {
     expect(confirmCashBtn).toHaveAttribute('aria-busy', 'true')
     fireEvent.click(confirmCashBtn)
     expect(send).toHaveBeenCalledTimes(2)
+    expect(screen.queryByRole('dialog', { name: 'Hoàn tất giao dịch' })).not.toBeInTheDocument()
     resolveCash(null)
     await waitFor(() =>
       expect(
@@ -200,6 +209,22 @@ describe('Gate settlement contract', () => {
     expect(
       screen.queryByText('Xe đã được ghi nhận vào bãi.'),
     ).not.toBeInTheDocument()
+  })
+  it('keeps settlement open when cash confirmation fails and completes after a successful retry', async () => {
+    send.mockResolvedValueOnce({
+      bookingCode: 'BK-003', totalAmount: 100000, advanceDeposit: 30000,
+      amountDue: 70000, parkingMinutes: 120, bookingStatus: 'AWAITING_FINAL_PAYMENT',
+    }).mockRejectedValueOnce(new Error('Chưa xác nhận được giao dịch')).mockResolvedValueOnce(null)
+    show(<MerchantScannerPage />, '/?code=BK-003&lot=12')
+    await screen.findByText('Bãi kiểm thử')
+    fireEvent.click(screen.getByRole('button', { name: 'XE RA' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Kiểm tra & quyết toán xe ra' }))
+    const confirm = await screen.findByRole('button', { name: /Đã nhận đủ tiền mặt/ })
+    fireEvent.click(confirm)
+    expect(await screen.findByText('Chưa xác nhận được giao dịch')).toBeInTheDocument()
+    expect(screen.queryByRole('dialog', { name: 'Hoàn tất giao dịch' })).not.toBeInTheDocument()
+    fireEvent.click(confirm)
+    expect(await screen.findByRole('dialog', { name: 'Hoàn tất giao dịch' })).toHaveTextContent('BK-003')
   })
 })
 describe('Finance, disputes and lot configuration', () => {

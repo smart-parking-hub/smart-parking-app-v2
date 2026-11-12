@@ -8,7 +8,12 @@
     "isolatedModules": true,
     "noEmit": true,
     "strict": true,
-    "types": ["node", "@playwright/test"]
+    "jsx": "react-jsx",
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./src/*"]
+    },
+    "types": ["node", "@playwright/test", "vite/client"]
   },
   "include": ["e2e", "playwright.config.ts"]
 }
