@@ -1,5 +1,5 @@
 import { useMemo } from 'react'
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, keepPreviousData } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
 import {
   fetchMerchantDashboardData,
@@ -36,6 +36,7 @@ export function MerchantDashboardPage() {
     queryFn: () =>
       fetchMerchantDashboardData(dateRange.startDate, dateRange.endDate),
     staleTime: 20000,
+    placeholderData: keepPreviousData,
   })
 
   const lotRevenueQuery = useQuery({
@@ -44,6 +45,7 @@ export function MerchantDashboardPage() {
       fetchRevenueStats(selectedLotId, dateRange.startDate, dateRange.endDate),
     enabled: selectedLotId !== null,
     staleTime: 20000,
+    placeholderData: keepPreviousData,
   })
 
   const handleManualRefresh = async () => {
@@ -70,8 +72,8 @@ export function MerchantDashboardPage() {
     }
   }
 
-  if (isLoading) return <MerchantDashboardSkeleton />
-  if (error || !data)
+  if (isLoading && !data) return <MerchantDashboardSkeleton />
+  if (error && !data)
     return (
       <div className="max-w-[1280px] mx-auto px-4 lg:px-8 py-10 space-y-4">
         <Notice error>
@@ -88,6 +90,7 @@ export function MerchantDashboardPage() {
         </button>
       </div>
     )
+  if (!data) return null
 
   const currentRevenueSeries =
     selectedLotId !== null

@@ -105,7 +105,7 @@ describe('Merchant dashboard real data', () => {
     expect(apiClient.get).toHaveBeenCalledWith('/api/v1/merchant/parking-lots/10/revenue', expect.anything())
   })
 
-  it('SP-S3-UI-01: selects time range pills and synchronizes with merchantDashboardStore', async () => {
+  it('SP-S3-UI-01: selects time range pills and synchronizes with merchantDashboardStore and API (F-01, F-05)', async () => {
     vi.mocked(apiClient.get).mockImplementation(async url => ({
       data: {
         data: {
@@ -129,8 +129,22 @@ describe('Merchant dashboard real data', () => {
     fireEvent.click(weekBtn)
     expect(getMerchantDashboardStoreSnapshot().timeRange).toBe('WEEK')
 
+    // Verify API called with date range params (F-01, F-05)
+    await waitFor(() => {
+      expect(apiClient.get).toHaveBeenCalledWith(
+        '/api/v1/merchant/revenue',
+        expect.objectContaining({
+          params: expect.objectContaining({
+            granularity: 'DAY',
+            startDate: expect.any(String),
+            endDate: expect.any(String),
+          }),
+        }),
+      )
+    })
+
     // Click "Hôm nay"
-    const todayBtn = screen.getByRole('button', { name: 'Hôm nay' })
+    const todayBtn = await screen.findByRole('button', { name: 'Hôm nay' })
     fireEvent.click(todayBtn)
     expect(getMerchantDashboardStoreSnapshot().timeRange).toBe('TODAY')
   })
@@ -168,5 +182,32 @@ describe('Merchant dashboard real data', () => {
     expect(
       screen.queryByText('Dữ liệu bảng điều khiển chủ bãi đã được làm mới thành công!'),
     ).not.toBeInTheDocument()
+  })
+
+  it('SP-S3-UI-01: displays error toast when manual refresh fails (F-02)', async () => {
+    vi.mocked(apiClient.get).mockImplementation(async url => ({
+      data: {
+        data: {
+          ...responses,
+          '/api/v1/merchant/parking-lots': {
+            content: [{ id: 10, name: 'Bãi ICD Tân Cảng', address: 'Quận 9', status: 'APPROVED' }],
+            totalElements: 1,
+          },
+        }[url],
+      },
+    }))
+
+    renderPage()
+    expect((await screen.findAllByText('Bãi ICD Tân Cảng')).length).toBeGreaterThan(0)
+
+    // Make next refetch fail
+    vi.mocked(apiClient.get).mockRejectedValueOnce(new Error('Network error'))
+
+    const refreshBtn = screen.getByRole('button', { name: /Làm mới dữ liệu/i })
+    fireEvent.click(refreshBtn)
+
+    expect(
+      await screen.findByText('Không thể làm mới dữ liệu. Vui lòng kiểm tra kết nối.'),
+    ).toBeInTheDocument()
   })
 })
