@@ -125,6 +125,8 @@ export function Select({
         onChange={(e) => onChange(e.target.value)}
         disabled={disabled}
         tabIndex={-1}
+        aria-label={id ? undefined : ariaLabel}
+        aria-labelledby={ariaLabelledBy}
         className="sr-only focus-visible:ring-2 focus-visible:ring-[#d95f00]"
       >
         {placeholder && (

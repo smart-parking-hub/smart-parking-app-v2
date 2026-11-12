@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
+import type { AxiosResponse } from 'axios'
 import { apiClient } from '../client'
 import { adaptSpringPage, toSpringPageParams, createIdempotencyHeader } from '../adapters'
 import { getData, sendData } from '../resources'
@@ -53,9 +54,9 @@ describe('Controlled API Contract Verification & Integration Tests', () => {
             size: 10,
           },
         },
-      } as any)
+      } as unknown as AxiosResponse)
 
-      const result = await getData<any>('/api/v1/merchant/parking-lots', { page: 1 })
+      const result = await getData<Record<string, unknown>>('/api/v1/merchant/parking-lots', { page: 1 })
       expect(result.number).toBe(1)
       expect(result.currentPage).toBe(2)
     })
@@ -65,7 +66,7 @@ describe('Controlled API Contract Verification & Integration Tests', () => {
     it('sendSmsRecoveryOtpApi sends email OTP to /api/v1/auth/forgot-password/otp', async () => {
       const postSpy = vi.spyOn(apiClient, 'post').mockResolvedValueOnce({
         data: { code: 200, message: 'OTP sent' },
-      } as any)
+      } as unknown as AxiosResponse)
 
       const message = await sendSmsRecoveryOtpApi('driver@smartparking.vn')
       expect(postSpy).toHaveBeenCalledWith('/api/v1/auth/forgot-password/otp', {
@@ -77,7 +78,7 @@ describe('Controlled API Contract Verification & Integration Tests', () => {
     it('verifySmsRecoveryOtpApi sends reset request to /api/v1/auth/forgot-password/reset', async () => {
       const postSpy = vi.spyOn(apiClient, 'post').mockResolvedValueOnce({
         data: { code: 200, message: 'Password reset' },
-      } as any)
+      } as unknown as AxiosResponse)
 
       await verifySmsRecoveryOtpApi('driver@smartparking.vn', '123456', 'NewPassword@2026')
       expect(postSpy).toHaveBeenCalledWith('/api/v1/auth/forgot-password/reset', {
@@ -99,7 +100,7 @@ describe('Controlled API Contract Verification & Integration Tests', () => {
             wayfindingGuide: 'Di chuyển theo trục Nguyễn Thị Định',
           },
         },
-      } as any)
+      } as unknown as AxiosResponse)
 
       const segments = await generateAiParkingLotContent({
         name: 'Depot Cát Lái 2',
@@ -134,7 +135,7 @@ describe('Controlled API Contract Verification & Integration Tests', () => {
             bookingStatus: 'COMPLETED',
           },
         },
-      } as any)
+      } as unknown as AxiosResponse)
 
       const settlement = await sendData('post', '/api/v1/merchant/check-out', {
         bookingCode: 'BK-2026-9081',
@@ -162,29 +163,29 @@ describe('Controlled API Contract Verification & Integration Tests', () => {
     it('fetchUnreadCountApi calls /api/v1/notifications/unread-count via apiClient', async () => {
       vi.spyOn(apiClient, 'get').mockResolvedValueOnce({
         data: { code: 200, data: 7 },
-      } as any)
+      } as never)
 
       const count = await fetchUnreadCountApi()
       expect(apiClient.get).toHaveBeenCalledWith('/api/v1/notifications/unread-count')
       expect(count).toBe(7)
     })
 
-    it('markAsReadApi sends PUT to /api/v1/notifications/:id/read', async () => {
-      const putSpy = vi.spyOn(apiClient, 'put').mockResolvedValueOnce({
-        data: { code: 200, message: 'Read' },
-      } as any)
+    it('markAsReadApi sends POST to /api/v1/notifications/:id/read', async () => {
+      const postSpy = vi.spyOn(apiClient, 'post').mockResolvedValueOnce({
+        data: { code: 200, message: 'Đã đọc' },
+      } as never)
 
       await markAsReadApi(42)
-      expect(putSpy).toHaveBeenCalledWith('/api/v1/notifications/42/read')
+      expect(postSpy).toHaveBeenCalledWith('/api/v1/notifications/42/read')
     })
 
-    it('markAllAsReadApi sends PUT to /api/v1/notifications/read-all', async () => {
-      const putSpy = vi.spyOn(apiClient, 'put').mockResolvedValueOnce({
-        data: { code: 200, message: 'All read' },
-      } as any)
+    it('markAllAsReadApi sends POST to /api/v1/notifications/read-all', async () => {
+      const postSpy = vi.spyOn(apiClient, 'post').mockResolvedValueOnce({
+        data: { code: 200, message: 'Đã đọc tất cả' },
+      } as never)
 
       await markAllAsReadApi()
-      expect(putSpy).toHaveBeenCalledWith('/api/v1/notifications/read-all')
+      expect(postSpy).toHaveBeenCalledWith('/api/v1/notifications/read-all')
     })
   })
 
@@ -192,7 +193,7 @@ describe('Controlled API Contract Verification & Integration Tests', () => {
     it('deleteMerchantParkingLotImage calls DELETE /api/v1/merchant/parking-lots/:id/images/:imgId', async () => {
       const delSpy = vi.spyOn(apiClient, 'delete').mockResolvedValueOnce({
         data: { code: 200, message: 'Deleted' },
-      } as any)
+      } as unknown as AxiosResponse)
 
       await deleteMerchantParkingLotImage(10, 501)
       expect(delSpy).toHaveBeenCalledWith('/api/v1/merchant/parking-lots/10/images/501')
@@ -201,7 +202,7 @@ describe('Controlled API Contract Verification & Integration Tests', () => {
     it('setCoverMerchantParkingLotImage calls PATCH /api/v1/merchant/parking-lots/:id/images/:imgId/cover', async () => {
       const patchSpy = vi.spyOn(apiClient, 'patch').mockResolvedValueOnce({
         data: { code: 200, message: 'Cover updated' },
-      } as any)
+      } as unknown as AxiosResponse)
 
       await setCoverMerchantParkingLotImage(10, 501)
       expect(patchSpy).toHaveBeenCalledWith('/api/v1/merchant/parking-lots/10/images/501/cover')
@@ -212,7 +213,7 @@ describe('Controlled API Contract Verification & Integration Tests', () => {
     it('calls PUT /api/v1/admin/parking-lots/:id/request-changes with reason justification', async () => {
       const reqSpy = vi.spyOn(apiClient, 'request').mockResolvedValueOnce({
         data: { code: 200, message: 'Yêu cầu sửa đổi thành công', data: null },
-      } as any)
+      } as unknown as AxiosResponse)
 
       await sendData('put', '/api/v1/admin/parking-lots/45/request-changes', {
         reason: 'Bổ sung giấy chứng nhận kiểm định trạm cân 100 tấn.',
@@ -235,7 +236,7 @@ describe('Controlled API Contract Verification & Integration Tests', () => {
           code: 200,
           data: 'https://pay.payos.vn/web/checkout-real-token',
         },
-      } as any)
+      } as unknown as AxiosResponse)
 
       const result = await createPayOsDepositLink('9081', 100000)
       expect(postSpy).toHaveBeenCalledWith('/api/v1/payments', {

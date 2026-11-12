@@ -110,7 +110,7 @@ describe('GROUP 13 - Authentication & Access Control Guards Hardening', () => {
       const { renderWithProviders } = createTestContext('/register')
       renderWithProviders(<AuthPage mode="register" />)
 
-      const submitBtn = screen.getByRole('button', { name: 'Tạo tài khoản' })
+      const submitBtn = screen.getByRole('button', { name: 'Tiếp tục: Xác thực Email' })
       expect(submitBtn.className).toContain('bg-[#d95f00]')
       expect(submitBtn.className).toContain('text-white')
       expect(submitBtn.className).toContain('focus-visible:ring-[#d95f00]')

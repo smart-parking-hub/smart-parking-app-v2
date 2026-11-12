@@ -10,6 +10,8 @@ import {
   type Page,
 } from '@/shared/api/resources'
 import { QueryState } from '@/shared/components/QueryState'
+import { DisputeEvidenceGallery } from './DisputeEvidenceGallery'
+import { parseDisputeDescription } from '../api/driverDisputesApi'
 import {
   Workspace,
   DataTable,
@@ -115,18 +117,25 @@ export function PortalDisputesView({
 
 function PortalDisputeDetail({ data, admin }: { data: Dispute; admin: boolean }) {
   const [resolve, setResolve] = useState(false)
+  const parsed = parseDisputeDescription(data.description)
   return (
     <>
       <div className="grid gap-6 lg:grid-cols-[2fr_1fr]">
         <Panel title={data.reason}>
-          <p className="mb-6 whitespace-pre-wrap text-sm leading-7">
-            {data.description || 'Chưa có mô tả bổ sung.'}
-          </p>
-          <div className="border-t border-brand-border pt-5">
-            <Badge value={data.status} />
-            <p className="mt-4 text-xs text-brand-muted">
-              Được tạo: {date(data.createdAt)}
+          <div className="space-y-5">
+            <p className="whitespace-pre-wrap text-sm leading-7">
+              {parsed.body || 'Chưa có mô tả bổ sung.'}
             </p>
+            <DisputeEvidenceGallery
+              evidenceUrls={data.evidenceUrls ?? []}
+              localAttachmentRefs={parsed.localAttachmentRefs}
+            />
+            <div className="border-t border-brand-border pt-5">
+              <Badge value={data.status} />
+              <p className="mt-4 text-xs text-brand-muted">
+                Được tạo: {date(data.createdAt)}
+              </p>
+            </div>
           </div>
         </Panel>
         <Panel title="Thông tin liên quan">

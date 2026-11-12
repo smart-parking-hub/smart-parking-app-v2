@@ -11,7 +11,7 @@ import {
   AdminUserDetailPage,
 } from '../index'
 import { DisputesPage } from '@/features/disputes'
-import { PortalNotificationsPage } from '@/features/portal/AccountPages'
+import { PortalNotificationsPage } from '@/features/notifications'
 import { getData, sendData } from '@/shared/api/resources'
 
 vi.mock('@/shared/api/resources', () => ({

@@ -1,8 +1,8 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useForm } from 'react-hook-form'
 import { useSearchParams } from 'react-router-dom'
-import { Camera, Loader2, ScanLine, ShieldCheck, SwitchCamera, Zap } from 'lucide-react'
+import { Camera, CheckCircle2, Loader2, ScanLine, ShieldCheck, SwitchCamera, Zap } from 'lucide-react'
 import type { Lot, Settlement } from '@/entities/operations'
 import {
   getData,
@@ -60,10 +60,13 @@ export function MerchantScannerPage() {
   const [camera, setCamera] = useState(false)
   const [cameraError, setCameraError] = useState('')
   const [success, setSuccess] = useState('')
+  const [completedSettlement, setCompletedSettlement] = useState<Settlement | null>(null)
   const [facingMode, setFacingMode] = useState<'environment' | 'user'>('environment')
   const [autoSubmit, setAutoSubmit] = useState(true)
   const video = useRef<HTMLVideoElement>(null)
   const readerRef = useRef<ZXingReader | null>(null)
+  const scanPending = useRef(false)
+  const checkedIn = useRef(new Set<string>())
   const cache = useQueryClient()
   const form = useForm<{ bookingCode: string; parkingLotId: number }>({
     defaultValues: {
@@ -90,7 +93,11 @@ export function MerchantScannerPage() {
   const scan = useMutation({
     mutationFn: (data: { bookingCode: string; parkingLotId: number }) =>
       sendData<Settlement | null>('post', `/api/v1/merchant/${mode}`, data),
-    onSuccess: () => {
+    onSuccess: (_result, data) => {
+      if (mode === 'check-out' && _result?.bookingStatus === 'COMPLETED') {
+        setCompletedSettlement(_result)
+      }
+      if (mode === 'check-in') checkedIn.current.add(`${data.parkingLotId}:${data.bookingCode}`)
       setCamera(false)
       setSuccess(
         mode === 'check-in'
@@ -98,16 +105,40 @@ export function MerchantScannerPage() {
           : 'Đã ghi nhận xe ra. Kiểm tra số tiền còn phải thu.',
       )
       void cache.invalidateQueries({ queryKey: ['merchant-bookings'] })
+      void cache.invalidateQueries({ queryKey: ['merchant-booking'] })
+      void cache.invalidateQueries({ queryKey: ['real-bookings'] })
+      void cache.invalidateQueries({ queryKey: ['booking'] })
     },
+    onSettled: () => { scanPending.current = false },
+  })
+
+  const submitScan = (data: { bookingCode: string; parkingLotId: number }) => {
+    if (scanPending.current) return
+    if (mode === 'check-in' && checkedIn.current.has(`${data.parkingLotId}:${data.bookingCode}`)) {
+      setSuccess('Xe đã được ghi nhận vào bãi. Chọn XE RA khi cần check-out.')
+      return
+    }
+    scanPending.current = true
+    setSuccess('')
+    cash.reset()
+    scan.mutate(data)
+  }
+  const submitScanRef = useRef(submitScan)
+  useLayoutEffect(() => {
+    submitScanRef.current = submitScan
   })
 
   const cash = useMutation({
     mutationFn: () =>
       sendData('post', '/api/v1/merchant/confirm-cash', scan.variables),
     onSuccess: () => {
+      if (scan.data) setCompletedSettlement(scan.data)
       scan.reset()
       setSuccess('Đã xác nhận thu tiền mặt và trả chỗ thành công.')
       void cache.invalidateQueries({ queryKey: ['merchant-bookings'] })
+      void cache.invalidateQueries({ queryKey: ['merchant-booking'] })
+      void cache.invalidateQueries({ queryKey: ['real-bookings'] })
+      void cache.invalidateQueries({ queryKey: ['booking'] })
     },
   })
 
@@ -115,6 +146,7 @@ export function MerchantScannerPage() {
     if (!camera) return
     let stopped = false
     let currentReader: ZXingReader | null = null
+    const videoEl = video.current
 
     const start = async () => {
       try {
@@ -128,7 +160,7 @@ export function MerchantScannerPage() {
         readerRef.current = reader
         currentReader = reader
 
-        if (!video.current) return
+        if (!videoEl) return
 
         await reader.decodeFromConstraints(
           {
@@ -139,11 +171,12 @@ export function MerchantScannerPage() {
               height: { ideal: 720 },
             },
           },
-          video.current,
+          videoEl,
           (result) => {
             if (stopped) return
             const raw = result?.getText()?.trim()
             if (raw) {
+              stopped = true
               playBeepSound()
               if (typeof navigator !== 'undefined' && navigator.vibrate) {
                 navigator.vibrate([40, 50, 40])
@@ -156,7 +189,7 @@ export function MerchantScannerPage() {
               // Instant Auto-Confirm (Quét phát ăn ngay)
               const lotId = form.getValues('parkingLotId')
               if (autoSubmit && lotId) {
-                scan.mutate({ bookingCode: raw, parkingLotId: lotId })
+                submitScanRef.current({ bookingCode: raw, parkingLotId: lotId })
               }
             }
           },
@@ -164,10 +197,10 @@ export function MerchantScannerPage() {
 
         if (stopped) {
           reader.reset()
-          if (video.current?.srcObject) {
-            const stream = video.current.srcObject as MediaStream
+          if (videoEl?.srcObject) {
+            const stream = videoEl.srcObject as MediaStream
             stream.getTracks().forEach((t) => t.stop())
-            video.current.srcObject = null
+            videoEl.srcObject = null
           }
         }
       } catch {
@@ -189,14 +222,14 @@ export function MerchantScannerPage() {
           // ignore reset error
         }
       }
-      if (video.current?.srcObject) {
-        const stream = video.current.srcObject as MediaStream
+      if (videoEl?.srcObject) {
+        const stream = videoEl.srcObject as MediaStream
         stream.getTracks().forEach((t) => t.stop())
-        video.current.srcObject = null
+        videoEl.srcObject = null
       }
       readerRef.current = null
     }
-  }, [camera, facingMode, autoSubmit, form, scan])
+  }, [camera, facingMode, autoSubmit, form])
 
   function changeMode(next: typeof mode) {
     setMode(next)
@@ -223,7 +256,9 @@ export function MerchantScannerPage() {
 
           {/* Video Container with Clean Symmetrical Square Tracking Box */}
           <div className="relative flex aspect-video items-center justify-center overflow-hidden rounded-xl border border-slate-700 bg-black shadow-inner">
+            {/* A previous reader can finish asynchronously after a camera switch. */}
             <video
+              key={camera ? `${facingMode}:${autoSubmit}` : 'off'}
               ref={video}
               muted
               playsInline
@@ -309,16 +344,12 @@ export function MerchantScannerPage() {
           </div>
           <form
             className="space-y-5"
-            onSubmit={form.handleSubmit((data) => {
-              if (scan.isPending) return
-              setSuccess('')
-              cash.reset()
-              scan.mutate(data)
-            })}
+            onSubmit={form.handleSubmit(submitScan)}
           >
             <Field label="Bãi kiểm soát">
               <select
                 className={control}
+                value={form.watch('parkingLotId') || ''}
                 {...form.register('parkingLotId', {
                   required: true,
                   valueAsNumber: true,
@@ -378,7 +409,37 @@ export function MerchantScannerPage() {
       {scan.isError && <Notice error>{errorMessage(scan.error)}</Notice>}
       {success && <Notice>{success}</Notice>}
 
-      {scan.data && mode === 'check-out' && (
+      {completedSettlement && (
+        <Dialog title="Hoàn tất giao dịch" onClose={() => {
+          setCompletedSettlement(null)
+          scan.reset()
+        }}>
+          <div className="space-y-5 text-center">
+            <CheckCircle2 className="mx-auto h-14 w-14 text-emerald-600" aria-hidden="true" />
+            <p role="status" className="font-semibold text-brand-navy">Đã hoàn tất checkout và trả chỗ.</p>
+            <dl className="space-y-3 text-left">
+              {[
+                ['Mã đặt chỗ', completedSettlement.bookingCode],
+                ['Tổng phí', money(completedSettlement.totalAmount)],
+                ['Tiền cọc đã khấu trừ', money(completedSettlement.advanceDeposit)],
+                [completedSettlement.amountDue > 0 ? 'Tiền mặt vừa xác nhận' : 'Còn phải thanh toán', money(completedSettlement.amountDue)],
+              ].map(([label, value]) => (
+                <div key={label} className="flex justify-between gap-4">
+                  <dt className="text-brand-muted">{label}</dt>
+                  <dd className="break-all text-right font-semibold">{value}</dd>
+                </div>
+              ))}
+            </dl>
+            <button type="button" className={`${button} w-full`} onClick={() => {
+              setCompletedSettlement(null)
+              scan.reset()
+              form.setValue('bookingCode', '')
+            }}>Hoàn tất</button>
+          </div>
+        </Dialog>
+      )}
+
+      {scan.data && mode === 'check-out' && !completedSettlement && (
         <Dialog
           title="Quyết toán lượt đỗ"
           onClose={() => {

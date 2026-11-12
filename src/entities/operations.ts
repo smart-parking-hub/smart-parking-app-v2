@@ -42,30 +42,45 @@ export interface Lot {
   pricingRules: Pricing[]
   images: { id: number; contentUrl: string }[]
 }
+export type ApiDateTimeValue = string | number[] | null | undefined
+
 export interface Booking {
   id: number
   bookingCode: string
   vehiclePlate: string
-  vehicleLicensePlate: string
-  vehicleType: VehicleType
+  vehicleLicensePlate?: string | null
+  vehicleType?: VehicleType
   parkingLotId: number
   parkingLotName: string
-  parkingLotAddress?: string
-  merchantId?: number
-  driverId?: number
-  vehicleId?: number
+  parkingLotAddress?: string | null
+  merchantId?: number | null
+  driverId?: number | null
+  vehicleId?: number | null
   status: string
   advanceDeposit: number
-  totalAmount: number
-  hourlyRate?: number
-  expectedCheckInTime: string
-  expectedCheckOutTime: string
-  expiresAt?: string
-  checkInTime: string
-  checkOutTime: string
-  createdAt: string
-  cancellationReason?: string
-  cancelledAt?: string
+  totalAmount?: number | null
+  hourlyRate?: number | null
+  surgeMultiplier?: number | null
+  surgeStartTime?: ApiDateTimeValue
+  surgeEndTime?: ApiDateTimeValue
+  overtimePenaltyMultiplier?: number | null
+  expectedCheckInTime: ApiDateTimeValue
+  expectedCheckOutTime?: ApiDateTimeValue
+  expiresAt?: ApiDateTimeValue
+  checkInTime?: ApiDateTimeValue
+  checkOutTime?: ApiDateTimeValue
+  createdAt?: ApiDateTimeValue
+  cancelledAt?: ApiDateTimeValue
+  cancellationReason?: string | null
+  refundAmount?: number | null
+  refundPercentage?: number | null
+  refundPolicy?: string | null
+  refundStatus?: string | null
+  refundReference?: string | null
+  driverName?: string | null
+  driverPhone?: string | null
+  customerName?: string | null
+  customerPhone?: string | null
 }
 export interface Settlement {
   bookingCode: string
@@ -96,10 +111,19 @@ export interface Withdrawal {
   maskedBankAccount: string
   accountHolderName: string
 }
+export interface DisputeTimelineEntry {
+  id: number
+  eventType: string
+  actorRole: string
+  message: string
+  resultingStatus: string
+  createdAt: string
+}
 export interface Dispute {
   id: number
   bookingId: number
   merchantId: number | null
+  parkingLotId?: number | null
   driverId: number
   reason: string
   description: string
@@ -108,6 +132,7 @@ export interface Dispute {
   amount?: number | null
   compensationAmount?: number | null
   evidenceUrls?: string[]
+  timeline?: DisputeTimelineEntry[]
   createdAt: string
   updatedAt: string
 }

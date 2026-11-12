@@ -6,6 +6,8 @@ node_modules
 # Testing & Coverage
 coverage
 .artifacts/
+test-results/
+playwright-report/
 
 # Production Build
 dist

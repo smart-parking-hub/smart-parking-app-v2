@@ -5,7 +5,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { DisputesPage } from '@/features/disputes'
 import { AdminAuditLogsPage } from '../index'
-import { PortalNotificationsPage } from '@/features/portal/AccountPages'
+import { PortalNotificationsPage } from '@/features/notifications'
 import { AdminProfilePage } from '../pages/AdminProfilePage'
 import { getData, sendData } from '@/shared/api/resources'
 

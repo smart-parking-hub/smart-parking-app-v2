@@ -32,10 +32,8 @@ import {
   AdminAuditLogsPage,
 } from '@/features/admin'
 import { DisputesPage } from '@/features/disputes'
-import {
-  PortalNotificationsPage,
-  AdminProfilePage,
-} from '@/features/portal/AccountPages'
+import { PortalNotificationsPage } from '@/features/notifications'
+import { AdminProfilePage } from '@/features/admin/pages/AdminProfilePage'
 import { vehicleTypes } from '@/entities/operations'
 import { control } from '@/shared/components/Workspace'
 import { AuthPage, AccessPage } from '@/features/auth'
@@ -103,10 +101,14 @@ function previewCache() {
   const bookings = Array.from({ length: 5 }, (_, i) => ({
     id: 12 + i,
     bookingCode: `BK-DEMO-${1200 + i}`,
+    vehicleId: 30 + i,
+    driverId: 500 + i,
+    merchantId: 2,
     vehicleLicensePlate: `XE MẪU 0${i + 1}`,
     vehicleType: 'CONTAINER',
     parkingLotId: 12,
     parkingLotName: lot.name,
+    parkingLotAddress: lot.address,
     status: [
       'PARKING',
       'PENDING_CHECKIN',
@@ -114,11 +116,18 @@ function previewCache() {
       'COMPLETED',
       'OVERTIME',
     ][i],
+    hourlyRate: 25000,
+    surgeMultiplier: 1.5,
+    surgeStartTime: '18:00',
+    surgeEndTime: '22:00',
+    overtimePenaltyMultiplier: 1.5,
     advanceDeposit: 100000,
     totalAmount: 275000,
+    expiresAt: '2026-11-04T09:15:00',
     expectedCheckInTime: now,
     expectedCheckOutTime: '2026-11-04T17:00:00',
-    checkInTime: now,
+    checkInTime: i === 1 || i === 2 ? null : now,
+    checkOutTime: i === 3 ? '2026-11-04T16:40:00' : null,
     createdAt: now,
   }))
   const revenue = {
@@ -185,8 +194,15 @@ function previewCache() {
     disputeCount: 1,
   }))
   client.setQueryData(['scanner-lots'], paging([lot]))
-  client.setQueryData(['merchant-bookings', 0], paging(bookings))
-  client.setQueryData(['merchant-booking', '12'], bookings[0])
+  client.setQueryData(['merchant-bookings', { page: 0, size: 5, parkingLotId: null }], paging(bookings))
+  client.setQueryData(['merchant-bookings-summary', { parkingLotId: null }], {
+    items: bookings,
+    totalElements: bookings.length,
+  })
+  client.setQueryData(['merchant-bookings-lots-filter'], [{ id: lot.id, name: lot.name }])
+  for (const item of bookings) {
+    client.setQueryData(['merchant-booking', String(item.id)], item)
+  }
   client.setQueryData(['merchant-lot', '12'], lot)
   client.setQueryData(
     ['merchant-revenue', { startDate: '', endDate: '', granularity: 'DAY' }],

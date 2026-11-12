@@ -1,6 +1,6 @@
 import type { Dispute } from '@/entities/operations'
 import { getData, sendData, type Page } from '@/shared/api/resources'
-import type { DisputeBookingSummary } from '@/features/bookings'
+import type { DisputeBookingSummary } from '@/features/bookings/schemas/disputeSchemas'
 
 export interface DisputePaymentRecord {
   id: number
@@ -51,12 +51,47 @@ export function normalizeDisputeStatus(status: string | undefined): 'PENDING' | 
   return 'PENDING'
 }
 
-export function disputeTimeLabel(value: string | null | undefined): string {
-  if (!value) return '—'
+const disputeDateTimeFormatter = new Intl.DateTimeFormat('en-GB', {
+  timeZone: 'Asia/Ho_Chi_Minh',
+  hour: '2-digit',
+  minute: '2-digit',
+  day: '2-digit',
+  month: '2-digit',
+  year: 'numeric',
+  hourCycle: 'h23',
+})
+
+export interface DisputeTimeParts {
+  time: string
+  date: string
+}
+
+export function disputeTimeParts(value: string | null | undefined): DisputeTimeParts | null {
+  if (!value) return null
   const iso = /(?:Z|[+-]\d{2}:\d{2})$/.test(value) ? value : `${value}+07:00`
   const parsed = new Date(iso)
-  if (Number.isNaN(parsed.getTime())) return '—'
-  return parsed.toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' })
+  if (Number.isNaN(parsed.getTime())) return null
+
+  const parts = disputeDateTimeFormatter.formatToParts(parsed)
+  const pick = (type: Intl.DateTimeFormatPartTypes) =>
+    parts.find((part) => part.type === type)?.value ?? ''
+
+  const hour = pick('hour').padStart(2, '0')
+  const minute = pick('minute').padStart(2, '0')
+  const day = pick('day').padStart(2, '0')
+  const month = pick('month').padStart(2, '0')
+  const year = pick('year')
+
+  if (!hour || !minute || !day || !month || !year) return null
+  return {
+    time: `${hour}:${minute}`,
+    date: `${day}/${month}/${year}`,
+  }
+}
+
+export function disputeTimeLabel(value: string | null | undefined): string {
+  const parts = disputeTimeParts(value)
+  return parts ? `${parts.time} ${parts.date}` : '—'
 }
 
 export function disputeMoney(amount: unknown): string {
@@ -69,14 +104,52 @@ export async function fetchDriverDisputesPage(page: number, size = 20): Promise<
 }
 
 export async function fetchDriverDisputeById(id: string | number): Promise<Dispute> {
-  return getData<Dispute>(`/api/v1/disputes/${id}`)
+  return getData<Dispute>(`/api/v1/disputes/me/${id}`)
+}
+
+export interface UploadedDisputeEvidence {
+  fileName: string
+  originalFileName: string
+  contentType: string
+  sizeBytes: number
+  contentUrl: string
+  url: string
+}
+
+const DISPUTE_EVIDENCE_PATH_PREFIX = '/api/v1/disputes/evidence/'
+
+export function extractEvidenceImageApiPath(rawUrl: string): string | null {
+  const trimmed = rawUrl.trim()
+  if (!trimmed) return null
+  if (trimmed.startsWith(DISPUTE_EVIDENCE_PATH_PREFIX)) {
+    return trimmed
+  }
+  try {
+    const parsed = new URL(trimmed)
+    if (parsed.pathname.startsWith(DISPUTE_EVIDENCE_PATH_PREFIX)) {
+      return parsed.pathname
+    }
+  } catch {
+    return null
+  }
+  return null
+}
+
+export async function uploadDisputeEvidence(files: File[]): Promise<UploadedDisputeEvidence[]> {
+  const formData = new FormData()
+  files.forEach((file) => formData.append('files', file))
+  return sendData<UploadedDisputeEvidence[]>('post', '/api/v1/disputes/evidence', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  })
 }
 
 export async function submitDriverDispute(payload: {
   bookingId: number
   merchantId?: number | null
+  parkingLotId?: number | null
   reason: string
   description: string
+  evidenceUrls?: string[]
 }): Promise<Dispute> {
   return sendData<Dispute>('post', '/api/v1/disputes', payload)
 }

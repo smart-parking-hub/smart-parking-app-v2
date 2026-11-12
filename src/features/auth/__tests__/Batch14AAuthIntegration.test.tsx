@@ -52,8 +52,8 @@ describe('BATCH-14A: Authentication & Access Control Pages Integration', () => {
     expect(screen.getByLabelText('Số điện thoại')).toBeInTheDocument()
     expect(screen.getByLabelText('Email nhận mã xác thực')).toBeInTheDocument()
     expect(screen.getByLabelText('Mật khẩu')).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /Gửi mã/i })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Tạo tài khoản' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /Gửi mã/i, hidden: true })).not.toBeVisible()
+    expect(screen.getByRole('button', { name: 'Tạo tài khoản', hidden: true })).not.toBeVisible()
 
     // Password visibility toggle
     const toggleBtn = screen.getByLabelText('Hiện mật khẩu')

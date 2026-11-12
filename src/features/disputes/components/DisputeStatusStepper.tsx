@@ -1,5 +1,6 @@
 import { CheckCircle2, Clock, FileCheck2, ShieldAlert, XCircle } from 'lucide-react'
-import { disputeTimeLabel, normalizeDisputeStatus } from '../api/driverDisputesApi'
+import { normalizeDisputeStatus } from '../api/driverDisputesApi'
+import { DisputeTimeDisplay } from './DisputeTimeDisplay'
 
 export interface DisputeStatusStepperProps {
   status: string
@@ -21,7 +22,13 @@ export function DisputeStatusStepper({
     {
       id: 'submitted',
       title: '1. Tiếp nhận hồ sơ',
-      detail: disputeTimeLabel(createdAt),
+      detail: (
+        <DisputeTimeDisplay
+          value={createdAt}
+          timeClassName="text-sm font-semibold"
+          dateClassName="text-xs opacity-80"
+        />
+      ),
       state: 'completed' as const,
       icon: FileCheck2,
     },
@@ -35,7 +42,15 @@ export function DisputeStatusStepper({
     {
       id: 'verdict',
       title: '3. Phán quyết & Biên bản',
-      detail: isFinished ? disputeTimeLabel(updatedAt) : 'Chờ kết luận',
+      detail: isFinished ? (
+        <DisputeTimeDisplay
+          value={updatedAt}
+          timeClassName="text-sm font-semibold"
+          dateClassName="text-xs opacity-80"
+        />
+      ) : (
+        'Chờ kết luận'
+      ),
       state:
         normalized === 'RESOLVED'
           ? ('completed' as const)
@@ -105,9 +120,9 @@ export function DisputeStatusStepper({
               </span>
               <div className="min-w-0">
                 <h3 className="text-sm font-semibold text-slate-900">{step.title}</h3>
-                <p className={`mt-0.5 text-sm font-medium tabular-nums ${style.detailText}`}>
+                <div className={`mt-0.5 text-sm font-medium tabular-nums ${style.detailText}`}>
                   {step.detail}
-                </p>
+                </div>
               </div>
             </li>
           )

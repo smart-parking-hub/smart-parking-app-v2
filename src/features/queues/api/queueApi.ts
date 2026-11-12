@@ -4,6 +4,7 @@ import type {
   QueueHistoryItem,
   QueueTelemetryData,
   QueueRegulationItem,
+  QueueStatus,
 } from '../types/queueTypes'
 
 export const fallbackActiveQueue: ActiveQueueItem = {
@@ -258,7 +259,7 @@ export const fetchQueueHistory = async (): Promise<QueueHistoryItem[]> => {
         vehicleSpec: item.vehicleSpec || 'Container 40FT',
         initialPosition: 1,
         waitTimeText: '10 phút chờ',
-        status: (item.status as any) || 'CONVERTED',
+        status: (item.status as QueueStatus) || 'CONVERTED',
         statusText: 'Đã hoàn tất phiên xếp hàng',
       }))
     }

@@ -18,11 +18,15 @@ import {
   X,
 } from 'lucide-react'
 import type { Dispute } from '@/entities/operations'
-import { errorMessage, getData, sendData } from '@/shared/api/resources'
+import { errorMessage, getData, type Page } from '@/shared/api/resources'
 import { Dialog } from '@/shared/components/Dialog'
 import { Select } from '@/shared/components/Select'
 import { Notice, control, secondary } from '@/shared/components/Workspace'
 import { formatMoney, statusLabels, type Booking } from '@/features/booking-flow'
+import {
+  submitDriverDispute,
+  uploadDisputeEvidence,
+} from '@/features/disputes/api/driverDisputesApi'
 import {
   DISPUTE_ACCEPTED_IMAGE_TYPES,
   DISPUTE_DESCRIPTION_MAX_LENGTH,
@@ -282,27 +286,70 @@ export function CreateDisputeModal({
     mutationFn: async (values: CreateDisputeFormValues) => {
       const resolvedMerchantId =
         values.merchantId ?? selectedBookingContext?.merchantId ?? undefined
+      const resolvedParkingLotId =
+        selectedBookingContext?.parkingLotId ?? initialBooking?.parkingLotId ?? undefined
 
       const cleanDescription = values.description.trim()
-      const attachmentNote =
-        attachments.length > 0
-          ? `[Chứng từ đính kèm trên thiết bị: ${attachments
-              .map((item) => `${item.name} (${formatBytes(item.sizeBytes)})`)
-              .join('; ')}]`
-          : ''
+      let evidenceUrls: string[] = []
+      if (attachments.length > 0) {
+        const uploaded = await uploadDisputeEvidence(
+          attachments.map((item) => item.file),
+        )
+        evidenceUrls = uploaded.map((item) => {
+          if (item.url && /^https?:\/\//i.test(item.url)) {
+            return item.url
+          }
+          const origin =
+            typeof window !== 'undefined' && window.location?.origin
+              ? window.location.origin
+              : 'http://localhost:8088'
+          return new URL(item.contentUrl, origin).toString()
+        })
+      }
 
-      const finalDescription = [cleanDescription, attachmentNote].filter(Boolean).join('\n\n')
-
-      return sendData<Dispute>('post', '/api/v1/disputes', {
+      return submitDriverDispute({
         bookingId: values.bookingId,
         ...(typeof resolvedMerchantId === 'number' && resolvedMerchantId > 0
           ? { merchantId: resolvedMerchantId }
           : {}),
+        ...(typeof resolvedParkingLotId === 'number' && resolvedParkingLotId > 0
+          ? { parkingLotId: resolvedParkingLotId }
+          : {}),
         reason: values.reason.trim(),
-        description: finalDescription,
+        description: cleanDescription,
+        ...(evidenceUrls.length > 0 ? { evidenceUrls } : {}),
       })
     },
     onSuccess: (created) => {
+      queryClient.setQueryData<Page<Dispute>>(
+        ['disputes', 'driver', undefined, 0],
+        (prev) => {
+          if (!prev || !Array.isArray(prev.content)) return prev
+          const exists = prev.content.some((item) => item.id === created.id)
+          if (exists) {
+            return {
+              ...prev,
+              content: prev.content.map((item) =>
+                item.id === created.id ? created : item,
+              ),
+            }
+          }
+          return {
+            ...prev,
+            content: [created, ...prev.content],
+            totalElements:
+              typeof prev.totalElements === 'number'
+                ? prev.totalElements + 1
+                : prev.content.length + 1,
+          }
+        },
+      )
+      if (created?.id) {
+        queryClient.setQueryData(
+          ['disputes', 'driver', String(created.id), 0],
+          created,
+        )
+      }
       void queryClient.invalidateQueries({ queryKey: ['disputes'] })
       void queryClient.invalidateQueries({ queryKey: ['driver-disputes-lookup'] })
       void queryClient.invalidateQueries({ queryKey: ['real-bookings'] })
@@ -721,7 +768,7 @@ export function CreateDisputeModal({
           <p className="flex items-start gap-2 rounded-lg border border-sky-200/80 bg-sky-50/70 px-3 py-2 text-xs text-sky-900">
             <Info className="mt-0.5 h-3.5 w-3.5 shrink-0 text-sky-700" aria-hidden="true" />
             <span>
-              Ảnh đính kèm được kiểm tra &amp; xem trước trực tiếp trên thiết bị. Hiện API tạo khiếu nại phía máy chủ chỉ lưu nội dung văn bản; tên tệp ảnh sẽ được ghi chú tự động kèm mô tả để bộ phận hỗ trợ đối chiếu.
+              Ảnh chứng từ hợp lệ (JPG, PNG, WebP · tối đa 5 MB/ảnh) sẽ được tải lên máy chủ cùng hồ sơ để Admin, Chủ bãi và bạn xem lại trực tiếp trong chi tiết khiếu nại.
             </span>
           </p>
         </div>
