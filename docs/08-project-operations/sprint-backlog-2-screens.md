@@ -21,7 +21,7 @@
 
 ## 📑 Danh Sách Chi Tiết 53 Tasks Trong Sprint Backlog 2
 
-### [SP-S2-FE-001] [FE] Trang chủ Marketing & Live Hero Map (LandingPage) - (3 STP)
+### [FE] Trang chủ Marketing & Live Hero Map (LandingPage) (SCR-001) (3 STP)
 
 > **Hierarchy:** Epic `SP-FE-MOD-01` (Public Landing & Marketing) → Story `SP-FE-MOD-01-US01` → Task `SP-S2-FE-001`
 > **Priority:** `High` | **Complexity:** `M` | **Estimated Effort:** `6h` | **Story Points:** `3 STP` | **Status:** `Sprint Backlog 2`
@@ -72,7 +72,7 @@ Giới thiệu nền tảng, tìm bãi nhanh, số liệu thống kê
 
 ---
 
-### [SP-S2-FE-002] [FE] Giải pháp Dành cho Tài xế Xe tải (DriverSolutionsPage) - (2 STP)
+### [FE] Giải pháp Dành cho Tài xế Xe tải (DriverSolutionsPage) (SCR-002) (2 STP)
 
 > **Hierarchy:** Epic `SP-FE-MOD-01` (Public Landing & Marketing) → Story `SP-FE-MOD-01-US02` → Task `SP-S2-FE-002`
 > **Priority:** `Medium` | **Complexity:** `S` | **Estimated Effort:** `4h` | **Story Points:** `2 STP` | **Status:** `Sprint Backlog 2`
@@ -123,7 +123,7 @@ Trình bày lợi ích dành cho tài xế xe tải/ô tô
 
 ---
 
-### [SP-S2-FE-003] [FE] Giải pháp Dành cho Chủ bãi Đỗ (OwnerSolutionsPage) - (2 STP)
+### [FE] Giải pháp Dành cho Chủ bãi Đỗ (OwnerSolutionsPage) (SCR-003) (2 STP)
 
 > **Hierarchy:** Epic `SP-FE-MOD-01` (Public Landing & Marketing) → Story `SP-FE-MOD-01-US03` → Task `SP-S2-FE-003`
 > **Priority:** `Medium` | **Complexity:** `S` | **Estimated Effort:** `4h` | **Story Points:** `2 STP` | **Status:** `Sprint Backlog 2`
@@ -174,7 +174,7 @@ Giới thiệu công cụ quản lý và tăng doanh thu cho chủ bãi
 
 ---
 
-### [SP-S2-FE-004] [FE] Bảng giá Dịch vụ & Gói Bãi xe (PricingPage) - (2 STP)
+### [FE] Bảng giá Dịch vụ & Gói Bãi xe (PricingPage) (SCR-004) (2 STP)
 
 > **Hierarchy:** Epic `SP-FE-MOD-01` (Public Landing & Marketing) → Story `SP-FE-MOD-01-US03` → Task `SP-S2-FE-004`
 > **Priority:** `Medium` | **Complexity:** `S` | **Estimated Effort:** `4h` | **Story Points:** `2 STP` | **Status:** `Sprint Backlog 2`
@@ -225,7 +225,7 @@ Công bố bảng giá dịch vụ nền tảng & các gói bãi xe
 
 ---
 
-### [SP-S2-FE-005] [FE] Tài liệu Tích hợp API & Webhooks (ApiIntegrationPage) - (2 STP)
+### [FE] Tài liệu Tích hợp API & Webhooks (ApiIntegrationPage) (SCR-005) (2 STP)
 
 > **Hierarchy:** Epic `SP-FE-MOD-01` (Public Landing & Marketing) → Story `SP-FE-MOD-01-US03` → Task `SP-S2-FE-005`
 > **Priority:** `Medium` | **Complexity:** `S` | **Estimated Effort:** `4h` | **Story Points:** `2 STP` | **Status:** `Sprint Backlog 2`
@@ -276,7 +276,7 @@ Giới thiệu API/Webhook kết nối hệ thống logistics bên thứ ba
 
 ---
 
-### [SP-S2-FE-006] [FE] Giới thiệu Doanh nghiệp & Đội ngũ (AboutUsPage) - (2 STP)
+### [FE] Giới thiệu Doanh nghiệp & Đội ngũ (AboutUsPage) (SCR-006) (2 STP)
 
 > **Hierarchy:** Epic `SP-FE-MOD-01` (Public Landing & Marketing) → Story `SP-FE-MOD-01-US03` → Task `SP-S2-FE-006`
 > **Priority:** `Medium` | **Complexity:** `S` | **Estimated Effort:** `4h` | **Story Points:** `2 STP` | **Status:** `Sprint Backlog 2`
@@ -327,7 +327,7 @@ Giới thiệu tầm nhìn, sứ mệnh đội ngũ SmartParking
 
 ---
 
-### [SP-S2-FE-007] [FE] Cơ hội Nghề nghiệp & Tuyển dụng (CareersPage) - (2 STP)
+### [FE] Cơ hội Nghề nghiệp & Tuyển dụng (CareersPage) (SCR-007) (2 STP)
 
 > **Hierarchy:** Epic `SP-FE-MOD-01` (Public Landing & Marketing) → Story `SP-FE-MOD-01-US03` → Task `SP-S2-FE-007`
 > **Priority:** `Medium` | **Complexity:** `S` | **Estimated Effort:** `4h` | **Story Points:** `2 STP` | **Status:** `Sprint Backlog 2`
@@ -378,7 +378,7 @@ Giới thiệu tầm nhìn, sứ mệnh đội ngũ SmartParking
 
 ---
 
-### [SP-S2-FE-008] [FE] Tin tức, Kiến thức Logistics & Báo cáo (BlogPage) - (2 STP)
+### [FE] Tin tức, Kiến thức Logistics & Báo cáo (BlogPage) (SCR-008) (2 STP)
 
 > **Hierarchy:** Epic `SP-FE-MOD-01` (Public Landing & Marketing) → Story `SP-FE-MOD-01-US03` → Task `SP-S2-FE-008`
 > **Priority:** `Medium` | **Complexity:** `S` | **Estimated Effort:** `4h` | **Story Points:** `2 STP` | **Status:** `Sprint Backlog 2`
@@ -429,7 +429,7 @@ Chia sẻ bài viết kinh nghiệm đỗ xe an toàn và logistics
 
 ---
 
-### [SP-S2-FE-009] [FE] Liên hệ Hợp tác & Hỗ trợ Kỹ thuật 24/7 (ContactPage) - (3 STP)
+### [FE] Liên hệ Hợp tác & Hỗ trợ Kỹ thuật 24/7 (ContactPage) (SCR-009) (3 STP)
 
 > **Hierarchy:** Epic `SP-FE-MOD-01` (Public Landing & Marketing) → Story `SP-FE-MOD-01-US03` → Task `SP-S2-FE-009`
 > **Priority:** `Medium` | **Complexity:** `M` | **Estimated Effort:** `6h` | **Story Points:** `3 STP` | **Status:** `Sprint Backlog 2`
@@ -480,7 +480,7 @@ Tiếp nhận thông tin liên hệ hợp tác và hỗ trợ kỹ thuật
 
 ---
 
-### [SP-S2-FE-010] [FE] Đăng nhập Tài khoản Đa vai trò (LoginPage) - (3 STP)
+### [FE] Đăng nhập Tài khoản Đa vai trò (LoginPage) (SCR-010) (3 STP)
 
 > **Hierarchy:** Epic `SP-FE-MOD-02` (Authentication & Authorization) → Story `SP-FE-MOD-02-US01` → Task `SP-S2-FE-010`
 > **Priority:** `Critical` | **Complexity:** `S` | **Estimated Effort:** `6h` | **Story Points:** `3 STP` | **Status:** `Sprint Backlog 2`
@@ -531,7 +531,7 @@ Xác thực người dùng bằng Số điện thoại và Mật khẩu
 
 ---
 
-### [SP-S2-FE-011] [FE] Đăng ký Tài khoản Tài xế / Chủ bãi (RegisterPage) - (3 STP)
+### [FE] Đăng ký Tài khoản Tài xế / Chủ bãi (RegisterPage) (SCR-011) (3 STP)
 
 > **Hierarchy:** Epic `SP-FE-MOD-02` (Authentication & Authorization) → Story `SP-FE-MOD-02-US02` → Task `SP-S2-FE-011`
 > **Priority:** `Critical` | **Complexity:** `M` | **Estimated Effort:** `6h` | **Story Points:** `3 STP` | **Status:** `Sprint Backlog 2`
@@ -582,7 +582,7 @@ Xác thực người dùng bằng Số điện thoại và Mật khẩu
 
 ---
 
-### [SP-S2-FE-012] [FE] Khôi phục Mật khẩu qua Mã xác thực OTP (ForgotPasswordPage) - (3 STP)
+### [FE] Khôi phục Mật khẩu qua Mã xác thực OTP (ForgotPasswordPage) (SCR-012) (3 STP)
 
 > **Hierarchy:** Epic `SP-FE-MOD-02` (Authentication & Authorization) → Story `SP-FE-MOD-02-US03` → Task `SP-S2-FE-012`
 > **Priority:** `High` | **Complexity:** `M` | **Estimated Effort:** `6h` | **Story Points:** `3 STP` | **Status:** `Sprint Backlog 2`
@@ -633,7 +633,7 @@ Khôi phục mật khẩu thông qua xác thực mã OTP
 
 ---
 
-### [SP-S2-FE-013] [FE] Thông báo Lỗi Truy cập 403 Forbidden (ForbiddenPage) - (1 STP)
+### [FE] Thông báo Lỗi Truy cập 403 Forbidden (ForbiddenPage) (SCR-013) (1 STP)
 
 > **Hierarchy:** Epic `SP-FE-MOD-02` (Authentication & Authorization) → Story `SP-FE-MOD-02-US04` → Task `SP-S2-FE-013`
 > **Priority:** `High` | **Complexity:** `S` | **Estimated Effort:** `2h` | **Story Points:** `1 STP` | **Status:** `Sprint Backlog 2`
@@ -684,7 +684,7 @@ Thông báo từ chối truy cập khi không đủ quyền
 
 ---
 
-### [SP-S2-FE-014] [FE] Bảng điều khiển Tổng quan Tài xế (DriverDashboardPage) - (3 STP)
+### [FE] Bảng điều khiển Tổng quan Tài xế (DriverDashboardPage) (SCR-014) (3 STP)
 
 > **Hierarchy:** Epic `SP-FE-MOD-03` (Driver Experience & Operations) → Story `SP-FE-MOD-03-US01` → Task `SP-S2-FE-014`
 > **Priority:** `High` | **Complexity:** `M` | **Estimated Effort:** `6h` | **Story Points:** `3 STP` | **Status:** `Sprint Backlog 2`
@@ -735,7 +735,7 @@ Tổng quan các chuyến đỗ xe gần đây, lối tắt nhanh
 
 ---
 
-### [SP-S2-FE-015] [FE] Bản đồ Tương tác & Tìm kiếm Bãi đỗ Xe tải (SearchParkingPage) - (8 STP)
+### [FE] Bản đồ Tương tác & Tìm kiếm Bãi đỗ Xe tải (SearchParkingPage) (SCR-015) (8 STP)
 
 > **Hierarchy:** Epic `SP-FE-MOD-03` (Driver Experience & Operations) → Story `SP-FE-MOD-03-US02` → Task `SP-S2-FE-015`
 > **Priority:** `Critical` | **Complexity:** `XL` | **Estimated Effort:** `16h` | **Story Points:** `8 STP` | **Status:** `Sprint Backlog 2`
@@ -786,7 +786,7 @@ Tìm kiếm bãi đỗ xe trên bản đồ Leaflet, lọc slot, ETA
 
 ---
 
-### [SP-S2-FE-016] [FE] Chi tiết Bãi đỗ & Modal Đặt giữ chỗ 10p (ParkingDetailPage) - (8 STP)
+### [FE] Chi tiết Bãi đỗ & Modal Đặt giữ chỗ 10p (ParkingDetailPage) (SCR-016) (8 STP)
 
 > **Hierarchy:** Epic `SP-FE-MOD-03` (Driver Experience & Operations) → Story `SP-FE-MOD-03-US03` → Task `SP-S2-FE-016`
 > **Priority:** `Critical` | **Complexity:** `XL` | **Estimated Effort:** `16h` | **Story Points:** `8 STP` | **Status:** `Sprint Backlog 2`
@@ -837,7 +837,7 @@ Chi tiết bãi đỗ, thư viện ảnh, tiện ích, slot trống, bảng giá
 
 ---
 
-### [SP-S2-FE-017] [FE] Quản lý Danh sách Đơn Đặt chỗ của tôi (MyBookingsPage) - (5 STP)
+### [FE] Quản lý Danh sách Đơn Đặt chỗ của tôi (MyBookingsPage) (SCR-017) (5 STP)
 
 > **Hierarchy:** Epic `SP-FE-MOD-03` (Driver Experience & Operations) → Story `SP-FE-MOD-03-US04` → Task `SP-S2-FE-017`
 > **Priority:** `High` | **Complexity:** `L` | **Estimated Effort:** `10h` | **Story Points:** `5 STP` | **Status:** `Sprint Backlog 2`
@@ -888,7 +888,7 @@ Quản lý toàn bộ danh sách đặt chỗ, xem mã QR, thanh toán
 
 ---
 
-### [SP-S2-FE-018] [FE] Theo dõi Vị trí Hàng đợi Ảo Thông minh (DriverQueuesPage) - (5 STP)
+### [FE] Theo dõi Vị trí Hàng đợi Ảo Thông minh (DriverQueuesPage) (SCR-018) (5 STP)
 
 > **Hierarchy:** Epic `SP-FE-MOD-03` (Driver Experience & Operations) → Story `SP-FE-MOD-03-US05` → Task `SP-S2-FE-018`
 > **Priority:** `High` | **Complexity:** `L` | **Estimated Effort:** `10h` | **Story Points:** `5 STP` | **Status:** `Sprint Backlog 2`
@@ -939,7 +939,7 @@ Theo dõi vị trí trong hàng đợi ảo, nhận slot khi có thông báo
 
 ---
 
-### [SP-S2-FE-019] [FE] Sổ cái Lịch sử Thanh toán & Đối soát Cọc (DriverPaymentsPage) - (2 STP)
+### [FE] Sổ cái Lịch sử Thanh toán & Đối soát Cọc (DriverPaymentsPage) (SCR-019) (2 STP)
 
 > **Hierarchy:** Epic `SP-FE-MOD-03` (Driver Experience & Operations) → Story `SP-FE-MOD-03-US06` → Task `SP-S2-FE-019`
 > **Priority:** `Medium` | **Complexity:** `S` | **Estimated Effort:** `4h` | **Story Points:** `2 STP` | **Status:** `Sprint Backlog 2`
@@ -990,7 +990,7 @@ Thống kê lịch sử giao dịch thanh toán tiền cọc và tiền phạt
 
 ---
 
-### [SP-S2-FE-020] [FE] Quản lý Đội xe & Phương tiện Tài xế (VehiclesPage) - (3 STP)
+### [FE] Quản lý Đội xe & Phương tiện Tài xế (VehiclesPage) (SCR-020) (3 STP)
 
 > **Hierarchy:** Epic `SP-FE-MOD-03` (Driver Experience & Operations) → Story `SP-FE-MOD-03-US06` → Task `SP-S2-FE-020`
 > **Priority:** `High` | **Complexity:** `M` | **Estimated Effort:** `6h` | **Story Points:** `3 STP` | **Status:** `Sprint Backlog 2`
@@ -1041,7 +1041,7 @@ Quản lý danh sách phương tiện sở hữu của tài xế
 
 ---
 
-### [SP-S2-FE-021] [FE] Hồ sơ Cá nhân & Cài đặt Tài xế (ProfilePage) - (2 STP)
+### [FE] Hồ sơ Cá nhân & Cài đặt Tài xế (ProfilePage) (SCR-021) (2 STP)
 
 > **Hierarchy:** Epic `SP-FE-MOD-03` (Driver Experience & Operations) → Story `SP-FE-MOD-03-US06` → Task `SP-S2-FE-021`
 > **Priority:** `Medium` | **Complexity:** `S` | **Estimated Effort:** `4h` | **Story Points:** `2 STP` | **Status:** `Sprint Backlog 2`
@@ -1092,7 +1092,7 @@ Cập nhật hồ sơ cá nhân tài xế (Họ tên, SĐT, Email, SĐT khẩn c
 
 ---
 
-### [SP-S2-FE-022] [FE] Thay đổi Mật khẩu Bảo mật Tài khoản (ChangePasswordPage) - (2 STP)
+### [FE] Thay đổi Mật khẩu Bảo mật Tài khoản (ChangePasswordPage) (SCR-022) (2 STP)
 
 > **Hierarchy:** Epic `SP-FE-MOD-03` (Driver Experience & Operations) → Story `SP-FE-MOD-03-US06` → Task `SP-S2-FE-022`
 > **Priority:** `Medium` | **Complexity:** `S` | **Estimated Effort:** `4h` | **Story Points:** `2 STP` | **Status:** `Sprint Backlog 2`
@@ -1143,7 +1143,7 @@ Thay đổi mật khẩu đăng nhập tài khoản tài xế
 
 ---
 
-### [SP-S2-FE-023] [FE] Kết quả Thanh toán PayOS Thành công (PaymentSuccessPage) - (3 STP)
+### [FE] Kết quả Thanh toán PayOS Thành công (PaymentSuccessPage) (SCR-023) (3 STP)
 
 > **Hierarchy:** Epic `SP-FE-MOD-03` (Driver Experience & Operations) → Story `SP-FE-MOD-03-US06` → Task `SP-S2-FE-023`
 > **Priority:** `High` | **Complexity:** `M` | **Estimated Effort:** `6h` | **Story Points:** `3 STP` | **Status:** `Sprint Backlog 2`
@@ -1194,7 +1194,7 @@ Hiển thị kết quả thanh toán PayOS thành công, đồng bộ hệ thố
 
 ---
 
-### [SP-S2-FE-024] [FE] Thông báo Thanh toán Bị hủy & Hướng dẫn Thử lại (PaymentCancelPage) - (2 STP)
+### [FE] Thông báo Thanh toán Bị hủy & Hướng dẫn Thử lại (PaymentCancelPage) (SCR-024) (2 STP)
 
 > **Hierarchy:** Epic `SP-FE-MOD-03` (Driver Experience & Operations) → Story `SP-FE-MOD-03-US06` → Task `SP-S2-FE-024`
 > **Priority:** `Medium` | **Complexity:** `S` | **Estimated Effort:** `4h` | **Story Points:** `2 STP` | **Status:** `Sprint Backlog 2`
@@ -1245,7 +1245,7 @@ Thông báo thanh toán bị hủy, hướng dẫn thử lại
 
 ---
 
-### [SP-S2-FE-025] [FE] Trung tâm Thông báo Vận hành Tài xế (DriverNotificationsPage) - (2 STP)
+### [FE] Trung tâm Thông báo Vận hành Tài xế (DriverNotificationsPage) (SCR-025) (2 STP)
 
 > **Hierarchy:** Epic `SP-FE-MOD-03` (Driver Experience & Operations) → Story `SP-FE-MOD-03-US06` → Task `SP-S2-FE-025`
 > **Priority:** `Medium` | **Complexity:** `S` | **Estimated Effort:** `4h` | **Story Points:** `2 STP` | **Status:** `Sprint Backlog 2`
@@ -1296,7 +1296,7 @@ Xem toàn bộ thông báo đẩy (Booking, Thanh toán, Hàng đợi)
 
 ---
 
-### [SP-S2-FE-026] [FE] Bảng Điều khiển Tổng quan Vận hành Chủ bãi (MerchantDashboardPage) - (5 STP)
+### [FE] Bảng Điều khiển Tổng quan Vận hành Chủ bãi (MerchantDashboardPage) (SCR-026) (5 STP)
 
 > **Hierarchy:** Epic `SP-FE-MOD-04` (Merchant Portal & Operations) → Story `SP-FE-MOD-04-US01` → Task `SP-S2-FE-026`
 > **Priority:** `High` | **Complexity:** `L` | **Estimated Effort:** `10h` | **Story Points:** `5 STP` | **Status:** `Sprint Backlog 2`
@@ -1347,7 +1347,7 @@ Thống kê số bãi, booking hôm nay, doanh thu, xe đang đỗ
 
 ---
 
-### [SP-S2-FE-027] [FE] Hồ sơ Chủ bãi & Thông tin Ngân hàng Rút tiền (MerchantProfilePage) - (2 STP)
+### [FE] Hồ sơ Chủ bãi & Thông tin Ngân hàng Rút tiền (MerchantProfilePage) (SCR-027) (2 STP)
 
 > **Hierarchy:** Epic `SP-FE-MOD-04` (Merchant Portal & Operations) → Story `SP-FE-MOD-04-US02` → Task `SP-S2-FE-027`
 > **Priority:** `Medium` | **Complexity:** `S` | **Estimated Effort:** `4h` | **Story Points:** `2 STP` | **Status:** `Sprint Backlog 2`
@@ -1398,7 +1398,7 @@ Quản lý hồ sơ chủ bãi, giấy phép kinh doanh, tài khoản ngân hàn
 
 ---
 
-### [SP-S2-FE-028] [FE] Danh sách & Lưới Trạng thái Bãi đỗ xe (MerchantParkingLotsPage) - (3 STP)
+### [FE] Danh sách & Lưới Trạng thái Bãi đỗ xe (MerchantParkingLotsPage) (SCR-028) (3 STP)
 
 > **Hierarchy:** Epic `SP-FE-MOD-04` (Merchant Portal & Operations) → Story `SP-FE-MOD-04-US03` → Task `SP-S2-FE-028`
 > **Priority:** `Medium` | **Complexity:** `M` | **Estimated Effort:** `6h` | **Story Points:** `3 STP` | **Status:** `Sprint Backlog 2`
@@ -1449,7 +1449,7 @@ Danh sách bãi đỗ xe thuộc quyền sở hữu của chủ bãi
 
 ---
 
-### [SP-S2-FE-029] [FE] Đăng ký Tạo mới Bãi đỗ & Tải ảnh Mặt bằng (CreateMerchantParkingLotPage) - (5 STP)
+### [FE] Đăng ký Tạo mới Bãi đỗ & Tải ảnh Mặt bằng (CreateMerchantParkingLotPage) (SCR-029) (5 STP)
 
 > **Hierarchy:** Epic `SP-FE-MOD-04` (Merchant Portal & Operations) → Story `SP-FE-MOD-04-US04` → Task `SP-S2-FE-029`
 > **Priority:** `High` | **Complexity:** `L` | **Estimated Effort:** `10h` | **Story Points:** `5 STP` | **Status:** `Sprint Backlog 2`
@@ -1500,7 +1500,7 @@ Danh sách bãi đỗ xe thuộc quyền sở hữu của chủ bãi
 
 ---
 
-### [SP-S2-FE-030] [FE] Chi tiết Vận hành & Doanh thu Bãi đỗ (MerchantParkingLotDetailPage) - (3 STP)
+### [FE] Chi tiết Vận hành & Doanh thu Bãi đỗ (MerchantParkingLotDetailPage) (SCR-030) (3 STP)
 
 > **Hierarchy:** Epic `SP-FE-MOD-04` (Merchant Portal & Operations) → Story `SP-FE-MOD-04-US05` → Task `SP-S2-FE-030`
 > **Priority:** `Medium` | **Complexity:** `M` | **Estimated Effort:** `6h` | **Story Points:** `3 STP` | **Status:** `Sprint Backlog 2`
@@ -1551,7 +1551,7 @@ Xem chi tiết thông số, ảnh chụp, doanh thu riêng của 1 bãi
 
 ---
 
-### [SP-S2-FE-031] [FE] Chỉnh sửa Thông tin & Tiện ích Bãi đỗ (EditMerchantParkingLotPage) - (3 STP)
+### [FE] Chỉnh sửa Thông tin & Tiện ích Bãi đỗ (EditMerchantParkingLotPage) (SCR-031) (3 STP)
 
 > **Hierarchy:** Epic `SP-FE-MOD-04` (Merchant Portal & Operations) → Story `SP-FE-MOD-04-US06` → Task `SP-S2-FE-031`
 > **Priority:** `Medium` | **Complexity:** `M` | **Estimated Effort:** `6h` | **Story Points:** `3 STP` | **Status:** `Sprint Backlog 2`
@@ -1602,7 +1602,7 @@ Chỉnh sửa thông tin bãi đỗ, số điện thoại, mô tả tiện ích
 
 ---
 
-### [SP-S2-FE-032] [FE] Cấu hình Sức chứa Sơ đồ 5 Loại xe (MerchantSlotsPage) - (5 STP)
+### [FE] Cấu hình Sức chứa Sơ đồ 5 Loại xe (MerchantSlotsPage) (SCR-032) (5 STP)
 
 > **Hierarchy:** Epic `SP-FE-MOD-04` (Merchant Portal & Operations) → Story `SP-FE-MOD-04-US07` → Task `SP-S2-FE-032`
 > **Priority:** `High` | **Complexity:** `L` | **Estimated Effort:** `10h` | **Story Points:** `5 STP` | **Status:** `Sprint Backlog 2`
@@ -1653,7 +1653,7 @@ Cấu hình sức chứa tối đa (`totalCapacity`) cho 5 loại phương tiệ
 
 ---
 
-### [SP-S2-FE-033] [FE] Thiết lập Biểu phí Ma trận 4 Thông số (MerchantPricingPage) - (5 STP)
+### [FE] Thiết lập Biểu phí Ma trận 4 Thông số (MerchantPricingPage) (SCR-033) (5 STP)
 
 > **Hierarchy:** Epic `SP-FE-MOD-04` (Merchant Portal & Operations) → Story `SP-FE-MOD-04-US08` → Task `SP-S2-FE-033`
 > **Priority:** `High` | **Complexity:** `L` | **Estimated Effort:** `10h` | **Story Points:** `5 STP` | **Status:** `Sprint Backlog 2`
@@ -1704,7 +1704,7 @@ Cấu hình biểu phí: Theo giờ, qua đêm, quá giờ, cọc cho 5 loại x
 
 ---
 
-### [SP-S2-FE-034] [FE] Quản lý Lịch sử & Đơn Đặt chỗ Khách hàng (MerchantBookingsPage) - (3 STP)
+### [FE] Quản lý Lịch sử & Đơn Đặt chỗ Khách hàng (MerchantBookingsPage) (SCR-034) (3 STP)
 
 > **Hierarchy:** Epic `SP-FE-MOD-04` (Merchant Portal & Operations) → Story `SP-FE-MOD-04-US08` → Task `SP-S2-FE-034`
 > **Priority:** `Medium` | **Complexity:** `M` | **Estimated Effort:** `6h` | **Story Points:** `3 STP` | **Status:** `Sprint Backlog 2`
@@ -1755,7 +1755,7 @@ Quản lý toàn bộ danh sách đặt chỗ của khách tại bãi của Merc
 
 ---
 
-### [SP-S2-FE-035] [FE] Chi tiết Đơn Đặt chỗ & Nhật ký Barie (MerchantBookingDetailPage) - (3 STP)
+### [FE] Chi tiết Đơn Đặt chỗ & Nhật ký Barie (MerchantBookingDetailPage) (SCR-035) (3 STP)
 
 > **Hierarchy:** Epic `SP-FE-MOD-04` (Merchant Portal & Operations) → Story `SP-FE-MOD-04-US08` → Task `SP-S2-FE-035`
 > **Priority:** `Medium` | **Complexity:** `M` | **Estimated Effort:** `6h` | **Story Points:** `3 STP` | **Status:** `Sprint Backlog 2`
@@ -1806,7 +1806,7 @@ Xem chi tiết 1 booking: Biển số, loại xe, giờ vào/ra, thanh toán
 
 ---
 
-### [SP-S2-FE-036] [FE] Camera Quét QR Barie Ra/Vào & Thu tiền mặt (MerchantQrScannerPage) - (5 STP)
+### [FE] Camera Quét QR Barie Ra/Vào & Thu tiền mặt (MerchantQrScannerPage) (SCR-036) (5 STP)
 
 > **Hierarchy:** Epic `SP-FE-MOD-04` (Merchant Portal & Operations) → Story `SP-FE-MOD-04-US08` → Task `SP-S2-FE-036`
 > **Priority:** `High` | **Complexity:** `L` | **Estimated Effort:** `10h` | **Story Points:** `5 STP` | **Status:** `Sprint Backlog 2`
@@ -1857,7 +1857,7 @@ Quét mã QR check-in xe vào và check-out tính tiền xe ra bãi
 
 ---
 
-### [SP-S2-FE-037] [FE] Phân tích Biểu đồ Doanh thu & Sổ cái Ví (MerchantRevenuePage) - (5 STP)
+### [FE] Phân tích Biểu đồ Doanh thu & Sổ cái Ví (MerchantRevenuePage) (SCR-037) (5 STP)
 
 > **Hierarchy:** Epic `SP-FE-MOD-04` (Merchant Portal & Operations) → Story `SP-FE-MOD-04-US08` → Task `SP-S2-FE-037`
 > **Priority:** `High` | **Complexity:** `L` | **Estimated Effort:** `10h` | **Story Points:** `5 STP` | **Status:** `Sprint Backlog 2`
@@ -1908,7 +1908,7 @@ Biểu đồ Recharts phân tích doanh thu theo Ngày, Tháng, Năm
 
 ---
 
-### [SP-S2-FE-038] [FE] Tạo Yêu cầu Rút tiền & Quản lý Giải ngân (MerchantWithdrawalsPage) - (5 STP)
+### [FE] Tạo Yêu cầu Rút tiền & Quản lý Giải ngân (MerchantWithdrawalsPage) (SCR-038) (5 STP)
 
 > **Hierarchy:** Epic `SP-FE-MOD-04` (Merchant Portal & Operations) → Story `SP-FE-MOD-04-US08` → Task `SP-S2-FE-038`
 > **Priority:** `High` | **Complexity:** `L` | **Estimated Effort:** `10h` | **Story Points:** `5 STP` | **Status:** `Sprint Backlog 2`
@@ -1959,7 +1959,7 @@ Xem số dư ví và tạo lệnh yêu cầu rút tiền về ngân hàng
 
 ---
 
-### [SP-S2-FE-039] [FE] Danh sách Khiếu nại từ Tài xế (MerchantDisputesPage) - (2 STP)
+### [FE] Danh sách Khiếu nại từ Tài xế (MerchantDisputesPage) (SCR-039) (2 STP)
 
 > **Hierarchy:** Epic `SP-FE-MOD-04` (Merchant Portal & Operations) → Story `SP-FE-MOD-04-US08` → Task `SP-S2-FE-039`
 > **Priority:** `Medium` | **Complexity:** `S` | **Estimated Effort:** `4h` | **Story Points:** `2 STP` | **Status:** `Sprint Backlog 2`
@@ -2010,7 +2010,7 @@ Danh sách các vụ khiếu nại của tài xế liên quan đến bãi xe
 
 ---
 
-### [SP-S2-FE-040] [FE] Chi tiết Khiếu nại, Lời khai & Bằng chứng (MerchantDisputeDetailPage) - (3 STP)
+### [FE] Chi tiết Khiếu nại, Lời khai & Bằng chứng (MerchantDisputeDetailPage) (SCR-040) (3 STP)
 
 > **Hierarchy:** Epic `SP-FE-MOD-04` (Merchant Portal & Operations) → Story `SP-FE-MOD-04-US08` → Task `SP-S2-FE-040`
 > **Priority:** `Medium` | **Complexity:** `M` | **Estimated Effort:** `6h` | **Story Points:** `3 STP` | **Status:** `Sprint Backlog 2`
@@ -2061,7 +2061,7 @@ Chi tiết khiếu nại, lời khai của tài xế và phán quyết của Adm
 
 ---
 
-### [SP-S2-FE-041] [FE] Trung tâm Thông báo Vận hành Bãi xe (MerchantNotificationsPage) - (2 STP)
+### [FE] Trung tâm Thông báo Vận hành Bãi xe (MerchantNotificationsPage) (SCR-041) (2 STP)
 
 > **Hierarchy:** Epic `SP-FE-MOD-04` (Merchant Portal & Operations) → Story `SP-FE-MOD-04-US08` → Task `SP-S2-FE-041`
 > **Priority:** `Medium` | **Complexity:** `S` | **Estimated Effort:** `4h` | **Story Points:** `2 STP` | **Status:** `Sprint Backlog 2`
@@ -2112,7 +2112,7 @@ Thông báo vận hành bãi (Duyệt bãi, Booking mới, Tiền rút)
 
 ---
 
-### [SP-S2-FE-042] [FE] Trung tâm Điều hành Toàn sàn Super Admin (AdminDashboardPage) - (5 STP)
+### [FE] Trung tâm Điều hành Toàn sàn Super Admin (AdminDashboardPage) (SCR-042) (5 STP)
 
 > **Hierarchy:** Epic `SP-FE-MOD-05` (Admin Portal & Governance) → Story `SP-FE-MOD-05-US01` → Task `SP-S2-FE-042`
 > **Priority:** `High` | **Complexity:** `L` | **Estimated Effort:** `10h` | **Story Points:** `5 STP` | **Status:** `Sprint Backlog 2`
@@ -2163,7 +2163,7 @@ Chỉ số vĩ mô toàn sàn: User, Driver, Merchant, Bãi xe, Doanh thu
 
 ---
 
-### [SP-S2-FE-043] [FE] Danh sách Kiểm duyệt Bãi đỗ Toàn hệ thống (AdminParkingLotsPage) - (3 STP)
+### [FE] Danh sách Kiểm duyệt Bãi đỗ Toàn hệ thống (AdminParkingLotsPage) (SCR-043) (3 STP)
 
 > **Hierarchy:** Epic `SP-FE-MOD-05` (Admin Portal & Governance) → Story `SP-FE-MOD-05-US02` → Task `SP-S2-FE-043`
 > **Priority:** `Medium` | **Complexity:** `M` | **Estimated Effort:** `6h` | **Story Points:** `3 STP` | **Status:** `Sprint Backlog 2`
@@ -2214,7 +2214,7 @@ Danh sách bãi đỗ toàn hệ thống với bộ lọc trạng thái duyệt
 
 ---
 
-### [SP-S2-FE-044] [FE] Thẩm định Hồ sơ Mặt bằng & Ra quyết định Duyệt (AdminParkingLotDetailPage) - (5 STP)
+### [FE] Thẩm định Hồ sơ Mặt bằng & Ra quyết định Duyệt (AdminParkingLotDetailPage) (SCR-044) (5 STP)
 
 > **Hierarchy:** Epic `SP-FE-MOD-05` (Admin Portal & Governance) → Story `SP-FE-MOD-05-US03` → Task `SP-S2-FE-044`
 > **Priority:** `High` | **Complexity:** `L` | **Estimated Effort:** `10h` | **Story Points:** `5 STP` | **Status:** `Sprint Backlog 2`
@@ -2265,7 +2265,7 @@ Thẩm định hồ sơ bãi: Bản đồ, Chủ bãi, Ảnh chụp, Slot, Biể
 
 ---
 
-### [SP-S2-FE-045] [FE] Danh bạ Quản lý Tài khoản & Phân quyền Toàn sàn (AdminUsersPage) - (3 STP)
+### [FE] Danh bạ Quản lý Tài khoản & Phân quyền Toàn sàn (AdminUsersPage) (SCR-045) (3 STP)
 
 > **Hierarchy:** Epic `SP-FE-MOD-05` (Admin Portal & Governance) → Story `SP-FE-MOD-05-US04` → Task `SP-S2-FE-045`
 > **Priority:** `Medium` | **Complexity:** `M` | **Estimated Effort:** `6h` | **Story Points:** `3 STP` | **Status:** `Sprint Backlog 2`
@@ -2316,7 +2316,7 @@ Quản lý danh sách tài khoản toàn sàn, lọc theo vai trò và trạng t
 
 ---
 
-### [SP-S2-FE-046] [FE] Hồ sơ Người dùng, Lịch sử Đỗ & Khóa tài khoản (AdminUserDetailPage) - (3 STP)
+### [FE] Hồ sơ Người dùng, Lịch sử Đỗ & Khóa tài khoản (AdminUserDetailPage) (SCR-046) (3 STP)
 
 > **Hierarchy:** Epic `SP-FE-MOD-05` (Admin Portal & Governance) → Story `SP-FE-MOD-05-US05` → Task `SP-S2-FE-046`
 > **Priority:** `Medium` | **Complexity:** `M` | **Estimated Effort:** `6h` | **Story Points:** `3 STP` | **Status:** `Sprint Backlog 2`
@@ -2367,7 +2367,7 @@ Xem chi tiết hoạt động của 1 người dùng (Số booking, khiếu nạ
 
 ---
 
-### [SP-S2-FE-047] [FE] Sổ cái Giám sát Giao dịch Dòng tiền Toàn hệ thống (AdminTransactionsPage) - (5 STP)
+### [FE] Sổ cái Giám sát Giao dịch Dòng tiền Toàn hệ thống (AdminTransactionsPage) (SCR-047) (5 STP)
 
 > **Hierarchy:** Epic `SP-FE-MOD-05` (Admin Portal & Governance) → Story `SP-FE-MOD-05-US06` → Task `SP-S2-FE-047`
 > **Priority:** `High` | **Complexity:** `L` | **Estimated Effort:** `10h` | **Story Points:** `5 STP` | **Status:** `Sprint Backlog 2`
@@ -2418,7 +2418,7 @@ Giám sát toàn bộ dòng tiền vào/ra trên hệ thống (PayOS, VNPay)
 
 ---
 
-### [SP-S2-FE-048] [FE] Phê duyệt & Quyết toán Lệnh Rút tiền Ví Chủ bãi (AdminWithdrawalsPage) - (5 STP)
+### [FE] Phê duyệt & Quyết toán Lệnh Rút tiền Ví Chủ bãi (AdminWithdrawalsPage) (SCR-048) (5 STP)
 
 > **Hierarchy:** Epic `SP-FE-MOD-05` (Admin Portal & Governance) → Story `SP-FE-MOD-05-US06` → Task `SP-S2-FE-048`
 > **Priority:** `High` | **Complexity:** `L` | **Estimated Effort:** `10h` | **Story Points:** `5 STP` | **Status:** `Sprint Backlog 2`
@@ -2469,7 +2469,7 @@ Danh sách yêu cầu rút tiền từ ví của các chủ bãi
 
 ---
 
-### [SP-S2-FE-049] [FE] Bàn Trọng tài & Danh sách Tranh chấp Mở (AdminDisputesPage) - (3 STP)
+### [FE] Bàn Trọng tài & Danh sách Tranh chấp Mở (AdminDisputesPage) (SCR-049) (3 STP)
 
 > **Hierarchy:** Epic `SP-FE-MOD-05` (Admin Portal & Governance) → Story `SP-FE-MOD-05-US06` → Task `SP-S2-FE-049`
 > **Priority:** `Medium` | **Complexity:** `M` | **Estimated Effort:** `6h` | **Story Points:** `3 STP` | **Status:** `Sprint Backlog 2`
@@ -2520,7 +2520,7 @@ Danh sách các vụ tranh chấp đang mở giữa tài xế và chủ bãi
 
 ---
 
-### [SP-S2-FE-050] [FE] Phán quyết Trọng tài & Phân bổ Tiền bồi thường (AdminDisputeDetailPage) - (5 STP)
+### [FE] Phán quyết Trọng tài & Phân bổ Tiền bồi thường (AdminDisputeDetailPage) (SCR-050) (5 STP)
 
 > **Hierarchy:** Epic `SP-FE-MOD-05` (Admin Portal & Governance) → Story `SP-FE-MOD-05-US06` → Task `SP-S2-FE-050`
 > **Priority:** `High` | **Complexity:** `L` | **Estimated Effort:** `10h` | **Story Points:** `5 STP` | **Status:** `Sprint Backlog 2`
@@ -2571,7 +2571,7 @@ Hồ sơ vụ tranh chấp: Bằng chứng tài xế, số tiền, thông tin b�
 
 ---
 
-### [SP-S2-FE-051] [FE] Nhật ký Kiểm toán An ninh & Vết Quản trị (AdminAuditLogsPage) - (3 STP)
+### [FE] Nhật ký Kiểm toán An ninh & Vết Quản trị (AdminAuditLogsPage) (SCR-051) (3 STP)
 
 > **Hierarchy:** Epic `SP-FE-MOD-05` (Admin Portal & Governance) → Story `SP-FE-MOD-05-US06` → Task `SP-S2-FE-051`
 > **Priority:** `Medium` | **Complexity:** `M` | **Estimated Effort:** `6h` | **Story Points:** `3 STP` | **Status:** `Sprint Backlog 2`
@@ -2622,7 +2622,7 @@ Lịch sử ghi nhận mọi hành động quản trị hệ thống nhạy cả
 
 ---
 
-### [SP-S2-FE-052] [FE] Trung tâm Phát sóng & Cảnh báo Điều hành (AdminNotificationsPage) - (2 STP)
+### [FE] Trung tâm Phát sóng & Cảnh báo Điều hành (AdminNotificationsPage) (SCR-052) (2 STP)
 
 > **Hierarchy:** Epic `SP-FE-MOD-05` (Admin Portal & Governance) → Story `SP-FE-MOD-05-US06` → Task `SP-S2-FE-052`
 > **Priority:** `Low` | **Complexity:** `S` | **Estimated Effort:** `4h` | **Story Points:** `2 STP` | **Status:** `Sprint Backlog 2`
@@ -2673,7 +2673,7 @@ Trung tâm thông báo điều hành và cảnh báo hệ thống
 
 ---
 
-### [SP-S2-FE-053] [FE] Hồ sơ Quản trị viên & Phiên Đăng nhập Bảo mật (AdminProfilePage) - (2 STP)
+### [FE] Hồ sơ Quản trị viên & Phiên Đăng nhập Bảo mật (AdminProfilePage) (SCR-053) (2 STP)
 
 > **Hierarchy:** Epic `SP-FE-MOD-05` (Admin Portal & Governance) → Story `SP-FE-MOD-05-US06` → Task `SP-S2-FE-053`
 > **Priority:** `Low` | **Complexity:** `S` | **Estimated Effort:** `4h` | **Story Points:** `2 STP` | **Status:** `Sprint Backlog 2`
