@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useForm } from 'react-hook-form'
 import { useSearchParams } from 'react-router-dom'
@@ -123,6 +123,10 @@ export function MerchantScannerPage() {
     cash.reset()
     scan.mutate(data)
   }
+  const submitScanRef = useRef(submitScan)
+  useLayoutEffect(() => {
+    submitScanRef.current = submitScan
+  })
 
   const cash = useMutation({
     mutationFn: () =>
@@ -142,6 +146,7 @@ export function MerchantScannerPage() {
     if (!camera) return
     let stopped = false
     let currentReader: ZXingReader | null = null
+    const videoEl = video.current
 
     const start = async () => {
       try {
@@ -155,7 +160,7 @@ export function MerchantScannerPage() {
         readerRef.current = reader
         currentReader = reader
 
-        if (!video.current) return
+        if (!videoEl) return
 
         await reader.decodeFromConstraints(
           {
@@ -166,7 +171,7 @@ export function MerchantScannerPage() {
               height: { ideal: 720 },
             },
           },
-          video.current,
+          videoEl,
           (result) => {
             if (stopped) return
             const raw = result?.getText()?.trim()
@@ -184,7 +189,7 @@ export function MerchantScannerPage() {
               // Instant Auto-Confirm (Quét phát ăn ngay)
               const lotId = form.getValues('parkingLotId')
               if (autoSubmit && lotId) {
-                submitScan({ bookingCode: raw, parkingLotId: lotId })
+                submitScanRef.current({ bookingCode: raw, parkingLotId: lotId })
               }
             }
           },
@@ -192,10 +197,10 @@ export function MerchantScannerPage() {
 
         if (stopped) {
           reader.reset()
-          if (video.current?.srcObject) {
-            const stream = video.current.srcObject as MediaStream
+          if (videoEl?.srcObject) {
+            const stream = videoEl.srcObject as MediaStream
             stream.getTracks().forEach((t) => t.stop())
-            video.current.srcObject = null
+            videoEl.srcObject = null
           }
         }
       } catch {
@@ -217,14 +222,14 @@ export function MerchantScannerPage() {
           // ignore reset error
         }
       }
-      if (video.current?.srcObject) {
-        const stream = video.current.srcObject as MediaStream
+      if (videoEl?.srcObject) {
+        const stream = videoEl.srcObject as MediaStream
         stream.getTracks().forEach((t) => t.stop())
-        video.current.srcObject = null
+        videoEl.srcObject = null
       }
       readerRef.current = null
     }
-  }, [camera, facingMode, autoSubmit, form, scan])
+  }, [camera, facingMode, autoSubmit, form])
 
   function changeMode(next: typeof mode) {
     setMode(next)
@@ -251,7 +256,9 @@ export function MerchantScannerPage() {
 
           {/* Video Container with Clean Symmetrical Square Tracking Box */}
           <div className="relative flex aspect-video items-center justify-center overflow-hidden rounded-xl border border-slate-700 bg-black shadow-inner">
+            {/* A previous reader can finish asynchronously after a camera switch. */}
             <video
+              key={camera ? `${facingMode}:${autoSubmit}` : 'off'}
               ref={video}
               muted
               playsInline

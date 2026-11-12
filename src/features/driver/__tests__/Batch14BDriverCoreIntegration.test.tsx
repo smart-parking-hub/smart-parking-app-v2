@@ -229,10 +229,10 @@ describe('BATCH-14B: Driver Core — Search, Detail & Bookings Integration', () 
 
     // Quick book drawer should open
     expect(
-      screen.getByRole('dialog', { name: /Panel giữ chỗ nhanh 10 phút/i })
+      screen.getByRole('dialog', { name: 'Panel giữ chỗ nhanh 10 phút' })
     ).toBeInTheDocument()
     expect(
-      screen.getByRole('heading', { name: 'Đặt giữ chỗ nhanh' })
+      screen.getByRole('heading', { name: 'Đặt giữ chỗ nhanh', level: 2 })
     ).toBeInTheDocument()
 
     // Close drawer

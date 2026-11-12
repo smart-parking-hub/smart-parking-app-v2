@@ -8,7 +8,12 @@ import { sendData } from '@/shared/api/resources'
 
 vi.mock('@/shared/api/resources', () => ({
   sendData: vi.fn(),
-  errorMessage: vi.fn((err: any) => err?.message || 'Lỗi kết nối'),
+  errorMessage: vi.fn((err: unknown) => {
+    if (err && typeof err === 'object' && 'message' in err) {
+      return typeof err.message === 'string' && err.message ? err.message : 'Lỗi kết nối'
+    }
+    return 'Lỗi kết nối'
+  }),
 }))
 
 function renderAiCopilot(initialEntries = ['/']) {
