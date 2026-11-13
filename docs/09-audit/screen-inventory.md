@@ -32,6 +32,8 @@
 | `SCR-030` | Merchant Parking Lot Details & Telemetry (Chi tiết bãi đỗ xe & Hồ sơ kỹ thuật) | `/merchant/parking-lots/:parkingLotId` | `features/merchant/parking-lots` | Stitch HTML/CSS (`web_dashboard`) | **IMPLEMENTED** | Sẵn sàng nghiệm thu |
 | `SCR-031` | Edit Merchant Parking Lot (Chỉnh sửa & Cập nhật hồ sơ bãi đỗ) | `/merchant/parking-lots/:parkingLotId/edit` | `features/merchant/parking-lots` | API bãi thực tế; yêu cầu bỏ dữ liệu mẫu (2026-11-07) | **IMPLEMENTED** | 16 component tests + 3 Edge E2E passed; chưa kiểm chứng lưu backend thật |
 
+SCR-052 (2026-11-12, owner: SPH): `/admin/notifications` dùng `features/admin/pages/AdminNotificationsPage.tsx`, giữ `AdminLayout`/guard ADMIN; feed, phân trang 20 mục, tổng chưa đọc, PUT read/read-all, retry và cache theo phiên. **IMPLEMENTED — ACCEPTANCE PENDING**: 14 component tests và 13 E2E (API giả lập), chờ backend thật/nghiệm thu. Xem [module](../05-modules/admin/scr-052-notifications.md) và [báo cáo](./sp-s3-ui-16-admin-notifications-report.md).
+
 SCR-010 (2026-11-05): /login dùng LoginPage + AuthLayout riêng; Redux session sync, guest guard, role redirect, toast; 217 unit/component tests và 7 E2E PASS. Live backend acceptance pending. Xem [báo cáo](./scr-010-login-record.md).
 
 SCR-012 (2026-11-08): `/forgot-password` dùng `ForgotPasswordPage` + `AuthLayout` (`variant="recovery"`) theo Stitch bản 1; quy trình 2 bước (gửi OTP qua `POST /api/v1/auth/forgot-password/otp` và đặt lại mật khẩu qua `POST /api/v1/auth/forgot-password/reset`), tách biệt TTL (`expiresInSeconds`) và cooldown (`resendAfterSeconds`), chống race condition và không lưu dữ liệu nhạy cảm. Chi tiết tại [tài liệu module auth](../05-modules/auth/scr-012-forgot-password.md).

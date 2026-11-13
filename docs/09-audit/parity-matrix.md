@@ -270,6 +270,22 @@ Real-data capacity summary/category bars, Vietnamese pricing cards, read-only lo
 | Success state (`role="status"`) & return to `/login` without auto-login | `ForgotPasswordPage.tsx` (`#state-success` + `Toast`) | Returns `200 OK` (`data: null`) | **Implemented** |
 | Stitch Variant 1 visual shell with neutral copy adjustments | Removed simulator bar, demo email/OTP, and unverified ISO/AES/SSO/hotline claims | Verified against `identity-service` | **Documented in module record** |
 
+## SCR-052 — Admin Notifications / SP-S3-UI-16
+
+last_verified: 2026-11-12; owner: SPH. [Module, API và nguồn thiết kế](../05-modules/admin/scr-052-notifications.md), [bằng chứng](./sp-s3-ui-16-admin-notifications-report.md).
+
+| Năng lực hiện có | React mới / nguồn thiết kế | API / Quyền | Parity |
+| --- | --- | --- | --- |
+| `/admin/notifications`, menu và guard | Lazy `AdminNotificationsPage`, giữ `AdminLayout` | FE ADMIN; backend authenticated + ownership | Preserved |
+| List/title/content/readAt/createdAt | Header và feed SCR-052, formatter entity hiện có | GET `/notifications`, chỉ tài khoản hiện tại | Preserved |
+| Phân trang 20 mục | Shared Pagination; xem được >100 mục | `page` 0-based, `size=20` | Preserved; khác archived size=100 theo task đã chỉnh |
+| Đọc từng mục/tất cả | Nút bàn phím, pending, retry, không success giả | PUT `/{id}/read`, `/read-all` | Preserved / hardened |
+| Tổng chưa đọc | Badge toàn tài khoản, lỗi không giả số 0 | GET `/unread-count` | Added theo task đã chỉnh |
+| Lỗi/loading/empty và dữ liệu cũ | Skeleton, empty, retry list/count và cảnh báo refetch | TanStack Query, invalidation theo scope phiên | Hardened |
+| Chuyển tài khoản | Inbox remount + cache theo revision; chặn mutation chờ của phiên cũ | Session events hiện có; token không nằm trong key | Hardened |
+| Merchant notifications | Vẫn `PortalNotificationsPage`, table và PUT như trước | `/merchant/notifications` | Preserved; E2E + regression tests |
+| KPI, SMS/Telegram, WebSocket, filter và CTA demo | Không triển khai theo phạm vi đã sửa | Chưa có hợp đồng được xác minh cho màn này | Out of scope; không cam kết mockup đầy đủ |
+
 > 2026-11-08 — SCR-045 Admin: all nine navigation destinations, logout, paged users, user fields, detail links and existing state/permission handling preserved. [Detailed capability parity](./admin-users-navigation-redesign.md).
 
 

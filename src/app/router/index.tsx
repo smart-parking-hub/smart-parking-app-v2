@@ -58,6 +58,9 @@ const AdminProfilePage = lazy(() =>
 const AdminDashboardPage = lazy(() =>
   import('@/features/admin').then((module) => ({ default: module.AdminDashboardPage })),
 )
+const AdminNotificationsPage = lazy(() =>
+  import('@/features/admin/pages/AdminNotificationsPage').then((module) => ({ default: module.AdminNotificationsPage })),
+)
 const AdminParkingLotsPage = lazy(() =>
   import('@/features/admin').then((module) => ({ default: module.AdminParkingLotsPage })),
 )
@@ -262,7 +265,7 @@ export const router = createBrowserRouter([
       { path: 'disputes', element: <DisputesPage role="admin" /> },
       { path: 'disputes/:id', element: <DisputesPage role="admin" detail /> },
       { path: 'audit-logs', element: <AdminAuditLogsPage /> },
-      { path: 'notifications', element: <PortalNotificationsPage /> },
+      { path: 'notifications', element: <AdminNotificationsPage /> },
       { path: 'profile', element: <AdminProfilePage /> },
     ],
   },

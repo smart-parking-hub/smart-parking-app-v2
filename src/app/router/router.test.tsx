@@ -23,6 +23,13 @@ describe('Merged route ownership', () => {
     const match = matchRoutes(router.routes, '/forgot-password')?.at(-1)
     expect(match?.route.path).toBe('/forgot-password')
   })
+  it.each(['/admin/notifications', '/merchant/notifications'])(
+    'keeps the notification route in its own portal (%s)', (path) => {
+      const matches = matchRoutes(router.routes, path)
+      expect(matches?.at(-1)?.route.path).toBe('notifications')
+      expect(matches?.some(match => match.route.path === path.split('/').slice(0, 2).join('/'))).toBe(true)
+    },
+  )
   it.each([
     '/change-password',
     '/dashboard/change-password',
