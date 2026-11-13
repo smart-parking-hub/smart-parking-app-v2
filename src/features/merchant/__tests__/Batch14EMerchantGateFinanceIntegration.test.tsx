@@ -366,7 +366,7 @@ describe('BATCH-14E: Merchant Gate, Bookings & Financial Settlement Integration 
   // SCR-037: Merchant Revenue Reports & Analytics
   // -------------------------------------------------------------
   it('SCR-037: MerchantRevenuePage displays revenue KPIs, time grouping and series visualization', async () => {
-    mockGetData.mockResolvedValueOnce(mockRevenueData)
+    mockGetData.mockImplementation(async (url) => url.endsWith('/ledger') ? { content: [], totalPages: 0, totalElements: 0, currentPage: 0 } : mockRevenueData)
 
     renderWithProviders(<MerchantRevenuePage />, ['/merchant/revenue'])
 
@@ -382,13 +382,13 @@ describe('BATCH-14E: Merchant Gate, Bookings & Financial Settlement Integration 
 
     // 4 Metrics
     expect(await screen.findByText('Doanh thu gộp')).toBeInTheDocument()
-    expect(screen.getByText('Doanh thu thực nhận')).toBeInTheDocument()
+    expect(screen.getByText('Biến động ví tích lũy')).toBeInTheDocument()
     expect(screen.getByText('Phí nền tảng')).toBeInTheDocument()
     expect(screen.getByText('Số dư khả dụng')).toBeInTheDocument()
 
     // Series Panel
     expect(screen.getByText('Nhịp doanh thu')).toBeInTheDocument()
-    expect(screen.getByText('2026-11-01')).toBeInTheDocument()
+    expect(screen.getAllByText('2026-11-01')).toHaveLength(2)
     expect(screen.getByText('42 lượt')).toBeInTheDocument()
   })
 
