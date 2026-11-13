@@ -9,10 +9,10 @@ export type AdminNotification = Pick<
 export const ADMIN_NOTIFICATION_PAGE_SIZE = 20
 const endpoint = '/api/v1/notifications'
 
-export function getAdminNotifications(page: number, signal: AbortSignal) {
+export function getAdminNotifications(page: number, signal: AbortSignal, sort = 'createdAt,desc') {
   return getData<Page<AdminNotification>>(
     endpoint,
-    { page, size: ADMIN_NOTIFICATION_PAGE_SIZE },
+    { page, size: ADMIN_NOTIFICATION_PAGE_SIZE, sort },
     { signal },
   )
 }

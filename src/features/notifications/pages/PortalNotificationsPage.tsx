@@ -15,6 +15,8 @@ import {
   DataTable,
   date,
   secondary,
+  Field,
+  control,
 } from '@/shared/components/Workspace'
 
 interface Notification {
@@ -28,11 +30,12 @@ interface Notification {
 
 export function PortalNotificationsPage() {
   const [page, setPage] = useState(0)
+  const [sort, setSort] = useState('createdAt,desc')
   const cache = useQueryClient()
   const query = useQuery({
-    queryKey: ['portal-notifications', page],
+    queryKey: ['portal-notifications', page, sort],
     queryFn: () =>
-      getData<Page<Notification>>('/api/v1/notifications', { page, size: 20 }),
+      getData<Page<Notification>>('/api/v1/notifications', { page, size: 20, sort }),
     retry: false,
   })
   const read = useMutation({
@@ -41,8 +44,12 @@ export function PortalNotificationsPage() {
         'put',
         `/api/v1/notifications/${id ? `${id}/read` : 'read-all'}`,
       ),
-    onSuccess: () =>
-      void cache.invalidateQueries({ queryKey: ['portal-notifications'] }),
+    onSuccess: async () => {
+      await Promise.all([
+        cache.invalidateQueries({ queryKey: ['portal-notifications'] }),
+        cache.invalidateQueries({ queryKey: ['notification-indicator'] }),
+      ])
+    },
   })
   return (
     <Workspace
@@ -70,6 +77,20 @@ export function PortalNotificationsPage() {
       }
     >
       {read.isError && <Notice error>{errorMessage(read.error)}</Notice>}
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <Field label="Sắp xếp thông báo">
+          <select className={control} value={sort} onChange={event => {
+            setSort(event.target.value)
+            setPage(0)
+          }}>
+            <option value="createdAt,desc">Mới nhất trước</option>
+            <option value="createdAt,asc">Cũ nhất trước</option>
+          </select>
+        </Field>
+        <button type="button" className={secondary} disabled={query.isFetching} onClick={() => void query.refetch()}>
+          {query.isFetching ? 'Đang cập nhật…' : 'Cập nhật'}
+        </button>
+      </div>
       <QueryState query={query}>
         {(data) => (
           <DataTable

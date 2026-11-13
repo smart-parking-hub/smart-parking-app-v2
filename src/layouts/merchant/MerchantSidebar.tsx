@@ -15,6 +15,7 @@ import {
   X,
 } from 'lucide-react'
 import { cn } from '@/shared/utils/cn'
+import { UnreadNotificationDot } from '@/features/notifications'
 
 interface MerchantSidebarProps {
   mobileOpen?: boolean
@@ -145,12 +146,15 @@ export function MerchantSidebar({ mobileOpen = false, onCloseMobile, collapsed =
                   )}
                   aria-current={active ? 'page' : undefined}
                 >
+                  <span className="relative inline-flex shrink-0">
                   <Icon
                     className={cn(
                       'w-4 h-4 shrink-0 transition-colors',
                       active ? 'text-[#0d1c2e]' : 'text-[#7c839b]',
                     )}
                   />
+                  {item.to === '/merchant/notifications' && <UnreadNotificationDot />}
+                  </span>
                   <span className={cn('truncate', collapsed && 'lg:hidden')}>{item.label}</span>
                 </Link>
               )

@@ -248,9 +248,11 @@ describe('Layouts and Navigation System Comprehensive Tests', () => {
       const handleClose = vi.fn()
 
       render(
+        <QueryClientProvider client={createTestQueryClient()}>
         <MemoryRouter initialEntries={['/merchant/dashboard']}>
           <MerchantSidebar mobileOpen={true} onCloseMobile={handleClose} />
         </MemoryRouter>
+        </QueryClientProvider>
       )
 
       expect(screen.getByText('Tổng quan')).toBeInTheDocument()

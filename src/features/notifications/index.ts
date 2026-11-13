@@ -11,4 +11,5 @@ export * from './components/NotificationsEmptyState'
 export * from './components/NotificationsSkeleton'
 export * from './pages/NotificationsPage'
 export * from './pages/PortalNotificationsPage'
+export { UnreadNotificationDot } from './components/UnreadNotificationDot'
 
