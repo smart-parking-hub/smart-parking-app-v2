@@ -76,6 +76,7 @@ function AdminList<T extends { id: number }>({
   detailLink,
   actions,
   renderMobileCard,
+  sortOptions,
 }: {
   title: string
   path: string
@@ -83,16 +84,26 @@ function AdminList<T extends { id: number }>({
   detailLink?: (r: T) => string
   actions?: (r: T) => React.ReactNode
   renderMobileCard?: (r: T) => React.ReactNode
+  sortOptions?: { value: string; label: string }[]
 }) {
   const [page, setPage] = useState(0)
+  const [sort, setSort] = useState(sortOptions?.[0]?.value ?? '')
   const query = useQuery({
-    queryKey: ['admin-list', path, page],
-    queryFn: () => getData<Page<T>>(path, { page, size: 20 }),
+    queryKey: ['admin-list', path, page, sort],
+    queryFn: () => getData<Page<T>>(path, { page, size: 20, ...(sort ? { sort } : {}) }),
     retry: false,
   })
 
   return (
     <Workspace title={title} eyebrow="ADMIN / OPERATIONS">
+      {sortOptions && <Field label="Sắp xếp yêu cầu rút tiền">
+        <select className={`${control} sm:max-w-xs`} value={sort} onChange={event => {
+          setSort(event.target.value)
+          setPage(0)
+        }}>
+          {sortOptions.map(option => <option key={option.value} value={option.value}>{option.label}</option>)}
+        </select>
+      </Field>}
       <QueryState query={query}>
         {(data) => (
           <DataTable
@@ -478,6 +489,12 @@ export function AdminWithdrawalsPage() {
       <AdminList<Withdrawal>
         title="Phê duyệt rút tiền"
         path="/api/v1/admin/withdrawals"
+        sortOptions={[
+          { value: 'requestedAt,desc', label: 'Mới nhất trước' },
+          { value: 'requestedAt,asc', label: 'Cũ nhất trước' },
+          { value: 'amount,desc', label: 'Số tiền giảm dần' },
+          { value: 'amount,asc', label: 'Số tiền tăng dần' },
+        ]}
         columns={[
           {
             label: 'Yêu cầu',
@@ -495,6 +512,7 @@ export function AdminWithdrawalsPage() {
               </span>
             ),
           },
+          { label: 'Ngày yêu cầu', render: (r) => date(r.requestedAt) },
           {
             label: 'Số tiền',
             align: 'right',

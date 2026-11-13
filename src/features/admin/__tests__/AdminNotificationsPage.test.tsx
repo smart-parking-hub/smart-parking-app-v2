@@ -89,7 +89,7 @@ describe('SCR-052 Admin notifications', () => {
     expect(within(row).getByText(/12\/11\/2026/)).toBeInTheDocument()
     expect(within(screen.getByRole('article', { name: 'Thông báo 2' })).getAllByText('Đã đọc')[0]).toBeInTheDocument()
     expect(screen.getByText('1 thông báo chưa đọc')).toBeInTheDocument()
-    expect(getData).toHaveBeenCalledWith(endpoint, { page: 0, size: 20 }, { signal: expect.any(AbortSignal) })
+    expect(getData).toHaveBeenCalledWith(endpoint, { page: 0, size: 20, sort: 'createdAt,desc' }, { signal: expect.any(AbortSignal) })
     expect(getData).toHaveBeenCalledWith(`${endpoint}/unread-count`, undefined, { signal: expect.any(AbortSignal) })
     expect(screen.getAllByRole('button', { name: /^Đánh dấu đã đọc:/ })).toHaveLength(1)
   })
@@ -112,7 +112,7 @@ describe('SCR-052 Admin notifications', () => {
       await user.click(screen.getByRole('button', { name: 'Trang sau' }))
       await screen.findByRole('article', { name: `Thông báo ${page * 20 + 1}` })
     }
-    expect(getData).toHaveBeenCalledWith(endpoint, { page: 5, size: 20 }, expect.any(Object))
+    expect(getData).toHaveBeenCalledWith(endpoint, { page: 5, size: 20, sort: 'createdAt,desc' }, expect.any(Object))
     expect(screen.getByRole('button', { name: 'Trang sau' })).toBeDisabled()
     await user.click(screen.getByRole('button', { name: 'Trang trước' }))
     expect(await screen.findByRole('article', { name: 'Thông báo 81' })).toBeInTheDocument()

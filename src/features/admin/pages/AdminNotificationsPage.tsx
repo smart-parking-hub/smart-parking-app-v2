@@ -16,7 +16,7 @@ export function AdminNotificationsPage() {
 }
 
 function AdminNotificationsInbox({ session }: { session: number }) {
-  const { page, setPage, list, count, read, markRead } = useAdminNotifications(session)
+  const { page, setPage, sort, setSort, list, count, read, markRead } = useAdminNotifications(session)
   const syncFailed = read.isSuccess && (list.isError || count.isError)
   const countKnown = count.isSuccess
   const refreshing = list.isFetching || count.isFetching
@@ -56,7 +56,11 @@ function AdminNotificationsInbox({ session }: { session: number }) {
 
       <div className="admin-notifications-feed-header">
         <h2>Danh sách thông báo</h2>
-        <span>Mới nhất trước</span>
+        <select aria-label="Sắp xếp thông báo" className="min-h-12 rounded-xl border border-slate-200 bg-white px-3 text-sm" value={sort}
+          onChange={event => setSort(event.target.value)} disabled={read.isPending}>
+          <option value="createdAt,desc">Mới nhất trước</option>
+          <option value="createdAt,asc">Cũ nhất trước</option>
+        </select>
         <Button variant="ghost" className="min-h-12" disabled={read.isPending} isLoading={refreshing} leftIcon={<RefreshCw size={16} aria-hidden="true" />} onClick={() => {
           void list.refetch()
           void count.refetch()

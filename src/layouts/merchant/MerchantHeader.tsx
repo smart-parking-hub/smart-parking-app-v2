@@ -14,6 +14,7 @@ import {
   PanelLeftOpen,
 } from 'lucide-react'
 import { cn } from '@/shared/utils/cn'
+import { UnreadNotificationDot } from '@/features/notifications'
 
 interface MerchantHeaderProps {
   onToggleMobileMenu?: () => void
@@ -112,7 +113,7 @@ export function MerchantHeader({ onToggleMobileMenu, sidebarCollapsed = false, o
             className="w-9 h-9 rounded-xl flex items-center justify-center text-slate-600 hover:bg-[#eff4ff] hover:text-[#0d1c2e] transition-colors"
             aria-label="Thông báo chủ bãi"
           >
-            <Bell className="w-5 h-5" />
+            <span className="relative inline-flex"><Bell className="w-5 h-5" /><UnreadNotificationDot /></span>
           </Link>
         </div>
 

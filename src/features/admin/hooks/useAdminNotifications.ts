@@ -36,12 +36,13 @@ export function useAdminNotificationSession() {
 
 export function useAdminNotifications(session: number) {
   const [page, setPage] = useState(0)
+  const [sort, setSort] = useState('createdAt,desc')
   const cache = useQueryClient()
   const inFlight = useRef(false)
   const scope = ['admin-notifications', session] as const
   const list = useQuery({
-    queryKey: [...scope, 'list', page],
-    queryFn: ({ signal }) => getAdminNotifications(page, signal),
+    queryKey: [...scope, 'list', page, sort],
+    queryFn: ({ signal }) => getAdminNotifications(page, signal, sort),
     retry: false,
     refetchOnWindowFocus: false,
   })
@@ -73,5 +74,5 @@ export function useAdminNotifications(session: number) {
     read.mutate(id, { onSettled: () => { inFlight.current = false } })
   }
 
-  return { page, setPage, list, count, read, markRead }
+  return { page, setPage, sort, setSort: (value: string) => { setSort(value); setPage(0) }, list, count, read, markRead }
 }
