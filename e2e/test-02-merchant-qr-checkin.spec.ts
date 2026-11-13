@@ -141,10 +141,15 @@ test.describe('Flow 2: Check-in Barie Cổng Vào (SP-S3-INT-01)', () => {
     await expect(submitBtn).toBeEnabled()
     await submitBtn.click()
 
-    // 6. Kiểm tra thông báo thành công xuất hiện
+    // 6. Kiểm tra modal thành công và đóng trước khi tiếp tục
+    const confirmation = page.getByRole('dialog', { name: 'Xác nhận xe vào thành công' })
+    await expect(confirmation).toBeVisible()
+    await expect(confirmation.getByText('BK-2026-0894', { exact: true })).toBeVisible()
     await expect(
-      page.getByText('Xe đã được ghi nhận vào bãi.'),
+      confirmation.getByText('Xe đã được ghi nhận vào bãi.'),
     ).toBeVisible({ timeout: 5000 })
+    await confirmation.getByRole('button', { name: 'Đã hiểu' }).click()
+    await expect(confirmation).not.toBeVisible()
 
     // 7. Chuyển sang màn hình quản lý đơn đỗ xe (/merchant/bookings)
     await page.goto('/merchant/bookings')

@@ -60,6 +60,7 @@ export function MerchantScannerPage() {
   const [camera, setCamera] = useState(false)
   const [cameraError, setCameraError] = useState('')
   const [success, setSuccess] = useState('')
+  const [confirmedCheckIn, setConfirmedCheckIn] = useState<string | null>(null)
   const [completedSettlement, setCompletedSettlement] = useState<Settlement | null>(null)
   const [facingMode, setFacingMode] = useState<'environment' | 'user'>('environment')
   const [autoSubmit, setAutoSubmit] = useState(true)
@@ -97,11 +98,14 @@ export function MerchantScannerPage() {
       if (mode === 'check-out' && _result?.bookingStatus === 'COMPLETED') {
         setCompletedSettlement(_result)
       }
-      if (mode === 'check-in') checkedIn.current.add(`${data.parkingLotId}:${data.bookingCode}`)
+      if (mode === 'check-in') {
+        checkedIn.current.add(`${data.parkingLotId}:${data.bookingCode}`)
+        setConfirmedCheckIn(data.bookingCode)
+      }
       setCamera(false)
       setSuccess(
         mode === 'check-in'
-          ? 'Xe đã được ghi nhận vào bãi.'
+          ? ''
           : 'Đã ghi nhận xe ra. Kiểm tra số tiền còn phải thu.',
       )
       void cache.invalidateQueries({ queryKey: ['merchant-bookings'] })
@@ -115,10 +119,11 @@ export function MerchantScannerPage() {
   const submitScan = (data: { bookingCode: string; parkingLotId: number }) => {
     if (scanPending.current) return
     if (mode === 'check-in' && checkedIn.current.has(`${data.parkingLotId}:${data.bookingCode}`)) {
-      setSuccess('Xe đã được ghi nhận vào bãi. Chọn XE RA khi cần check-out.')
+      setConfirmedCheckIn(data.bookingCode)
       return
     }
     scanPending.current = true
+    setConfirmedCheckIn(null)
     setSuccess('')
     cash.reset()
     scan.mutate(data)
@@ -233,6 +238,7 @@ export function MerchantScannerPage() {
 
   function changeMode(next: typeof mode) {
     setMode(next)
+    setConfirmedCheckIn(null)
     scan.reset()
     cash.reset()
     setSuccess('')
@@ -408,6 +414,35 @@ export function MerchantScannerPage() {
       {cameraError && <Notice error>{cameraError}</Notice>}
       {scan.isError && <Notice error>{errorMessage(scan.error)}</Notice>}
       {success && <Notice>{success}</Notice>}
+
+      {confirmedCheckIn && (
+        <Dialog
+          title="Xác nhận xe vào thành công"
+          maxWidth="sm"
+          onClose={() => setConfirmedCheckIn(null)}
+        >
+          <div className="space-y-5 text-center">
+            <CheckCircle2 className="mx-auto h-14 w-14 text-emerald-600" aria-hidden="true" />
+            <p role="status" className="font-semibold text-brand-navy">
+              Xe đã được ghi nhận vào bãi.
+            </p>
+            <div className="rounded-xl bg-brand-surface p-4">
+              <p className="text-sm text-brand-muted">Mã đặt chỗ</p>
+              <p className="mt-2 break-all font-mono font-semibold text-brand-navy">
+                {confirmedCheckIn}
+              </p>
+            </div>
+            <p className="text-sm text-brand-muted">Chọn XE RA khi cần check-out.</p>
+            <button
+              type="button"
+              className={`${button} w-full`}
+              onClick={() => setConfirmedCheckIn(null)}
+            >
+              Đã hiểu
+            </button>
+          </div>
+        </Dialog>
+      )}
 
       {completedSettlement && (
         <Dialog title="Hoàn tất giao dịch" onClose={() => {
