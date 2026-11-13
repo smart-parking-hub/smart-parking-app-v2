@@ -1,11 +1,16 @@
 import { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { useMutation } from '@tanstack/react-query'
 import { ArrowRight, Check, Eye, EyeOff, LoaderCircle, ShieldCheck, Store, Truck } from 'lucide-react'
 import type { AuthFields } from '../model/authFields'
 import { BankField } from '../components/BankField'
-import { requestEmailOtp, verifyRegisterOtp } from '../api/emailOtp'
+import {
+  checkCitizenIdAvailability,
+  checkPhoneAvailability,
+  requestEmailOtp,
+  verifyRegisterOtp,
+} from '../api/emailOtp'
 import { errorMessage, sendData } from '@/shared/api/resources'
 import { AuthLayout } from '@/layouts/AuthLayout'
 import { Select, type SelectOption } from '@/shared/components/Select'
@@ -36,6 +41,7 @@ export function RegisterPage({ mode = 'register' }: { mode?: 'login' | 'register
   type RegisterStepKey = 'info' | 'bank' | 'email' | 'password'
   const [registerStepKey, setRegisterStepKey] = useState<RegisterStepKey>('info')
   const [isOtpFocused, setIsOtpFocused] = useState(false)
+  const [checkingAvailability, setCheckingAvailability] = useState(false)
 
   useEffect(() => {
     if (!countdown) return
@@ -146,8 +152,24 @@ export function RegisterPage({ mode = 'register' }: { mode?: 'login' | 'register
       }
     },
     onError: (error) => {
+      const msg = errorMessage(error)
+      if (/số điện thoại|phone/i.test(msg)) {
+        setRegisterStepKey('info')
+        form.setError('phone', { message: msg }, { shouldFocus: true })
+        return
+      }
+      if (/cccd|cmnd|citizen/i.test(msg)) {
+        setRegisterStepKey('info')
+        form.setError('citizenId', { message: msg }, { shouldFocus: true })
+        return
+      }
+      if (/email/i.test(msg)) {
+        setRegisterStepKey('email')
+        form.setError('email', { message: msg }, { shouldFocus: true })
+        return
+      }
       // Registration rechecks expiry and consumes the code atomically with account creation.
-      if (mode === 'register' && /otp/i.test(errorMessage(error))) {
+      if (mode === 'register' && /otp/i.test(msg)) {
         setRegisterStepKey('email')
         form.setFocus('otpCode')
       }
@@ -155,13 +177,74 @@ export function RegisterPage({ mode = 'register' }: { mode?: 'login' | 'register
   })
 
   const advanceRegisterStep = async () => {
-    if (verifyOtp.isPending || submit.isPending) return
+    if (verifyOtp.isPending || submit.isPending || checkingAvailability) return
     if (registerStepKey === 'info') {
-      if (await form.trigger(['phone', 'fullName', 'citizenId'])) {
+      const valid = await form.trigger(['phone', 'fullName', 'citizenId'])
+      const fullName = (form.getValues('fullName') ?? '').trim()
+      if (fullName.length < 2) {
+        form.setError('fullName', {
+          message: fullName.length === 0 ? 'Vui lòng nhập họ và tên.' : 'Họ và tên phải có ít nhất 2 ký tự.',
+        })
+        form.setFocus('fullName')
+        return
+      }
+
+      if (selectedRole === 'MERCHANT') {
+        const citizenId = (form.getValues('citizenId') ?? '').trim()
+        if (!citizenId) {
+          form.setError('citizenId', { message: 'CCCD / CMND là bắt buộc đối với Chủ bãi xe.' })
+          form.setFocus('citizenId')
+          return
+        }
+        if (!/^(?:[0-9]{9}|[0-9]{12})$/.test(citizenId)) {
+          form.setError('citizenId', { message: 'CCCD / CMND phải gồm 9 hoặc 12 chữ số.' })
+          form.setFocus('citizenId')
+          return
+        }
+      }
+
+      if (!valid) return
+
+      // Validate phone uniqueness right at Step 1 before leaving
+      setCheckingAvailability(true)
+      try {
+        const phone = (form.getValues('phone') ?? '').replace(/\s/g, '')
+        const isPhoneAvail = await checkPhoneAvailability(phone)
+        if (!isPhoneAvail) {
+          form.setError('phone', {
+            type: 'manual',
+            message: 'Số điện thoại này đã được đăng ký. Vui lòng dùng số khác hoặc đăng nhập.',
+          })
+          form.setFocus('phone')
+          return
+        }
+
+        if (selectedRole === 'MERCHANT') {
+          const citizenId = (form.getValues('citizenId') ?? '').trim()
+          const isCitizenAvail = await checkCitizenIdAvailability(citizenId)
+          if (!isCitizenAvail) {
+            form.setError('citizenId', {
+              type: 'manual',
+              message: 'CCCD / CMND này đã được đăng ký cho một chủ bãi khác.',
+            })
+            form.setFocus('citizenId')
+            return
+          }
+        }
+
         setRegisterStepKey(selectedRole === 'MERCHANT' ? 'bank' : 'email')
+      } finally {
+        setCheckingAvailability(false)
       }
     } else if (registerStepKey === 'bank') {
-      if (await form.trigger(['bankName', 'bankAccountNum'])) setRegisterStepKey('email')
+      const valid = await form.trigger(['bankName', 'bankAccountNum'])
+      const bankAccountNum = (form.getValues('bankAccountNum') ?? '').trim()
+      if (!/^\d{6,25}$/.test(bankAccountNum)) {
+        form.setError('bankAccountNum', { message: 'Số tài khoản ngân hàng phải gồm từ 6 đến 25 chữ số.' })
+        form.setFocus('bankAccountNum')
+        return
+      }
+      if (valid) setRegisterStepKey('email')
     } else if (registerStepKey === 'email') {
       if (!sentValid || otp.isPending) {
         form.setError('email', { message: 'Vui lòng gửi mã OTP thành công đến email này trước khi tiếp tục.' })
@@ -241,49 +324,61 @@ export function RegisterPage({ mode = 'register' }: { mode?: 'login' | 'register
     <AuthLayout>
       <div>
         {mode === 'register' && (
-          <div className="h-1.5 w-full bg-black/10 rounded-full overflow-hidden mb-5">
+          <div className="h-1.5 w-full bg-black/10 rounded-full overflow-hidden mb-4">
             <div
-              className="h-full bg-[#d95f00] transition-all duration-500 rounded-full"
-              style={{ width: `${progressPercent}%` }}
+              className={`h-full transition-all duration-500 rounded-full ${
+                submit.isSuccess ? 'bg-gradient-to-r from-[#d95f00] to-emerald-500' : 'bg-[#d95f00]'
+              }`}
+              style={{ width: `${submit.isSuccess ? 100 : progressPercent}%` }}
               role="progressbar"
-              aria-valuenow={progressPercent}
+              aria-valuenow={submit.isSuccess ? 100 : progressPercent}
               aria-valuemin={0}
               aria-valuemax={100}
-              aria-label={`Tiến trình đăng ký bước ${currentStepNumber} trên ${totalSteps}`}
+              aria-label={`Tiến trình đăng ký bước ${submit.isSuccess ? totalSteps : currentStepNumber} trên ${totalSteps}`}
             />
           </div>
         )}
 
-        <div className="mb-6 sm:mb-8 flex flex-col items-center text-center">
+        <div className="mb-3.5 sm:mb-4 flex flex-col items-center text-center">
           <Link
             to="/"
-            className="inline-flex items-center gap-3.5 font-sora text-xl sm:text-2xl font-bold text-black mb-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d95f00] rounded-2xl p-1.5 transition-all hover:scale-105 group"
+            className="inline-flex items-center gap-2.5 font-sora text-lg sm:text-xl font-bold text-black mb-2 sm:mb-2.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d95f00] rounded-xl p-1 transition-all hover:scale-105 group"
           >
             <img
               src="/image-smart-parking-hub.png"
               alt="Smart Parking Hub Logo"
-              className="w-11 h-11 sm:w-12 sm:h-12 rounded-2xl object-contain shrink-0 shadow-md ring-1 ring-white/60 group-hover:shadow-lg transition-all"
+              className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl object-contain shrink-0 shadow-sm ring-1 ring-white/60 group-hover:shadow-md transition-all"
             />
-            <span className="tracking-tight text-black font-bold text-xl sm:text-2xl group-hover:text-[#d95f00] transition-colors">
+            <span className="tracking-tight text-black font-bold text-lg sm:text-xl group-hover:text-[#d95f00] transition-colors">
               SMARTTRUCK HUB
             </span>
           </Link>
-          <h1 className="font-sora text-3xl sm:text-4xl font-bold tracking-tight text-black drop-shadow-xs">
-            {title}
-          </h1>
-          <p className="mt-2 text-sm sm:text-base text-black font-normal">
-            {mode === 'login'
-              ? 'Đăng nhập để tiếp tục công việc của bạn.'
-              : 'Thông tin được xác thực bởi hệ thống SmartTruck Hub.'}
-          </p>
+          {!submit.isSuccess && (
+            <>
+              <h1 className="font-sora text-2xl sm:text-3xl font-bold tracking-tight text-black drop-shadow-xs">
+                {title}
+              </h1>
+              <p className="mt-1 text-xs sm:text-sm text-black/75 font-normal">
+                {mode === 'login'
+                  ? 'Đăng nhập để tiếp tục công việc của bạn.'
+                  : 'Thông tin được xác thực bởi hệ thống SmartTruck Hub.'}
+              </p>
+            </>
+          )}
         </div>
 
         {submit.isSuccess && mode !== 'login' ? (
-          <AuthSuccess mode={mode} />
+          <AuthSuccess
+            mode={mode}
+            registeredPhone={form.getValues('phone')}
+            registeredEmail={form.getValues('email')}
+            registeredFullName={form.getValues('fullName')}
+            role={form.getValues('role')}
+          />
         ) : (
           <form
             noValidate
-            className="space-y-4 [&_input:not([role='combobox'])]:min-h-12 [&_input:not([role='combobox'])]:sm:min-h-14 [&_input:not([role='combobox'])]:text-base [&_input:not([role='combobox'])]:rounded-xl [&_input:not([role='combobox'])]:px-4 [&_select]:min-h-12 [&_select]:sm:min-h-14 [&_select]:text-base [&_select]:rounded-xl [&_select]:px-4 [&_label]:gap-1.5"
+            className="space-y-3.5 [&_input:not([role='combobox'])]:min-h-11 [&_input:not([role='combobox'])]:sm:min-h-12 [&_input:not([role='combobox'])]:text-sm [&_input:not([role='combobox'])]:sm:text-base [&_input:not([role='combobox'])]:rounded-xl [&_input:not([role='combobox'])]:px-3.5 [&_select]:min-h-11 [&_select]:sm:min-h-12 [&_select]:text-sm [&_select]:sm:text-base [&_select]:rounded-xl [&_select]:px-3.5 [&_label]:gap-1"
             onChange={() => { if (submit.isError) submit.reset() }}
             onSubmit={(event) => {
               if (mode === 'register' && registerStepKey !== 'password') {
@@ -372,20 +467,38 @@ export function RegisterPage({ mode = 'register' }: { mode?: 'login' | 'register
                     options={ROLE_OPTIONS}
                     variant="default"
                     size="lg"
-                    triggerClassName="min-h-12 sm:min-h-14 text-base bg-white border border-slate-300 text-black rounded-xl px-4 py-3 shadow-2xs hover:border-[#d95f00] hover:bg-orange-50/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d95f00] focus-visible:ring-offset-1 transition-all cursor-pointer font-normal"
+                    triggerClassName="min-h-11 sm:min-h-12 text-sm sm:text-base bg-white border border-slate-300 text-black rounded-xl px-3.5 py-2.5 shadow-2xs hover:border-[#d95f00] hover:bg-orange-50/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d95f00] focus-visible:ring-offset-1 transition-all cursor-pointer font-normal"
                     dropdownClassName="border border-slate-200 shadow-xl rounded-xl z-50 bg-white"
                   />
                 </div>
               )}
 
               {mode === 'register' ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-                  {input('fullName', 'Họ và tên', 'text', { maxLength: 100 }, 'Ví dụ: Nguyễn Văn Hùng')}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-3.5">
+                  {input(
+                    'fullName',
+                    'Họ và tên',
+                    'text',
+                    {
+                      required: 'Vui lòng nhập họ và tên.',
+                      maxLength: 100,
+                      validate: (val) =>
+                        Boolean(val && val.trim().length >= 2) ||
+                        'Họ và tên phải có ít nhất 2 ký tự.',
+                    },
+                    'Ví dụ: Nguyễn Văn Hùng',
+                  )}
                   {input(
                     'phone',
                     'Số điện thoại',
                     'tel',
-                    { pattern: /^(0|\+84)[35789][0-9]{8}$/ },
+                    {
+                      required: 'Vui lòng nhập số điện thoại.',
+                      pattern: {
+                        value: /^(0|\+84)[35789][0-9]{8}$/,
+                        message: 'Số điện thoại Việt Nam chưa hợp lệ (10 số, ví dụ: 0918239485).',
+                      },
+                    },
                     'Ví dụ: 0918239485',
                   )}
                 </div>
@@ -394,7 +507,13 @@ export function RegisterPage({ mode = 'register' }: { mode?: 'login' | 'register
                   'phone',
                   'Số điện thoại',
                   'tel',
-                  { pattern: /^(0|\+84)[35789][0-9]{8}$/ },
+                  {
+                    required: 'Vui lòng nhập số điện thoại.',
+                    pattern: {
+                      value: /^(0|\+84)[35789][0-9]{8}$/,
+                      message: 'Số điện thoại Việt Nam chưa hợp lệ (10 số, ví dụ: 0918239485).',
+                    },
+                  },
                   'Ví dụ: 0918239485',
                 )
               ) : null}
@@ -405,8 +524,11 @@ export function RegisterPage({ mode = 'register' }: { mode?: 'login' | 'register
                   'CCCD / CMND',
                   'text',
                   {
-                    required: false,
-                    pattern: /^$|^(?:[0-9]{9}|[0-9]{12})$/,
+                    required: selectedRole === 'MERCHANT' ? 'CCCD / CMND là bắt buộc đối với Chủ bãi xe.' : false,
+                    pattern: {
+                      value: selectedRole === 'MERCHANT' ? /^(?:[0-9]{9}|[0-9]{12})$/ : /^$|^(?:[0-9]{9}|[0-9]{12})$/,
+                      message: 'CCCD / CMND phải gồm 9 hoặc 12 chữ số.',
+                    },
                   },
                   'Ví dụ: 079123456789 (9 hoặc 12 số)',
                 )}
@@ -414,15 +536,25 @@ export function RegisterPage({ mode = 'register' }: { mode?: 'login' | 'register
               {mode === 'register' && (
                 <button
                   type="button"
+                  disabled={checkingAvailability}
                   onClick={() => void advanceRegisterStep()}
-                  className="inline-flex min-h-12 sm:min-h-14 w-full items-center justify-center gap-2 rounded-xl bg-[#d95f00] px-5 py-3 text-base font-bold text-white hover:bg-[#b84e00] active:bg-[#9e4300] hover:scale-[1.01] active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d95f00] focus-visible:ring-offset-2 transition-all shadow-md cursor-pointer"
+                  className="inline-flex min-h-11 sm:min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-[#d95f00] px-5 py-2.5 sm:py-3 text-sm sm:text-base font-bold text-white hover:bg-[#b84e00] active:bg-[#9e4300] hover:scale-[1.01] active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d95f00] focus-visible:ring-offset-2 disabled:opacity-50 transition-all shadow-md cursor-pointer"
                 >
-                  <span>
-                    {selectedRole === 'MERCHANT'
-                      ? 'Tiếp tục: Kết nối ngân hàng'
-                      : 'Tiếp tục: Xác thực Email'}
-                  </span>
-                  <ArrowRight size={18} />
+                  {checkingAvailability ? (
+                    <>
+                      <LoaderCircle className="animate-spin text-white" size={18} />
+                      <span>Đang kiểm tra thông tin…</span>
+                    </>
+                  ) : (
+                    <>
+                      <span>
+                        {selectedRole === 'MERCHANT'
+                          ? 'Tiếp tục: Kết nối ngân hàng'
+                          : 'Tiếp tục: Xác thực Email'}
+                      </span>
+                      <ArrowRight size={18} />
+                    </>
+                  )}
                 </button>
               )}
             </div>
@@ -724,7 +856,7 @@ export function RegisterPage({ mode = 'register' }: { mode?: 'login' | 'register
                     <ShieldCheck size={15} className="text-[#d95f00] shrink-0" />
                     <span>Quy định mật khẩu trên hệ thống:</span>
                   </p>
-                  <div className="grid grid-cols-3 gap-2 pt-1 text-[10.5px] sm:text-[11px] text-black/75">
+                  <div className="flex items-center justify-between gap-1 pt-1 text-[10.5px] sm:text-[11px] text-black/75">
                     <span className="flex items-center gap-1.5 whitespace-nowrap">
                       <span className="w-1.5 h-1.5 rounded-full bg-[#d95f00] shrink-0" />
                       <span>Từ 6 đến 50 ký tự</span>
@@ -796,41 +928,43 @@ export function RegisterPage({ mode = 'register' }: { mode?: 'login' | 'register
           </form>
         )}
 
-        <nav
-          aria-label="Tài khoản"
-          className="mt-5 flex flex-wrap items-center justify-between gap-3 text-sm sm:text-base text-black font-normal"
-        >
-          {mode !== 'login' && (
-            <div>
-              <span>Đã có tài khoản? </span>
+        {(!submit.isSuccess || mode === 'login') && (
+          <nav
+            aria-label="Tài khoản"
+            className="mt-4 flex flex-wrap items-center justify-between gap-2.5 text-xs sm:text-sm text-black font-normal"
+          >
+            {mode !== 'login' && (
+              <div>
+                <span>Đã có tài khoản? </span>
+                <Link
+                  to="/login"
+                  className="font-bold text-[#d95f00] hover:text-[#9e4300] hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d95f00] rounded-xs transition-colors"
+                >
+                  Đăng nhập
+                </Link>
+              </div>
+            )}
+            {mode !== 'register' && (
+              <div>
+                <span>Chưa có tài khoản? </span>
+                <Link
+                  to="/register"
+                  className="font-bold text-[#d95f00] hover:text-[#9e4300] hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d95f00] rounded-xs transition-colors"
+                >
+                  Tạo tài khoản
+                </Link>
+              </div>
+            )}
+            {mode !== 'forgot' && (
               <Link
-                to="/login"
-                className="font-bold text-[#d95f00] hover:text-[#9e4300] hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d95f00] rounded-xs transition-colors"
+                to="/forgot-password"
+                className="font-semibold text-[#d95f00] hover:text-[#9e4300] hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d95f00] rounded-xs transition-colors"
               >
-                Đăng nhập
+                Quên mật khẩu?
               </Link>
-            </div>
-          )}
-          {mode !== 'register' && (
-            <div>
-              <span>Chưa có tài khoản? </span>
-              <Link
-                to="/register"
-                className="font-bold text-[#d95f00] hover:text-[#9e4300] hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d95f00] rounded-xs transition-colors"
-              >
-                Tạo tài khoản
-              </Link>
-            </div>
-          )}
-          {mode !== 'forgot' && (
-            <Link
-              to="/forgot-password"
-              className="font-semibold text-[#d95f00] hover:text-[#9e4300] hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d95f00] rounded-xs transition-colors"
-            >
-              Quên mật khẩu?
-            </Link>
-          )}
-        </nav>
+            )}
+          </nav>
+        )}
       </div>
     </AuthLayout>
   )
@@ -838,36 +972,104 @@ export function RegisterPage({ mode = 'register' }: { mode?: 'login' | 'register
 
 export function AuthSuccess({
   mode = 'register',
+  registeredPhone,
+  registeredEmail,
+  registeredFullName,
+  role = 'DRIVER',
+  autoRedirect = true,
 }: {
   mode?: 'register' | 'forgot'
+  registeredPhone?: string
+  registeredEmail?: string
+  registeredFullName?: string
+  role?: 'DRIVER' | 'MERCHANT' | string
+  autoRedirect?: boolean
 }) {
+  const navigate = useNavigate()
+  const [countdown, setCountdown] = useState(4)
+
+  useEffect(() => {
+    if (registeredPhone) {
+      try {
+        localStorage.setItem('remembered_phone', registeredPhone.replace(/\s/g, ''))
+      } catch {
+        // ignore
+      }
+    }
+  }, [registeredPhone])
+
+  useEffect(() => {
+    if (!autoRedirect) return
+    if (countdown <= 0) {
+      navigate('/login', { replace: true })
+      return
+    }
+    const timer = setTimeout(() => setCountdown((c) => c - 1), 1000)
+    return () => clearTimeout(timer)
+  }, [countdown, autoRedirect, navigate])
+
   return (
     <section
       role="status"
-      className="rounded-3xl border border-brand-border bg-white p-7 shadow-sm sm:p-10"
+      className="text-center pt-1 pb-1 animate-in fade-in zoom-in-95 duration-300"
     >
-      <div className="mb-7 flex h-14 w-14 items-center justify-center rounded-2xl bg-brand-navy text-brand-orange">
+      <div className="mx-auto mb-3.5 flex size-14 sm:size-16 items-center justify-center rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-600 shadow-2xs">
         <Check size={28} strokeWidth={2.5} />
       </div>
-      <p className="mb-3 text-xs font-semibold tracking-[.18em] text-brand-muted">
+      <p className="mb-2 text-xs font-bold tracking-[.18em] text-[#d95f00] uppercase">
         {mode === 'register'
           ? 'TÀI KHOẢN ĐÃ SẴN SÀNG'
           : 'BẢO MẬT ĐÃ ĐƯỢC CẬP NHẬT'}
       </p>
-      <h2 className="font-sora text-2xl font-semibold leading-relaxed text-brand-navy">
+      <h2 className="font-sora text-2xl sm:text-3xl font-bold tracking-tight text-black mb-2">
         {mode === 'register' ? 'Đăng ký thành công!' : 'Đã đặt lại mật khẩu.'}
       </h2>
-      <p className="mb-8 mt-3 max-w-md text-base leading-7 text-brand-muted">
+      <p className="mb-4 max-w-md mx-auto text-xs sm:text-sm leading-relaxed text-black/75 font-normal">
         {mode === 'register'
-          ? 'Chào mừng bạn đến với SmartTruck Hub. Đăng nhập để tìm điểm đỗ và bắt đầu hành trình của mình.'
+          ? `Chào mừng ${registeredFullName ? registeredFullName + ' ' : ''}đến với SmartTruck Hub. Đăng nhập để tìm điểm đỗ và bắt đầu hành trình của mình.`
           : 'Bạn có thể đăng nhập bằng mật khẩu mới để tiếp tục sử dụng tài khoản.'}
       </p>
+
+      {mode === 'register' && (registeredPhone || registeredEmail) && (
+        <div className="mb-4 rounded-xl border border-slate-200/90 bg-white/80 backdrop-blur-md p-3 sm:p-3.5 text-left shadow-2xs space-y-2">
+          <div className="flex items-center justify-between text-xs sm:text-sm">
+            <span className="text-black/60 font-medium">Vai trò tài khoản:</span>
+            <span className="font-bold text-black flex items-center gap-1.5">
+              {role === 'MERCHANT' ? <Store size={14} className="text-[#d95f00]" /> : <Truck size={14} className="text-[#d95f00]" />}
+              {role === 'MERCHANT' ? 'Chủ bãi đỗ xe' : 'Tài xế'}
+            </span>
+          </div>
+          {registeredPhone && (
+            <div className="flex items-center justify-between text-xs sm:text-sm">
+              <span className="text-black/60 font-medium">Số điện thoại đăng nhập:</span>
+              <span className="font-bold text-black">{registeredPhone}</span>
+            </div>
+          )}
+          {registeredEmail && (
+            <div className="flex items-center justify-between text-xs sm:text-sm">
+              <span className="text-black/60 font-medium">Email xác thực:</span>
+              <span className="font-semibold text-black break-all">{registeredEmail}</span>
+            </div>
+          )}
+        </div>
+      )}
+
+      {autoRedirect && (
+        <div className="mb-3.5 flex items-center justify-center gap-2 text-xs sm:text-sm text-black/70">
+          <LoaderCircle size={15} className="animate-spin text-[#d95f00]" />
+          <span>
+            Tự động chuyển hướng về trang đăng nhập sau{' '}
+            <strong className="text-[#d95f00] font-bold">{countdown}s</strong>...
+          </span>
+        </div>
+      )}
+
       <Link
-        className="inline-flex min-h-14 w-full sm:w-auto sm:min-w-64 items-center justify-center gap-2 rounded-xl bg-[#d95f00] px-5 py-3 text-base font-semibold text-white hover:bg-[#b84e00] active:bg-[#9e4300] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d95f00] focus-visible:ring-offset-2 transition-colors shadow-xs"
+        className="inline-flex min-h-11 sm:min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-[#d95f00] px-5 py-2.5 sm:py-3 text-sm sm:text-base font-bold text-white hover:bg-[#b84e00] active:bg-[#9e4300] hover:scale-[1.01] active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d95f00] focus-visible:ring-offset-2 transition-all shadow-md cursor-pointer"
         to="/login"
       >
-        Đến trang đăng nhập
-        <ArrowRight size={20} />
+        <span>Đến trang đăng nhập</span>
+        <ArrowRight size={18} />
       </Link>
     </section>
   )
