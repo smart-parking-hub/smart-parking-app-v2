@@ -358,7 +358,7 @@ export function ForgotPasswordResetForm({
               />
               <span>Quy định mật khẩu mới trên hệ thống:</span>
             </p>
-            <div className="grid grid-cols-3 gap-2 pt-1 text-[10.5px] sm:text-[11px] text-black/75">
+            <div className="flex items-center justify-between gap-1 pt-1 text-[10.5px] sm:text-[11px] text-black/75">
               <span className="flex items-center gap-1.5 whitespace-nowrap">
                 <span className="w-1.5 h-1.5 rounded-full bg-[#d95f00] shrink-0" />
                 <span>Từ 6 đến 50 ký tự</span>

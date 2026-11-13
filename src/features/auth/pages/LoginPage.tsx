@@ -13,20 +13,20 @@ export function LoginPage() {
   return (
     <AuthLayout>
       <div>
-        <div className="mb-6 sm:mb-8 flex flex-col items-center text-center">
+        <div className="mb-3.5 sm:mb-4 flex flex-col items-center text-center">
           <Link
             to="/"
-            className="inline-flex items-center gap-3.5 font-sora text-xl sm:text-2xl font-bold text-black mb-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d95f00] rounded-2xl p-1.5 transition-all hover:scale-105 group"
+            className="inline-flex items-center gap-2.5 font-sora text-lg sm:text-xl font-bold text-black mb-2 sm:mb-2.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d95f00] rounded-xl p-1 transition-all hover:scale-105 group"
           >
             <img
               src="/image-smart-parking-hub.png"
               alt="Smart Parking Hub Logo"
-              className="w-11 h-11 sm:w-12 sm:h-12 rounded-2xl object-contain shrink-0 shadow-md ring-1 ring-white/60 group-hover:shadow-lg transition-all"
+              className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl object-contain shrink-0 shadow-sm ring-1 ring-white/60 group-hover:shadow-md transition-all"
             />
-            <span className="tracking-tight text-black drop-shadow-xs font-bold text-xl sm:text-2xl group-hover:text-[#d95f00] transition-colors">SMARTTRUCK HUB</span>
+            <span className="tracking-tight text-black drop-shadow-xs font-bold text-lg sm:text-xl group-hover:text-[#d95f00] transition-colors">SMARTTRUCK HUB</span>
           </Link>
-          <h1 className="font-sora text-3xl sm:text-4xl font-bold tracking-tight text-black drop-shadow-xs">Chào mừng trở lại.</h1>
-          <p className="mt-2 text-sm sm:text-base text-black font-normal">Đăng nhập để tiếp tục công việc của bạn.</p>
+          <h1 className="font-sora text-2xl sm:text-3xl font-bold tracking-tight text-black drop-shadow-xs">Chào mừng trở lại.</h1>
+          <p className="mt-1 text-xs sm:text-sm text-black/75 font-normal">Đăng nhập để tiếp tục công việc của bạn.</p>
         </div>
         <LoginForm />
       </div>
