@@ -124,12 +124,17 @@ describe('Gate settlement contract', () => {
         bookingCode: 'BK-001',
       }),
     )
-    expect(
-      await screen.findByText('Xe đã được ghi nhận vào bãi.'),
-    ).toBeInTheDocument()
+    const confirmation = await screen.findByRole('dialog', { name: 'Xác nhận xe vào thành công' })
+    expect(confirmation).toHaveTextContent('Xe đã được ghi nhận vào bãi.')
+    expect(confirmation).toHaveTextContent('BK-001')
+    fireEvent.click(screen.getByRole('button', { name: 'Đã hiểu' }))
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
     fireEvent.click(screen.getByRole('button', { name: 'Xác nhận xe vào bãi' }))
-    expect(await screen.findByText(/Chọn XE RA khi cần check-out/)).toBeInTheDocument()
+    expect(await screen.findByRole('dialog', { name: 'Xác nhận xe vào thành công' }))
+      .toHaveTextContent('Chọn XE RA khi cần check-out.')
     expect(send).toHaveBeenCalledTimes(1)
+    fireEvent(screen.getByRole('dialog'), new Event('cancel', { cancelable: true }))
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
   })
   it('does not confirm cash until the attendant explicitly confirms settlement', async () => {
     send
@@ -206,6 +211,7 @@ describe('Gate settlement contract', () => {
     await screen.findByText('Bãi kiểm thử')
     fireEvent.click(screen.getByRole('button', { name: 'Xác nhận xe vào bãi' }))
     expect(await screen.findByText('Vé đã hết hạn')).toBeInTheDocument()
+    expect(screen.queryByRole('dialog', { name: 'Xác nhận xe vào thành công' })).not.toBeInTheDocument()
     expect(
       screen.queryByText('Xe đã được ghi nhận vào bãi.'),
     ).not.toBeInTheDocument()

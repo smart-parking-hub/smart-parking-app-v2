@@ -309,6 +309,8 @@ test.describe('Core E2E Lifecycle: Booking & cọc PayOS -> Barie Check-in -> Ba
     await page.getByRole('button', { name: 'Xác nhận xe vào bãi' }).click()
 
     await expect(page.getByText('Xe đã được ghi nhận vào bãi.')).toBeVisible()
+    await page.getByRole('dialog', { name: 'Xác nhận xe vào thành công' })
+      .getByRole('button', { name: 'Đã hiểu' }).click()
 
     // -------------------------------------------------------------
     // PHASE 3: CỔNG BARIE CHECK-OUT XE RA, TÍNH CƯỚC & THU TIỀN MẶT
