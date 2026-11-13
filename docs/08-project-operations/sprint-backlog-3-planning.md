@@ -50,7 +50,7 @@
 1. `[SP-S3-PAY-02] [QA] Kiểm thử toàn diện quy trình đối soát tài chính kép và duyệt rút tiền (5 STP)`
 2. `[SP-S3-PAY-03] [FE] Phân tích Biểu đồ Doanh thu & Sổ cái Ví (MerchantRevenuePage) (SCR-037) (5 STP)`
 3. `[SP-S3-PAY-04] [FE] Tạo Yêu cầu Rút tiền & Quản lý Giải ngân (MerchantWithdrawalsPage) (SCR-038) (5 STP)`
-4. `[SP-S3-PAY-05] [FE] Sổ cái Giám sát Giao dịch Dòng tiền Toàn hệ thống (AdminTransactionsPage) (SCR-047) (5 STP)`
+4. [SP-S3-PAY-05 — FE: Hoàn thiện giám sát giao dịch thanh toán toàn hệ thống (AdminTransactionsPage, SCR-047, 5 STP)](./SP-S3-PAY-05.md)
 5. `[SP-S3-PAY-06] [FE] Phê duyệt & Quyết toán Lệnh Rút tiền Ví Chủ bãi (AdminWithdrawalsPage) (SCR-048) (5 STP)`
 6. `[SP-S3-PAY-07] [FE] Phán quyết Trọng tài & Phân bổ Tiền bồi thường (AdminDisputeDetailPage) (SCR-050) (5 STP)`
 7. `[SP-S3-PAY-08] [FE] Hồ sơ Chủ bãi & Thông tin Ngân hàng Rút tiền (MerchantProfilePage) (SCR-027) (2 STP)`

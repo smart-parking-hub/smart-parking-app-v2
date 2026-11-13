@@ -46,8 +46,14 @@ jobs:
       - name: Install Playwright Chromium Browser & FFmpeg
         run: npx playwright install chromium ffmpeg
 
-      - name: Step 5 - Playwright E2E Core Booking & Gate Flows
-        run: npx playwright test e2e/test-01-driver-booking-deposit.spec.ts e2e/test-02-merchant-qr-checkin.spec.ts e2e/test-03-merchant-qr-checkout-cash.spec.ts e2e/core-booking-gate-flow.spec.ts
+      - name: Step 5 - Playwright Booking, Gate & Admin Transactions
+        run: >-
+          npx playwright test
+          e2e/test-01-driver-booking-deposit.spec.ts
+          e2e/test-02-merchant-qr-checkin.spec.ts
+          e2e/test-03-merchant-qr-checkout-cash.spec.ts
+          e2e/core-booking-gate-flow.spec.ts
+          e2e/admin-transactions.spec.ts
 
       - name: Upload Playwright Report & Artifacts on Failure
         if: always()
