@@ -156,3 +156,46 @@ it('checks OTP on the server before revealing password fields and keeps rejectio
   await waitFor(() => expect(screen.getByLabelText('Mật khẩu')).toBeVisible())
   expect(request.mock.calls.some(([config]) => config.url === '/api/v1/auth/register')).toBe(false)
 })
+
+it('supports Magic Link URL parameters to auto-verify email and advance directly to password step', async () => {
+  const request = vi.spyOn(apiClient, 'request').mockResolvedValue({ data: { code: 'OTP_VERIFIED' } })
+  sessionStorage.setItem('sp_register_draft', JSON.stringify({ fullName: 'Magic User', phone: '0912345678' }))
+
+  render(
+    <QueryClientProvider client={new QueryClient({ defaultOptions: { mutations: { retry: false } } })}>
+      <MemoryRouter initialEntries={['/register?email=magic@example.test&otpCode=654321&autoVerify=true']}>
+        <AuthPage mode="register" />
+      </MemoryRouter>
+    </QueryClientProvider>,
+  )
+
+  await waitFor(() =>
+    expect(request).toHaveBeenCalledWith(
+      expect.objectContaining({
+        url: '/api/v1/auth/otp/verify',
+        data: { email: 'magic@example.test', otpCode: '654321' },
+      }),
+    ),
+  )
+
+  expect(await screen.findByText(/Email đã được xác thực thành công qua liên kết/i)).toBeInTheDocument()
+  expect(screen.getByLabelText('Mật khẩu')).toBeVisible()
+  sessionStorage.removeItem('sp_register_draft')
+})
+
+it('restores draft from sessionStorage and preserves draft across registration steps', async () => {
+  sessionStorage.setItem('sp_register_draft', JSON.stringify({ fullName: 'Draft Driver', phone: '0988776655' }))
+
+  render(
+    <QueryClientProvider client={new QueryClient({ defaultOptions: { mutations: { retry: false } } })}>
+      <MemoryRouter initialEntries={['/register']}>
+        <AuthPage mode="register" />
+      </MemoryRouter>
+    </QueryClientProvider>,
+  )
+
+  expect(screen.getByLabelText('Họ và tên')).toHaveValue('Draft Driver')
+  expect(screen.getByLabelText('Số điện thoại')).toHaveValue('0988776655')
+  sessionStorage.removeItem('sp_register_draft')
+})
+
