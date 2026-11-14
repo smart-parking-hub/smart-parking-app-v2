@@ -6,8 +6,6 @@ import { ArrowRight, Check, Eye, EyeOff, LoaderCircle, ShieldCheck, Store, Truck
 import type { AuthFields } from '../model/authFields'
 import { BankField } from '../components/BankField'
 import {
-  checkCitizenIdAvailability,
-  checkPhoneAvailability,
   requestEmailOtp,
   verifyRegisterOtp,
 } from '../api/emailOtp'
@@ -41,7 +39,6 @@ export function RegisterPage({ mode = 'register' }: { mode?: 'login' | 'register
   type RegisterStepKey = 'info' | 'bank' | 'email' | 'password'
   const [registerStepKey, setRegisterStepKey] = useState<RegisterStepKey>('info')
   const [isOtpFocused, setIsOtpFocused] = useState(false)
-  const [checkingAvailability, setCheckingAvailability] = useState(false)
 
   useEffect(() => {
     if (!countdown) return
@@ -177,7 +174,7 @@ export function RegisterPage({ mode = 'register' }: { mode?: 'login' | 'register
   })
 
   const advanceRegisterStep = async () => {
-    if (verifyOtp.isPending || submit.isPending || checkingAvailability) return
+    if (verifyOtp.isPending || submit.isPending) return
     if (registerStepKey === 'info') {
       const valid = await form.trigger(['phone', 'fullName', 'citizenId'])
       const fullName = (form.getValues('fullName') ?? '').trim()
@@ -205,37 +202,7 @@ export function RegisterPage({ mode = 'register' }: { mode?: 'login' | 'register
 
       if (!valid) return
 
-      // Validate phone uniqueness right at Step 1 before leaving
-      setCheckingAvailability(true)
-      try {
-        const phone = (form.getValues('phone') ?? '').replace(/\s/g, '')
-        const isPhoneAvail = await checkPhoneAvailability(phone)
-        if (!isPhoneAvail) {
-          form.setError('phone', {
-            type: 'manual',
-            message: 'Số điện thoại này đã được đăng ký. Vui lòng dùng số khác hoặc đăng nhập.',
-          })
-          form.setFocus('phone')
-          return
-        }
-
-        if (selectedRole === 'MERCHANT') {
-          const citizenId = (form.getValues('citizenId') ?? '').trim()
-          const isCitizenAvail = await checkCitizenIdAvailability(citizenId)
-          if (!isCitizenAvail) {
-            form.setError('citizenId', {
-              type: 'manual',
-              message: 'CCCD / CMND này đã được đăng ký cho một chủ bãi khác.',
-            })
-            form.setFocus('citizenId')
-            return
-          }
-        }
-
-        setRegisterStepKey(selectedRole === 'MERCHANT' ? 'bank' : 'email')
-      } finally {
-        setCheckingAvailability(false)
-      }
+      setRegisterStepKey(selectedRole === 'MERCHANT' ? 'bank' : 'email')
     } else if (registerStepKey === 'bank') {
       const valid = await form.trigger(['bankName', 'bankAccountNum'])
       const bankAccountNum = (form.getValues('bankAccountNum') ?? '').trim()
@@ -536,25 +503,15 @@ export function RegisterPage({ mode = 'register' }: { mode?: 'login' | 'register
               {mode === 'register' && (
                 <button
                   type="button"
-                  disabled={checkingAvailability}
                   onClick={() => void advanceRegisterStep()}
                   className="inline-flex min-h-11 sm:min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-[#d95f00] px-5 py-2.5 sm:py-3 text-sm sm:text-base font-bold text-white hover:bg-[#b84e00] active:bg-[#9e4300] hover:scale-[1.01] active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d95f00] focus-visible:ring-offset-2 disabled:opacity-50 transition-all shadow-md cursor-pointer"
                 >
-                  {checkingAvailability ? (
-                    <>
-                      <LoaderCircle className="animate-spin text-white" size={18} />
-                      <span>Đang kiểm tra thông tin…</span>
-                    </>
-                  ) : (
-                    <>
-                      <span>
-                        {selectedRole === 'MERCHANT'
-                          ? 'Tiếp tục: Kết nối ngân hàng'
-                          : 'Tiếp tục: Xác thực Email'}
-                      </span>
-                      <ArrowRight size={18} />
-                    </>
-                  )}
+                  <span>
+                    {selectedRole === 'MERCHANT'
+                      ? 'Tiếp tục: Kết nối ngân hàng'
+                      : 'Tiếp tục: Xác thực Email'}
+                  </span>
+                  <ArrowRight size={18} />
                 </button>
               )}
             </div>
