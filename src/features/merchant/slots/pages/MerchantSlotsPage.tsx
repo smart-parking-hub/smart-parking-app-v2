@@ -238,7 +238,7 @@ export function MerchantSlotsPage() {
   return (
     <div className="merchant-slots">
       {/* Toast floating notices */}
-      <div className="fixed top-20 right-6 z-50 flex flex-col gap-2 pointer-events-none">
+      <div className="fixed top-20 right-4 sm:right-6 z-[100] flex flex-col gap-2.5 max-w-sm sm:max-w-md pointer-events-none w-[calc(100%-2rem)] sm:w-auto">
         {toasts.map((toast) => (
           <div
             key={toast.id}

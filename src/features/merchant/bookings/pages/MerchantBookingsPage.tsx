@@ -356,7 +356,7 @@ export function MerchantBookingsPage() {
       {/* Live Toast Notifications */}
       {toast && (
         <div
-          className="fixed bottom-6 right-6 z-[60] max-w-md w-[calc(100%-3rem)] sm:w-auto"
+          className="fixed top-20 right-4 sm:right-6 z-[100] max-w-md w-[calc(100%-2rem)] sm:w-auto animate-in fade-in slide-in-from-top-2 slide-in-from-right-4 duration-200"
           aria-live="polite"
         >
           <Toast

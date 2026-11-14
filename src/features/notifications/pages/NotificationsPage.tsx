@@ -4,7 +4,7 @@ import { errorMessage } from '@/shared/api/resources'
 import { Alert } from '@/shared/components/Alert'
 import { Button } from '@/shared/components/Button'
 import { ErrorState } from '@/shared/components/ErrorState'
-import { Toast } from '@/shared/components/Toast'
+import { Toast, ToastContainer } from '@/shared/components/Toast'
 import { Workspace } from '@/shared/components/Workspace'
 import { DEFAULT_NOTIFICATION_PAGE_SIZE } from '../api/notificationApi'
 import { NotificationDetailModal } from '../components/NotificationDetailModal'
@@ -293,10 +293,7 @@ export function NotificationsPage() {
 
       {/* Live Toast Feedback */}
       {toast && (
-        <div
-          className="fixed bottom-6 right-6 z-[60] max-w-md w-[calc(100%-3rem)] sm:w-auto"
-          aria-live="polite"
-        >
+        <ToastContainer>
           <Toast
             key={toast.id}
             title={toast.title}
@@ -304,7 +301,7 @@ export function NotificationsPage() {
             variant={toast.variant}
             onClose={clearToast}
           />
-        </div>
+        </ToastContainer>
       )}
     </Workspace>
   )

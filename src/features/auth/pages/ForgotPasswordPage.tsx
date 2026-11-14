@@ -12,7 +12,7 @@ import {
 } from 'lucide-react'
 import { AuthLayout } from '@/layouts/AuthLayout'
 import { errorMessage } from '@/shared/api/resources'
-import { Toast } from '@/shared/components/Toast'
+import { Toast, ToastContainer } from '@/shared/components/Toast'
 import {
   resetPasswordWithOtp,
   sendForgotPasswordOtp,
@@ -421,14 +421,14 @@ export function ForgotPasswordPage() {
   return (
     <AuthLayout variant="recovery">
       {showSuccessToast && (
-        <div className="fixed top-4 right-4 z-50">
+        <ToastContainer>
           <Toast
             variant="success"
             title="Đặt lại mật khẩu thành công"
             message="Bạn có thể đăng nhập bằng mật khẩu mới."
             onClose={() => setShowSuccessToast(false)}
           />
-        </div>
+        </ToastContainer>
       )}
 
       <div className="w-full bg-transparent relative">

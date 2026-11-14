@@ -10,7 +10,7 @@ import {
   DropdownSeparator,
   DropdownTrigger,
 } from '@/shared/components/Dropdown'
-import { Toast } from '@/shared/components/Toast'
+import { Toast, ToastContainer } from '@/shared/components/Toast'
 import { Workspace, Panel, Notice, Badge, secondary } from '@/shared/components/Workspace'
 import { errorMessage, getData, type Page } from '@/shared/api/resources'
 import { fetchBookings, BookingStatusPanel, type Booking } from '@/features/booking-flow'
@@ -85,19 +85,21 @@ export function MyBookingsPage() {
       }
     >
       {createdNotice && (
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <Toast
-            variant="success"
-            title={`Đã gửi khiếu nại #KN-${createdNotice.id}`}
-            message="Hồ sơ đã được chuyển tới quản trị viên và chủ bãi để đối soát."
-            duration={8000}
-            onClose={() => setCreatedNotice(null)}
-            className="max-w-full"
-          />
-          <Link to={`/disputes/${createdNotice.id}`} className={secondary}>
-            Xem tiến độ xử lý #KN-{createdNotice.id}
-          </Link>
-        </div>
+        <ToastContainer>
+          <div className="pointer-events-auto flex flex-col gap-2 rounded-2xl border border-emerald-200 bg-emerald-50/95 p-4 shadow-xl backdrop-blur-md">
+            <Toast
+              variant="success"
+              title={`Đã gửi khiếu nại #KN-${createdNotice.id}`}
+              message="Hồ sơ đã được chuyển tới quản trị viên và chủ bãi để đối soát."
+              duration={8000}
+              onClose={() => setCreatedNotice(null)}
+              className="border-0 bg-transparent p-0 shadow-none"
+            />
+            <Link to={`/disputes/${createdNotice.id}`} className={`${secondary} self-start text-xs`}>
+              Xem tiến độ xử lý #KN-{createdNotice.id}
+            </Link>
+          </div>
+        </ToastContainer>
       )}
 
       {query.isPending ? (
