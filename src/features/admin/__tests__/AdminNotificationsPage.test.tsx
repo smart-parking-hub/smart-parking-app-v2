@@ -1,5 +1,6 @@
 import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import { MemoryRouter } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { getData, sendData } from '@/shared/api/resources'
@@ -46,7 +47,7 @@ function mockRequests() {
 function mount() {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false, gcTime: 0 }, mutations: { retry: false } } })
   clients.push(client)
-  return { client, ...render(<QueryClientProvider client={client}><AdminNotificationsPage /></QueryClientProvider>) }
+  return { client, ...render(<QueryClientProvider client={client}><MemoryRouter><AdminNotificationsPage /></MemoryRouter></QueryClientProvider>) }
 }
 
 function deferred<T>() {
@@ -68,6 +69,20 @@ afterEach(() => {
 })
 
 describe('SCR-052 Admin notifications', () => {
+  it('automatically shows a new lot review notification and links to its exact dossier', async () => {
+    vi.useFakeTimers()
+    try {
+      mount()
+      await act(async () => { await vi.advanceTimersByTimeAsync(1) })
+      expect(screen.getByRole('article', { name: 'Thông báo 1' })).toBeInTheDocument()
+      items.unshift({ ...notification(7), title: 'Hồ sơ bãi đỗ chờ duyệt #7', targetType: 'PARKING_LOT', targetId: 7 })
+      await act(async () => { await vi.advanceTimersByTimeAsync(15001) })
+      expect(screen.getByRole('link', { name: 'Xem hồ sơ bãi #7' })).toHaveAttribute('href', '/admin/parking-lots/7')
+      expect(screen.getByText('2 thông báo chưa đọc')).toBeInTheDocument()
+    } finally {
+      vi.useRealTimers()
+    }
+  })
   it('shows a loading skeleton and disables bulk actions until data settles', async () => {
     const pending = deferred<ReturnType<typeof pageResponse>>()
     vi.mocked(getData).mockImplementation(async url => url === endpoint ? pending.promise : 1)

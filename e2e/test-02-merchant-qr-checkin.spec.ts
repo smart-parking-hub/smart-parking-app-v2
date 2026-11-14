@@ -150,6 +150,11 @@ test.describe('Flow 2: Check-in Barie Cổng Vào (SP-S3-INT-01)', () => {
     ).toBeVisible({ timeout: 5000 })
     await confirmation.getByRole('button', { name: 'Đã hiểu' }).click()
     await expect(confirmation).not.toBeVisible()
+    await expect(page.getByRole('button', { name: 'Xe đã check-in', exact: true })).toBeDisabled()
+    await bookingInput.fill('BK-NEXT-VEHICLE')
+    await expect(page.getByRole('button', { name: 'Xác nhận xe vào bãi' })).toBeEnabled()
+    await bookingInput.fill('BK-2026-0894')
+    await expect(page.getByRole('button', { name: 'Xe đã check-in', exact: true })).toBeDisabled()
 
     // 7. Chuyển sang màn hình quản lý đơn đỗ xe (/merchant/bookings)
     await page.goto('/merchant/bookings')

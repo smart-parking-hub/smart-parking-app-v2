@@ -1,5 +1,7 @@
 # SCR-052 — Trung tâm thông báo quản trị
 
+> Update 2026-11-15; owner: SPH frontend. List/count refresh every 15 seconds and on focus. Existing PARKING_LOT target metadata now supplies a validated `/admin/parking-lots/:id` dossier link. AdminLayout has a bell with the existing unread indicator. This supersedes the older exclusion of business CTAs below, per the user's explicit request. Server read permissions and per-session cache isolation are unchanged. Delivery still uses the existing parking outbox → Kafka → AdminOperationsHandler flow; no synthetic notification is created by the UI.
+
 - Task: `SP-S3-UI-16`; owner: Đội phát triển SPH; reviewer/người nghiệm thu chưa được gán.
 - last_verified: `2026-11-12`.
 - Trạng thái: Đã triển khai FE và kiểm thử API giả lập; chờ backend thật và nghiệm thu.

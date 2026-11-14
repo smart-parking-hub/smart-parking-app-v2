@@ -277,10 +277,10 @@ test.describe('Core E2E Lifecycle: Booking & cọc PayOS -> Barie Check-in -> Ba
     const lotCard = page.locator('article', { hasText: 'Bãi Đỗ Xe Tân Cảng Container' }).first()
     await expect(lotCard).toBeVisible({ timeout: 10_000 })
 
-    const quickBookBtn = lotCard.locator('button', { hasText: 'ĐẶT GIỮ CHỖ 10P' })
+    const quickBookBtn = lotCard.locator('button', { hasText: 'ĐẶT GIỮ CHỖ' })
     await quickBookBtn.click()
 
-    const dialog = page.getByRole('dialog', { name: /Panel giữ chỗ nhanh 10 phút/i })
+    const dialog = page.getByRole('dialog', { name: /Đặt giữ chỗ nhanh/i })
     await expect(dialog).toBeVisible()
     await expect(dialog.getByRole('combobox', { name: 'Phương tiện của bạn' })).toHaveValue('3')
     await dialog.getByRole('button', { name: 'Tạo booking và xem tiền cọc' }).click()

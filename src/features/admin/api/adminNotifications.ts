@@ -3,7 +3,7 @@ import { getData, sendData, type Page } from '@/shared/api/resources'
 
 export type AdminNotification = Pick<
   BackendNotificationDto,
-  'id' | 'title' | 'content' | 'readAt' | 'createdAt'
+  'id' | 'title' | 'content' | 'readAt' | 'createdAt' | 'targetType' | 'targetId'
 >
 
 export const ADMIN_NOTIFICATION_PAGE_SIZE = 20

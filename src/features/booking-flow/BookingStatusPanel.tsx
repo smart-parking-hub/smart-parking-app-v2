@@ -37,13 +37,13 @@ function handleDownloadQr(bookingCode: string) {
   }
 }
 
-type StatusPanelProps = { bookingId: number; booking?: Booking }
+type StatusPanelProps = { bookingId: number; booking?: Booking; embedded?: boolean }
 
 export function BookingStatusPanel(props: StatusPanelProps) {
   return <BookingStatusContent key={props.bookingId} {...props} />
 }
 
-function BookingStatusContent({ bookingId, booking }: StatusPanelProps) {
+function BookingStatusContent({ bookingId, booking, embedded = false }: StatusPanelProps) {
   const cache = useQueryClient()
   const [copied, setCopied] = useState(false)
   const [checkoutIntent, setCheckoutIntent] = useState<string | null>(null)
@@ -118,9 +118,9 @@ function BookingStatusContent({ bookingId, booking }: StatusPanelProps) {
 
   return (
     <div className="space-y-5 text-base text-brand-navy">
-      <p role="status" className="font-semibold">
+      {!embedded && <p role="status" className="font-semibold">
         {statusLabels[data.status]}
-      </p>
+      </p>}
 
       {/* QR Check-in Hero Box khi đã cọc và chờ check-in */}
       {data.status === 'PENDING_CHECKIN' && (
@@ -283,9 +283,9 @@ function BookingStatusContent({ bookingId, booking }: StatusPanelProps) {
             {copied ? 'Đã sao chép' : 'Sao chép mã check-in'}
           </button>
         )}
-        <Link className={secondary} to="/bookings">
+        {!embedded && <Link className={secondary} to="/bookings">
           Xem các lượt đặt chỗ
-        </Link>
+        </Link>}
       </div>
 
       {payable && checkoutOpen && payment.data && (

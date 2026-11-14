@@ -178,7 +178,7 @@ export function YardCardItem({
           }`}
         >
           <span>
-            {lot.isFull || lot.availableSlots === 0 ? 'ĐỢI SLOT' : 'ĐẶT GIỮ CHỖ 10P'}
+            {lot.isFull || lot.availableSlots === 0 ? 'ĐỢI SLOT' : 'ĐẶT GIỮ CHỖ'}
           </span>
           <ArrowUpRight size={14} />
         </button>

@@ -16,6 +16,10 @@ export interface Tariff { vehicleType: Vehicle['vehicleType']; basePricePerHour:
 export interface Lot { id: number; name: string; address: string; status: string; merchantId: number; slots: { vehicleType: Vehicle['vehicleType']; availableCapacity: number; totalCapacity: number }[]; pricingRules: Tariff[] }
 export async function fetchBooking(id: number) { return bookingSchema.parse(await getData<unknown>(`/api/v1/bookings/${id}`)) }
 export async function fetchBookings() { const page = await getData<Page<unknown>>('/api/v1/bookings', { size: 100 }); return page.content.map(row => bookingSchema.parse(row)) }
+export async function fetchBookingsPage(page: number, size = 8) {
+  const result = await getData<Page<unknown>>('/api/v1/bookings', { page, size, sort: 'createdAt,desc' })
+  return { ...result, content: result.content.map(row => bookingSchema.parse(row)) }
+}
 export async function fetchVehicles() { const page = await getData<Page<Vehicle>>('/api/v1/vehicles', { size: 100 }); return page.content.filter(vehicle => vehicle.status === 'ACTIVE') }
 export const fetchLot = (id: number) => getData<Lot>(`/api/v1/parking-lots/${id}`)
 export interface BookingInput { vehicleId: number; parkingLotId: number; vehicleType: Vehicle['vehicleType']; expectedCheckInTime: string; expectedCheckOutTime: string; requestId: string }
