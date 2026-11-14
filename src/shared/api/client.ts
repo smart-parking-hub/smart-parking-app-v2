@@ -1,7 +1,15 @@
 import axios, { type AxiosInstance, type InternalAxiosRequestConfig } from 'axios'
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api'
+let API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api'
 const APP_KEY = import.meta.env.VITE_APP_KEY || 'SP_APP_KEY_2026_xM99qP2!'
+
+// Phòng vệ lỗi Mixed Content: Nếu chạy trên trang HTTPS (như Vercel),
+// trình duyệt sẽ chặn toàn bộ request gọi trực tiếp tới http:// không có SSL.
+// Tự động chuyển về '/api' để sử dụng reverse proxy an toàn (như vercel.json rewrites).
+if (typeof window !== 'undefined' && window.location.protocol === 'https:' && API_BASE_URL.startsWith('http://')) {
+  console.warn('[API Client] Phát hiện API_BASE_URL dùng http:// trên trang HTTPS. Tự động chuyển về /api để tránh lỗi Mixed Content.')
+  API_BASE_URL = '/api'
+}
 
 export const apiClient: AxiosInstance = axios.create({
   baseURL: API_BASE_URL,

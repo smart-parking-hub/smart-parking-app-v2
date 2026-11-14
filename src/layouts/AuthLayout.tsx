@@ -1,6 +1,7 @@
-import type { CSSProperties, ReactNode } from 'react'
-import { ShieldCheck } from 'lucide-react'
+import { useEffect, useState, type CSSProperties, type ReactNode } from 'react'
+import { ShieldCheck, RefreshCw } from 'lucide-react'
 import { ScrollToTop } from '@/shared/components/ScrollToTop'
+import { checkServerConnectivity } from '@/shared/api/health'
 
 export interface AuthLayoutProps {
   children: ReactNode
@@ -13,6 +14,45 @@ const RECOVERY_TYPOGRAPHY_SCOPE: CSSProperties = {
 } as CSSProperties
 
 export function AuthLayout({ children }: AuthLayoutProps) {
+  const [isConnected, setIsConnected] = useState<boolean>(
+    import.meta.env.MODE === 'test' ? true : false,
+  )
+  const [isRetrying, setIsRetrying] = useState(false)
+
+  useEffect(() => {
+    if (import.meta.env.MODE === 'test') return
+
+    let active = true
+    let timer: ReturnType<typeof setTimeout>
+
+    const verify = async () => {
+      const ok = await checkServerConnectivity()
+      if (!active) return
+      if (ok) {
+        setIsConnected(true)
+        setIsRetrying(false)
+      } else {
+        setIsConnected(false)
+        timer = setTimeout(verify, 2500)
+      }
+    }
+
+    void verify()
+
+    return () => {
+      active = false
+      clearTimeout(timer)
+    }
+  }, [])
+
+  const handleManualRetry = async () => {
+    setIsRetrying(true)
+    const ok = await checkServerConnectivity()
+    setIsRetrying(false)
+    if (ok) {
+      setIsConnected(true)
+    }
+  }
   return (
     <div
       style={RECOVERY_TYPOGRAPHY_SCOPE}
@@ -54,7 +94,41 @@ export function AuthLayout({ children }: AuthLayoutProps) {
       <main className="relative z-20 w-full flex-1 flex items-center justify-end overflow-hidden py-2 sm:py-4">
         <section className="relative z-20 w-full max-w-[520px] sm:max-w-[550px] lg:max-w-[560px] my-auto mx-auto sm:mx-0 sm:mr-10 md:mr-14 lg:mr-20 xl:mr-28 2xl:mr-36 p-3 sm:p-0">
           <div className="w-full max-h-[96vh] overflow-y-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden bg-white/60 backdrop-blur-2xl rounded-[28px] sm:rounded-[34px] p-5 sm:p-7 lg:p-7 shadow-[0_25px_60px_rgba(0,0,0,0.4)] border border-white/70 ring-1 ring-white/40 text-black">
-            {children}
+            {isConnected ? (
+              children
+            ) : (
+              <div
+                role="status"
+                aria-live="polite"
+                className="flex flex-col items-center justify-center py-12 sm:py-16 px-4 text-center select-none"
+              >
+                <div className="relative mb-6">
+                  <div className="w-16 h-16 rounded-full border-4 border-[#d95f00]/20 border-t-[#d95f00] animate-spin" />
+                  <ShieldCheck className="w-7 h-7 text-[#d95f00] absolute inset-0 m-auto" />
+                </div>
+                <h2 className="text-xl sm:text-2xl font-bold text-slate-900 mb-2 font-sora">
+                  Đang kết nối đến máy chủ…
+                </h2>
+                <p className="text-sm text-slate-600 max-w-sm mb-6 leading-relaxed">
+                  Hệ thống đang kiểm tra và thiết lập đường truyền tới máy chủ SmartTruck Hub. Giao diện sẽ tự động mở khi kết nối sẵn sàng.
+                </p>
+                <div className="flex flex-col sm:flex-row items-center gap-3">
+                  <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-orange-50 border border-orange-200 text-xs text-[#d95f00] font-semibold">
+                    <span className="w-2 h-2 rounded-full bg-[#d95f00] animate-pulse" />
+                    Đang tự động kết nối lại…
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => void handleManualRetry()}
+                    disabled={isRetrying}
+                    className="inline-flex items-center gap-1.5 text-xs text-slate-500 hover:text-slate-800 underline transition-colors cursor-pointer"
+                  >
+                    <RefreshCw size={12} className={isRetrying ? 'animate-spin' : ''} />
+                    <span>Thử lại ngay</span>
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </section>
       </main>

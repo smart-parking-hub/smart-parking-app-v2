@@ -9,6 +9,7 @@ export async function requestEmailOtp(mode: 'register' | 'forgot', email: string
     'post',
     `/api/v1/auth/${mode === 'register' ? 'otp/send' : 'forgot-password/otp'}`,
     { email },
+    { timeout: 12000 },
   )
   return { ...result, email }
 }
