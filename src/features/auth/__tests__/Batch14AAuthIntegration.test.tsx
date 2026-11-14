@@ -88,12 +88,35 @@ describe('BATCH-14A: Authentication & Access Control Pages Integration', () => {
   })
 
   it('SCR-011/SCR-012: AuthSuccess displays status card and link to LoginPage', () => {
-    renderWithContext(<AuthSuccess mode="register" />)
+    renderWithContext(
+      <AuthSuccess
+        mode="register"
+        registeredPhone="0918239485"
+        registeredEmail="driver@test.com"
+        registeredFullName="Nguyễn Văn Hùng"
+        role="DRIVER"
+        autoRedirect={false}
+      />
+    )
 
     expect(screen.getByText('TÀI KHOẢN ĐÃ SẴN SÀNG')).toBeInTheDocument()
     expect(screen.getByText('Đăng ký thành công!')).toBeInTheDocument()
+    expect(screen.getByText('0918239485')).toBeInTheDocument()
+    expect(screen.getByText('driver@test.com')).toBeInTheDocument()
     const loginLink = screen.getByRole('link', { name: /Đến trang đăng nhập/ })
     expect(loginLink).toHaveAttribute('href', '/login')
+  })
+
+  it('SCR-011: Step 1 validates fullName and phone before advancing', async () => {
+    renderWithContext(<AuthPage mode="register" />, '/register')
+
+    // Click advance without filling info
+    fireEvent.click(screen.getByRole('button', { name: 'Tiếp tục: Xác thực Email' }))
+
+    // Must show validation errors and stay on step 1
+    expect(await screen.findByText('Vui lòng nhập họ và tên.')).toBeInTheDocument()
+    expect(await screen.findByText('Vui lòng nhập số điện thoại.')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Tiếp tục: Xác thực Email' })).toBeVisible()
   })
 
   it('SCR-013: AccessPage renders 403 Forbidden with navigation back to Home and Login', () => {

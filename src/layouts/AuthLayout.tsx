@@ -51,9 +51,9 @@ export function AuthLayout({ children }: AuthLayoutProps) {
       </div>
 
       {/* 2. PHẦN MODE (MODAL FORM): NẰM LỆCH PHẢI XÍCH VÀO GIỮA, RỘNG RÃI, NỀN KÍNH TRONG SUỐT TĨNH KHÔNG ĐỔI MÀU KHI HOVER */}
-      <main className="relative z-20 w-full flex-1 flex items-center justify-end overflow-hidden py-4 sm:py-6">
-        <section className="relative z-20 w-full max-w-[540px] sm:max-w-[560px] lg:max-w-[580px] my-auto mx-auto sm:mx-0 sm:mr-10 md:mr-14 lg:mr-20 xl:mr-28 2xl:mr-36 p-3 sm:p-0">
-          <div className="w-full max-h-[94vh] overflow-y-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden bg-white/60 backdrop-blur-2xl rounded-[32px] sm:rounded-[36px] p-6 sm:p-8 lg:p-9 shadow-[0_25px_60px_rgba(0,0,0,0.4)] border border-white/70 ring-1 ring-white/40 text-black">
+      <main className="relative z-20 w-full flex-1 flex items-center justify-end overflow-hidden py-2 sm:py-4">
+        <section className="relative z-20 w-full max-w-[520px] sm:max-w-[550px] lg:max-w-[560px] my-auto mx-auto sm:mx-0 sm:mr-10 md:mr-14 lg:mr-20 xl:mr-28 2xl:mr-36 p-3 sm:p-0">
+          <div className="w-full max-h-[96vh] overflow-y-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden bg-white/60 backdrop-blur-2xl rounded-[28px] sm:rounded-[34px] p-5 sm:p-7 lg:p-7 shadow-[0_25px_60px_rgba(0,0,0,0.4)] border border-white/70 ring-1 ring-white/40 text-black">
             {children}
           </div>
         </section>
