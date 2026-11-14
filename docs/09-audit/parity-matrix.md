@@ -1,5 +1,9 @@
 # Capability Parity Matrix — 4 Landing Screens: Trang Chủ, Tài Xế, Chủ Bãi & Bảng Giá
 
+## SCR-048 confirmation — 2026-11-15
+
+Amount, bank/holder/merchant, warning, reason validation, approve/reject calls, mutation state and dialog keyboard behavior are preserved. Full `bankAccountNumber` replaces masked-only display inside the confirmation per user request; the ledger remains masked. Bank logos reuse the entity directory/cache with an icon fallback. [Details](../05-modules/admin/withdrawal-confirmation.md).
+
 ## Bổ sung SCR-047 / PAY-05 (2026-11-14)
 
 | Khả năng có sẵn | Kết quả PAY-05 | Trạng thái |
