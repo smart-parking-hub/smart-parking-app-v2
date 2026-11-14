@@ -23,3 +23,7 @@ Evidence: auth `EmailOtp.test.tsx`, `BankField.test.tsx`, and
 `e2e/account-registration.spec.ts`; backend `EmailOtpIntegrationTest` and
 `AuthControllerTest`. E2E stubs delivery/verification/account creation; it does not
 claim real inbox delivery.
+
+## Shared bank picker (2026-11-15)
+
+Registration's bank API and picker now live in `src/entities/bank`, reused by the merchant withdrawal form. Auth retains its existing typed wrapper and API exports. Search, bank logos, required selection from the provider, 24-hour query cache, public credential-free VietQR fetch, loading and retry behavior are preserved. No registration payload or OTP behavior changes.

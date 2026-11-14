@@ -1,8 +1,11 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { useForm } from 'react-hook-form'
+import { Controller, useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { z } from 'zod'
 import { LoaderCircle } from 'lucide-react'
 import type { Revenue, Withdrawal } from '@/entities/operations'
+import { BankField, BANKS_QUERY_KEY, type Bank } from '@/entities/bank'
 import {
   getData,
   sendData,
@@ -26,6 +29,13 @@ import {
 import { cn } from '@/shared/utils/cn'
 
 export { MerchantRevenuePage } from './MerchantRevenuePage'
+
+type WithdrawalForm = {
+  amount: number
+  bankName: string
+  bankAccountNumber: string
+  accountHolderName: string
+}
 
 export function MerchantWithdrawalsPage() {
   const [page, setPage] = useState(0)
@@ -162,14 +172,8 @@ function WithdrawalDialog({
   onClose: () => void
 }) {
   const cache = useQueryClient()
-  const form = useForm<{
-    amount: number
-    bankName: string
-    bankAccountNumber: string
-    accountHolderName: string
-  }>()
+  const [accountChoice, setAccountChoice] = useState<'default' | 'other'>('default')
 
-  // Prepopulate bank details from merchant profile if available
   const profileQuery = useQuery({
     queryKey: ['merchant-profile-summary'],
     queryFn: () =>
@@ -182,33 +186,36 @@ function WithdrawalDialog({
     retry: false,
   })
 
-  useEffect(() => {
-    if (profileQuery.data) {
-      if (profileQuery.data.bankName && !form.getValues('bankName')) {
-        form.setValue('bankName', profileQuery.data.bankName)
-      }
-      if (
-        profileQuery.data.bankAccountNum &&
-        !form.getValues('bankAccountNumber')
-      ) {
-        form.setValue('bankAccountNumber', profileQuery.data.bankAccountNum)
-      }
-      if (
-        profileQuery.data.fullName &&
-        !form.getValues('accountHolderName')
-      ) {
-        form.setValue('accountHolderName', profileQuery.data.fullName)
-      }
-    }
-  }, [profileQuery.data, form])
+  const profile = profileQuery.data
+  const hasDefaultAccount = Boolean(
+    profile?.bankName?.trim() &&
+      /^\d{1,30}$/.test(profile?.bankAccountNum ?? '') &&
+      profile?.fullName?.trim(),
+  )
+  const useDefaultAccount = accountChoice === 'default' && hasDefaultAccount
+  const waitingForDefault = accountChoice === 'default' && profileQuery.isPending
+  const form = useForm<WithdrawalForm>({
+    resolver: zodResolver(
+      z.object({
+        amount: z.number().min(minimum).max(balance).int(),
+        bankName: useDefaultAccount
+          ? z.string()
+          : z.string().trim().refine(
+              value => cache.getQueryData<Bank[]>(BANKS_QUERY_KEY)
+                ?.some(bank => bank.shortName === value),
+              'Chọn ngân hàng từ danh sách.',
+            ),
+        bankAccountNumber: useDefaultAccount
+          ? z.string()
+          : z.string().regex(/^\d{1,30}$/),
+        accountHolderName: useDefaultAccount ? z.string() : z.string().trim().min(1),
+      }),
+    ),
+    defaultValues: { bankName: '', bankAccountNumber: '', accountHolderName: '' },
+  })
 
   const mutation = useMutation({
-    mutationFn: (data: {
-      amount: number
-      bankName: string
-      bankAccountNumber: string
-      accountHolderName: string
-    }) => sendData('post', '/api/v1/withdrawals', data),
+    mutationFn: (data: WithdrawalForm) => sendData('post', '/api/v1/withdrawals', data),
     onSuccess: () => {
       void cache.invalidateQueries({ queryKey: ['merchant-withdrawals'] })
       void cache.invalidateQueries({ queryKey: ['merchant-revenue'] })
@@ -226,7 +233,19 @@ function WithdrawalDialog({
       }}
     >
       <form
-        onSubmit={form.handleSubmit((data) => mutation.mutate(data))}
+        onSubmit={form.handleSubmit((data) => {
+          if (waitingForDefault || mutation.isPending) return
+          mutation.mutate(
+            useDefaultAccount
+              ? {
+                  amount: data.amount,
+                  bankName: profile?.bankName ?? '',
+                  bankAccountNumber: profile?.bankAccountNum ?? '',
+                  accountHolderName: profile?.fullName ?? '',
+                }
+              : data,
+          )
+        })}
         className="space-y-5"
       >
         <Notice error={!isBalanceValid}>
@@ -247,21 +266,51 @@ function WithdrawalDialog({
           )}
         </Notice>
         <Field label="Số tiền rút (VND)">
-          <input
-            type="number"
-            step="1000"
-            className={control}
-            placeholder={`Nhập số tiền từ ${minimum.toLocaleString('vi-VN')} ₫`}
-            {...form.register('amount', {
-              required: true,
-              valueAsNumber: true,
-              min: minimum,
-              max: balance,
-            })}
+          <Controller
+            name="amount"
+            control={form.control}
+            render={({ field }) => (
+              <input
+                {...field}
+                type="text"
+                inputMode="numeric"
+                className={cn(control, 'tabular-nums')}
+                placeholder={`Nhập số tiền từ ${minimum.toLocaleString('vi-VN')} ₫`}
+                value={
+                  Number.isFinite(field.value)
+                    ? field.value.toLocaleString('vi-VN')
+                    : ''
+                }
+                aria-invalid={Boolean(form.formState.errors.amount)}
+                onChange={(event) => {
+                  const input = event.currentTarget
+                  const raw = input.value
+                  if (!/^[\d.,\s]*$/.test(raw)) return
+                  const digitsBeforeCursor = raw
+                    .slice(0, input.selectionStart ?? raw.length)
+                    .replace(/\D/g, '').length
+                  const digits = raw.replace(/\D/g, '')
+                  const amount = digits ? Number(digits) : Number.NaN
+                  if (digits && !Number.isSafeInteger(amount)) return
+                  field.onChange(amount)
+                  requestAnimationFrame(() => {
+                    let cursor = 0
+                    let seen = 0
+                    while (
+                      cursor < input.value.length && seen < digitsBeforeCursor
+                    ) {
+                      if (/\d/.test(input.value[cursor])) seen++
+                      cursor++
+                    }
+                    input.setSelectionRange(cursor, cursor)
+                  })
+                }}
+              />
+            )}
           />
         </Field>
         {isBalanceValid && (
-          <div className="-mt-3 flex items-center gap-2 text-xs text-brand-muted">
+          <div className="-mt-3 flex flex-wrap items-center gap-2 text-xs text-brand-muted">
             <span>Chọn nhanh:</span>
             <button
               type="button"
@@ -284,37 +333,97 @@ function WithdrawalDialog({
             </button>
           </div>
         )}
-        {(['bankName', 'bankAccountNumber', 'accountHolderName'] as const).map(
-          (key) => (
-            <Field
-              key={key}
-              label={
-                {
-                  bankName: 'Ngân hàng nhận',
-                  bankAccountNumber: 'Số tài khoản thụ hưởng',
-                  accountHolderName: 'Tên chủ tài khoản',
-                }[key]
-              }
-            >
+        <fieldset className="space-y-3" disabled={mutation.isPending}>
+          <legend className="mb-3 text-sm font-medium">Tài khoản nhận tiền</legend>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <label className={cn(
+              'flex cursor-pointer items-center gap-2 rounded-xl border p-3 text-sm',
+              useDefaultAccount || waitingForDefault
+                ? 'border-brand-primary bg-brand-surface'
+                : 'border-brand-border',
+              !hasDefaultAccount && !profileQuery.isPending && 'cursor-not-allowed opacity-50',
+            )}>
               <input
-                className={control}
-                placeholder={
-                  {
-                    bankName: 'Ví dụ: Vietcombank, Techcombank…',
-                    bankAccountNumber: 'Nhập số tài khoản ngân hàng',
-                    accountHolderName: 'NGUYEN VAN A',
-                  }[key]
-                }
-                {...form.register(key, {
-                  required: true,
-                  ...(key === 'bankAccountNumber'
-                    ? { pattern: /^\d{1,30}$/ }
-                    : {}),
-                })}
+                type="radio"
+                name="receiving-account"
+                value="default"
+                checked={useDefaultAccount || waitingForDefault}
+                disabled={!hasDefaultAccount || profileQuery.isPending}
+                onChange={() => { setAccountChoice('default'); form.clearErrors() }}
+                className="accent-brand-primary"
               />
-            </Field>
-          ),
-        )}
+              Tài khoản mặc định
+            </label>
+            <label className={cn(
+              'flex cursor-pointer items-center gap-2 rounded-xl border p-3 text-sm',
+              !useDefaultAccount && !waitingForDefault
+                ? 'border-brand-primary bg-brand-surface'
+                : 'border-brand-border',
+            )}>
+              <input
+                type="radio"
+                name="receiving-account"
+                value="other"
+                checked={!useDefaultAccount && !waitingForDefault}
+                onChange={() => { setAccountChoice('other'); form.clearErrors() }}
+                className="accent-brand-primary"
+              />
+              Tài khoản khác
+            </label>
+          </div>
+          {waitingForDefault ? (
+            <p role="status" className="text-sm text-brand-muted">Đang tải tài khoản mặc định…</p>
+          ) : useDefaultAccount ? (
+            <div className="rounded-xl border border-brand-border bg-brand-surface p-4 text-sm">
+              <p className="font-semibold">{profile?.bankName}</p>
+              <p className="mt-1 break-all tabular-nums">{profile?.bankAccountNum}</p>
+              <p className="mt-1 break-words text-brand-muted">{profile?.fullName}</p>
+              <p className="mt-3 text-xs text-brand-muted">Tài khoản ngân hàng đã lưu trong hồ sơ.</p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              <p className="text-xs text-brand-muted">
+                {profileQuery.isError
+                  ? 'Không tải được tài khoản mặc định. Bạn có thể nhập tài khoản nhận tiền bên dưới.'
+                  : !hasDefaultAccount && !profileQuery.isPending
+                    ? 'Hồ sơ chưa có đủ thông tin tài khoản mặc định. Vui lòng nhập tài khoản nhận tiền.'
+                    : 'Nhập tài khoản dùng cho yêu cầu này. Tài khoản mặc định trong hồ sơ vẫn được giữ nguyên.'}
+              </p>
+              <BankField
+                control={form.control}
+                name="bankName"
+                label="Ngân hàng nhận"
+                disabled={mutation.isPending}
+              />
+              {(['bankAccountNumber', 'accountHolderName'] as const).map(
+                (key) => (
+                  <Field
+                    key={key}
+                    label={
+                      {
+                        bankAccountNumber: 'Số tài khoản thụ hưởng',
+                        accountHolderName: 'Tên chủ tài khoản',
+                      }[key]
+                    }
+                  >
+                    <input
+                      className={control}
+                      placeholder={
+                        {
+                          bankAccountNumber: 'Nhập số tài khoản ngân hàng',
+                          accountHolderName: 'NGUYEN VAN A',
+                        }[key]
+                      }
+                      inputMode={key === 'bankAccountNumber' ? 'numeric' : undefined}
+                      aria-invalid={Boolean(form.formState.errors[key])}
+                      {...form.register(key)}
+                    />
+                  </Field>
+                ),
+              )}
+            </div>
+          )}
+        </fieldset>
         {Object.keys(form.formState.errors).length > 0 && (
           <Notice error>
             Vui lòng kiểm tra lại thông tin: Số tiền từ {money(minimum)} đến{' '}
@@ -328,10 +437,10 @@ function WithdrawalDialog({
           type="submit"
           className={cn(
             `${button} w-full`,
-            (!isBalanceValid || mutation.isPending) &&
+            (!isBalanceValid || waitingForDefault || mutation.isPending) &&
               'cursor-not-allowed opacity-60',
           )}
-          disabled={!isBalanceValid || mutation.isPending}
+          disabled={!isBalanceValid || waitingForDefault || mutation.isPending}
         >
           {mutation.isPending ? (
             <>
