@@ -9,6 +9,7 @@ import { MerchantCommandSurface } from '../components/MerchantCommandSurface'
 import { MerchantDashboardSkeleton } from '../components/MerchantDashboardSkeleton'
 import { RevenueVolumeComboChart } from '../components/RevenueVolumeComboChart'
 import { MerchantDashboardFilterForm } from '../components/MerchantDashboardFilterForm'
+import { RecentMerchantBookings } from '../components/RecentMerchantBookings'
 import {
   Notice,
   Panel,
@@ -211,36 +212,7 @@ export function MerchantDashboardPage() {
               </div>
             </Panel>
 
-            <Panel title="Đặt chỗ gần nhất">
-              {data.bookings.content.length === 0 ? (
-                <Notice>Chưa có lượt đặt chỗ.</Notice>
-              ) : (
-                <ul className="space-y-4">
-                  {data.bookings.content.map((booking) => (
-                    <li
-                      key={booking.id}
-                      className="flex flex-wrap items-center justify-between gap-3 border-b border-brand-border pb-3"
-                    >
-                      <Link
-                        to={`/merchant/bookings/${booking.id}`}
-                        className="underline"
-                      >
-                        {booking.bookingCode}
-                      </Link>
-                      <span>{booking.vehicleLicensePlate || '—'}</span>
-                      <span>{booking.parkingLotName || '—'}</span>
-                      <Badge value={booking.status} />
-                    </li>
-                  ))}
-                </ul>
-              )}
-              <Link
-                to="/merchant/bookings"
-                className="mt-4 inline-block underline"
-              >
-                Xem tất cả đặt chỗ
-              </Link>
-            </Panel>
+            <RecentMerchantBookings bookings={data.bookings.content} />
           </div>
 
           <div className="lg:col-span-4 space-y-6">
