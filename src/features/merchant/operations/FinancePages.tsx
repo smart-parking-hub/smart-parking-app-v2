@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useForm } from 'react-hook-form'
-import { Link } from 'react-router-dom'
 import { LoaderCircle } from 'lucide-react'
 import type { Revenue, Withdrawal } from '@/entities/operations'
 import {
@@ -14,7 +13,6 @@ import { QueryState } from '@/shared/components/QueryState'
 import {
   Workspace,
   Metrics,
-  Panel,
   Notice,
   Field,
   DataTable,
@@ -27,129 +25,7 @@ import {
 } from '@/shared/components/Workspace'
 import { cn } from '@/shared/utils/cn'
 
-export function MerchantRevenuePage() {
-  const filters = useForm({
-    defaultValues: { startDate: '', endDate: '', granularity: 'DAY' },
-  })
-  const [range, setRange] = useState(filters.getValues())
-  const query = useQuery({
-    queryKey: ['merchant-revenue', range],
-    queryFn: () => getData<Revenue>('/api/v1/merchant/revenue', range),
-    retry: false,
-  })
-  return (
-    <Workspace
-      title="Hiệu quả kinh doanh"
-      eyebrow="FINANCE / REVENUE"
-      description="Theo dõi doanh thu, phí nền tảng và dòng tiền thực nhận."
-      actions={
-        <Link className={button} to="/merchant/withdrawals">
-          Ví & Rút tiền →
-        </Link>
-      }
-    >
-      <Panel>
-        <form
-          className="flex flex-wrap items-end gap-4"
-          onSubmit={filters.handleSubmit((data) => setRange(data))}
-        >
-          <Field label="Từ ngày">
-            <input
-              type="date"
-              className={control}
-              {...filters.register('startDate')}
-            />
-          </Field>
-          <Field label="Đến ngày">
-            <input
-              type="date"
-              className={control}
-              {...filters.register('endDate', {
-                validate: (value) =>
-                  !value ||
-                  !filters.getValues('startDate') ||
-                  value >= filters.getValues('startDate'),
-              })}
-            />
-          </Field>
-          <Field label="Nhóm thời gian">
-            <select className={control} {...filters.register('granularity')}>
-              <option value="DAY">Theo ngày</option>
-              <option value="MONTH">Theo tháng</option>
-              <option value="YEAR">Theo năm</option>
-            </select>
-          </Field>
-          <button type="submit" className={button}>
-            Áp dụng
-          </button>
-          {filters.formState.errors.endDate && (
-            <Notice error>Ngày kết thúc phải từ ngày bắt đầu.</Notice>
-          )}
-        </form>
-      </Panel>
-      <QueryState query={query}>
-        {(data) => (
-          <>
-            <Metrics
-              items={[
-                {
-                  label: 'Doanh thu gộp',
-                  value: money(data.totalGrossRevenue),
-                },
-                {
-                  label: 'Doanh thu thực nhận',
-                  value: money(data.totalNetRevenue),
-                },
-                { label: 'Phí nền tảng', value: money(data.totalPlatformFee) },
-                {
-                  label: 'Số dư khả dụng',
-                  value: money(data.currentWalletBalance),
-                },
-              ]}
-            />
-            <Panel title="Nhịp doanh thu">
-              <div className="flex min-h-64 items-end gap-3 overflow-x-auto border-b border-brand-border pb-3">
-                {data.series?.length ? (
-                  data.series.map((point) => (
-                    <div
-                      key={point.period}
-                      className="flex min-w-16 flex-1 flex-col items-center gap-3"
-                    >
-                      <span className="text-xs font-semibold">
-                        {money(point.revenue)}
-                      </span>
-                      <div
-                        className="w-full max-w-12 rounded-t-md bg-brand-primary transition-all hover:brightness-110"
-                        style={{
-                          height: `${Math.max(4, (point.revenue / Math.max(1, ...data.series.map((p) => p.revenue))) * 180)}px`,
-                        }}
-                      />
-                      <span className="text-xs text-brand-muted">
-                        {point.period}
-                      </span>
-                      <span className="text-xs">{point.bookingCount} lượt</span>
-                    </div>
-                  ))
-                ) : (
-                  <p className="m-auto text-sm text-brand-muted">
-                    Chưa có chuỗi dữ liệu doanh thu.
-                  </p>
-                )}
-              </div>
-            </Panel>
-            <Panel title="Đối soát">
-              <p className="text-sm leading-7 text-brand-muted">
-                Đã hoàn tất {data.completedBookings ?? 0} lượt đặt chỗ. Số liệu
-                được cập nhật theo phản hồi máy chủ. Bộ lọc chỉ có hiệu lực khi
-                dịch vụ doanh thu hỗ trợ tổng hợp theo khoảng thời gian.
-              </p>
-            </Panel>
-          </>
-        )}
-      </QueryState>
-    </Workspace>
-  )
-}
+export { MerchantRevenuePage } from './MerchantRevenuePage'
 
 export function MerchantWithdrawalsPage() {
   const [page, setPage] = useState(0)

@@ -52,6 +52,7 @@ async function openCheckout() {
 }
 beforeEach(() => {
   vi.clearAllMocks()
+  vi.mocked(apiClient.post).mockReset()
   current = { ...initial }
   vi.mocked(loadPayOS).mockResolvedValue({ usePayOS: (config) => {
     sdkConfig = config
@@ -70,6 +71,19 @@ afterEach(() => {
 })
 
 describe('PayOS embedded checkout', () => {
+  it('shows a 4,000 dong deposit without a client amount override and blocks a rejected stale link', async () => {
+    current = { ...initial, advanceDeposit: 4000, totalAmount: 20000 }
+    const message = 'Link thanh toán cũ không khớp số tiền booking hiện tại.'
+    vi.mocked(apiClient.post).mockRejectedValueOnce(new Error(message))
+    mount()
+    const user = userEvent.setup()
+    await user.click(await screen.findByRole('button', { name: /Thanh toán cọc 4\.000\s+₫ qua PayOS/ }))
+    expect(apiClient.post).toHaveBeenCalledWith('/api/v1/payments', { bookingId: 51, paymentType: 'DEPOSIT' })
+    expect(await screen.findByRole('alert')).toHaveTextContent(message)
+    expect(loadPayOS).not.toHaveBeenCalled()
+    expect(screen.queryByTitle('Mã QR thanh toán PayOS')).not.toBeInTheDocument()
+    expect(screen.getByText('Chờ thanh toán cọc')).toBeInTheDocument()
+  })
   it('checks with the server when returning to the payment tab', async () => {
     mount()
     await openCheckout()
