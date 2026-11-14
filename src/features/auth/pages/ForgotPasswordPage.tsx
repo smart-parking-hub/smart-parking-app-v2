@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { isAxiosError } from 'axios'
 import {
@@ -43,6 +43,9 @@ interface RecoveryErrorBanner {
 }
 
 export function ForgotPasswordPage() {
+  const [searchParams] = useSearchParams()
+  const paramEmail = searchParams.get('email')
+  const paramOtp = searchParams.get('otpCode') || searchParams.get('otp')
   const [step, setStep] = useState<RecoveryStep>('email')
   const [emailDraft, setEmailDraft] = useState('')
   const [challenge, setChallenge] = useState<ActiveOtpChallenge | null>(null)
@@ -64,6 +67,25 @@ export function ForgotPasswordPage() {
     otpCode: string
     newPassword: string
   } | null>(null)
+
+  useEffect(() => {
+    if (paramEmail && paramOtp && /^\d{6}$/.test(paramOtp)) {
+      const email = normalizeRecoveryEmail(paramEmail)
+      setEmailDraft(email)
+      activeEmailRef.current = email
+      const now = Date.now()
+      const newChallenge: ActiveOtpChallenge = {
+        email,
+        expiresAtMs: now + 300000,
+        resendAvailableAtMs: now + 60000,
+        expiresInSeconds: 300,
+        resendAfterSeconds: 60,
+      }
+      setChallenge(newChallenge)
+      challengesByEmailRef.current[email] = newChallenge
+      setStep('reset')
+    }
+  }, [paramEmail, paramOtp])
 
   const clearSettledRecoveryMutations = useCallback(() => {
     const cache = queryClient.getMutationCache()
@@ -622,6 +644,7 @@ export function ForgotPasswordPage() {
             <ForgotPasswordResetForm
               key={resetFormKey}
               email={challenge.email}
+              initialOtpCode={paramOtp || ''}
               ttlRemainingSeconds={ttlRemainingSeconds}
               resendRemainingSeconds={resendRemainingSeconds}
               isResetPending={isResettingPassword}

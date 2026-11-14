@@ -782,4 +782,12 @@ describe('SCR-012 ForgotPasswordPage (Khôi phục mật khẩu qua OTP)', () =>
 
     expect(container.querySelectorAll('.font-mono')).toHaveLength(0)
   })
+
+  it('supports Magic Link URL (?email=...&otpCode=...) to directly navigate to Step 2 with pre-filled OTP', async () => {
+    setupApp('/forgot-password?email=recovery%40example.com&otpCode=998877')
+
+    expect(await screen.findByText('BƯỚC 2')).toBeInTheDocument()
+    expect(screen.getByLabelText(/^Mật khẩu mới/i)).toBeInTheDocument()
+    expect(screen.getByLabelText(/^Xác nhận mật khẩu/i)).toBeInTheDocument()
+  })
 })

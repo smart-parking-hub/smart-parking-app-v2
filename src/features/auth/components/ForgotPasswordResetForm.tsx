@@ -18,6 +18,7 @@ import {
 
 export interface ForgotPasswordResetFormProps {
   email: string
+  initialOtpCode?: string
   ttlRemainingSeconds: number
   resendRemainingSeconds: number
   isResetPending: boolean
@@ -38,6 +39,7 @@ export function formatOtpCountdown(seconds: number): string {
 
 export function ForgotPasswordResetForm({
   email,
+  initialOtpCode,
   ttlRemainingSeconds,
   resendRemainingSeconds,
   isResetPending,
@@ -55,7 +57,7 @@ export function ForgotPasswordResetForm({
   const form = useForm<ForgotPasswordResetFields>({
     resolver: zodResolver(forgotPasswordResetSchema),
     defaultValues: {
-      otpCode: '',
+      otpCode: initialOtpCode || '',
       newPassword: '',
       confirmPassword: '',
     },
