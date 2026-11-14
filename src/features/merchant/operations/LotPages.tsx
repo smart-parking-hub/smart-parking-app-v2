@@ -525,7 +525,7 @@ function SaveState({
         <div
           role="status"
           aria-live="polite"
-          className="fixed top-20 right-4 left-4 sm:left-auto z-50 flex items-center gap-3 rounded-xl border border-status-success-border bg-surface-card px-4 py-3 text-text-primary shadow-lg sm:max-w-sm font-inter text-sm"
+          className="fixed top-20 right-4 left-4 sm:left-auto z-[100] flex items-center gap-3 rounded-xl border border-status-success-border bg-surface-card px-4 py-3 text-text-primary shadow-lg sm:max-w-sm font-inter text-sm"
         >
           <CheckCircle2 className="h-5 w-5 shrink-0 text-status-success" aria-hidden="true" />
           <span>Đã lưu cấu hình thành công.</span>

@@ -266,7 +266,7 @@ export function MerchantBookingDetailPage() {
 
       {toast && (
         <div
-          className="fixed right-6 bottom-6 z-[60] w-[calc(100%-3rem)] max-w-md sm:w-auto"
+          className="fixed top-20 right-4 sm:right-6 z-[100] w-[calc(100%-2rem)] max-w-md sm:w-auto animate-in fade-in slide-in-from-top-2 slide-in-from-right-4 duration-200"
           aria-live="polite"
         >
           <Toast

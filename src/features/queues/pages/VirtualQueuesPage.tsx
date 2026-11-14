@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom'
 import { Plus, Radio, RefreshCw } from 'lucide-react'
 import { EmptyState } from '@/shared/components/EmptyState'
 import { Alert } from '@/shared/components/Alert'
-import { Toast } from '@/shared/components/Toast'
+import { Toast, ToastContainer } from '@/shared/components/Toast'
 import type { ActiveQueueItem } from '../types/queueTypes'
 import {
   fetchMyActiveQueue,
@@ -185,14 +185,14 @@ export function VirtualQueuesPage() {
     <div className="max-w-[1280px] mx-auto px-4 lg:px-8 py-8 font-inter relative">
       {/* Toast Notification Feedback */}
       {toastMessage && (
-        <div className="fixed bottom-6 right-6 z-50 max-w-md animate-in slide-in-from-bottom duration-200">
+        <ToastContainer>
           <Toast
             title={toastMessage}
             variant={toastType}
             onClose={clearToast}
             duration={4000}
           />
-        </div>
+        </ToastContainer>
       )}
 
       {/* Error Alert with Retry button */}

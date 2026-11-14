@@ -124,7 +124,7 @@ export function MerchantDashboardPage() {
       {toast && (
         <div
           data-testid="merchant-dashboard-toast"
-          className="fixed bottom-6 right-6 z-50 max-w-sm sm:max-w-md animate-in slide-in-from-bottom-2 duration-200"
+          className="fixed top-20 right-4 sm:right-6 z-[100] max-w-sm sm:max-w-md animate-in fade-in slide-in-from-top-2 slide-in-from-right-4 duration-200"
         >
           <Toast
             title={

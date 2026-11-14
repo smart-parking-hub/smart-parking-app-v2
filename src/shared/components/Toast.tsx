@@ -73,7 +73,7 @@ export function Toast({
     <div
       role="alert"
       className={cn(
-        'flex items-start gap-3 rounded-2xl border p-4 shadow-lg backdrop-blur-xs transition-all w-full max-w-sm sm:max-w-md animate-in slide-in-from-top-2 duration-200',
+        'flex items-start gap-3 rounded-2xl border p-4 shadow-xl backdrop-blur-md transition-all w-full max-w-sm sm:max-w-md animate-in fade-in slide-in-from-top-2 slide-in-from-right-4 duration-200 pointer-events-auto',
         wrapper,
         className
       )}
@@ -97,6 +97,38 @@ export function Toast({
           <X className="w-4 h-4" />
         </button>
       )}
+    </div>
+  )
+}
+
+export interface ToastContainerProps {
+  children: React.ReactNode
+  className?: string
+  position?: 'top-right' | 'top-center' | 'top-left' | 'bottom-right'
+}
+
+export function ToastContainer({
+  children,
+  className,
+  position = 'top-right',
+}: ToastContainerProps) {
+  const positionClass = {
+    'top-right': 'top-20 right-4 sm:right-6',
+    'top-center': 'top-20 left-1/2 -translate-x-1/2',
+    'top-left': 'top-20 left-4 sm:left-6',
+    'bottom-right': 'bottom-6 right-4 sm:right-6',
+  }[position]
+
+  return (
+    <div
+      aria-live="polite"
+      className={cn(
+        'fixed z-[100] flex flex-col gap-2.5 max-w-sm sm:max-w-md pointer-events-none w-[calc(100%-2rem)] sm:w-auto',
+        positionClass,
+        className
+      )}
+    >
+      {children}
     </div>
   )
 }

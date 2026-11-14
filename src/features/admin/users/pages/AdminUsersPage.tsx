@@ -49,7 +49,7 @@ export function AdminUsersPage() {
         <div
           role="status"
           aria-live="polite"
-          className={`fixed bottom-6 right-6 z-50 flex items-center gap-3 rounded-2xl border px-4 py-3 shadow-lg transition-all animate-in fade-in slide-in-from-bottom-4 ${
+          className={`fixed top-20 right-4 sm:right-6 z-[100] flex items-center gap-3 rounded-2xl border px-4 py-3 shadow-lg transition-all animate-in fade-in slide-in-from-top-2 slide-in-from-right-4 ${
             toast.type === 'success'
               ? 'border-emerald-200 bg-emerald-50 text-emerald-800'
               : toast.type === 'error'

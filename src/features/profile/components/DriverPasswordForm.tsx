@@ -36,7 +36,7 @@ export function DriverPasswordForm() {
       </fieldset>
       {save.isError && <Notice error>{errorMessage(save.error)}</Notice>}
       {successToastId !== null && createPortal(
-        <div className="fixed right-4 top-4 z-[100] w-[calc(100%-2rem)] max-w-sm">
+        <div className="fixed top-20 right-4 sm:right-6 z-[100] w-[calc(100%-2rem)] max-w-sm sm:max-w-md">
           <Toast key={successToastId} title="Đã đổi mật khẩu thành công." variant="success" duration={5000} onClose={closeSuccessToast} />
         </div>,
         document.body,

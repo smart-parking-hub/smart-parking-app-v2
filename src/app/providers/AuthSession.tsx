@@ -41,5 +41,5 @@ export function AuthSession() {
     const timer = setTimeout(() => setToast(false), 5000)
     return () => clearTimeout(timer)
   }, [toast])
-  return toast ? <div role="status" className="fixed bottom-6 right-6 z-50 max-w-[calc(100vw-3rem)] rounded-xl border border-brand-border bg-white p-4 text-brand-navy shadow-lg">Đăng nhập thành công.<button type="button" className="ml-4 underline" aria-label="Đóng thông báo" onClick={() => setToast(false)}>Đóng</button></div> : null
+  return toast ? <div role="status" className="fixed top-20 right-4 sm:right-6 z-[100] max-w-[calc(100vw-3rem)] rounded-xl border border-brand-border bg-white p-4 text-brand-navy shadow-lg animate-in fade-in slide-in-from-top-2 slide-in-from-right-4">Đăng nhập thành công.<button type="button" className="ml-4 underline" aria-label="Đóng thông báo" onClick={() => setToast(false)}>Đóng</button></div> : null
 }

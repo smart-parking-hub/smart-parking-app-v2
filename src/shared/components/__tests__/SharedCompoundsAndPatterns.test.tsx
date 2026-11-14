@@ -15,6 +15,7 @@ import {
   PopoverContent,
   Breadcrumb,
   Toast,
+  ToastContainer,
   Dialog,
   Drawer,
   ErrorState,
@@ -212,6 +213,18 @@ describe('Shared Compounds and UI Patterns Suite', () => {
       const closeBtn = screen.getByLabelText('Đóng thông báo')
       fireEvent.click(closeBtn)
       expect(handleClose).toHaveBeenCalled()
+    })
+
+    it('renders ToastContainer with top-right position and accessibility attributes', () => {
+      render(
+        <ToastContainer>
+          <Toast title="Thông báo hệ thống" message="Đang đồng bộ..." />
+        </ToastContainer>
+      )
+
+      const container = screen.getByText('Thông báo hệ thống').closest('[aria-live="polite"]')
+      expect(container).toBeInTheDocument()
+      expect(container).toHaveClass('fixed', 'top-20', 'right-4', 'z-[100]')
     })
   })
 

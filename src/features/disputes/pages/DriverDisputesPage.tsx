@@ -16,7 +16,7 @@ import { errorMessage, type Page } from '@/shared/api/resources'
 import { Breadcrumb } from '@/shared/components/Breadcrumb'
 import { EmptyState } from '@/shared/components/EmptyState'
 import { Skeleton } from '@/shared/components/Skeleton'
-import { Toast } from '@/shared/components/Toast'
+import { Toast, ToastContainer } from '@/shared/components/Toast'
 import {
   Badge,
   DataTable,
@@ -243,19 +243,21 @@ export function DriverDisputesPage({ detail = false }: { detail?: boolean }) {
       }
     >
       {createdToast && (
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <Toast
-            variant="success"
-            title={`Đã gửi khiếu nại #KN-${createdToast.id}`}
-            message="Hồ sơ của bạn đã được ghi nhận ở trạng thái Chờ xử lý."
-            duration={8000}
-            onClose={() => setCreatedToast(null)}
-            className="max-w-full"
-          />
-          <Link to={`/disputes/${createdToast.id}`} className={secondary}>
-            Xem hồ sơ #KN-{createdToast.id}
-          </Link>
-        </div>
+        <ToastContainer>
+          <div className="pointer-events-auto flex flex-col gap-2 rounded-2xl border border-emerald-200 bg-emerald-50/95 p-4 shadow-xl backdrop-blur-md">
+            <Toast
+              variant="success"
+              title={`Đã gửi khiếu nại #KN-${createdToast.id}`}
+              message="Hồ sơ của bạn đã được ghi nhận ở trạng thái Chờ xử lý."
+              duration={8000}
+              onClose={() => setCreatedToast(null)}
+              className="border-0 bg-transparent p-0 shadow-none"
+            />
+            <Link to={`/disputes/${createdToast.id}`} className={`${secondary} self-start text-xs`}>
+              Xem hồ sơ #KN-{createdToast.id}
+            </Link>
+          </div>
+        </ToastContainer>
       )}
 
       {listQuery.isPending && !listQuery.data ? (
