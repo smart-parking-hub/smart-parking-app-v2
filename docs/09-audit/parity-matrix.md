@@ -1,5 +1,18 @@
 # Capability Parity Matrix — 4 Landing Screens: Trang Chủ, Tài Xế, Chủ Bãi & Bảng Giá
 
+## Bổ sung SCR-047 / PAY-05 (2026-11-14)
+
+| Khả năng có sẵn | Kết quả PAY-05 | Trạng thái |
+|---|---|---|
+| Route ADMIN, phân trang, mã giao dịch/booking, số tiền, trạng thái, thời điểm | Giữ route/public export và contract GET hiện có | Preserved |
+| Modal đối chiếu bản ghi danh sách | GET chi tiết theo ID, loading/lỗi/404/thử lại; đổi nhãn thành “Xem chi tiết” để phản ánh hành vi chỉ đọc | Changed theo yêu cầu hoàn thiện task |
+| Gateway, chủ bãi trong modal | Giữ gateway, ghi rõ chủ bãi là tham chiếu hệ thống, bổ sung ID người trả và thời điểm cập nhật từ DTO | Preserved / completed |
+| Trạng thái rỗng/lỗi và phân trang | Giữ và kiểm thử; thêm tổng số server, sort server có ID tie-breaker, refresh và mobile card | Preserved / completed |
+
+Nguồn trước thay đổi: `src/features/admin/index.tsx` (AdminTransactionsPage); nguồn sau thay đổi: `src/features/admin/transactions/`. Không thay màn hình legacy bên ngoài repository. Không có HTML Stitch mới trong yêu cầu; giữ shared primitives và design tokens hiện có. [Task / contract](../08-project-operations/SP-S3-PAY-05.md), [bằng chứng](./SP-S3-PAY-05-report.md).
+
+---
+
 > Bổ sung 2026-11-04: xem [FE completion report](./fe-completion-report.md) cho toàn bộ route còn thiếu, đối chiếu contract thực tế và các mục CONFLICT/LIMITATION. Đặc biệt bảng giá backend không khớp bốn trường trong đặc tả Stitch cũ; không đánh dấu Full Match cho phần này.
 
 > Phiên bản thiết kế: Stitch HTML `web_standard`  

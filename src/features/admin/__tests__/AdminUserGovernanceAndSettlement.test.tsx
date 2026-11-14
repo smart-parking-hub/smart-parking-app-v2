@@ -130,14 +130,19 @@ describe('GROUP 11 - Admin User Governance & Financial Settlement Ledger', () =>
       transactionCode: 'TXN-9021-X1',
       bookingCode: 'BK-CATLAI-091',
       amount: 450000,
-      type: 'BOOKING_PAYMENT',
+      type: 'DEPOSIT',
       gateway: 'PAYOS',
+      bookingId: 12,
+      payerUserId: 21,
+      payerPhone: 'USER#21',
+      merchantId: 31,
+      updatedAt: '2026-11-07T09:00:00',
       status: 'SUCCESS',
       merchantName: 'Bãi xe Container Tân Cảng',
       createdAt: '2026-11-06T14:20:00Z',
     }
 
-    it('AC2: renders transaction table with right-aligned amount and opens detail dialog on "Đối soát"', async () => {
+    it('AC2: renders transaction table with right-aligned amount and loads detail dialog on "Xem chi tiết"', async () => {
       const user = userEvent.setup()
       vi.mocked(getData).mockResolvedValueOnce({
         content: [mockTransaction],
@@ -153,27 +158,28 @@ describe('GROUP 11 - Admin User Governance & Financial Settlement Ledger', () =>
         </QueryClientProvider>,
       )
 
-      expect(await screen.findByText('TXN-9021-X1')).toBeInTheDocument()
-      expect(screen.getByText('BK-CATLAI-091')).toBeInTheDocument()
+      expect((await screen.findAllByText('TXN-9021-X1'))[0]).toBeInTheDocument()
+      expect(screen.getAllByText('BK-CATLAI-091')[0]).toBeInTheDocument()
 
       // Amount cell check
-      const amountEl = screen.getByText('450.000 ₫')
+      const amountEl = screen.getAllByText('450.000 ₫')[0]
       expect(amountEl).toBeInTheDocument()
       expect(amountEl.className).toContain('tabular-nums')
 
-      // Click "Đối soát" CTA
-      const auditBtn = screen.getByRole('button', { name: 'Đối soát' })
+      // Load the authoritative transaction detail
+      const auditBtn = screen.getAllByRole('button', { name: /Xem chi tiết giao dịch/ })[0]
       expect(auditBtn).toBeInTheDocument()
+      vi.mocked(getData).mockResolvedValueOnce(mockTransaction)
       await user.click(auditBtn)
 
       // Dialog opens
       expect(
-        await screen.findByText('Chi tiết đối soát giao dịch'),
+        await screen.findByText('Chi tiết giao dịch'),
       ).toBeInTheDocument()
       expect(screen.getByText('Số tiền giao dịch')).toBeInTheDocument()
       expect(screen.getByText('Bãi xe Container Tân Cảng')).toBeInTheDocument()
-      expect(screen.getByText('PAYOS')).toBeInTheDocument()
-      expect(screen.getAllByText('BOOKING_PAYMENT').length).toBeGreaterThanOrEqual(2)
+      expect(screen.getAllByText('PAYOS')[0]).toBeInTheDocument()
+      expect(screen.getAllByText('Đặt cọc').length).toBeGreaterThanOrEqual(2)
     })
   })
 

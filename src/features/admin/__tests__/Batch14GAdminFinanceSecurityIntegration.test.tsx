@@ -44,14 +44,19 @@ describe('BATCH-14G: Admin Finance, Arbitration Tribunal & Security Audit (SCR-0
       transactionCode: 'TXN-20261107-001',
       bookingCode: 'BK-88899',
       amount: 120000,
-      type: 'BOOKING_PAYMENT',
+      type: 'DEPOSIT',
       gateway: 'PAYOS',
+      bookingId: 12,
+      payerUserId: 21,
+      payerPhone: 'USER#21',
+      merchantId: 31,
+      updatedAt: '2026-11-07T09:00:00',
       status: 'SUCCESS',
       merchantName: 'Bãi xe Logistics Cát Lái',
       createdAt: '2026-11-07T08:15:00Z',
     }
 
-    it('renders transaction ledger table and opens reconciliation detail dialog', async () => {
+    it('renders transaction ledger table and loads transaction detail dialog', async () => {
       const user = userEvent.setup()
       vi.mocked(getData).mockResolvedValueOnce({
         content: [mockTransaction],
@@ -67,18 +72,19 @@ describe('BATCH-14G: Admin Finance, Arbitration Tribunal & Security Audit (SCR-0
         </QueryClientProvider>,
       )
 
-      expect(await screen.findByText('TXN-20261107-001')).toBeInTheDocument()
-      expect(screen.getByText('BK-88899')).toBeInTheDocument()
-      expect(screen.getByText('120.000 ₫')).toBeInTheDocument()
+      expect((await screen.findAllByText('TXN-20261107-001'))[0]).toBeInTheDocument()
+      expect(screen.getAllByText('BK-88899')[0]).toBeInTheDocument()
+      expect(screen.getAllByText('120.000 ₫')[0]).toBeInTheDocument()
 
-      const auditBtn = screen.getByRole('button', { name: 'Đối soát' })
+      const auditBtn = screen.getAllByRole('button', { name: /Xem chi tiết giao dịch/ })[0]
       expect(auditBtn).toBeInTheDocument()
+      vi.mocked(getData).mockResolvedValueOnce(mockTransaction)
       await user.click(auditBtn)
 
-      expect(await screen.findByText('Chi tiết đối soát giao dịch')).toBeInTheDocument()
+      expect(await screen.findByText('Chi tiết giao dịch')).toBeInTheDocument()
       expect(screen.getByText('Số tiền giao dịch')).toBeInTheDocument()
       expect(screen.getByText('Bãi xe Logistics Cát Lái')).toBeInTheDocument()
-      expect(screen.getByText('PAYOS')).toBeInTheDocument()
+      expect(screen.getAllByText('PAYOS')[0]).toBeInTheDocument()
     })
   })
 

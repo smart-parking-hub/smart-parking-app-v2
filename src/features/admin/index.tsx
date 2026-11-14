@@ -40,18 +40,6 @@ interface User {
   disputeCount?: number
 }
 
-interface Transaction {
-  id: number
-  transactionCode: string
-  bookingCode: string
-  amount: number
-  type: string
-  gateway: string
-  status: string
-  merchantName: string
-  createdAt: string
-}
-
 interface Audit {
   id: number
   actorUserId: number
@@ -229,98 +217,7 @@ export function AdminAuditLogsPage() {
   )
 }
 
-export function AdminTransactionsPage() {
-  const [selected, setSelected] = useState<Transaction | null>(null)
-  return (
-    <>
-      <AdminList<Transaction>
-        title="Giám sát giao dịch"
-        path="/api/v1/admin/transactions"
-        columns={[
-          {
-            label: 'Mã giao dịch',
-            render: (r) => (
-              <span className="font-mono text-xs font-semibold text-brand-navy">
-                {r.transactionCode}
-              </span>
-            ),
-          },
-          {
-            label: 'Booking',
-            render: (r) => (
-              <span className="font-mono text-xs text-brand-muted">
-                {r.bookingCode || '—'}
-              </span>
-            ),
-          },
-          {
-            label: 'Số tiền',
-            align: 'right',
-            render: (r) => (
-              <span className="font-sora font-semibold tabular-nums text-brand-navy">
-                {money(r.amount)}
-              </span>
-            ),
-          },
-          { label: 'Loại', render: (r) => <Badge value={r.type} /> },
-          { label: 'Trạng thái', render: (r) => <Badge value={r.status} /> },
-          {
-            label: 'Thời điểm',
-            render: (r) => (
-              <span className="whitespace-nowrap text-xs text-brand-muted">
-                {date(r.createdAt)}
-              </span>
-            ),
-          },
-        ]}
-        actions={(r) => (
-          <button
-            className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-brand-border bg-white px-3 py-1.5 text-xs font-semibold text-brand-navy hover:bg-brand-surface hover:text-[#d95f00] transition-colors cursor-pointer"
-            onClick={() => setSelected(r)}
-          >
-            Đối soát
-          </button>
-        )}
-      />
-      {selected && (
-        <Dialog
-          title="Chi tiết đối soát giao dịch"
-          onClose={() => setSelected(null)}
-        >
-          <div className="space-y-4">
-            <div className="flex items-center justify-between rounded-xl border border-brand-border bg-brand-surface p-4">
-              <div>
-                <p className="text-xs text-brand-muted">Số tiền giao dịch</p>
-                <p className="font-sora text-2xl font-bold tabular-nums text-[#d95f00]">
-                  {money(selected.amount)}
-                </p>
-              </div>
-              <Badge value={selected.status} />
-            </div>
-            <dl className="divide-y divide-brand-border/60 text-sm">
-              {[
-                ['Mã giao dịch', selected.transactionCode],
-                ['Mã đặt chỗ (Booking)', selected.bookingCode],
-                ['Chủ bãi thụ hưởng', selected.merchantName],
-                ['Cổng thanh toán', selected.gateway],
-                ['Loại giao dịch', selected.type],
-                ['Thời điểm tạo', date(selected.createdAt)],
-              ].map(([label, value]) => (
-                <div
-                  key={label}
-                  className="flex justify-between gap-4 pt-3 pb-1 text-sm"
-                >
-                  <dt className="text-brand-muted">{label}</dt>
-                  <dd className="font-semibold text-brand-navy">{value || '—'}</dd>
-                </div>
-              ))}
-            </dl>
-          </div>
-        </Dialog>
-      )}
-    </>
-  )
-}
+export { AdminTransactionsPage } from './transactions/pages/AdminTransactionsPage'
 
 interface Decision {
   title: string
