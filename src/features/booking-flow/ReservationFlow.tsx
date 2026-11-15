@@ -8,6 +8,7 @@ import { Field, Notice, button, control, secondary } from '@/shared/components/W
 import { errorMessage } from '@/shared/api/resources'
 import { fetchLot, fetchVehicles, createBooking, formatMoney } from './api'
 import { BookingStatusPanel } from './BookingStatusPanel'
+import { BookingHoldRestrictionNotice, useBookingHoldRestriction } from './BookingHoldRestrictionNotice'
 import { bookingTimestamp, vietnamLocalTime } from './time'
 const schema = z.object({ vehicleId: z.coerce.number().int().positive('Chọn phương tiện của bạn.'), start: z.string().min(1), end: z.string().min(1) }).superRefine((data, context) => {
   if (!Number.isFinite(bookingTimestamp(data.start)) || bookingTimestamp(data.start) <= Date.now()) context.addIssue({ code: 'custom', path:['start'], message:'Giờ vào phải ở tương lai.' })
@@ -35,12 +36,13 @@ export function ReservationFlow({ lotId }: { lotId: number }) {
     cache.setQueryData(['booking',data.id],data);setBookingId(data.id)
     void cache.invalidateQueries({queryKey:['real-bookings']});void cache.invalidateQueries({queryKey:['parking-lots-search']})
   }})
-  if(bookingId!==null)return <BookingStatusPanel bookingId={bookingId}/>
+  const holdRestriction = useBookingHoldRestriction(save.error)
+  if(bookingId!==null)return <BookingStatusPanel bookingId={bookingId} compact/>
   if(lot.isPending||vehicles.isPending)return <p role="status">Đang tải bãi và phương tiện…</p>
   if(lot.isError||vehicles.isError)return <Notice error><div>{errorMessage(lot.error??vehicles.error)}<button className={`${secondary} mt-3`} onClick={()=>{void lot.refetch();void vehicles.refetch()}}>Thử lại</button></div></Notice>
   if(!vehicles.data?.length)return <Notice><div>Bạn chưa có phương tiện đang hoạt động.<Link to="/vehicles" className={`${secondary} mt-3`}>Đăng ký phương tiện</Link></div></Notice>
   const blocked=lot.data.status!=='APPROVED'||!tariff||!slot||Number(slot.availableCapacity)<=0
-  return <form noValidate onSubmit={form.handleSubmit(values=>save.mutate(values))} className="space-y-4 font-inter text-sm text-brand-navy">
+  return <form noValidate onSubmit={form.handleSubmit(values=>{if(!holdRestriction.blocked&&!save.isPending)save.mutate(values)})} className="space-y-4 font-inter text-sm text-brand-navy">
     <div className="rounded-xl border border-brand-border bg-brand-surface px-4 py-3"><h3 className="font-sora text-base font-semibold">{lot.data.name}</h3><p className="mt-1 text-xs leading-relaxed text-brand-muted">{lot.data.address}</p></div>
     <fieldset className="grid gap-4 sm:grid-cols-2" disabled={save.isPending}>
       <legend className="sr-only">Phương tiện và giờ đỗ (giờ Việt Nam UTC+7)</legend>
@@ -62,8 +64,8 @@ export function ReservationFlow({ lotId }: { lotId: number }) {
       </div>
     </div>}
     {blocked&&<Notice error>Bãi chưa nhận đặt chỗ, hết chỗ cho loại xe đã chọn hoặc chưa có bảng giá. Chọn xe/bãi khác.</Notice>}
-    {save.isError&&<Notice error>{errorMessage(save.error)}</Notice>}
-    <button className={`${button} w-full`} disabled={blocked||save.isPending}>{save.isPending?'Đang xác minh và giữ chỗ…':'Tạo booking và xem tiền cọc'}</button>
+    {save.isError&&<BookingHoldRestrictionNotice error={save.error}/>}
+    <button className={`${button} w-full`} disabled={blocked||save.isPending||holdRestriction.blocked}>{save.isPending?'Đang xác minh và giữ chỗ…':holdRestriction.blocked?`Có thể thử lại sau ${holdRestriction.remaining}`:'Tạo booking và xem tiền cọc'}</button>
     <p className="text-center text-xs leading-relaxed text-brand-muted">Tiền cọc chính xác hiển thị ở bước tiếp theo, trước khi thanh toán. Giá và chỗ trống được xác minh khi đặt.</p>
   </form>
 }

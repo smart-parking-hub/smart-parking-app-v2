@@ -50,6 +50,9 @@ export async function mockPayOSDeposit(page: Page, bookingId: number, confirmDep
     route.fulfill({ contentType: 'application/javascript', body: sdkFixture }),
   )
   await page.route('https://pay.payos.vn/**', (route) =>
-    route.fulfill({ contentType: 'text/html; charset=utf-8', body: checkoutFixture }),
+    route.fulfill({ contentType: 'text/html; charset=utf-8', body: checkoutFixture.replace(
+      "parent.postMessage({status:'PAID'},'*')",
+      `window.location.assign(${JSON.stringify(new URL(`/payment/return?bookingId=${bookingId}`, page.url()).href)})`,
+    ) }),
   )
 }

@@ -211,15 +211,16 @@ for (const width of [390, 1440]) {
     expect(hold).toBeNull()
 
     // Navigate to /bookings via the returned link
+    await dialog.getByText('Tác vụ khác', { exact: true }).click()
     const bookingsLink = dialog.getByRole('link', {
       name: 'Xem các lượt đặt chỗ',
     })
     await bookingsLink.click()
-    await expect(page).toHaveURL(/\/bookings$/)
+    await expect(page).toHaveURL(/\/bookings\?bookingId=88$/)
 
     // Server booking appears in /bookings list
     await expect(page.getByText('BK-SERVER-88', { exact: true })).toBeVisible()
-    await expect(page.getByRole('heading', { level: 2, name: 'Bãi Xe Phía Nam' })).toBeVisible()
+    await expect(page.getByRole('heading', { level: 2, name: /Vé vừa xem.*Bãi Xe Phía Nam/ })).toBeVisible()
 
     expect(errors).toEqual([])
   })

@@ -76,6 +76,16 @@ it('shows an empty list when the API returns no bookings', async () => {
   mount(<MyBookingsPage />, '/bookings', '/bookings')
   expect(await screen.findByText('Bạn chưa có lượt đặt chỗ nào.')).toBeInTheDocument()
 })
+it('opens the selected server-owned booking even when it is outside the current list page', async () => {
+  vi.mocked(apiClient.get).mockImplementation(async url => ({data: {data: String(url).endsWith('/bookings')
+    ? {content: [{...booking, id: 99, bookingCode: 'BK-OTHER-99'}], totalElements: 20, totalPages: 3}
+    : String(url).includes('/disputes/me') ? {content: []} : booking}}))
+  mount(<MyBookingsPage />, '/bookings?bookingId=41', '/bookings')
+  expect(await screen.findByRole('heading', {name: /Vé vừa xem.*Bãi Container Cát Lái/})).toBeInTheDocument()
+  expect(await screen.findByText('BK-API-41', {exact: true})).toBeInTheDocument()
+  expect(apiClient.get).toHaveBeenCalledWith('/api/v1/bookings/41', expect.anything())
+  expect(screen.getByRole('button', {name: 'Xem vé & chi tiết'})).toHaveAttribute('aria-expanded', 'false')
+})
 it('keeps many tickets compact, expands one at a time and requests the next server page', async () => {
   vi.mocked(apiClient.get).mockImplementation(async (url, config) => {
     if (String(url).endsWith('/bookings')) {

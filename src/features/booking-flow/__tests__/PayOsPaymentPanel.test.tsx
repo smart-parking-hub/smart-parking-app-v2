@@ -1,16 +1,16 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { MemoryRouter } from 'react-router-dom'
 import { apiClient } from '@/shared/api/client'
 import { BookingStatusPanel } from '../BookingStatusPanel'
-import { loadPayOS, type PayOSConfig } from '../payosCheckout'
+import { loadPayOS, requiresHostedPayOS, type PayOSConfig } from '../payosCheckout'
 import type { Booking } from '../api'
 
 vi.mock('@/shared/api/client', () => ({ apiClient: { get: vi.fn(), post: vi.fn(), request: vi.fn() } }))
 vi.mock('../payosCheckout', async (original) => ({
-  ...await original<typeof import('../payosCheckout')>(), loadPayOS: vi.fn(),
+  ...await original<typeof import('../payosCheckout')>(), loadPayOS: vi.fn(), requiresHostedPayOS: vi.fn(() => false),
 }))
 
 const checkoutUrl = 'https://pay.payos.vn/web/test-payment-link'
@@ -32,12 +32,12 @@ const open = vi.fn(() => {
   document.getElementById(sdkConfig.ELEMENT_ID)?.appendChild(frame)
 })
 
-function mount(booking?: Booking) {
+function mount(booking?: Booking, compact = false) {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } })
   clients.push(client)
   const wrap = (value?: Booking) => (
     <QueryClientProvider client={client}><MemoryRouter>
-      <BookingStatusPanel bookingId={value?.id ?? current.id} booking={value} />
+      <BookingStatusPanel bookingId={value?.id ?? current.id} booking={value} compact={compact} />
     </MemoryRouter></QueryClientProvider>
   )
   const view = render(wrap(booking))
@@ -52,6 +52,7 @@ async function openCheckout() {
 }
 beforeEach(() => {
   vi.clearAllMocks()
+  vi.mocked(requiresHostedPayOS).mockReturnValue(false)
   vi.mocked(apiClient.post).mockReset()
   current = { ...initial }
   vi.mocked(loadPayOS).mockResolvedValue({ usePayOS: (config) => {
@@ -71,6 +72,45 @@ afterEach(() => {
 })
 
 describe('PayOS embedded checkout', () => {
+  it('keeps the compact deposit summary server-owned and copies the full long code', async () => {
+    const user = userEvent.setup()
+    const writeText = vi.spyOn(navigator.clipboard, 'writeText').mockResolvedValue(undefined)
+    current = { ...initial, bookingCode: 'BK3A88B84B500F46489E20958D0E7BB609', advanceDeposit: 258240, totalAmount: 1291200 }
+    mount(undefined, true)
+    expect(await screen.findByText('Tiền cọc cần thanh toán')).toBeInTheDocument()
+    expect(within(screen.getByRole('region', { name: 'Thông tin vé chờ thanh toán' })).getByText(/258\.240/)).toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: 'Sao chép mã đặt chỗ' }))
+    expect(writeText).toHaveBeenCalledWith(current.bookingCode)
+    expect(screen.getByText('Tác vụ khác')).toBeInTheDocument()
+    expect(screen.queryByTestId('checkin-qr-container')).not.toBeInTheDocument()
+  })
+  it('does not expose or reopen a stale hosted URL when server verification fails', async () => {
+    vi.mocked(requiresHostedPayOS).mockReturnValue(true)
+    mount(undefined, true)
+    const user = userEvent.setup()
+    await user.click(await screen.findByRole('button', { name: /Thanh toán cọc.*qua PayOS/ }))
+    vi.mocked(apiClient.post).mockImplementation(async url => {
+      if (String(url).endsWith('/sync')) return {data: {data: {status: 'PENDING'}}}
+      throw new Error('Phiên PayOS đã hủy, chưa tạo được phiên mới')
+    })
+    await user.click(screen.getByRole('button', { name: 'Mở PayOS để thanh toán' }))
+    expect(await screen.findByRole('heading', { name: 'Chưa mở được phiên thanh toán' })).toBeInTheDocument()
+    expect(screen.getByRole('alert')).toHaveTextContent('Phiên PayOS đã hủy')
+    expect(screen.queryByRole('button', { name: 'Mở PayOS để thanh toán' })).not.toBeInTheDocument()
+    expect(document.querySelector(`a[href="${checkoutUrl}"]`)).toBeNull()
+    expect(loadPayOS).not.toHaveBeenCalled()
+  })
+  it('uses a same-tab hosted checkout on local networks instead of a blocked iframe', async () => {
+    vi.mocked(requiresHostedPayOS).mockReturnValue(true)
+    mount()
+    await userEvent.click(await screen.findByRole('button', { name: /Thanh toán cọc.*qua PayOS/ }))
+    const launch = await screen.findByRole('button', { name: 'Mở PayOS để thanh toán' })
+    expect(launch).toBeEnabled()
+    expect(launch).not.toHaveAttribute('href')
+    expect(screen.queryByTitle('Mã QR thanh toán PayOS')).not.toBeInTheDocument()
+    expect(loadPayOS).not.toHaveBeenCalled()
+    expect(screen.queryByTestId('checkin-qr-container')).not.toBeInTheDocument()
+  })
   it('shows a 4,000 dong deposit without a client amount override and blocks a rejected stale link', async () => {
     current = { ...initial, advanceDeposit: 4000, totalAmount: 20000 }
     const message = 'Link thanh toán cũ không khớp số tiền booking hiện tại.'
@@ -155,7 +195,7 @@ describe('PayOS embedded checkout', () => {
     const user = userEvent.setup()
     await user.click(await screen.findByRole('button', { name: /Thanh toán cọc.*qua PayOS/ }))
     expect(await screen.findByRole('alert')).toHaveTextContent('CDN không tải được')
-    await user.click(screen.getByRole('button', { name: 'Thử tải lại QR' }))
+    await user.click(screen.getByRole('button', { name: 'Mở lại khung QR' }))
     await screen.findByTitle('Mã QR thanh toán PayOS')
     expect(apiClient.post).toHaveBeenCalledTimes(1)
     expect(loadPayOS).toHaveBeenCalledTimes(2)
@@ -246,21 +286,99 @@ describe('PayOS embedded checkout', () => {
     }
   })
 
-  it('handles onCancel callback by showing cancel notice and NOT triggering payment sync', async () => {
+  it('removes the frame on cancellation, verifies payment and preserves the booking', async () => {
     mount()
     await openCheckout()
     expect(apiClient.post).toHaveBeenCalledTimes(1) // only initial /api/v1/payments
     await act(async () => {
       sdkConfig.onCancel({ status: 'CANCELLED' })
     })
-    // Must NOT call /api/v1/payments/sync
-    expect(apiClient.post).toHaveBeenCalledTimes(1)
-    expect(apiClient.post).not.toHaveBeenCalledWith('/api/v1/payments/sync', expect.anything())
-    expect(
-      screen.getByText('Bạn đã hủy bước thanh toán trên PayOS. Booking chưa được xác nhận thanh toán.'),
-    ).toBeInTheDocument()
+    expect(screen.queryByTitle('Mã QR thanh toán PayOS')).not.toBeInTheDocument()
+    expect(exit).toHaveBeenCalledOnce()
+    expect(screen.getByRole('heading', { name: 'Đã dừng thanh toán PayOS' })).toBeInTheDocument()
+    await waitFor(() => expect(apiClient.post).toHaveBeenCalledWith('/api/v1/payments/sync', { bookingId: 51 }))
+    expect(screen.queryByRole('button', { name: 'Mở lại khung QR' })).not.toBeInTheDocument()
+    expect(apiClient.post).not.toHaveBeenCalledWith(expect.stringContaining('/cancel'), expect.anything())
     expect(screen.getByText('Chờ thanh toán cọc')).toBeInTheDocument()
     expect(screen.queryByTestId('checkin-qr-container')).not.toBeInTheDocument()
+  })
+
+  it('collapses an exited QR and ignores late callbacks from the removed frame', async () => {
+    mount()
+    await openCheckout()
+    const oldConfig = sdkConfig
+    await act(async () => { oldConfig.onExit({}) })
+    expect(screen.queryByTitle('Mã QR thanh toán PayOS')).not.toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Đã đóng khung thanh toán' })).toBeInTheDocument()
+    const calls = vi.mocked(apiClient.post).mock.calls.length
+    await act(async () => { oldConfig.onSuccess({ status: 'PAID' }); oldConfig.onCancel({ status: 'CANCELLED' }) })
+    expect(apiClient.post).toHaveBeenCalledTimes(calls)
+    expect(screen.getByRole('heading', { name: 'Đã đóng khung thanh toán' })).toBeInTheDocument()
+  })
+
+  it('removes a cancelled hosted frame when server sync reports FAILED without an SDK callback', async () => {
+    mount()
+    const user = await openCheckout()
+    vi.mocked(apiClient.post).mockResolvedValueOnce({ data: { data: { status: 'FAILED' } } })
+    await user.click(screen.getByRole('button', { name: 'Kiểm tra trạng thái thanh toán' }))
+    expect(await screen.findByRole('heading', { name: 'Thanh toán chưa hoàn tất' })).toBeInTheDocument()
+    expect(screen.queryByTitle('Mã QR thanh toán PayOS')).not.toBeInTheDocument()
+    expect(screen.getByText('Chờ thanh toán cọc')).toBeInTheDocument()
+    expect(screen.queryByTestId('checkin-qr-container')).not.toBeInTheDocument()
+  })
+
+  it('accepts a cancellation return only from this frame, origin and booking', async () => {
+    mount()
+    await openCheckout()
+    const frame = screen.getByTitle('Mã QR thanh toán PayOS') as HTMLIFrameElement
+    const data = { type: 'smartparking:payos-return', bookingId: 51, cancelled: true }
+    for (const event of [
+      new MessageEvent('message', { origin: 'https://untrusted.test', source: frame.contentWindow, data }),
+      new MessageEvent('message', { origin: window.location.origin, source: window, data }),
+      new MessageEvent('message', { origin: window.location.origin, source: frame.contentWindow, data: { ...data, bookingId: 52 } }),
+    ]) await act(async () => { window.dispatchEvent(event) })
+    expect(screen.getByTitle('Mã QR thanh toán PayOS')).toBeInTheDocument()
+    expect(apiClient.post).toHaveBeenCalledTimes(1)
+    await act(async () => { window.dispatchEvent(new MessageEvent('message', {
+      origin: window.location.origin, source: frame.contentWindow, data,
+    })) })
+    expect(screen.queryByTitle('Mã QR thanh toán PayOS')).not.toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Đã dừng thanh toán PayOS' })).toBeInTheDocument()
+    expect(screen.queryByTestId('checkin-qr-container')).not.toBeInTheDocument()
+  })
+
+  it('keeps cancellation feedback stable when later checks still report PENDING', async () => {
+    mount()
+    const user = await openCheckout()
+    await act(async () => { sdkConfig.onCancel({ status: 'CANCELLED' }) })
+    const heading = screen.getByRole('heading', { name: 'Đã dừng thanh toán PayOS' })
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Kiểm tra trạng thái thanh toán' })).toBeEnabled())
+    await user.click(screen.getByRole('button', { name: 'Kiểm tra trạng thái thanh toán' }))
+    expect(heading).toBeInTheDocument()
+    expect(screen.queryByTitle('Mã QR thanh toán PayOS')).not.toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: 'Quay lại vé' }))
+    expect(screen.queryByRole('region', { name: 'Thanh toán PayOS' })).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /Thanh toán cọc.*qua PayOS/ })).toBeInTheDocument()
+  })
+
+  it('checks server state when the hosted frame navigates without an SDK callback', async () => {
+    mount()
+    await openCheckout()
+    vi.mocked(apiClient.post).mockResolvedValueOnce({ data: { data: { status: 'FAILED' } } })
+    fireEvent.load(screen.getByTitle('Mã QR thanh toán PayOS'))
+    expect(await screen.findByRole('heading', { name: 'Thanh toán chưa hoàn tất' })).toBeInTheDocument()
+    expect(screen.queryByTitle('Mã QR thanh toán PayOS')).not.toBeInTheDocument()
+    expect(apiClient.post).toHaveBeenCalledWith('/api/v1/payments/sync', { bookingId: 51 })
+  })
+
+  it('closes a navigated frame even when the backend still reports PENDING', async () => {
+    mount()
+    await openCheckout()
+    fireEvent.load(screen.getByTitle('Mã QR thanh toán PayOS'))
+    expect(await screen.findByRole('heading', { name: 'Đã đóng khung thanh toán' })).toBeInTheDocument()
+    expect(screen.queryByTitle('Mã QR thanh toán PayOS')).not.toBeInTheDocument()
+    expect(screen.queryByTestId('checkin-qr-container')).not.toBeInTheDocument()
+    expect(screen.getByText('Chờ thanh toán cọc')).toBeInTheDocument()
   })
 
   it('clears active checkout session when bookingId switches, preventing stale reopen when switching back', async () => {

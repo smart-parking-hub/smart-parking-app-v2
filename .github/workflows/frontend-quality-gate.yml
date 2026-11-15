@@ -54,6 +54,11 @@ jobs:
           e2e/test-03-merchant-qr-checkout-cash.spec.ts
           e2e/core-booking-gate-flow.spec.ts
           e2e/admin-transactions.spec.ts
+          e2e/driver-payment-history.spec.ts
+          e2e/payos-cancel.spec.ts
+          e2e/payos-embedded-checkout.spec.ts
+          e2e/unpaid-hold-policy.spec.ts
+          e2e/quick-hold-redesign.spec.ts
 
       - name: Upload Playwright Report & Artifacts on Failure
         if: always()
