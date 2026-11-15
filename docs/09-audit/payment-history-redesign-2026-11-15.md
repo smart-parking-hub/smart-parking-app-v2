@@ -49,7 +49,7 @@ The API still supplies current-page search/status filtering and summary amounts,
 
 ## Pre-push review on isolated main checkout
 
-Branch: `feat/scr-19-driver-payments`, reused from the original screen and based on refreshed `origin/main`. Exactly 10 payment-related files; no other working-tree features included.
+Branch: `feat/scr-19-driver-payments`, reused from the original screen and based on refreshed `origin/main`. Eleven related files, including the one-line CI addition to run payment-history browser coverage; no other working-tree features included.
 
 Review found one dependency on an unmerged booking enhancement: the new detail link used a selected-booking query that current main does not consume. It now opens the supported `/bookings` list. No booking feature or backend dependency is pulled into this PR.
 
