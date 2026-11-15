@@ -1,5 +1,11 @@
 # Merchant check-in confirmation
 
+## Update 2026-11-15
+
+Owner: SPH frontend. `last_verified`: 2026-11-15. Evidence: `ScannerPage`, `operations.test.tsx`, `e2e/test-02-merchant-qr-checkin.spec.ts`.
+
+After successful check-in, the exact lot/code pair displays **Xe đã check-in** on a disabled submit button and a persistent inline explanation. Repeated manual/automatic submissions return without reopening the success dialog or calling the API. Editing the code/lot allows another ticket; returning to a processed pair disables it again. This replaces the older dialog-reopening behavior described below. Backend row locking, ownership validation and PENDING_CHECKIN-only transition remain authoritative, including after a page reload.
+
 - Owner: frontend maintainers
 - Last verified: 2026-11-13
 - Route: `/merchant/qr-scanner` (XE VÀO)

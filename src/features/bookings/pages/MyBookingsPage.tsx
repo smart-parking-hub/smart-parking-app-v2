@@ -13,7 +13,7 @@ import {
 import { Toast, ToastContainer } from '@/shared/components/Toast'
 import { Workspace, Panel, Notice, Badge, secondary } from '@/shared/components/Workspace'
 import { errorMessage, getData, type Page } from '@/shared/api/resources'
-import { fetchBookings, BookingStatusPanel, type Booking } from '@/features/booking-flow'
+import { fetchBookingsPage, formatMoney, statusLabels, bookingTimeLabel, BookingStatusPanel, type Booking } from '@/features/booking-flow'
 import { CreateDisputeModal } from '../components/CreateDisputeModal'
 import { isBookingEligibleForDispute } from '../schemas/disputeSchemas'
 
@@ -44,10 +44,12 @@ export function MyBookingsPage() {
   const navigate = useNavigate()
   const [disputeBooking, setDisputeBooking] = useState<Booking | null>(null)
   const [createdNotice, setCreatedNotice] = useState<Dispute | null>(null)
+  const [page, setPage] = useState(0)
+  const [expandedId, setExpandedId] = useState<number | null | undefined>(undefined)
 
   const query = useQuery({
-    queryKey: ['real-bookings'],
-    queryFn: fetchBookings,
+    queryKey: ['real-bookings', page],
+    queryFn: () => fetchBookingsPage(page),
     retry: false,
     refetchInterval: 10000,
   })
@@ -55,7 +57,7 @@ export function MyBookingsPage() {
   const disputesLookupQuery = useQuery({
     queryKey: ['driver-disputes-lookup'],
     queryFn: fetchDisputesLookupSafe,
-    enabled: query.isSuccess && (query.data?.length ?? 0) > 0,
+    enabled: query.isSuccess && (query.data?.content.length ?? 0) > 0,
     retry: false,
     staleTime: 30_000,
   })
@@ -113,20 +115,25 @@ export function MyBookingsPage() {
             </button>
           </div>
         </Notice>
-      ) : !query.data.length ? (
-        <Notice>Bạn chưa có lượt đặt chỗ nào.</Notice>
+      ) : !query.data.content.length ? (
+        <Notice>{page === 0 ? 'Bạn chưa có lượt đặt chỗ nào.' : 'Không có lượt đặt chỗ ở trang này.'}{page > 0 && <button className={secondary} onClick={() => setPage(0)}>Về trang đầu</button>}</Notice>
       ) : (
-        query.data.map((booking) => {
+        <>
+        <p className="text-sm text-brand-muted">{query.data.totalElements ?? query.data.content.length} lượt đặt chỗ · Mở từng vé để xem QR, thanh toán và chi tiết.</p>
+        <div className="grid items-start gap-3 xl:grid-cols-2">
+        {query.data.content.map((booking) => {
           const existingDispute = disputeByBookingId.get(booking.id)
           const canDispute = isBookingEligibleForDispute(booking.status)
+          const expanded = expandedId === booking.id || (expandedId === undefined && query.data.content.length === 1)
 
           return (
-            <Panel key={booking.id} title={booking.parkingLotName || `Bãi đỗ #${booking.parkingLotId}`}>
-              <div className="mb-4 flex flex-col gap-3 border-b border-slate-100 pb-4 sm:flex-row sm:items-center sm:justify-between">
-                <div>
-                  <p className="text-brand-muted">{booking.parkingLotAddress}</p>
+            <Panel key={booking.id} className="!p-4 sm:!p-5">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                <div className="min-w-0">
+                  <h2 className="font-sora text-base font-semibold">{booking.parkingLotName || `Bãi đỗ #${booking.parkingLotId}`}</h2>
+                  <p className="mt-1 truncate text-xs text-brand-muted" title={booking.parkingLotAddress ?? undefined}>{booking.parkingLotAddress}</p>
                   <div className="mt-2 flex flex-wrap items-center gap-2 text-xs">
-                    <span className="rounded-md bg-slate-100 px-2 py-0.5 font-mono font-semibold text-slate-800">
+                    <span className="max-w-56 truncate rounded-md bg-slate-100 px-2 py-0.5 font-mono font-semibold text-slate-800" title={booking.bookingCode}>
                       #{booking.id} · {booking.bookingCode}
                     </span>
                     {booking.vehiclePlate && (
@@ -206,10 +213,26 @@ export function MyBookingsPage() {
                 </div>
               </div>
 
-              <BookingStatusPanel bookingId={booking.id} booking={booking} />
+              <div className="mt-3 flex flex-wrap items-center justify-between gap-3 border-t border-brand-border pt-3">
+                <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-xs">
+                  <Badge value={booking.status}>{statusLabels[booking.status]}</Badge>
+                  <span className="text-brand-muted">Vào <strong className="font-medium text-brand-navy">{bookingTimeLabel(booking.expectedCheckInTime)}</strong><br/>Ra <strong className="font-medium text-brand-navy">{bookingTimeLabel(booking.expectedCheckOutTime)}</strong></span>
+                  <span className="text-brand-muted">{['AWAITING_FINAL_PAYMENT','COMPLETED','REVIEWED'].includes(booking.status) ? 'Phí quyết toán' : 'Phí dự kiến'}<strong className="ml-2 text-brand-navy">{booking.totalAmount == null ? 'Chưa có' : formatMoney(booking.totalAmount)}</strong><br/>Cọc <strong className="ml-2 text-brand-navy">{formatMoney(booking.advanceDeposit)}</strong></span>
+                </div>
+                <button type="button" className={`${secondary} !px-3 !py-2 !text-xs`} aria-expanded={expanded} aria-controls={`booking-detail-${booking.id}`} onClick={() => setExpandedId(expanded ? null : booking.id)}>
+                  {expanded ? 'Thu gọn' : 'Xem vé & chi tiết'}<ChevronDown size={14} className={expanded ? 'rotate-180' : ''} aria-hidden="true"/>
+                </button>
+              </div>
+              {expanded && <div id={`booking-detail-${booking.id}`} className="mt-4 border-t border-brand-border pt-4"><BookingStatusPanel bookingId={booking.id} booking={booking} embedded /></div>}
             </Panel>
           )
-        })
+        })}
+        </div>
+        {(query.data.totalPages ?? 1) > 1 && <nav aria-label="Phân trang vé đặt chỗ" className="flex flex-wrap items-center justify-between gap-3 text-sm">
+          <span className="text-brand-muted">Trang {page + 1} / {query.data.totalPages}</span>
+          <div className="flex gap-2"><button className={secondary} disabled={page === 0 || query.isFetching} onClick={() => { setExpandedId(undefined); setPage(page - 1) }}>Trang trước</button><button className={secondary} disabled={page + 1 >= query.data.totalPages || query.isFetching} onClick={() => { setExpandedId(undefined); setPage(page + 1) }}>Trang sau</button></div>
+        </nav>}
+        </>
       )}
 
       {disputeBooking && (

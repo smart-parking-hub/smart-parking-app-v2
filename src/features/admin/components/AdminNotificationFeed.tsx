@@ -1,4 +1,5 @@
 import { Bell, BellRing, CheckCheck, LoaderCircle } from 'lucide-react'
+import { Link } from 'react-router-dom'
 import { formatNotificationTime } from '@/entities/notification'
 import { Button } from '@/shared/components/Button'
 import { Skeleton } from '@/shared/components/Skeleton'
@@ -39,6 +40,7 @@ export function AdminNotificationFeed({ items, pending, pendingId, disabled, onR
             <p>{item.content}</p>
           </div>
           <div className="admin-notification-action">
+            {item.targetType === 'PARKING_LOT' && typeof item.targetId === 'number' && Number.isSafeInteger(item.targetId) && item.targetId > 0 && <Link className="inline-flex min-h-10 items-center rounded-xl border border-brand-border px-3 text-sm font-semibold text-brand-primary" to={`/admin/parking-lots/${item.targetId}`}>Xem hồ sơ bãi #{item.targetId}</Link>}
             {unread ? <Button
               variant="ghost"
               className="min-h-12"

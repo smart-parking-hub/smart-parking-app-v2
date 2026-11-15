@@ -24,6 +24,9 @@ import { SearchParkingSkeleton } from '../components/SearchParkingSkeleton'
 import type { Coordinates, Place } from '../api/mapProvider'
 
 export function SearchParkingPage() {
+  useEffect(() => {
+    parkingSearchStore.setSelectedLotId(null)
+  }, [])
   const vehicleQuery = useQuery({ queryKey: ['booking-vehicles'], queryFn: fetchVehicles, retry: false })
   const vehicleOptions = (vehicleQuery.data ?? []).map(vehicle => ({ id: String(vehicle.id), label: vehicle.licensePlate, type: vehicle.vehicleType }))
   const filters = useParkingSearchStore((s) => s.filters)
@@ -58,7 +61,7 @@ export function SearchParkingPage() {
     parkingSearchStore.setFilters(updated)
   }
 
-  const selectedLot = lots.find((l) => l.id === selectedLotId) || lots[0]
+  const selectedLot = lots.find((l) => l.id === selectedLotId)
 
   const handleOpenQuickBook = (lot: ParkingLotItem) => {
     parkingSearchStore.openQuickBook(lot)

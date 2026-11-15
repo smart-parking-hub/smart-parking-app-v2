@@ -218,10 +218,10 @@ describe('BATCH-14B: Driver Core — Search, Detail & Bookings Integration', () 
 
     // Yard List displays parking lot cards with 10p hold buttons
     await waitFor(() => {
-      expect(screen.getAllByText(/ĐẶT GIỮ CHỖ 10P/i).length).toBeGreaterThan(0)
+      expect(screen.getAllByText(/ĐẶT GIỮ CHỖ/i).length).toBeGreaterThan(0)
     })
 
-    const quickBookButtons = screen.getAllByRole('button', { name: /ĐẶT GIỮ CHỖ 10P/i })
+    const quickBookButtons = screen.getAllByRole('button', { name: /ĐẶT GIỮ CHỖ/i })
     expect(quickBookButtons.length).toBeGreaterThan(0)
 
     // Open quick book drawer
@@ -229,7 +229,7 @@ describe('BATCH-14B: Driver Core — Search, Detail & Bookings Integration', () 
 
     // Quick book drawer should open
     expect(
-      screen.getByRole('dialog', { name: 'Panel giữ chỗ nhanh 10 phút' })
+      screen.getByRole('dialog', { name: 'Đặt giữ chỗ nhanh' })
     ).toBeInTheDocument()
     expect(
       screen.getByRole('heading', { name: 'Đặt giữ chỗ nhanh', level: 2 })
@@ -266,7 +266,7 @@ describe('BATCH-14B: Driver Core — Search, Detail & Bookings Integration', () 
     expect(screen.getByText(/18\/40 chỗ trống/i)).toBeInTheDocument()
 
     // Reservation flow panel is present
-    expect(await screen.findByText(/Đặt chỗ tại bãi/i)).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { level: 3, name: /Bãi Đỗ Xe/i })).toBeInTheDocument()
   })
 
   // -------------------------------------------------------------

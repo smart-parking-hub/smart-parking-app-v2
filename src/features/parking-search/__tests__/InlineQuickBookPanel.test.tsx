@@ -171,10 +171,10 @@ describe('InlineQuickBookPanel - Real Server Booking Integration', () => {
       <InlineQuickBookPanel open={true} onClose={onClose} lot={sampleLot} />,
     )
 
-    const dialog = await screen.findByRole('dialog', { name: 'Panel giữ chỗ nhanh 10 phút' })
+    const dialog = await screen.findByRole('dialog', { name: 'Đặt giữ chỗ nhanh' })
     expect(dialog).toBeInTheDocument()
     expect(await screen.findByRole('heading', { level: 2, name: 'Đặt giữ chỗ nhanh' })).toBeInTheDocument()
-    expect(await screen.findByRole('heading', { level: 2, name: /Bãi Xe Miền Nam/ })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { level: 3, name: /Bãi Xe Miền Nam/ })).toBeInTheDocument()
 
     // R1: Verify no 10-minute hold promise remains in heading, eyebrow, or aria-label
     expect(screen.queryByText(/khẩn cấp \(10 Phút\)/i)).toBeNull()
@@ -479,7 +479,7 @@ describe('InlineQuickBookPanel - Real Server Booking Integration', () => {
         </MemoryRouter>
       </QueryClientProvider>,
     )
-    expect(await screen.findByRole('heading', { level: 2, name: /Bãi Xe Miền Nam/ })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { level: 3, name: /Bãi Xe Miền Nam/ })).toBeInTheDocument()
 
     // Switch to otherLot
     rerender(
@@ -489,7 +489,7 @@ describe('InlineQuickBookPanel - Real Server Booking Integration', () => {
         </MemoryRouter>
       </QueryClientProvider>,
     )
-    expect(await screen.findByRole('heading', { level: 2, name: /Bãi Xe Miền Bắc/ })).toBeInTheDocument()
-    expect(screen.queryByRole('heading', { level: 2, name: /Bãi Xe Miền Nam/ })).not.toBeInTheDocument()
+    expect(await screen.findByRole('heading', { level: 3, name: /Bãi Xe Miền Bắc/ })).toBeInTheDocument()
+    expect(screen.queryByRole('heading', { level: 3, name: /Bãi Xe Miền Nam/ })).not.toBeInTheDocument()
   })
 })

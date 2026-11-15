@@ -1,4 +1,5 @@
 export * from './api'
+export { bookingTimeLabel } from './time'
 export { ReservationFlow } from './ReservationFlow'
 export { BookingStatusPanel } from './BookingStatusPanel'
 export { PaymentResultPage } from './PaymentResultPage'
