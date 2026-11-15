@@ -1,5 +1,5 @@
 import { beforeEach, afterEach, it, expect, vi } from 'vitest'
-import { render, screen, cleanup } from '@testing-library/react'
+import { render, screen, cleanup, within, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { MemoryRouter } from 'react-router-dom'
@@ -61,4 +61,37 @@ it('rejects a malformed amount rather than claiming a zero-value payment',async(
  vi.mocked(apiClient.get).mockResolvedValue(page([{...transaction,amount:null}]))
  mount(<DriverPaymentsPage/>);expect(await screen.findByRole('alert')).toBeInTheDocument()
  expect(screen.queryByText('TX-API-71')).not.toBeInTheDocument()
+})
+
+it('resets a filtered empty result and keeps the original current-page totals',async()=>{
+ const user=userEvent.setup();mount(<DriverPaymentsPage/>);await screen.findByText('TX-API-71')
+ await user.type(screen.getByLabelText('Tìm trong trang hiện tại'),'no-match')
+ await user.click(screen.getByRole('button',{name:'Xóa bộ lọc'}))
+ expect(screen.getByText('TX-API-71')).toBeInTheDocument()
+ expect(screen.getByLabelText('Tìm trong trang hiện tại')).toHaveValue('')
+ expect(screen.getByLabelText('Trạng thái trong trang hiện tại')).toHaveValue('')
+})
+
+it('opens the full transaction in a dialog and restores focus when closing it',async()=>{
+ const user=userEvent.setup();const code='PAYMENT-LONG-CODE-0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+ vi.mocked(apiClient.get).mockResolvedValue(page([{...transaction,transactionCode:code}]))
+ mount(<DriverPaymentsPage/>);const trigger=await screen.findByRole('button',{name:`Chi tiết giao dịch ${code}`})
+ await user.click(trigger)
+ const dialog=screen.getByRole('dialog',{name:'Chi tiết giao dịch'})
+ expect(within(dialog).getByText(code)).toBeInTheDocument()
+ expect(within(dialog).getByRole('link',{name:'Xem đặt chỗ'})).toHaveAttribute('href','/bookings')
+ await user.click(within(dialog).getByRole('button',{name:'Đóng chi tiết'}))
+ expect(screen.queryByRole('dialog')).not.toBeInTheDocument();expect(trigger).toHaveFocus()
+})
+
+it('disables refresh while a background request is pending without inventing a payment action',async()=>{
+ const user=userEvent.setup();mount(<DriverPaymentsPage/>);await screen.findByText('TX-API-71')
+ let finish: ((value: ReturnType<typeof page>)=>void) | undefined
+ vi.mocked(apiClient.get).mockImplementation(()=>new Promise(resolve=>{finish=resolve}))
+ await user.click(screen.getByRole('button',{name:'Làm mới'}))
+ expect(screen.getByRole('button',{name:'Làm mới'})).toBeDisabled()
+ expect(screen.getByText('TX-API-71')).toBeInTheDocument()
+ finish?.(page([transaction]))
+ await waitFor(()=>expect(screen.getByRole('button',{name:'Làm mới'})).toBeEnabled())
+ expect(apiClient.request).not.toHaveBeenCalled()
 })
