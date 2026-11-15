@@ -288,10 +288,11 @@ test.describe('Core E2E Lifecycle: Booking & cọc PayOS -> Barie Check-in -> Ba
     await expect(dialog.getByText('Chờ thanh toán cọc', { exact: true })).toBeVisible()
     await expect(dialog.getByTestId('checkin-qr-container')).toHaveCount(0)
     await dialog.getByRole('button', { name: /Thanh toán cọc.*qua PayOS/ }).click()
-    await page.frameLocator('iframe[title="Mã QR thanh toán PayOS"]')
-      .getByRole('button', { name: 'Thông báo đã quét (fixture)' }).click()
-    await expect(dialog.getByRole('img', { name: `Mã QR Check-in ${bookingCode}` })).toBeVisible()
-    await expect(dialog.getByText('Đã cọc · Chờ check-in', { exact: true })).toBeVisible()
+    await dialog.getByRole('button', { name: 'Mở PayOS để thanh toán' }).click()
+    await page.getByRole('button', { name: 'Thông báo đã quét (fixture)' }).click()
+    await page.getByRole('link', { name: 'Xem vé QR' }).click()
+    await expect(page.getByRole('img', { name: `Mã QR Check-in ${bookingCode}` })).toBeVisible()
+    await expect(page.getByText(/Đã xác nhận cọc\. Chỉ được check-in/)).toBeVisible()
 
     // -------------------------------------------------------------
     // PHASE 2: CỔNG BARIE CHECK-IN XE VÀO BÃI (ROLE MERCHANT)

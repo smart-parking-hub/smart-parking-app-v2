@@ -349,3 +349,33 @@ last_verified: 2026-11-12; owner: SPH. [Module, API và nguồn thiết kế](..
 | Nhật ký Barie & Tiến trình Vận hành (`MerchantBookingBarrierTimeline`, `buildBookingBarrierSummary`) | Dựng timeline theo trình tự thời gian từ các mốc xác thực của `BookingDto` (`createdAt`, `expiresAt`, `expectedCheckInTime`, `checkInTime`, `expectedCheckOutTime`, `checkOutTime`, `cancelledAt`), tính thời lượng lưu bãi thực tế & chênh lệch sớm/trễ/quá giờ; hiển thị ghi chú minh bạch khi BE chưa có API log quét lỗi / ALPR | Suy diễn xác thực từ `BookingDto.java` (không bịa dữ liệu mock phần cứng) | **New / Honest BE Fit** |
 | Hồ sơ Hành trình, Tài chính sau cọc & Hủy/Hoàn tiền (`MerchantBookingDetailSections`) | Đồng nhất 4 thẻ KPI trắng kiểu `MerchantBookingsMetrics` (`Mã vé`, `Trạng thái`, `Đặt cọc`, `Tổng phí` + highlight `Còn lại sau cọc`); tách `MerchantBookingJourneyPanel` thành 2 nhóm rõ ràng (*Phương tiện & Bãi tiếp nhận* vs *Lịch hẹn & Thời gian thực tế*), `MerchantBookingTariffAndRefundPanel`, và sticky `MerchantBookingDetailSidebar` | Đồng bộ Design System Merchant Portal (`MerchantBookingsPage`, `MerchantDashboardPage`) & `BookingDto.java` | **Redesigned + Verified** |
 | Đầy đủ 5 trạng thái UI & Kiểm thử | Loading (`MerchantBookingDetailSkeleton`), Empty (`EmptyState` cho `:id` lỗi hoặc response rỗng), Error (`ErrorState` + Retry & Background refetch `Alert`), Feedback (`Toast` khi sao chép mã / làm mới), kiểm thử `MerchantBookingDetailPage.test.tsx` + E2E `/merchant/bookings/9999` | Layer-1 `@/shared/components` + Vitest + Playwright | **Verified** |
+
+
+## SCR-019 — Payment history polish — 2026-11-15
+
+User-authorized refresh of the current `/payments` screen: compact summary cards, aligned desktop table with grouped type/channel, responsive mobile rows, semantic colored statuses and immediate accessible transaction detail dialog. Existing DRIVER API/query scope, totals, filters, pagination, refresh and reconciliation guidance are preserved. Historical enterprise/mock accounting descriptions do not describe this current API-backed screen. See [module and capability mapping](../05-modules/payments/driver-payment-history.md) and [verification report](./payment-history-redesign-2026-11-15.md). Last verified: 2026-11-15.
+
+
+## PayOS cancellation recovery — 2026-11-15
+
+| Capability | Result | Status |
+|---|---|---|
+| QR, hosted fallback, status sync, deposit/final payment | Retained with an isolated iframe lifecycle | Preserved |
+| SDK cancel/exit, hosted return and blocked local redirect | Remove iframe; compact summary and return-to-ticket action, even if sync remains PENDING | Changed per user request |
+| Payment/booking authority, cancellation, amount and link validation | No client confirmation or automatic booking cancellation/new charge | Preserved |
+| Same-origin return signaling | Validate origin, exact frame window and booking ID; only request server verification | Added |
+
+
+## SCR-023/024 — Unified PayOS return/cancel — 2026-11-15
+
+User-approved recovery plan implemented: all actual PayOS result routes share a compact server-driven result, real booking/deadline, one state-specific primary action, separate confirmed booking cancellation and a link that opens the selected ticket. No demo fallback URL, dummy berth/session/timer, invented hotline or claim that money was not deducted. Development demo confirmation stays on the booking screen only. Footer/Copilot hidden for these result routes. See [full capability mapping and verification](./payos-recovery-2026-11-15.md); the former demo-oriented SCR-024 inventory is superseded.
+
+
+## Quick payment presentation and QR reopening — 2026-11-15
+
+User-requested compact reservation payment variant: prominent real deposit/deadline, readable lot/plate/schedule, copyable truncated code, one primary PayOS action and disclosed tariff/secondary actions. Existing API, calculations, QR eligibility and demo gating are preserved. Hosted opening now revalidates through a button and removes the stale opener on error. The retained local backend is now activated using a copy-tested compatibility lineage; the earlier runtime-blocker note is superseded for this local instance. See [implementation and parity](./quick-payment-polish-2026-11-15.md).
+
+
+## Unpaid hold protection — 2026-11-15
+
+Server-owned vehicle/account quotas, verified unpaid-release cooldown and technical rate protection are surfaced in the reservation form with typed errors, original retry times and ticket links. Paid/review/refunded/partial/unknown evidence is not labelled as abuse. See [contract mapping](../05-modules/bookings/unpaid-hold-policy.md) and [verification](./unpaid-hold-policy-2026-11-15.md).

@@ -6,6 +6,7 @@ import { MemoryRouter } from 'react-router-dom'
 import { apiClient } from '@/shared/api/client'
 import { ReservationFlow } from '../ReservationFlow'
 import { PaymentResultPage } from '../PaymentResultPage'
+import { AxiosError } from 'axios'
 vi.mock('@/shared/api/client',()=>({apiClient:{get:vi.fn(),post:vi.fn(),request:vi.fn()}}))
 const vehicle={id:3,licensePlate:'51C-12345',vehicleType:'HEAVY_TRUCK',status:'ACTIVE'}
 const lot={id:7,name:'Bãi thử nghiệm',address:'Địa chỉ thử nghiệm',status:'APPROVED',slots:[{vehicleType:'HEAVY_TRUCK',availableCapacity:1,totalCapacity:2}],pricingRules:[{vehicleType:'HEAVY_TRUCK',basePricePerHour:25000,surgeMultiplier:1.2,surgeStartTime:'17:00:00',surgeEndTime:'20:00:00',overtimePenaltyMultiplier:2}]}
@@ -32,6 +33,15 @@ it('blocks a full lot without posting a booking',async()=>{
 })
 it('reports booking failure and never offers success on a rejected request',async()=>{
  vi.mocked(apiClient.post).mockRejectedValue(new Error('Bãi vừa hết chỗ'));mount();await userEvent.click(await screen.findByRole('button',{name:'Tạo booking và xem tiền cọc'}));expect(await screen.findByRole('alert')).toHaveTextContent('Bãi vừa hết chỗ');expect(screen.queryByText('BK-SERVER-41')).not.toBeInTheDocument()
+})
+it('keeps a cooldown submit disabled and preserves the form without opening payment',async()=>{
+ const retryAt=new Date(Date.now()+1800000).toISOString()
+ vi.mocked(apiClient.post).mockRejectedValue(Object.assign(new AxiosError('Too many requests'),{response:{data:{code:'BOOKING_HOLD_COOLDOWN',message:'Bạn đã bỏ hai lượt giữ chỗ tại bãi này.',data:{reason:'COOLDOWN',retryAt}}}}))
+ mount();await userEvent.click(await screen.findByRole('button',{name:'Tạo booking và xem tiền cọc'}))
+ expect(await screen.findByRole('alert')).toHaveTextContent('Bạn đã bỏ hai lượt giữ chỗ tại bãi này.')
+ const retry=screen.getByRole('button',{name:/Có thể thử lại sau/});expect(retry).toBeDisabled()
+ await userEvent.click(retry);expect(apiClient.post).toHaveBeenCalledTimes(1)
+ expect(screen.getByRole('combobox')).toHaveValue('3');expect(screen.queryByText(/Mở PayOS/)).not.toBeInTheDocument()
 })
 it('does not treat simulated=true or return navigation as payment confirmation',async()=>{
  mount(<PaymentResultPage/>,'/payment/return?bookingId=41&simulated=true');await screen.findByText('BK-SERVER-41');await waitFor(()=>expect(apiClient.post).toHaveBeenCalledWith('/api/v1/payments/sync',{bookingId:41}));expect(vi.mocked(apiClient.post).mock.calls.some(([url])=>String(url).includes('demo-confirm'))).toBe(false);expect(screen.getByText('Chờ thanh toán cọc')).toBeInTheDocument()

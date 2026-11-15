@@ -157,6 +157,38 @@ test.describe('Flow 1: Tạo booking & Đặt cọc PayOS (SP-S3-INT-01)', () =>
     })
   })
 
+  for (const width of [390, 1440]) {
+    test(`compact quick-booking payment at ${width}px`, async ({page}, testInfo) => {
+      await page.setViewportSize({width, height: 900})
+      const errors: string[] = []
+      page.on('pageerror', error => errors.push(error.message))
+      const booking = {id: 501, bookingCode: 'BK3A88B84B500F46489E20958D0E7BB609', parkingLotId: 12, merchantId: 101,
+        parkingLotName: mockParkingLot.name, parkingLotAddress: mockParkingLot.address, vehicleId: 3, vehiclePlate: '51D-894.12',
+        status: 'PENDING_PAYMENT', advanceDeposit: 258240, totalAmount: 1291200, hourlyRate: 30000,
+        overtimePenaltyMultiplier: 1.7, surgeMultiplier: 1.3,
+        expectedCheckInTime: new Date(Date.now()+1800000).toISOString(), expectedCheckOutTime: new Date(Date.now()+9000000).toISOString(), expiresAt: new Date(Date.now()+900000).toISOString()}
+      await page.route(/\/api\/v1\/bookings/, route => route.fulfill({json: {data: new URL(route.request().url()).pathname.endsWith('/501') || route.request().method()==='POST'
+        ? booking : {content: [booking], totalElements: 1, totalPages: 1}}}))
+      await page.goto('/parking')
+      await page.locator('article', {hasText: mockParkingLot.name}).first().getByRole('button', {name: 'ĐẶT GIỮ CHỖ'}).click()
+      const dialog = page.getByRole('dialog', {name: 'Đặt giữ chỗ nhanh'})
+      await dialog.getByRole('button', {name: 'Tạo booking và xem tiền cọc'}).click()
+      await expect(dialog.getByText('Tiền cọc cần thanh toán')).toBeVisible()
+      await dialog.getByRole('button', {name: /Thanh toán cọc.*qua PayOS/}).click()
+      await expect(dialog.getByRole('button', {name: 'Mở PayOS để thanh toán'})).toBeVisible()
+      await expect(dialog.getByText('Thanh toán qua PayOS', {exact: true})).toBeVisible()
+      await expect(dialog.getByRole('button', {name: 'Thanh toán Demo (chỉ local)'})).toHaveCount(0)
+      await expect(dialog.getByRole('button', {name: 'Hủy booking'})).toHaveCount(0)
+      expect(await dialog.evaluate(el => el.scrollWidth <= el.clientWidth)).toBe(true)
+      expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
+      await dialog.screenshot({path: testInfo.outputPath(`quick-payment-${width}.png`)})
+      await dialog.getByText('Tác vụ khác', {exact: true}).click()
+      await expect(dialog.getByRole('button', {name: 'Thanh toán Demo (chỉ local)'})).toBeVisible()
+      await expect(dialog.getByRole('link', {name: 'Xem các lượt đặt chỗ'})).toHaveAttribute('href', '/bookings?bookingId=501')
+      expect(errors).toEqual([])
+    })
+  }
+
   test('Tài xế tạo booking, thanh toán cọc PayOS và nhận vé QR từ server', async ({ page }) => {
     await page.goto('/parking')
     const lotCard = page.locator('article', { hasText: 'Bãi Đỗ Xe Tân Cảng Container' }).first()
@@ -176,12 +208,13 @@ test.describe('Flow 1: Tạo booking & Đặt cọc PayOS (SP-S3-INT-01)', () =>
     expect(await page.evaluate(() => localStorage.getItem('smart-truck-parking.active_hold'))).toBeNull()
 
     await dialog.getByRole('button', { name: /Thanh toán cọc.*qua PayOS/ }).click()
-    const checkout = page.frameLocator('iframe[title="Mã QR thanh toán PayOS"]')
-    await checkout.getByRole('button', { name: 'Thông báo đã quét (fixture)' }).click()
-    await expect(dialog.getByText('Đã cọc · Chờ check-in', { exact: true })).toBeVisible()
-    await expect(dialog.getByRole('img', { name: 'Mã QR Check-in BK-2026-0894' })).toBeVisible()
+    await dialog.getByRole('button', { name: 'Mở PayOS để thanh toán' }).click()
+    await page.getByRole('button', { name: 'Thông báo đã quét (fixture)' }).click()
+    await page.getByRole('link', { name: 'Xem vé QR' }).click()
+    await expect(page.getByText(/Đã xác nhận cọc\. Chỉ được check-in/)).toBeVisible()
+    await expect(page.getByRole('img', { name: 'Mã QR Check-in BK-2026-0894' })).toBeVisible()
 
-    await dialog.getByRole('link', { name: 'Xem các lượt đặt chỗ' }).click()
+    await page.getByRole('link', { name: 'Đóng vé đang chọn' }).click()
     await expect(page).toHaveURL(/\/bookings/)
     await expect(page.getByText('BK-2026-0894', { exact: true })).toBeVisible()
     await expect(page.getByText('Đã cọc · Chờ check-in', { exact: true }).first()).toBeVisible()

@@ -289,7 +289,7 @@ describe('InlineQuickBookPanel - Real Server Booking Integration', () => {
 
     // Now on /bookings: see the server booking
     expect(await screen.findByText('BK-SERVER-101')).toBeInTheDocument()
-    expect(screen.getByText('Bãi Xe Miền Nam')).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: /Vé vừa xem.*Bãi Xe Miền Nam/ })).toBeInTheDocument()
 
     // Simulate query refetch / reload: server data remains intact
     await queryClient.refetchQueries({ queryKey: ['real-bookings'] })
