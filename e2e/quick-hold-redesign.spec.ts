@@ -125,117 +125,22 @@ for (const width of [390, 1440]) {
       }
     })
 
-    // Isolate component from live map services
-    await page.route('**/src/main.tsx', (route) =>
-      route.fulfill({ contentType: 'application/javascript', body: '' }),
-    )
-    await page.goto('/')
-
-    await page.evaluate(async () => {
-      try {
-        const meta = await (
-          await fetch('/node_modules/.vite/deps/_metadata.json')
-        ).json()
-        const v = meta.browserHash
-        const load = (path: string) => import(/* @vite-ignore */ path)
-        const loadDep = (file: string) =>
-          import(/* @vite-ignore */ `/node_modules/.vite/deps/${file}?v=${v}`)
-
-        const ReactModule = await loadDep('react.js')
-        const React = ReactModule.default || ReactModule
-        const useState = React.useState
-        const ReactDOMModule = await loadDep('react-dom_client.js')
-        const ReactDOM = ReactDOMModule.default || ReactDOMModule
-        const { MemoryRouter, Routes, Route } = await loadDep(
-          'react-router-dom.js',
-        )
-        const { QueryClient, QueryClientProvider } = await loadDep(
-          '@tanstack_react-query.js',
-        )
-        const { InlineQuickBookPanel } = await load(
-          '/src/features/parking-search/components/InlineQuickBookPanel.tsx',
-        )
-        const { MyBookingsPage } = await load(
-          '/src/features/bookings/pages/MyBookingsPage.tsx',
-        )
-        await load('/src/styles/globals.css')
-
-        const queryClient = new QueryClient({
-          defaultOptions: {
-            queries: { retry: false },
-            mutations: { retry: false },
-          },
-        })
-
-        function Harness() {
-          const [open, setOpen] = useState(false)
-          return React.createElement(
-            QueryClientProvider,
-            { client: queryClient },
-            React.createElement(
-              MemoryRouter,
-              { initialEntries: ['/parking'] },
-              React.createElement(
-                'div',
-                { id: 'app-container' },
-                React.createElement(
-                  'button',
-                  {
-                    id: 'trigger',
-                    type: 'button',
-                    onClick: () => setOpen(true),
-                  },
-                  'Mở đặt chỗ',
-                ),
-                React.createElement(
-                  Routes,
-                  null,
-                  React.createElement(Route, {
-                    path: '/parking',
-                    element: React.createElement(InlineQuickBookPanel, {
-                      open,
-                      onClose: () => setOpen(false),
-                      lot: {
-                        id: 1,
-                        name: 'Bãi Xe Phía Nam',
-                        address: '123 Quốc Lộ 1A',
-                        distanceKm: 2.5,
-                        etaMinutes: 10,
-                        availableSlots: 5,
-                        totalSlots: 10,
-                        slotTypeLabel: 'Còn 5 chỗ',
-                        hourlyRate: 25000,
-                        depositAmount: 15000,
-                        amenities: [],
-                        latitude: 10.7,
-                        longitude: 106.6,
-                        ratingAverage: 4.8,
-                      },
-                    }),
-                  }),
-                  React.createElement(Route, {
-                    path: '/bookings',
-                    element: React.createElement(MyBookingsPage, null),
-                  }),
-                ),
-              ),
-            ),
-          )
-        }
-
-        document.body.innerHTML = '<div id="root"></div>'
-        const root = ReactDOM.createRoot(document.getElementById('root')!)
-        root.render(React.createElement(Harness, null))
-      } catch (err) {
-        console.error('EVALUATE_ERROR:', err)
-        throw err
-      }
-    })
-
-    const triggerBtn = page.locator('#trigger')
+    // Exercise the application route with API fixtures, avoiding a second React root.
+    await page.addInitScript(token => localStorage.setItem('access_token', token),
+      `test.${Buffer.from(JSON.stringify({ role: 'ROLE_DRIVER', userId: 88, exp: Math.floor(Date.now() / 1000) + 3600 })).toString('base64url')}.test`)
+    await page.route('**/api/v1/parking-lots/search**', route => route.fulfill({ json: { data: {
+      content: [{ id: 1, name: 'Bãi Xe Phía Nam', address: '123 Quốc Lộ 1A', availableCapacity: 5,
+        totalSlots: 10, basePricePerHour: 25000, latitude: 10.7, longitude: 106.6 }],
+      totalElements: 1, totalPages: 1,
+    } } }))
+    await page.route('**/api/v1/driver/profile', route => route.fulfill({ json: { data: { fullName: 'Tài xế kiểm thử' } } }))
+    await page.route('**/api/v1/notifications/unread-count', route => route.fulfill({ json: { data: 0 } }))
+    await page.route('**/api/v1/disputes/me**', route => route.fulfill({ json: { data: { content: [], totalElements: 0, totalPages: 0 } } }))
+    await page.goto('/parking')
+    const triggerBtn = page.getByRole('button', { name: 'ĐẶT GIỮ CHỖ', exact: true })
     await triggerBtn.click()
 
-    const dialog = page.getByRole('dialog', { name: 'Panel giữ chỗ nhanh 10 phút' })
+    const dialog = page.getByRole('dialog', { name: 'Đặt giữ chỗ nhanh' })
     await expect(dialog).toBeVisible()
     await expect(dialog.getByRole('heading', { level: 2, name: 'Đặt giữ chỗ nhanh' })).toBeVisible()
     await expect(dialog.getByText('Bãi Xe Phía Nam')).toBeVisible()
@@ -310,10 +215,11 @@ for (const width of [390, 1440]) {
       name: 'Xem các lượt đặt chỗ',
     })
     await bookingsLink.click()
+    await expect(page).toHaveURL(/\/bookings$/)
 
     // Server booking appears in /bookings list
     await expect(page.getByText('BK-SERVER-88', { exact: true })).toBeVisible()
-    await expect(page.getByText('Bãi Xe Phía Nam')).toBeVisible()
+    await expect(page.getByRole('heading', { level: 2, name: 'Bãi Xe Phía Nam' })).toBeVisible()
 
     expect(errors).toEqual([])
   })

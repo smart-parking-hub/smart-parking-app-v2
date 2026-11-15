@@ -1,5 +1,15 @@
 # Inline Quick Booking & Server Reservation Integration
 
+## Cập nhật 2026-11-15 — phiếu giữ chỗ gọn
+
+Owner: SPH frontend. `last_verified`: 2026-11-15. Evidence: `ReservationFlow`, `InlineQuickBookPanel`, `e2e/quick-hold-redesign.spec.ts`.
+
+- Tên bãi/địa chỉ trong một khối; tên loại xe tiếng Việt, giờ vào/ra cạnh nhau trên desktop và xếp dọc trên mobile; giá cơ bản/cọc thành hai cột. Giữ mọi lỗi, thử lại, kiểm tra xe và chỗ trống từ server.
+- Accessible name dialog là **Đặt giữ chỗ nhanh**; bỏ nhãn hứa giữ 10 phút trên nút bản đồ. Hạn thanh toán thực tế vẫn 15 phút, cọc 20%, check-in sớm tối đa 30 phút.
+- Giữ focus trap, Escape, khóa cuộn và hoàn trả focus. E2E dùng route ứng dụng với API fixtures, thay cơ chế inject một React root thứ hai vốn phụ thuộc cache Vite.
+- Bản đồ không chọn bãi mặc định, xóa lựa chọn khi vào lại `/parking`; chỉ target khi chọn card/marker/gợi ý hoặc bắt đầu giữ chỗ.
+- Chi tiết kiểm chứng: `docs/09-audit/booking-usability-2026-11-15.md`. Nội dung bên dưới về accessible name 10 phút là lịch sử, đã được thay thế bởi cập nhật này.
+
 ## 1. Bối cảnh & Vấn đề
 
 - **Trước khi sửa:** Thành phần `InlineQuickBookPanel` (`SCR-MOD-06`) trên trang bản đồ tìm kiếm bãi đỗ (`/parking` - `SearchParkingPage`) khi tài xế bấm xác nhận giữ chỗ chỉ sinh mã ngẫu nhiên dạng `BK-HOLD-2026-xxxx`, ghi vào `localStorage['smart-truck-parking.active_hold']` và hiển thị màn hình thành công giả lập kèm biển số hardcode ("51D-894.12"). Không có mutation HTTP nào gửi lên server (`booking-service`).

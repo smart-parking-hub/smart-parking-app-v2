@@ -14,8 +14,8 @@ vi.mock('@/shared/api/client', () => ({
   },
 }))
 vi.mock('../components/InteractiveMapCanvas', () => ({
-  InteractiveMapCanvas: () => (
-    <section aria-label="Bản đồ bãi đỗ OpenStreetMap" />
+  InteractiveMapCanvas: ({ selectedLot }: { selectedLot?: { id: number } }) => (
+    <section aria-label="Bản đồ bãi đỗ OpenStreetMap" data-selected-id={selectedLot?.id ?? ''} />
   ),
 }))
 
@@ -57,6 +57,21 @@ describe('SCR-015: Interactive Parking Search & Map (Bản đồ tìm kiếm bã
 
   afterEach(() => {
     vi.unstubAllGlobals()
+  })
+
+  it('starts with no targeted lot, targets the clicked lot, and resets on re-entry', async () => {
+    parkingSearchStore.setSelectedLotId(fallbackParkingLots[0].id)
+    const view = renderWithProviders(<SearchParkingPage />)
+    const cards = await screen.findAllByRole('button', { name: /^Chọn bãi xe / }, { timeout: 10000 })
+    const map = screen.getByRole('region', { name: 'Bản đồ bãi đỗ OpenStreetMap' })
+    expect(map).toHaveAttribute('data-selected-id', '')
+    expect(cards.every(card => card.getAttribute('aria-pressed') === 'false')).toBe(true)
+    fireEvent.click(cards[1])
+    expect(cards[1]).toHaveAttribute('aria-pressed', 'true')
+    expect(map).toHaveAttribute('data-selected-id', String(parkingSearchStore.getState().selectedLotId))
+    view.unmount()
+    renderWithProviders(<SearchParkingPage />)
+    expect(screen.getByRole('region', { name: 'Bản đồ bãi đỗ OpenStreetMap' })).toHaveAttribute('data-selected-id', '')
   })
 
   it('renders top filter bar with vehicle selector, 5 classifications and radius slider', async () => {
@@ -287,7 +302,7 @@ describe('SCR-015: Interactive Parking Search & Map (Bản đồ tìm kiếm bã
 
   it('opens the server-backed booking flow without claiming a hold before submission', async () => {
     renderWithProviders(<SearchParkingPage />)
-    const buttons = await screen.findAllByText(/ĐẶT GIỮ CHỖ 10P|ĐẶT CHỖ/i)
+    const buttons = await screen.findAllByText(/ĐẶT GIỮ CHỖ|ĐẶT CHỖ/i)
     fireEvent.click(buttons[0])
     expect(screen.getByRole('dialog')).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: /Đặt giữ chỗ/i })).toBeInTheDocument()

@@ -40,25 +40,30 @@ export function ReservationFlow({ lotId }: { lotId: number }) {
   if(lot.isError||vehicles.isError)return <Notice error><div>{errorMessage(lot.error??vehicles.error)}<button className={`${secondary} mt-3`} onClick={()=>{void lot.refetch();void vehicles.refetch()}}>Thử lại</button></div></Notice>
   if(!vehicles.data?.length)return <Notice><div>Bạn chưa có phương tiện đang hoạt động.<Link to="/vehicles" className={`${secondary} mt-3`}>Đăng ký phương tiện</Link></div></Notice>
   const blocked=lot.data.status!=='APPROVED'||!tariff||!slot||Number(slot.availableCapacity)<=0
-  return <form noValidate onSubmit={form.handleSubmit(values=>save.mutate(values))} className="space-y-5 font-inter text-base text-brand-navy">
-    <div><h2 className="font-sora text-xl font-semibold">Đặt chỗ tại {lot.data.name}</h2><p className="mt-2 text-brand-muted">{lot.data.address}</p></div>
+  return <form noValidate onSubmit={form.handleSubmit(values=>save.mutate(values))} className="space-y-4 font-inter text-sm text-brand-navy">
+    <div className="rounded-xl border border-brand-border bg-brand-surface px-4 py-3"><h3 className="font-sora text-base font-semibold">{lot.data.name}</h3><p className="mt-1 text-xs leading-relaxed text-brand-muted">{lot.data.address}</p></div>
     <fieldset className="grid gap-4 sm:grid-cols-2" disabled={save.isPending}>
       <legend className="sr-only">Phương tiện và giờ đỗ (giờ Việt Nam UTC+7)</legend>
-      <Field label="Phương tiện của bạn"><select className={control} {...form.register('vehicleId')}>{vehicles.data.map(vehicle=><option key={vehicle.id} value={vehicle.id}>{vehicle.licensePlate} · {vehicle.vehicleType}</option>)}</select></Field>
-      <div className="text-sm text-brand-muted">Giờ Việt Nam (UTC+7). Chỉ chọn xe thuộc tài khoản và đúng loại xe bãi tiếp nhận.</div>
+      <div className="sm:col-span-2"><Field label="Phương tiện của bạn"><select className={control} {...form.register('vehicleId')}>{vehicles.data.map(vehicle=><option key={vehicle.id} value={vehicle.id}>{vehicle.licensePlate} · {({SEDAN_SUV:'Ô tô con',BUS_COACH:'Xe khách',LIGHT_TRUCK:'Xe tải nhẹ',HEAVY_TRUCK:'Xe tải nặng',CONTAINER:'Xe container'})[vehicle.vehicleType]}</option>)}</select></Field></div>
       <Field label="Giờ vào dự kiến"><input type="datetime-local" className={control} {...form.register('start')}/></Field>
       <Field label="Giờ ra dự kiến"><input type="datetime-local" className={control} {...form.register('end')}/></Field>
     </fieldset>
     {Object.entries(form.formState.errors).map(([key,error])=><p role="alert" key={key} className="text-sm text-red-700">{error.message}</p>)}
-    {tariff&&<div className="rounded-xl border border-brand-border bg-brand-surface p-4 text-sm leading-7">
-      <p>Giá cơ bản: <strong>{formatMoney(Number(tariff.basePricePerHour))}/giờ</strong>.</p>
-      <p>Giờ cao điểm: ×{tariff.surgeMultiplier} {tariff.surgeStartTime&&tariff.surgeEndTime?`(${tariff.surgeStartTime} – ${tariff.surgeEndTime})`:'(chưa cấu hình khung giờ)'}.</p>
-      <p>Sau giờ ra dự kiến: <strong>×{tariff.overtimePenaltyMultiplier}</strong> cho phần quá giờ. Mỗi phần tính theo giờ bắt đầu.</p>
-      <p>Cọc <strong>20%</strong> phí dự kiến do server tính. Thanh toán trong <strong>15 phút</strong> kể từ lúc tạo booking. Chỉ được check-in sớm tối đa <strong>30 phút</strong>.</p>
+    <p className="text-xs text-brand-muted">Giờ Việt Nam (UTC+7) · Chỉ dùng xe đã đăng ký thuộc tài khoản của bạn.</p>
+    {tariff&&<div className="overflow-hidden rounded-xl border border-brand-border text-sm">
+      <dl className="grid grid-cols-2 gap-3 bg-brand-surface p-3.5">
+        <div><dt className="text-xs text-brand-muted">Giá cơ bản</dt><dd className="mt-1 font-semibold">{formatMoney(Number(tariff.basePricePerHour))}/giờ</dd></div>
+        <div><dt className="text-xs text-brand-muted">Cọc giữ chỗ</dt><dd className="mt-1 font-semibold">20% phí dự kiến</dd></div>
+      </dl>
+      <div className="space-y-1.5 p-3.5 text-xs leading-relaxed text-brand-muted">
+        <p>Giờ cao điểm: ×{tariff.surgeMultiplier} {tariff.surgeStartTime&&tariff.surgeEndTime?`(${tariff.surgeStartTime.slice(0,5)} – ${tariff.surgeEndTime.slice(0,5)})`:'(chưa cấu hình khung giờ)'}.</p>
+        <p>Sau giờ ra dự kiến: <strong className="text-brand-navy">×{tariff.overtimePenaltyMultiplier}</strong> cho phần quá giờ. Mỗi phần tính theo giờ bắt đầu.</p>
+        <p>Thanh toán cọc trong <strong className="text-brand-navy">15 phút</strong> kể từ lúc tạo booking · Check-in sớm tối đa <strong className="text-brand-navy">30 phút</strong>.</p>
+      </div>
     </div>}
     {blocked&&<Notice error>Bãi chưa nhận đặt chỗ, hết chỗ cho loại xe đã chọn hoặc chưa có bảng giá. Chọn xe/bãi khác.</Notice>}
     {save.isError&&<Notice error>{errorMessage(save.error)}</Notice>}
-    <button className={button} disabled={blocked||save.isPending}>{save.isPending?'Đang xác minh và giữ slot…':'Tạo booking và xem tiền cọc'}</button>
-    <p className="text-sm text-brand-muted">Giá và sức chứa được xác minh lại khi tạo booking. Bước tiếp theo hiển thị tiền cọc chính xác trước khi bạn thanh toán.</p>
+    <button className={`${button} w-full`} disabled={blocked||save.isPending}>{save.isPending?'Đang xác minh và giữ chỗ…':'Tạo booking và xem tiền cọc'}</button>
+    <p className="text-center text-xs leading-relaxed text-brand-muted">Tiền cọc chính xác hiển thị ở bước tiếp theo, trước khi thanh toán. Giá và chỗ trống được xác minh khi đặt.</p>
   </form>
 }

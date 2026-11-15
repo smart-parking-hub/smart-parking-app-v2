@@ -105,18 +105,18 @@ export function InlineQuickBookPanel({
         ref={panelRef}
         role="dialog"
         aria-modal="true"
-        aria-label="Panel giữ chỗ nhanh 10 phút"
+        aria-label="Đặt giữ chỗ nhanh"
         aria-describedby="quick-hold-description"
         className="quick-hold"
       >
         <header className="quick-hold__header">
           <div>
             <div className="quick-hold__eyebrow">
-              <Timer size={14} /> GIỮ CHỖ NHANH · SERVER BOOKING
+              <Timer size={14} /> GIỮ CHỖ NHANH
             </div>
             <h2>Đặt giữ chỗ nhanh</h2>
             <p id="quick-hold-description">
-              Tạo booking thật với xe đã đăng ký. Hạn thanh toán cọc 15 phút theo quy định server.
+              Chọn xe và giờ đỗ. Thanh toán cọc trong 15 phút để xác nhận chỗ.
             </p>
           </div>
           <button

@@ -1,5 +1,16 @@
 # Capability Parity Matrix — 4 Landing Screens: Trang Chủ, Tài Xế, Chủ Bãi & Bảng Giá
 
+## Booking usability — 2026-11-15
+
+| Capability | Result | Status |
+|---|---|---|
+| Map search, filters, routing and lot selection | No initial target; explicit selections preserved | Changed per user request |
+| Vehicle/time/tariff form, validation and server booking | Compact layout; same contracts and policies | Preserved |
+| QR, PayOS/demo payment, cancellation, complaints and review | Available inside expandable ticket; server pages of 8 | Preserved |
+| Check-in, camera auto-submit, settlement and cash | Processed check-in pair disabled; no repeated success dialog/API | Changed per user request |
+| Admin notification list/read/count | Polling and target dossier link; existing server event delivery | Preserved / extended |
+| Login success | Green success styling | Changed per user request |
+
 ## Bổ sung SCR-047 / PAY-05 (2026-11-14)
 
 | Khả năng có sẵn | Kết quả PAY-05 | Trạng thái |

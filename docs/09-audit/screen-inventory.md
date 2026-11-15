@@ -1,5 +1,7 @@
 # Screen Inventory — Smart Parking CRM Hub v2
 
+> 2026-11-15: `/parking`, quick-book dialog, `/bookings`, `/merchant/qr-scanner` and Admin notifications received the user-requested usability fixes. Compact tickets use 8-item server pages and one expanded detail. [Evidence and limitations](./booking-usability-2026-11-15.md).
+
 > 2026-11-14 / SCR-047 / PAY-05: module `features/admin/transactions` tại `/admin/transactions` đã có phân trang/sắp xếp server, tổng số bản ghi, refresh và GET chi tiết riêng. Desktop/mobile và bàn phím được kiểm chứng bằng fixture; nghiệm thu backend thật / sign-off còn chờ. [Task](../08-project-operations/SP-S3-PAY-05.md), [báo cáo](./SP-S3-PAY-05-report.md).
 
 > Cập nhật 2026-11-04: 29 màn hình SCR còn thiếu (SCR-009–013 và SCR-030–053), 2 màn hình khiếu nại Driver, AI Copilot và trang 404 đã được bổ sung. Danh mục route, trạng thái tích hợp và giới hạn xác minh: [FE completion report](./fe-completion-report.md). Trạng thái mới là UI_IMPLEMENTED / API_WIRED / LIVE_BACKEND_ACCEPTANCE_PENDING; chưa thay thế nghiệm thu backend production.

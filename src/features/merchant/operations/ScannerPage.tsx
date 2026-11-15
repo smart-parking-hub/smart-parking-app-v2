@@ -119,7 +119,6 @@ export function MerchantScannerPage() {
   const submitScan = (data: { bookingCode: string; parkingLotId: number }) => {
     if (scanPending.current) return
     if (mode === 'check-in' && checkedIn.current.has(`${data.parkingLotId}:${data.bookingCode}`)) {
-      setConfirmedCheckIn(data.bookingCode)
       return
     }
     scanPending.current = true
@@ -243,6 +242,10 @@ export function MerchantScannerPage() {
     cash.reset()
     setSuccess('')
   }
+
+  const alreadyCheckedIn = mode === 'check-in' && checkedIn.current.has(
+    `${form.watch('parkingLotId')}:${form.watch('bookingCode').trim()}`,
+  )
 
   return (
     <Workspace
@@ -387,7 +390,7 @@ export function MerchantScannerPage() {
             )}
             <button
               type="submit"
-              disabled={scan.isPending || !lots.data}
+              disabled={scan.isPending || !lots.data || alreadyCheckedIn}
               aria-busy={scan.isPending}
               className={`${button} w-full flex items-center justify-center gap-2`}
             >
@@ -396,12 +399,15 @@ export function MerchantScannerPage() {
                   <Loader2 className="h-4 w-4 animate-spin shrink-0" />
                   <span>Đang xác nhận…</span>
                 </>
+              ) : alreadyCheckedIn ? (
+                'Xe đã check-in'
               ) : mode === 'check-in' ? (
                 'Xác nhận xe vào bãi'
               ) : (
                 'Kiểm tra & quyết toán xe ra'
               )}
             </button>
+            {alreadyCheckedIn && <p role="status" className="rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-800">Vé này đã được ghi nhận vào bãi. Chọn XE RA để quyết toán hoặc nhập mã vé khác.</p>}
           </form>
           <div className="mt-6 flex gap-2 border-t border-brand-border pt-5 text-xs leading-relaxed text-brand-muted">
             <ShieldCheck size={18} className="shrink-0" />

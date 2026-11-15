@@ -44,13 +44,15 @@ export function useAdminNotifications(session: number) {
     queryKey: [...scope, 'list', page, sort],
     queryFn: ({ signal }) => getAdminNotifications(page, signal, sort),
     retry: false,
-    refetchOnWindowFocus: false,
+    refetchOnWindowFocus: true,
+    refetchInterval: 15000,
   })
   const count = useQuery({
     queryKey: [...scope, 'unread-count'],
     queryFn: ({ signal }) => getAdminUnreadCount(signal),
     retry: false,
-    refetchOnWindowFocus: false,
+    refetchOnWindowFocus: true,
+    refetchInterval: 15000,
   })
   const read = useMutation({
     mutationFn: (id: number | undefined) => {

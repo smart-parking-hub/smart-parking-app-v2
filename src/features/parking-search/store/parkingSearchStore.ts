@@ -25,7 +25,7 @@ const initialFilters: SearchFilterState = {
 
 const initialState: ParkingSearchState = {
   filters: initialFilters,
-  selectedLotId: 1,
+  selectedLotId: null,
   quickBookLot: null,
   quickBookOpen: false,
   searchText: '',

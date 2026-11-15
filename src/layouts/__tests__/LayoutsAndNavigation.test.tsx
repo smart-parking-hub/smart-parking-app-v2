@@ -290,7 +290,8 @@ describe('Layouts and Navigation System Comprehensive Tests', () => {
       expect(screen.getByRole('link', { name: /Duyệt rút tiền/ })).toBeInTheDocument()
       expect(screen.getByRole('link', { name: /Tranh chấp/ })).toBeInTheDocument()
       expect(screen.getByRole('link', { name: /Nhật ký kiểm toán/ })).toBeInTheDocument()
-      expect(screen.getByRole('link', { name: /Thông báo/ })).toBeInTheDocument()
+      expect(screen.getByRole('link', { name: 'Thông báo' })).toBeInTheDocument()
+      expect(screen.getByRole('link', { name: 'Thông báo quản trị' })).toHaveAttribute('href', '/admin/notifications')
       expect(screen.getAllByRole('link', { name: /Hồ sơ quản trị/ })).toHaveLength(2)
 
       expect(screen.getByRole('button', { name: /Đăng xuất/ })).toBeInTheDocument()

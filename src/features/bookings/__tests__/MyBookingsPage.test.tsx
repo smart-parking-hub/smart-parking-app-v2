@@ -76,6 +76,30 @@ it('shows an empty list when the API returns no bookings', async () => {
   mount(<MyBookingsPage />, '/bookings', '/bookings')
   expect(await screen.findByText('Bạn chưa có lượt đặt chỗ nào.')).toBeInTheDocument()
 })
+it('keeps many tickets compact, expands one at a time and requests the next server page', async () => {
+  vi.mocked(apiClient.get).mockImplementation(async (url, config) => {
+    if (String(url).endsWith('/bookings')) {
+      const page = Number((config?.params as { page?: number } | undefined)?.page ?? 0)
+      return { data: { data: { content: Array.from({ length: 8 }, (_, index) => ({ ...booking, id: 41 + page * 8 + index, bookingCode: `BK-API-${41 + page * 8 + index}`, status: 'PENDING_PAYMENT' })), totalElements: 24, totalPages: 3, currentPage: page } } }
+    }
+    return { data: { data: { content: [] } } }
+  })
+  mount(<MyBookingsPage />, '/bookings', '/bookings')
+  const toggles = await screen.findAllByRole('button', { name: 'Xem vé & chi tiết' })
+  expect(toggles).toHaveLength(8)
+  expect(screen.queryByRole('button', { name: /Thanh toán cọc .* qua PayOS/ })).not.toBeInTheDocument()
+  fireEvent.click(toggles[0])
+  expect(toggles[0]).toHaveAttribute('aria-expanded', 'true')
+  expect(screen.getByRole('button', { name: /Thanh toán cọc .* qua PayOS/ })).toBeInTheDocument()
+  fireEvent.click(toggles[1])
+  expect(toggles[0]).toHaveAttribute('aria-expanded', 'false')
+  expect(toggles[1]).toHaveAttribute('aria-expanded', 'true')
+  fireEvent.click(screen.getByRole('button', { name: 'Trang sau' }))
+  expect(await screen.findByText(/#49 · BK-API-49/)).toBeInTheDocument()
+  expect(screen.queryByText(/#41 · BK-API-41/)).not.toBeInTheDocument()
+  expect(apiClient.get).toHaveBeenCalledWith('/api/v1/bookings', expect.objectContaining({ params: { page: 1, size: 8, sort: 'createdAt,desc' } }))
+  expect(screen.getAllByRole('button', { name: 'Xem vé & chi tiết' })).toHaveLength(8)
+})
 it('reports request errors and retries without sample bookings', async () => {
   vi.mocked(apiClient.get).mockRejectedValue(new Error('Không tải được booking'))
   mount(<MyBookingsPage />, '/bookings', '/bookings')

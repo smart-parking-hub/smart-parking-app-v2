@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react'
 import { NavLink, Outlet, useNavigate, useLocation } from 'react-router-dom'
 import { useQueryClient } from '@tanstack/react-query'
 import { ScrollToTop } from '@/shared/components/ScrollToTop'
+import { UnreadNotificationDot } from '@/features/notifications'
 import { Dialog } from '@/shared/components/Dialog'
 import { ShieldCheck, Menu, LogOut, LayoutDashboard, Warehouse, Users, CreditCard, ArrowDownToLine, Scale, ScrollText, Bell, UserCheck, ChevronRight, ArrowUpRight } from 'lucide-react'
 import './admin-layout.css'
@@ -73,6 +74,7 @@ export function AdminLayout() {
           <span className="admin-current-page">{currentItem?.label ?? 'Tổng quan'}</span>
         </div>
         <div className="admin-topbar-actions">
+          <NavLink to="/admin/notifications" className="admin-menu-button !relative !inline-flex" aria-label="Thông báo quản trị"><Bell size={20} aria-hidden="true"/><UnreadNotificationDot /></NavLink>
           <NavLink to="/admin/profile" className="admin-account" aria-label="Hồ sơ quản trị"><span>AD</span><div><strong>Quản trị viên</strong><small>SmartTruck Hub</small></div></NavLink>
           <button type="button" className="admin-logout" onClick={() => {
             clearSession()
