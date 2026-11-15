@@ -427,10 +427,10 @@ describe('BATCH-14E: Merchant Gate, Bookings & Financial Settlement Integration 
     fireEvent.click(withdrawBtn)
     expect(await screen.findByText('Tạo yêu cầu rút tiền')).toBeInTheDocument()
 
-    // Verify auto-prefilled bank details from merchant profile
-    expect(await screen.findByDisplayValue('Vietcombank')).toBeInTheDocument()
-    expect(screen.getByDisplayValue('0071001234567')).toBeInTheDocument()
-    expect(screen.getByDisplayValue('Lê Văn Thành')).toBeInTheDocument()
+    // Verify the saved receiving account is selected and shown for review.
+    expect(await screen.findByText('0071001234567')).toBeInTheDocument()
+    expect(screen.getByRole('radio', { name: 'Tài khoản mặc định' })).toBeChecked()
+    expect(screen.getByText('Lê Văn Thành')).toBeInTheDocument()
 
     // Quick select buttons: Tối thiểu & Toàn bộ
     const minQuickBtn = screen.getByRole('button', { name: /Tối thiểu/i })

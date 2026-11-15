@@ -321,21 +321,14 @@ describe('Finance, disputes and lot configuration', () => {
     expect(await screen.findByText('Tạo yêu cầu rút tiền')).toBeInTheDocument()
     const minBtn = screen.getByRole('button', { name: /Tối thiểu/i })
     fireEvent.click(minBtn)
-    expect(screen.getByLabelText('Số tiền rút (VND)')).toHaveValue(50000)
+    expect(screen.getByLabelText('Số tiền rút (VND)')).toHaveValue('50.000')
 
     const maxBtn = screen.getByRole('button', { name: /Toàn bộ/i })
     fireEvent.click(maxBtn)
-    expect(screen.getByLabelText('Số tiền rút (VND)')).toHaveValue(500000)
-
-    fireEvent.change(screen.getByLabelText('Ngân hàng nhận'), {
-      target: { value: 'Vietcombank' },
-    })
-    fireEvent.change(screen.getByLabelText('Số tài khoản thụ hưởng'), {
-      target: { value: '0123456789' },
-    })
-    fireEvent.change(screen.getByLabelText('Tên chủ tài khoản'), {
-      target: { value: 'NGUYEN VAN TEST' },
-    })
+    expect(screen.getByLabelText('Số tiền rút (VND)')).toHaveValue('500.000')
+    await waitFor(() => expect(screen.getByRole('radio', { name: 'Tài khoản mặc định' })).toBeChecked())
+    expect(screen.getByText('0123456789')).toBeInTheDocument()
+    expect(screen.queryByLabelText('Ngân hàng nhận')).not.toBeInTheDocument()
 
     fireEvent.click(screen.getByRole('button', { name: 'Gửi yêu cầu phê duyệt' }))
     await waitFor(() =>

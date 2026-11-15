@@ -108,6 +108,7 @@ export interface Withdrawal {
   processedAt: string
   decisionReason: string
   bankName: string
+  bankAccountNumber?: string | null
   maskedBankAccount: string
   accountHolderName: string
 }

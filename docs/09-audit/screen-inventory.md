@@ -1,5 +1,7 @@
 # Screen Inventory — Smart Parking CRM Hub v2
 
+> 2026-11-15 / SCR-048: withdrawal confirmation now emphasizes the full API account number and receiving bank/logo. Approval/rejection behavior is preserved. [Contract and parity](../05-modules/admin/withdrawal-confirmation.md).
+
 > 2026-11-15 — PayOS cancellation: checkout becomes a compact stopped/closed panel after SDK exit/cancel or frame navigation, including Chrome local-network-blocked redirects. Embedded return pages notify the parent; payment authority remains server-side. See [module behavior](../05-modules/bookings/payos-checkout.md).
 
 > 2026-11-15: `/parking`, quick-book dialog, `/bookings`, `/merchant/qr-scanner` and Admin notifications received the user-requested usability fixes. Compact tickets use 8-item server pages and one expanded detail. [Evidence and limitations](./booking-usability-2026-11-15.md).
@@ -98,6 +100,10 @@ Real-data capacity summary/category bars, Vietnamese pricing cards, read-only lo
   - Domain utilities (`src/features/merchant/bookings/api/merchantBookingsApi.ts` & `types/merchantBookingsTypes.ts`): `parseValidBookingRouteId` validates positive integer `:id` params before enabling `useMerchantBookingDetailQuery`; `computeRemainingBookingAmount` calculates post-deposit balance; `buildBookingBarrierSummary` constructs chronological Barrier & Operational Timeline events (`Khởi tạo`, `Cọc/Giữ chỗ`, `Barie Check-in`, `Đang đỗ / Quá giờ`, `Barie Check-out`, `Quyết toán / Hủy & Hoàn tiền`) with early/late/overtime variance deltas and actual parking duration directly from verified `BookingDto` timestamps (`createdAt`, `expiresAt`, `expectedCheckInTime`, `checkInTime`, `expectedCheckOutTime`, `checkOutTime`, `cancelledAt`).
   - Layer 3 Components (`src/features/merchant/bookings/components/` & `pages/MerchantBookingDetailPage.tsx`): `MerchantBookingBarrierTimeline`, `MerchantBookingJourneyPanel`, `MerchantBookingTariffAndRefundPanel`, `MerchantBookingDetailSidebar`, and `MerchantBookingDetailSkeleton`; handles malformed `:id` / empty payload (`EmptyState`), initial load failure (`ErrorState` + Retry), non-blocking background refresh failure (`Alert`), and clipboard copy / manual refresh feedback (`Toast`), plus actionable gate CTA styling (`isActionableGateStatus`).
 - **Verification Scope & Limitation:** Verified against existing `GET /api/v1/merchant/bookings/{id}` contract (`MerchantCheckInOutController.java`, `BookingDto.java`) with a transparent note that multi-attempt failed QR scan / hardware ALPR logs remain future backend scope (`barrier_logs`). Automated checks cover `tsc --noEmit`, ESLint (`--max-warnings=0`), `MerchantBookingDetailPage.test.tsx`, `operations.test.tsx`, `Batch14EMerchantGateFinanceIntegration.test.tsx`, `e2e/core-booking-gate-flow.spec.ts`, and `npm run build`.
+
+## SCR-026 — Recent bookings refresh — 2026-11-15
+
+User-requested refresh of the recent bookings section: aligned column headings, abbreviated long codes with full accessible names/titles, readable plates, softer status badges, stacked mobile rows, empty state and view-all footer. Feature component: `RecentMerchantBookings`. API, guards, ordering and navigation preserved. See `docs/05-modules/merchant/dashboard-recent-bookings.md` and `docs/09-audit/recent-merchant-bookings-report.md`.
 
 
 ## SCR-019 — Payment history polish — 2026-11-15

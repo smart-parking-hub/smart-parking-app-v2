@@ -1,5 +1,9 @@
 # Capability Parity Matrix — 4 Landing Screens: Trang Chủ, Tài Xế, Chủ Bãi & Bảng Giá
 
+## SCR-048 confirmation — 2026-11-15
+
+Amount, bank/holder/merchant, warning, reason validation, approve/reject calls, mutation state and dialog keyboard behavior are preserved. Full `bankAccountNumber` replaces masked-only display inside the confirmation per user request; the ledger remains masked. Bank logos reuse the entity directory/cache with an icon fallback. [Details](../05-modules/admin/withdrawal-confirmation.md).
+
 ## Booking usability — 2026-11-15
 
 | Capability | Result | Status |
@@ -349,6 +353,17 @@ last_verified: 2026-11-12; owner: SPH. [Module, API và nguồn thiết kế](..
 | Nhật ký Barie & Tiến trình Vận hành (`MerchantBookingBarrierTimeline`, `buildBookingBarrierSummary`) | Dựng timeline theo trình tự thời gian từ các mốc xác thực của `BookingDto` (`createdAt`, `expiresAt`, `expectedCheckInTime`, `checkInTime`, `expectedCheckOutTime`, `checkOutTime`, `cancelledAt`), tính thời lượng lưu bãi thực tế & chênh lệch sớm/trễ/quá giờ; hiển thị ghi chú minh bạch khi BE chưa có API log quét lỗi / ALPR | Suy diễn xác thực từ `BookingDto.java` (không bịa dữ liệu mock phần cứng) | **New / Honest BE Fit** |
 | Hồ sơ Hành trình, Tài chính sau cọc & Hủy/Hoàn tiền (`MerchantBookingDetailSections`) | Đồng nhất 4 thẻ KPI trắng kiểu `MerchantBookingsMetrics` (`Mã vé`, `Trạng thái`, `Đặt cọc`, `Tổng phí` + highlight `Còn lại sau cọc`); tách `MerchantBookingJourneyPanel` thành 2 nhóm rõ ràng (*Phương tiện & Bãi tiếp nhận* vs *Lịch hẹn & Thời gian thực tế*), `MerchantBookingTariffAndRefundPanel`, và sticky `MerchantBookingDetailSidebar` | Đồng bộ Design System Merchant Portal (`MerchantBookingsPage`, `MerchantDashboardPage`) & `BookingDto.java` | **Redesigned + Verified** |
 | Đầy đủ 5 trạng thái UI & Kiểm thử | Loading (`MerchantBookingDetailSkeleton`), Empty (`EmptyState` cho `:id` lỗi hoặc response rỗng), Error (`ErrorState` + Retry & Background refetch `Alert`), Feedback (`Toast` khi sao chép mã / làm mới), kiểm thử `MerchantBookingDetailPage.test.tsx` + E2E `/merchant/bookings/9999` | Layer-1 `@/shared/components` + Vitest + Playwright | **Verified** |
+
+## SCR-026 — Recent bookings refresh — 2026-11-15
+
+| Capability | New presentation | Status |
+| --- | --- | --- |
+| Recent booking codes and detail links | Compact codes with original accessible label/title | Preserved |
+| Vehicle, lot and status | Labeled table; stacked rows in narrow containers; shared Badge | Preserved |
+| View all and empty results | Footer link and styled empty state | Preserved |
+| Data order, query, permissions, loading/error/refresh | Existing API/page/guard | Unchanged |
+
+Evidence: `docs/09-audit/recent-merchant-bookings-report.md`.
 
 
 ## SCR-019 — Payment history polish — 2026-11-15

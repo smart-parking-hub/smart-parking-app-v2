@@ -43,6 +43,7 @@ describe('GROUP 11 - Admin User Governance & Financial Settlement Ledger', () =>
       processedAt: '',
       decisionReason: '',
       bankName: 'Vietcombank Chi nhánh Tân Định',
+      bankAccountNumber: '00012345678',
       maskedBankAccount: '**** 5678',
       accountHolderName: 'CTY CP KHO BAI SAI GON',
     }
@@ -77,7 +78,7 @@ describe('GROUP 11 - Admin User Governance & Financial Settlement Ledger', () =>
       expect(rejectBtn).toBeInTheDocument()
     })
 
-    it('AC1: displays full beneficiary bank details (bank name, masked account, account holder, amount) in confirmation dialog before approve', async () => {
+    it('AC1: displays the full account number, beneficiary and amount before approve', async () => {
       const user = userEvent.setup()
       vi.mocked(getData).mockResolvedValue({
         content: [mockWithdrawal],
@@ -99,6 +100,7 @@ describe('GROUP 11 - Admin User Governance & Financial Settlement Ledger', () =>
 
       // Dialog opens with full bank payout confirmation card
       expect(screen.getByText('Lệnh rút tiền #88')).toBeInTheDocument()
+      expect(screen.getByText('00012345678')).toBeInTheDocument()
       expect(screen.getByText('CTY CP KHO BAI SAI GON')).toBeInTheDocument()
       expect(screen.getAllByText('Vietcombank Chi nhánh Tân Định').length).toBeGreaterThanOrEqual(2)
       expect(screen.getAllByText(/5678/).length).toBeGreaterThanOrEqual(2)

@@ -26,6 +26,7 @@ import {
   type Column,
 } from '@/shared/components/Workspace'
 import { LotOverview } from '@/features/merchant/operations'
+import { WithdrawalSummary, type WithdrawalInfo } from './components/WithdrawalSummary'
 
 interface User {
   id: number
@@ -225,14 +226,7 @@ interface Decision {
   method?: 'put' | 'post'
   action?: string
   isOptionalReason?: boolean
-  withdrawalInfo?: {
-    id: number
-    amount: number
-    bankName?: string
-    maskedBankAccount?: string
-    accountHolderName?: string
-    merchantName?: string
-  }
+  withdrawalInfo?: WithdrawalInfo
 }
 
 export function DecisionDialog({
@@ -284,47 +278,7 @@ export function DecisionDialog({
             ? 'Xác nhận phê duyệt hồ sơ bãi đỗ. Bãi sẽ được công bố và kích hoạt nhận đặt chỗ trên hệ thống.'
             : 'Kiểm tra hồ sơ trước khi xác nhận. Quyết định được lưu vào nhật ký hệ thống.'}
         </Notice>
-        {decision.withdrawalInfo && (
-          <div className="space-y-3 rounded-xl border border-brand-border bg-brand-surface p-4 text-sm">
-            <div className="flex items-center justify-between border-b border-brand-border/60 pb-2">
-              <span className="text-xs font-semibold uppercase tracking-wider text-brand-muted">
-                Lệnh rút tiền #{decision.withdrawalInfo.id}
-              </span>
-              <span className="font-sora text-lg font-bold tabular-nums text-[#d95f00]">
-                {money(decision.withdrawalInfo.amount)}
-              </span>
-            </div>
-            <div className="grid grid-cols-1 gap-2 text-xs sm:grid-cols-2">
-              <div>
-                <span className="text-brand-muted">Chủ bãi thụ hưởng:</span>
-                <p className="font-semibold text-brand-navy">
-                  {decision.withdrawalInfo.merchantName || '—'}
-                </p>
-              </div>
-              <div>
-                <span className="text-brand-muted">Ngân hàng:</span>
-                <p className="font-semibold text-brand-navy">
-                  {decision.withdrawalInfo.bankName || '—'}
-                </p>
-              </div>
-              <div>
-                <span className="text-brand-muted">Số tài khoản:</span>
-                <p className="font-mono font-semibold text-brand-navy">
-                  {decision.withdrawalInfo.maskedBankAccount || '—'}
-                </p>
-              </div>
-              <div>
-                <span className="text-brand-muted">Tên chủ tài khoản:</span>
-                <p className="font-semibold uppercase text-brand-navy">
-                  {decision.withdrawalInfo.accountHolderName || '—'}
-                </p>
-              </div>
-            </div>
-            <p className="text-[11px] italic text-brand-muted">
-              * Vui lòng kiểm tra kỹ số tài khoản và ngân hàng thụ hưởng trước khi bấm xác nhận chuyển tiền.
-            </p>
-          </div>
-        )}
+        {decision.withdrawalInfo && <WithdrawalSummary withdrawal={decision.withdrawalInfo} />}
         <Field
           label={
             isLotApproval
@@ -465,6 +419,7 @@ export function AdminWithdrawalsPage() {
                         id: r.id,
                         amount: r.amount,
                         bankName: r.bankName,
+                        bankAccountNumber: r.bankAccountNumber,
                         maskedBankAccount: r.maskedBankAccount,
                         accountHolderName: r.accountHolderName,
                         merchantName: r.merchantName,
