@@ -9,6 +9,7 @@ import { fetchBooking, paymentLink, payDemo, cancelBooking, formatMoney, statusL
 import { QRCodeSVG } from 'qrcode.react'
 import { QrCode, Download, Copy, Check, Clock, ShieldCheck } from 'lucide-react'
 import { PayOsPaymentPanel } from './PayOsPaymentPanel'
+import { QuickBookingPaymentSummary } from './QuickBookingPaymentSummary'
 
 function handleDownloadQr(bookingCode: string) {
   const svg = document.getElementById(`qr-checkin-${bookingCode}`) as SVGSVGElement | null
@@ -37,13 +38,13 @@ function handleDownloadQr(bookingCode: string) {
   }
 }
 
-type StatusPanelProps = { bookingId: number; booking?: Booking; embedded?: boolean }
+type StatusPanelProps = { bookingId: number; booking?: Booking; embedded?: boolean; compact?: boolean }
 
 export function BookingStatusPanel(props: StatusPanelProps) {
   return <BookingStatusContent key={props.bookingId} {...props} />
 }
 
-function BookingStatusContent({ bookingId, booking, embedded = false }: StatusPanelProps) {
+function BookingStatusContent({ bookingId, booking, embedded = false, compact = false }: StatusPanelProps) {
   const cache = useQueryClient()
   const [copied, setCopied] = useState(false)
   const [checkoutIntent, setCheckoutIntent] = useState<string | null>(null)
@@ -115,10 +116,18 @@ function BookingStatusContent({ bookingId, booking, embedded = false }: StatusPa
   const finalPayment = data.status === 'AWAITING_FINAL_PAYMENT'
   const checkoutOpen = checkoutIntent === `${bookingId}:${finalPayment ? 'FINAL_PAYMENT' : 'DEPOSIT'}`
   const busy = payment.isPending || demo.isPending || cancel.isPending
+  const compactPayment = compact && ['PENDING_PAYMENT', 'AWAITING_FINAL_PAYMENT'].includes(data.status)
+  const otherActions = <>
+    {import.meta.env.DEV && data.status === 'PENDING_PAYMENT' && !expired && <button className={secondary} disabled={busy} onClick={() => demo.mutate()}>Thanh toán Demo (chỉ local)</button>}
+    {['PENDING_PAYMENT', 'PENDING_CHECKIN'].includes(data.status) && <button className={secondary} disabled={busy} onClick={() => cancel.mutate()}>Hủy booking</button>}
+    {data.status === 'PENDING_CHECKIN' && <button className={secondary} onClick={() => { void navigator.clipboard.writeText(data.bookingCode).then(() => setCopied(true)) }}>{copied ? 'Đã sao chép' : 'Sao chép mã check-in'}</button>}
+    {!embedded && <Link className={secondary} to={compactPayment ? `/bookings?bookingId=${bookingId}` : '/bookings'}>Xem các lượt đặt chỗ</Link>}
+  </>
+  const priceDetails = <p className="text-sm leading-relaxed text-brand-muted">Quá giờ ra dự kiến: ×{data.overtimePenaltyMultiplier ?? 1} trên phí phần quá giờ. Mỗi phần tính theo giờ bắt đầu; hệ số giờ cao điểm ×{data.surgeMultiplier ?? 1} trong khung đã công bố của bãi.</p>
 
   return (
-    <div className="space-y-5 text-base text-brand-navy">
-      {!embedded && <p role="status" className="font-semibold">
+    <div className={`${compactPayment ? 'space-y-4 text-sm' : 'space-y-5 text-base'} text-brand-navy`}>
+      {!embedded && !compactPayment && <p role="status" className="font-semibold">
         {statusLabels[data.status]}
       </p>}
 
@@ -207,6 +216,7 @@ function BookingStatusContent({ bookingId, booking, embedded = false }: StatusPa
         </div>
       )}
 
+      {compactPayment ? <QuickBookingPaymentSummary booking={data} expired={expired}/> : <>
       <dl className="grid gap-4 sm:grid-cols-2">
         <div>
           <dt className="text-sm text-brand-muted">Mã đặt chỗ</dt>
@@ -248,14 +258,12 @@ function BookingStatusContent({ bookingId, booking, embedded = false }: StatusPa
         </Notice>
       )}
 
-      <p className="text-sm text-brand-muted">
-        Quá giờ ra dự kiến: ×{data.overtimePenaltyMultiplier ?? 1} trên phí phần quá giờ. Mỗi phần tính theo giờ bắt đầu; hệ
-        số giờ cao điểm ×{data.surgeMultiplier ?? 1} trong khung đã công bố của bãi.
-      </p>
+      </>}
+      {!compactPayment && priceDetails}
 
-      <div className="flex flex-wrap gap-3">
+      {(!compactPayment || (payable && !checkoutOpen)) && <div className="flex flex-wrap gap-3">
         {payable && !checkoutOpen && (
-          <button className={button} disabled={busy} onClick={() => openPayment(finalPayment)}>
+          <button className={`${button} ${compactPayment ? 'w-full' : ''}`} disabled={busy} onClick={() => openPayment(finalPayment)}>
             {payment.isPending
               ? 'Đang mở thanh toán…'
               : data.status === 'AWAITING_FINAL_PAYMENT'
@@ -263,39 +271,24 @@ function BookingStatusContent({ bookingId, booking, embedded = false }: StatusPa
                 : `Thanh toán cọc ${formatMoney(data.advanceDeposit)} qua PayOS`}
           </button>
         )}
-        {import.meta.env.DEV && data.status === 'PENDING_PAYMENT' && !expired && (
-          <button className={secondary} disabled={busy} onClick={() => demo.mutate()}>
-            Thanh toán Demo (chỉ local)
-          </button>
-        )}
-        {['PENDING_PAYMENT', 'PENDING_CHECKIN'].includes(data.status) && (
-          <button className={secondary} disabled={busy} onClick={() => cancel.mutate()}>
-            Hủy booking
-          </button>
-        )}
-        {data.status === 'PENDING_CHECKIN' && (
-          <button
-            className={secondary}
-            onClick={() => {
-              void navigator.clipboard.writeText(data.bookingCode).then(() => setCopied(true))
-            }}
-          >
-            {copied ? 'Đã sao chép' : 'Sao chép mã check-in'}
-          </button>
-        )}
-        {!embedded && <Link className={secondary} to="/bookings">
-          Xem các lượt đặt chỗ
-        </Link>}
-      </div>
+        {!compactPayment && otherActions}
+      </div>}
 
       {payable && checkoutOpen && payment.data && (
         <PayOsPaymentPanel
           key={`${bookingId}:${payment.data}`}
           bookingId={bookingId}
           checkoutUrl={payment.data}
+          final={finalPayment}
+          compact={compactPayment}
           onClose={() => setCheckoutIntent(null)}
         />
       )}
+
+      {compactPayment && <div className="divide-y divide-brand-border border-t border-brand-border text-xs">
+        <details className="py-3"><summary className="cursor-pointer font-medium text-brand-muted">Chi tiết giá & phụ phí</summary><div className="pt-3">{priceDetails}</div></details>
+        <details className="py-3"><summary className="cursor-pointer font-medium text-brand-muted">Tác vụ khác</summary><div className="flex flex-wrap gap-2 pt-3 [&>a]:!px-3 [&>a]:!py-2 [&>a]:!text-xs [&>button]:!px-3 [&>button]:!py-2 [&>button]:!text-xs">{otherActions}</div></details>
+      </div>}
 
       {data.status === 'COMPLETED' && <BookingReview bookingId={data.id} />}
       {demo.isSuccess && data.status === 'PENDING_PAYMENT' && (

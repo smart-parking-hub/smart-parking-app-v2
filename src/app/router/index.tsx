@@ -124,11 +124,6 @@ const PaymentReturnPage = lazy(() =>
     default: module.PaymentReturnPage,
   })),
 )
-const PaymentCancelPage = lazy(() =>
-  import('@/features/payment-cancel').then((module) => ({
-    default: module.PaymentCancelPage,
-  })),
-)
 const NotificationsPage = lazy(() =>
   import('@/features/notifications').then((module) => ({
     default: module.NotificationsPage,
@@ -323,7 +318,7 @@ export const router = createBrowserRouter([
       },
       {
         path: 'payment/cancel',
-        element: <PaymentCancelPage />,
+        element: <PaymentReturnPage mode="cancel" />,
       },
       {
         path: 'notifications',
@@ -381,7 +376,7 @@ export const router = createBrowserRouter([
       },
       {
         path: 'payment/cancel',
-        element: <PaymentCancelPage />,
+        element: <PaymentReturnPage mode="cancel" />,
       },
       {
         path: 'notifications',
@@ -465,7 +460,7 @@ export const router = createBrowserRouter([
     children: [
       {
         index: true,
-        element: <PaymentCancelPage />,
+        element: <PaymentReturnPage mode="cancel" />,
       },
     ],
   },

@@ -1,6 +1,6 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { ChevronDown, ExternalLink, MoreHorizontal, Receipt, ShieldAlert } from 'lucide-react'
 import type { Dispute } from '@/entities/operations'
 import {
@@ -13,7 +13,7 @@ import {
 import { Toast, ToastContainer } from '@/shared/components/Toast'
 import { Workspace, Panel, Notice, Badge, secondary } from '@/shared/components/Workspace'
 import { errorMessage, getData, type Page } from '@/shared/api/resources'
-import { fetchBookingsPage, formatMoney, statusLabels, bookingTimeLabel, BookingStatusPanel, type Booking } from '@/features/booking-flow'
+import { fetchBooking, fetchBookingsPage, formatMoney, statusLabels, bookingTimeLabel, BookingStatusPanel, type Booking } from '@/features/booking-flow'
 import { CreateDisputeModal } from '../components/CreateDisputeModal'
 import { isBookingEligibleForDispute } from '../schemas/disputeSchemas'
 
@@ -42,10 +42,20 @@ async function fetchDisputesLookupSafe(): Promise<Dispute[]> {
 
 export function MyBookingsPage() {
   const navigate = useNavigate()
+  const [params] = useSearchParams()
+  const selectedId = Number(params.get('bookingId'))
+  const validSelection = Number.isSafeInteger(selectedId) && selectedId > 0
   const [disputeBooking, setDisputeBooking] = useState<Booking | null>(null)
   const [createdNotice, setCreatedNotice] = useState<Dispute | null>(null)
   const [page, setPage] = useState(0)
   const [expandedId, setExpandedId] = useState<number | null | undefined>(undefined)
+  const selected = useQuery({ queryKey: ['booking', selectedId], queryFn: () => fetchBooking(selectedId), enabled: validSelection, retry: false, refetchInterval: 10000 })
+  const scrolledSelection = useRef<number | null>(null)
+  useEffect(() => {
+    if (!selected.data || scrolledSelection.current === selectedId) return
+    scrolledSelection.current = selectedId
+    document.getElementById(`selected-booking-${selectedId}`)?.scrollIntoView?.({ block: 'start' })
+  }, [selected.data, selectedId])
 
   const query = useQuery({
     queryKey: ['real-bookings', page],
@@ -104,6 +114,10 @@ export function MyBookingsPage() {
         </ToastContainer>
       )}
 
+      {validSelection && <Panel className="space-y-4 ring-2 ring-brand-primary/20">
+        <div id={`selected-booking-${selectedId}`} className="scroll-mt-[calc(var(--driver-header-height)+1rem)]"><h2 className="font-sora text-lg font-semibold">Vé vừa xem{selected.data ? ` · ${selected.data.parkingLotName || `Bãi đỗ #${selected.data.parkingLotId}`}` : ''}</h2><Link to="/bookings" className="mt-2 inline-block text-sm text-brand-muted underline">Đóng vé đang chọn</Link></div>
+        {selected.isPending ? <p role="status">Đang tải vé đang chọn…</p> : selected.isError ? <Notice error><div>{errorMessage(selected.error)}<button className={`${secondary} mt-2`} onClick={() => void selected.refetch()}>Thử tải lại vé</button></div></Notice> : <BookingStatusPanel key={selectedId} bookingId={selectedId} booking={selected.data} embedded />}
+      </Panel>}
       {query.isPending ? (
         <p role="status">Đang tải đặt chỗ…</p>
       ) : query.isError ? (
@@ -121,10 +135,10 @@ export function MyBookingsPage() {
         <>
         <p className="text-sm text-brand-muted">{query.data.totalElements ?? query.data.content.length} lượt đặt chỗ · Mở từng vé để xem QR, thanh toán và chi tiết.</p>
         <div className="grid items-start gap-3 xl:grid-cols-2">
-        {query.data.content.map((booking) => {
+        {query.data.content.filter(booking => !selected.data || booking.id !== selectedId).map((booking) => {
           const existingDispute = disputeByBookingId.get(booking.id)
           const canDispute = isBookingEligibleForDispute(booking.status)
-          const expanded = expandedId === booking.id || (expandedId === undefined && query.data.content.length === 1)
+          const expanded = expandedId === booking.id || (!validSelection && expandedId === undefined && query.data.content.length === 1)
 
           return (
             <Panel key={booking.id} className="!p-4 sm:!p-5">

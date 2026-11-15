@@ -14,6 +14,8 @@ export default defineConfig({
   server: {
     port: 3000,
     open: false,
+    // Trace HTML is generated during browser checks; it must not reload the app.
+    watch: { ignored: ['**/.artifacts/**', '**/test-results/**', '**/playwright-report/**'] },
     proxy: {
       '^/api(?:/|$)': { target: 'http://localhost:8088', changeOrigin: true },
     },

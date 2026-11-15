@@ -30,6 +30,15 @@ export async function paymentLink(bookingId: number, final = false) {
 }
 export const payDemo = (bookingId: number) => sendData('post', '/api/v1/payments/demo-confirm', { bookingId })
 export const cancelBooking = (id: number) => sendData('post', `/api/v1/bookings/${id}/cancel`, { reason: 'Tài xế chủ động hủy trước check-in' })
-export const syncPayment = (input: { bookingId: number; orderCode?: number }) => sendData<{ status: string }>('post', '/api/v1/payments/sync', input)
+export interface PaymentResult {
+  status: string
+  bookingId?: number
+  orderCode?: number
+  amount?: number
+  type?: 'DEPOSIT' | 'FINAL_PAYMENT'
+  canRetry?: boolean
+  canResume?: boolean
+}
+export const syncPayment = (input: { bookingId: number; orderCode?: number }) => sendData<PaymentResult>('post', '/api/v1/payments/sync', input)
 export const formatMoney = (amount: number) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND', maximumFractionDigits: 0 }).format(amount)
 export const statusLabels: Record<Booking['status'], string> = { PENDING_PAYMENT:'Chờ thanh toán cọc', PENDING_CHECKIN:'Đã cọc · Chờ check-in', PARKING:'Đang đỗ tại bãi', OVERTIME:'Đang đỗ quá giờ', AWAITING_FINAL_PAYMENT:'Chờ thanh toán phần còn lại', COMPLETED:'Đã hoàn tất', CANCELLED:'Đã hủy', EXPIRED:'Đã hết hạn', REVIEWED:'Đã đánh giá' }

@@ -1,10 +1,19 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { validatePaymentUrl } from '../payosCheckout'
+import { requiresHostedPayOS, validatePaymentUrl } from '../payosCheckout'
 
 afterEach(() => {
   vi.useRealTimers()
   delete window.PayOSCheckout
   document.querySelectorAll('script[src*="cdn.payos.vn"]').forEach((script) => script.remove())
+})
+
+describe('local network checkout presentation', () => {
+  it.each(['localhost', 'dev.localhost', '127.0.0.1', '[::1]', '10.1.2.3', '192.168.1.10', '172.16.0.1', '172.31.255.2'])('uses a hosted page for %s', host => {
+    expect(requiresHostedPayOS(host)).toBe(true)
+  })
+  it.each(['parking.example.com', '172.32.0.1', '192.169.1.1', 'pay.payos.vn'])('retains embedded checkout for %s', host => {
+    expect(requiresHostedPayOS(host)).toBe(false)
+  })
 })
 
 describe('PayOS checkout URL validation', () => {

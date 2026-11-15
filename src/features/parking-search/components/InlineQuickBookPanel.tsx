@@ -116,7 +116,7 @@ export function InlineQuickBookPanel({
             </div>
             <h2>Đặt giữ chỗ nhanh</h2>
             <p id="quick-hold-description">
-              Chọn xe và giờ đỗ. Thanh toán cọc trong 15 phút để xác nhận chỗ.
+              Thanh toán cọc để xác nhận chỗ cho xe của bạn.
             </p>
           </div>
           <button

@@ -1,5 +1,7 @@
 # Screen Inventory — Smart Parking CRM Hub v2
 
+> 2026-11-15 — PayOS cancellation: checkout becomes a compact stopped/closed panel after SDK exit/cancel or frame navigation, including Chrome local-network-blocked redirects. Embedded return pages notify the parent; payment authority remains server-side. See [module behavior](../05-modules/bookings/payos-checkout.md).
+
 > 2026-11-15: `/parking`, quick-book dialog, `/bookings`, `/merchant/qr-scanner` and Admin notifications received the user-requested usability fixes. Compact tickets use 8-item server pages and one expanded detail. [Evidence and limitations](./booking-usability-2026-11-15.md).
 
 > 2026-11-14 / SCR-047 / PAY-05: module `features/admin/transactions` tại `/admin/transactions` đã có phân trang/sắp xếp server, tổng số bản ghi, refresh và GET chi tiết riêng. Desktop/mobile và bàn phím được kiểm chứng bằng fixture; nghiệm thu backend thật / sign-off còn chờ. [Task](../08-project-operations/SP-S3-PAY-05.md), [báo cáo](./SP-S3-PAY-05-report.md).
@@ -101,3 +103,18 @@ Real-data capacity summary/category bars, Vietnamese pricing cards, read-only lo
 ## SCR-019 — Payment history polish — 2026-11-15
 
 User-authorized refresh of the current `/payments` screen: compact summary cards, aligned desktop table with grouped type/channel, responsive mobile rows, semantic colored statuses and immediate accessible transaction detail dialog. Existing DRIVER API/query scope, totals, filters, pagination, refresh and reconciliation guidance are preserved. Historical enterprise/mock accounting descriptions do not describe this current API-backed screen. See [module and capability mapping](../05-modules/payments/driver-payment-history.md) and [verification report](./payment-history-redesign-2026-11-15.md). Last verified: 2026-11-15.
+
+
+## SCR-023/024 — Unified PayOS return/cancel — 2026-11-15
+
+User-approved recovery plan implemented: all actual PayOS result routes share a compact server-driven result, real booking/deadline, one state-specific primary action, separate confirmed booking cancellation and a link that opens the selected ticket. No demo fallback URL, dummy berth/session/timer, invented hotline or claim that money was not deducted. Development demo confirmation stays on the booking screen only. Footer/Copilot hidden for these result routes. See [full capability mapping and verification](./payos-recovery-2026-11-15.md); the former demo-oriented SCR-024 inventory is superseded.
+
+
+## Quick payment presentation and QR reopening — 2026-11-15
+
+User-requested compact reservation payment variant: prominent real deposit/deadline, readable lot/plate/schedule, copyable truncated code, one primary PayOS action and disclosed tariff/secondary actions. Existing API, calculations, QR eligibility and demo gating are preserved. Hosted opening now revalidates through a button and removes the stale opener on error. The retained local backend is now activated using a copy-tested compatibility lineage; the earlier runtime-blocker note is superseded for this local instance. See [implementation and parity](./quick-payment-polish-2026-11-15.md).
+
+
+## Unpaid hold protection — 2026-11-15
+
+Server-owned vehicle/account quotas, verified unpaid-release cooldown and technical rate protection are surfaced in the reservation form with typed errors, original retry times and ticket links. Paid/review/refunded/partial/unknown evidence is not labelled as abuse. See [contract mapping](../05-modules/bookings/unpaid-hold-policy.md) and [verification](./unpaid-hold-policy-2026-11-15.md).
