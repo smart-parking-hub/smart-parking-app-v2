@@ -44,7 +44,7 @@ export function VehicleEditor({ vehicle, onClose, onSaved }: {
     },
   })
   const selectedType = form.watch('vehicleType')
-  const isTypeSelected = Boolean(selectedType && selectedType !== '')
+  const isTypeSelected = Boolean(selectedType)
 
   const save = useMutation({
     mutationFn: (values: VehicleInput) => saveVehicle(values, vehicle?.id),

@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { QRCodeSVG } from 'qrcode.react'
 import { QrCode, Download, Copy, Check, Clock, ShieldCheck, AlertCircle } from 'lucide-react'
-import { Dialog, Notice, Badge, secondary } from '@/shared/components/Workspace'
+import { Dialog, Badge, secondary } from '@/shared/components/Workspace'
 import { bookingTimestamp, bookingTimeLabel } from '@/features/booking-flow/time'
 import { statusLabels, type Booking } from '@/features/booking-flow'
 
