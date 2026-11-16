@@ -269,6 +269,78 @@ describe('Gate settlement contract', () => {
     fireEvent.click(confirm)
     expect(await screen.findByRole('dialog', { name: 'Hoàn tất giao dịch' })).toHaveTextContent('BK-003')
   })
+
+  it('toggles QR payment view in checkout settlement dialog and confirms settlement', async () => {
+    send.mockResolvedValueOnce({
+      bookingCode: 'BK-QR-001',
+      totalAmount: 20000,
+      advanceDeposit: 4000,
+      amountDue: 16000,
+      parkingMinutes: 120,
+      bookingStatus: 'AWAITING_FINAL_PAYMENT',
+    }).mockResolvedValueOnce(null)
+    show(<MerchantScannerPage />, '/?code=BK-QR-001&lot=12')
+    await screen.findByText('Bãi kiểm thử')
+    fireEvent.click(screen.getByRole('button', { name: 'XE RA' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Kiểm tra & quyết toán xe ra' }))
+
+    // Initial cash view
+    expect(await screen.findByText('Quyết toán lượt đỗ')).toBeInTheDocument()
+    const qrBtn = screen.getByRole('button', { name: /Thanh toán bằng QR/ })
+    expect(qrBtn).toBeInTheDocument()
+
+    // Switch to QR view
+    fireEvent.click(qrBtn)
+    expect(await screen.findByText('Thanh toán qua QR')).toBeInTheDocument()
+    expect(screen.getByTestId('checkout-qr-container')).toBeInTheDocument()
+    expect(screen.getByText('Quay lại Tiền mặt')).toBeInTheDocument()
+    expect(screen.getByText(/16\.000/)).toBeInTheDocument()
+
+    // Switch back to Cash view and then to QR again
+    fireEvent.click(screen.getByText('Quay lại Tiền mặt'))
+    expect(await screen.findByText('Quyết toán lượt đỗ')).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: /Thanh toán bằng QR/ }))
+
+    // Confirm settlement from QR view
+    const confirmQrBtn = screen.getByRole('button', { name: /Đã nhận thanh toán QR/ })
+    fireEvent.click(confirmQrBtn)
+
+    expect(await screen.findByRole('dialog', { name: 'Hoàn tất giao dịch' })).toHaveTextContent('BK-QR-001')
+  })
+
+  it('dismisses checkout settlement dialog when closing via X without confirming exit or triggering false success popup', async () => {
+    send.mockResolvedValueOnce({
+      bookingCode: 'BK-DISMISS-01',
+      totalAmount: 20000,
+      advanceDeposit: 4000,
+      amountDue: 16000,
+      parkingMinutes: 1,
+      bookingStatus: 'AWAITING_FINAL_PAYMENT',
+    })
+    show(<MerchantScannerPage />, '/?code=BK-DISMISS-01&lot=12')
+    await screen.findByText('Bãi kiểm thử')
+    fireEvent.click(screen.getByRole('button', { name: 'XE RA' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Kiểm tra & quyết toán xe ra' }))
+
+    expect(await screen.findByText('Quyết toán lượt đỗ')).toBeInTheDocument()
+    expect(send).toHaveBeenCalledTimes(1)
+
+    // User closes the dialog via X button
+    fireEvent.click(screen.getByRole('button', { name: 'Đóng' }))
+
+    // Ensure dialog is dismissed
+    await waitFor(() => {
+      expect(screen.queryByText('Quyết toán lượt đỗ')).not.toBeInTheDocument()
+    })
+
+    // Crucial check: Ensure NO misleading "Đã cập nhật lượt xe" or "Đã ghi nhận xe ra" popup is shown
+    expect(screen.queryByText('Đã cập nhật lượt xe')).not.toBeInTheDocument()
+    expect(screen.queryByText(/Đã ghi nhận xe ra/)).not.toBeInTheDocument()
+    expect(screen.queryByRole('dialog', { name: 'Hoàn tất giao dịch' })).not.toBeInTheDocument()
+
+    // confirm-cash was NEVER sent
+    expect(send).toHaveBeenCalledTimes(1)
+  })
 })
 describe('Finance, disputes and lot configuration', () => {
   it('requires a reason before submitting an admin decision and shows server rejection', async () => {
