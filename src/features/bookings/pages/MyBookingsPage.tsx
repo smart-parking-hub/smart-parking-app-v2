@@ -35,6 +35,7 @@ import {
   BookingStatusPanel,
   type Booking,
 } from '@/features/booking-flow'
+import { Modal } from '@/shared/components/Modal'
 import { CreateDisputeModal } from '../components/CreateDisputeModal'
 import { BookingPaymentHistoryModal } from '../components/BookingPaymentHistoryModal'
 import { BookingQrModal } from '../components/BookingQrModal'
@@ -75,6 +76,7 @@ export function MyBookingsPage() {
   const [paymentHistoryBooking, setPaymentHistoryBooking] = useState<Booking | null>(null)
   const [qrModalBooking, setQrModalBooking] = useState<Booking | null>(null)
   const [reviewBooking, setReviewBooking] = useState<Booking | null>(null)
+  const [detailModalBooking, setDetailModalBooking] = useState<Booking | null>(null)
   const [reviewNotice, setReviewNotice] = useState<string | null>(null)
   const [createdNotice, setCreatedNotice] = useState<Dispute | null>(null)
 
@@ -509,7 +511,7 @@ export function MyBookingsPage() {
               <tbody className="divide-y divide-slate-100">
                 {query.data.content
                   .filter((booking) => !selected.data || booking.id !== selectedId)
-                  .map((booking) => {
+                  .map((booking, idx) => {
                     const existingDispute = disputeByBookingId.get(booking.id)
                     const canDispute = isBookingEligibleForDispute(booking.status)
                     const expanded =
@@ -529,9 +531,14 @@ export function MyBookingsPage() {
                               className="font-mono font-bold text-slate-900 block truncate max-w-44"
                               title={bookingReference(booking)}
                             >
-                              {booking.status === 'PENDING_PAYMENT'
-                                ? `Số đơn #${booking.id}`
-                                : `#${booking.id} · ${booking.bookingCode}`}
+                              {booking.status === 'PENDING_PAYMENT' ? (
+                                `Số đơn #${booking.id}`
+                              ) : (
+                                <>
+                                  <span className="text-slate-400">#{booking.id} · </span>
+                                  <span>{booking.bookingCode}</span>
+                                </>
+                              )}
                             </span>
                           </td>
 
@@ -618,31 +625,19 @@ export function MyBookingsPage() {
                                 </button>
                               )}
 
-                              {/* Nút Đánh giá (cho COMPLETED hoặc REVIEWED) */}
+                              {/* Nút Đánh giá (cho COMPLETED hoặc REVIEWED) - monochrome / trắng đen */}
                               {['COMPLETED', 'REVIEWED'].includes(booking.status) && (
                                 <button
                                   type="button"
                                   onClick={() => setReviewBooking(booking)}
-                                  className={`inline-flex items-center gap-1 rounded-xl px-2.5 py-1.5 text-xs font-semibold transition-colors cursor-pointer shadow-2xs ${
-                                    booking.status === 'COMPLETED'
-                                      ? 'border border-amber-200 bg-amber-50 text-amber-800 hover:bg-amber-100'
-                                      : 'border border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-100'
-                                  }`}
+                                  className="inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 hover:border-slate-300 focus-visible:ring-2 focus-visible:ring-brand-primary transition-colors shadow-2xs cursor-pointer"
                                 >
-                                  <Star
-                                    size={13}
-                                    className={
-                                      booking.status === 'COMPLETED'
-                                        ? 'fill-amber-500 text-amber-500'
-                                        : 'fill-slate-400 text-slate-400'
-                                    }
-                                  />
                                   <span>{booking.status === 'COMPLETED' ? 'Đánh giá' : 'Đã đánh giá'}</span>
                                 </button>
                               )}
 
-                              {/* Khiếu nại CTA */}
-                              {existingDispute ? (
+                              {/* Xem khiếu nại nếu đã có */}
+                              {existingDispute && (
                                 <Link
                                   to={`/disputes/${existingDispute.id}`}
                                   className="inline-flex items-center gap-1 rounded-xl border border-orange-200 bg-orange-50 px-2.5 py-1.5 text-xs font-semibold text-brand-primary-active hover:bg-orange-100 focus-visible:ring-2 focus-visible:ring-brand-primary transition-colors"
@@ -650,35 +645,23 @@ export function MyBookingsPage() {
                                   <ExternalLink className="h-3.5 w-3.5" aria-hidden="true" />
                                   <span>Xem khiếu nại #KN-{existingDispute.id}</span>
                                 </Link>
-                              ) : canDispute ? (
-                                <button
-                                  type="button"
-                                  onClick={() => setDisputeBooking(booking)}
-                                  aria-label={`Gửi khiếu nại đơn ${bookingReference(booking)}`}
-                                  className="inline-flex items-center gap-1 rounded-xl border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-semibold text-slate-700 hover:border-brand-primary hover:bg-brand-primary-subtle hover:text-brand-primary-active focus-visible:ring-2 focus-visible:ring-brand-primary transition-colors shadow-2xs cursor-pointer"
-                                >
-                                  <ShieldAlert className="h-3.5 w-3.5 text-brand-primary" aria-hidden="true" />
-                                  <span>Gửi khiếu nại</span>
-                                </button>
-                              ) : null}
+                              )}
 
-                              {/* Nút Chi tiết */}
+                              {/* Nút Chi tiết - mở modal ra giữa màn hình */}
                               <button
                                 type="button"
-                                className={`${secondary} !px-2.5 !py-1.5 !text-xs gap-1 hover:border-brand-primary/40 focus-visible:ring-2 focus-visible:ring-brand-primary cursor-pointer transition-colors`}
-                                aria-expanded={expanded}
-                                aria-controls={`booking-detail-${booking.id}`}
-                                onClick={() => setExpandedId(expanded ? null : booking.id)}
+                                className="inline-flex items-center justify-center gap-1 rounded-xl border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 hover:border-slate-300 focus-visible:ring-2 focus-visible:ring-brand-primary cursor-pointer transition-colors shadow-2xs"
+                                aria-label="Xem vé & chi tiết"
+                                aria-expanded={detailModalBooking?.id === booking.id || expanded}
+                                onClick={() => {
+                                  setDetailModalBooking(booking)
+                                  setExpandedId(booking.id)
+                                }}
                               >
-                                <span>Xem vé & chi tiết</span>
-                                <ChevronDown
-                                  size={13}
-                                  className={`transition-transform duration-200 ${expanded ? 'rotate-180' : ''}`}
-                                  aria-hidden="true"
-                                />
+                                <span>Chi tiết</span>
                               </button>
 
-                              {/* Dropdown Tác vụ */}
+                              {/* Dropdown Tác vụ - side='top' cho các dòng gần cuối bảng */}
                               <Dropdown>
                                 <DropdownTrigger
                                   className="gap-1 rounded-xl border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 hover:border-slate-300 focus-visible:ring-2 focus-visible:ring-brand-primary transition-colors shadow-2xs"
@@ -688,7 +671,11 @@ export function MyBookingsPage() {
                                   <span className="sr-only">cho đơn {bookingReference(booking)}</span>
                                   <ChevronDown className="h-3.5 w-3.5 text-slate-400" aria-hidden="true" />
                                 </DropdownTrigger>
-                                <DropdownContent align="right" width="w-60">
+                                <DropdownContent
+                                  align="right"
+                                  side={idx >= (query.data.content?.length ?? 0) - 2 ? 'top' : 'bottom'}
+                                  width="w-60"
+                                >
                                   {booking.status === 'PENDING_CHECKIN' && (
                                     <DropdownItem
                                       icon={<QrCode className="h-4 w-4 text-brand-orange" />}
@@ -725,20 +712,6 @@ export function MyBookingsPage() {
                             </div>
                           </td>
                         </tr>
-
-                        {/* Expanded Detail Row */}
-                        {expanded && (
-                          <tr className="bg-slate-50/80 border-b border-slate-200">
-                            <td colSpan={7} className="p-4 sm:p-5">
-                              <div
-                                id={`booking-detail-${booking.id}`}
-                                className="rounded-xl border border-slate-200 bg-white p-4 shadow-2xs"
-                              >
-                                <BookingStatusPanel bookingId={booking.id} booking={booking} embedded />
-                              </div>
-                            </td>
-                          </tr>
-                        )}
                       </Fragment>
                     )
                   })}
@@ -814,6 +787,51 @@ export function MyBookingsPage() {
           onClose={() => setReviewBooking(null)}
           onSubmitReview={handleReviewSubmit}
         />
+      )}
+
+      {/* Modal hiển thị chi tiết vé ra giữa màn hình */}
+      {detailModalBooking && (
+        <Modal
+          isOpen={Boolean(detailModalBooking)}
+          onClose={() => {
+            setDetailModalBooking(null)
+            setExpandedId(null)
+          }}
+          maxWidth="xl"
+        >
+          <div className="space-y-4">
+            <div className="border-b border-slate-100 pb-3">
+              <h3 className="font-sora text-lg font-semibold text-slate-900">
+                Chi tiết lượt đặt chỗ #{detailModalBooking.bookingCode}
+              </h3>
+              <p className="text-xs text-slate-500 mt-1">
+                Bãi đỗ: <strong className="text-slate-800">{detailModalBooking.parkingLotName || `#${detailModalBooking.parkingLotId}`}</strong>
+                {detailModalBooking.vehiclePlate && (
+                  <> · Biển số: <strong className="font-mono text-slate-800">{detailModalBooking.vehiclePlate}</strong></>
+                )}
+              </p>
+            </div>
+            <div className="max-h-[75vh] overflow-y-auto pr-1">
+              <BookingStatusPanel
+                bookingId={detailModalBooking.id}
+                booking={detailModalBooking}
+                embedded
+              />
+            </div>
+            <div className="flex justify-end border-t border-slate-100 pt-3">
+              <button
+                type="button"
+                className={`${secondary} !min-h-10 !px-4 !py-2 !text-xs cursor-pointer`}
+                onClick={() => {
+                  setDetailModalBooking(null)
+                  setExpandedId(null)
+                }}
+              >
+                Đóng
+              </button>
+            </div>
+          </div>
+        </Modal>
       )}
     </Workspace>
   )

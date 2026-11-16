@@ -112,11 +112,10 @@ export function ReviewBookingModal({
                     className="p-1 cursor-pointer transition-transform hover:scale-110"
                   >
                     <Star
-                      className={`w-7 h-7 ${
-                        active
-                          ? 'fill-amber-400 text-amber-400'
-                          : 'fill-slate-100 text-slate-300'
-                      }`}
+                      className={`w-7 h-7 ${active
+                        ? 'fill-amber-400 text-amber-400'
+                        : 'fill-slate-100 text-slate-300'
+                        }`}
                     />
                   </button>
                 )

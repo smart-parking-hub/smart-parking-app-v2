@@ -84,6 +84,7 @@ export function DropdownTrigger({ children, className }: DropdownTriggerProps) {
 export interface DropdownContentProps {
   children: React.ReactNode
   align?: 'left' | 'right'
+  side?: 'top' | 'bottom'
   className?: string
   width?: string
 }
@@ -91,6 +92,7 @@ export interface DropdownContentProps {
 export function DropdownContent({
   children,
   align = 'right',
+  side = 'bottom',
   className,
   width = 'w-56',
 }: DropdownContentProps) {
@@ -105,7 +107,8 @@ export function DropdownContent({
       id={menuId}
       role="menu"
       className={cn(
-        'absolute z-50 mt-2 rounded-xl bg-white p-1.5 shadow-xl border border-slate-200 animate-in fade-in zoom-in-95 duration-150 focus:outline-none',
+        'absolute z-50 rounded-xl bg-white p-1.5 shadow-xl border border-slate-200 animate-in fade-in zoom-in-95 duration-150 focus:outline-none',
+        side === 'top' ? 'bottom-full mb-2' : 'top-full mt-2',
         align === 'right' ? 'right-0' : 'left-0',
         width,
         className

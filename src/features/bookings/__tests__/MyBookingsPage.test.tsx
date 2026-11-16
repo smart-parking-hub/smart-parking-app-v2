@@ -120,7 +120,9 @@ it('reports request errors and retries without sample bookings', async () => {
 })
 it('allows opening CreateDisputeModal from PENDING_CHECKIN booking action menu and submitting with merchantId', async () => {
   mount(<MyBookingsPage />, '/bookings', '/bookings')
-  const disputeBtn = await screen.findByRole('button', { name: /Gửi khiếu nại/i })
+  const actionTrigger = await screen.findByRole('button', { name: /Tác vụ/i })
+  fireEvent.click(actionTrigger)
+  const disputeBtn = await screen.findByRole('menuitem', { name: /Gửi khiếu nại/i })
   fireEvent.click(disputeBtn)
 
   const dialog = screen.getByRole('dialog')
