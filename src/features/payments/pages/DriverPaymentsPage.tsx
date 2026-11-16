@@ -162,7 +162,7 @@ export function DriverPaymentsPage() {
                       htmlFor="search-payment-input"
                       className="block text-xs font-semibold text-slate-700 mb-1.5"
                     >
-                      Tìm trong trang hiện tại
+                      Tìm kiếm
                     </label>
                     <div className="relative flex items-center">
                       <div className="pointer-events-none absolute left-3 flex items-center text-slate-400">
@@ -170,7 +170,7 @@ export function DriverPaymentsPage() {
                       </div>
                       <input
                         id="search-payment-input"
-                        aria-label="Tìm trong trang hiện tại"
+                        aria-label="Tìm kiếm"
                         className="w-full h-11 rounded-xl border border-slate-200 bg-white pl-10 pr-9 text-xs text-slate-900 placeholder:text-slate-400 hover:border-slate-300 focus:border-[#d95f00] focus:outline-none focus:ring-2 focus:ring-[#d95f00]/20 transition-all"
                         type="search"
                         value={search}
@@ -195,11 +195,11 @@ export function DriverPaymentsPage() {
                       htmlFor="status-filter-select"
                       className="block text-xs font-semibold text-slate-700 mb-1.5"
                     >
-                      Trạng thái tôi
+                      Trạng thái
                     </label>
                     <Select
                       id="status-filter-select"
-                      ariaLabel="Trạng thái trong trang hiện tại"
+                      ariaLabel="Trạng thái"
                       triggerAriaHidden={true}
                       value={status}
                       onChange={(val) => setStatus(val as PaymentRecord['status'] | '')}
