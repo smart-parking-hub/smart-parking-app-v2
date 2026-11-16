@@ -58,9 +58,6 @@ export function DriverPaymentSummary({ rows, total }: { rows: PaymentRecord[]; t
               featured ? 'text-orange-950' : 'text-slate-500'
             }`}
           >
-            {featured && (
-              <span className="h-2 w-2 rounded-full bg-[#d95f00] shrink-0" aria-hidden="true" />
-            )}
             {label}
           </p>
           <p className="mt-2 font-sora text-xl font-bold leading-8 tracking-tight tabular-nums text-slate-900 [overflow-wrap:anywhere] sm:text-2xl">
