@@ -35,6 +35,7 @@ import {
   type Booking,
 } from '@/features/booking-flow'
 import { Modal } from '@/shared/components/Modal'
+import { Select } from '@/shared/components/Select'
 import { CreateDisputeModal } from '../components/CreateDisputeModal'
 import { BookingPaymentHistoryModal } from '../components/BookingPaymentHistoryModal'
 import { BookingQrModal } from '../components/BookingQrModal'
@@ -64,6 +65,19 @@ async function fetchDisputesLookupSafe(): Promise<Dispute[]> {
   }
   return []
 }
+
+const bookingStatusFilterOptions = [
+  { value: '', label: 'Tất cả trạng thái' },
+  { value: 'PENDING_PAYMENT', label: 'Chờ thanh toán cọc' },
+  { value: 'PENDING_CHECKIN', label: 'Chờ check-in' },
+  { value: 'PARKING', label: 'Xe đang đỗ trong bãi' },
+  { value: 'OVERTIME', label: 'Đỗ quá giờ' },
+  { value: 'AWAITING_FINAL_PAYMENT', label: 'Chờ quyết toán' },
+  { value: 'COMPLETED', label: 'Đã hoàn tất' },
+  { value: 'REVIEWED', label: 'Đã đánh giá' },
+  { value: 'CANCELLED', label: 'Đã hủy' },
+  { value: 'EXPIRED', label: 'Đã hết hạn' },
+]
 
 export function MyBookingsPage() {
   const navigate = useNavigate()
@@ -289,35 +303,22 @@ export function MyBookingsPage() {
             <label htmlFor="status-select" className="block text-xs font-semibold text-slate-700">
               Trạng thái vé
             </label>
-            <div className="relative flex items-center">
-              <div className="pointer-events-none absolute left-3 flex items-center text-slate-400">
-                <Filter className="h-4 w-4" aria-hidden="true" />
-              </div>
-              <select
-                id="status-select"
-                aria-label="Trạng thái vé"
-                value={status}
-                onChange={(e) => {
-                  setStatus(e.target.value)
-                  setPage(0)
-                }}
-                className="w-full h-10 appearance-none rounded-xl border border-slate-200 bg-white pl-9 pr-9 text-xs text-slate-900 hover:border-slate-300 focus:border-brand-primary focus:outline-none focus:ring-2 focus:ring-brand-primary/20 transition-all cursor-pointer font-medium"
-              >
-                <option value="">Tất cả trạng thái</option>
-                <option value="PENDING_PAYMENT">Chờ thanh toán cọc</option>
-                <option value="PENDING_CHECKIN">Chờ check-in</option>
-                <option value="PARKING">Xe đang đỗ trong bãi</option>
-                <option value="OVERTIME">Đỗ quá giờ</option>
-                <option value="AWAITING_FINAL_PAYMENT">Chờ quyết toán</option>
-                <option value="COMPLETED">Đã hoàn tất</option>
-                <option value="REVIEWED">Đã đánh giá</option>
-                <option value="CANCELLED">Đã hủy</option>
-                <option value="EXPIRED">Đã hết hạn</option>
-              </select>
-              <div className="pointer-events-none absolute right-3 flex items-center text-slate-400">
-                <ChevronDown className="h-4 w-4" aria-hidden="true" />
-              </div>
-            </div>
+            <Select
+              id="status-select"
+              ariaLabel="Trạng thái vé"
+              triggerAriaHidden={true}
+              prefixIcon={<Filter className="h-4 w-4 text-slate-400 shrink-0" aria-hidden="true" />}
+              value={status}
+              onChange={(val) => {
+                setStatus(val)
+                setPage(0)
+              }}
+              options={bookingStatusFilterOptions}
+              placeholder="Tất cả trạng thái"
+              size="md"
+              variant="default"
+              triggerClassName="h-10 rounded-xl border-slate-200 text-xs font-normal"
+            />
           </div>
 
           {/* From Date Filter */}
