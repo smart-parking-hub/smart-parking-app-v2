@@ -321,3 +321,36 @@ input[type="range"].custom-range-slider::-moz-range-thumb:active {
   scrollbar-width: thin;
   scrollbar-color: #94a3b8 #f1f5f9;
 }
+
+/* ── Toast Bouncy Entrance Animation ── */
+@keyframes toast-bounce {
+  0% {
+    opacity: 0;
+    transform: translateY(-24px) scale(0.92);
+  }
+  45% {
+    opacity: 1;
+    transform: translateY(8px) scale(1.04);
+  }
+  65% {
+    transform: translateY(-4px) scale(0.98);
+  }
+  82% {
+    transform: translateY(2px) scale(1.01);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.animate-toast-bounce {
+  animation: toast-bounce 0.55s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-toast-bounce {
+    animation: none;
+  }
+}
+
