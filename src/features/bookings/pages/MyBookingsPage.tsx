@@ -12,7 +12,6 @@ import {
   RotateCcw,
   Calendar,
   Filter,
-  Star,
   X,
 } from 'lucide-react'
 import type { Dispute } from '@/entities/operations'
