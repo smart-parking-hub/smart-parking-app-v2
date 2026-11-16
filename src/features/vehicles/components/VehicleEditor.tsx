@@ -206,10 +206,19 @@ export function VehicleEditor({ vehicle, onClose, onSaved }: {
         {save.isError && <Notice error>{errorMessage(save.error)}</Notice>}
 
         <div className="flex flex-wrap gap-3 border-t border-brand-border pt-4">
-          <button className={`${button} min-h-12`} disabled={save.isPending}>
+          <button
+            type="submit"
+            className={`${button} min-h-12 cursor-pointer hover:bg-[#b84e00] hover:shadow-md hover:shadow-orange-500/25 active:scale-[0.98] transition-all`}
+            disabled={save.isPending}
+          >
             {save.isPending ? 'Đang lưu…' : 'Lưu phương tiện'}
           </button>
-          <button type="button" className={`${secondary} min-h-12`} disabled={save.isPending} onClick={onClose}>
+          <button
+            type="button"
+            className={`${secondary} min-h-12 cursor-pointer hover:bg-slate-50 hover:border-slate-300 hover:text-slate-900 active:scale-[0.98] transition-all`}
+            disabled={save.isPending}
+            onClick={onClose}
+          >
             Hủy
           </button>
         </div>
