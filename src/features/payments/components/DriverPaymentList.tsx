@@ -31,7 +31,15 @@ export function DriverPaymentList({ rows, onSelect }: { rows: PaymentRecord[]; o
         <td role="cell" className="col-start-2 row-start-2 self-center whitespace-nowrap text-right font-semibold tabular-nums lg:px-5 lg:py-4"><span className="sr-only lg:hidden">Số tiền: </span>{paymentMoney(item.amount)}</td>
         <td role="cell" className="col-start-2 row-start-1 self-start lg:px-5 lg:py-4"><DriverPaymentStatus status={item.status} /></td>
         <td role="cell" className="col-start-2 row-start-3 justify-self-end lg:px-5 lg:py-4">
-          <button type="button" onClick={() => onSelect(item.id)} aria-label={`Chi tiết giao dịch ${item.transactionCode || item.id}`} className="inline-flex min-h-9 items-center justify-center gap-1.5 whitespace-nowrap rounded-lg px-2 text-xs font-semibold text-brand-primary transition-colors hover:bg-brand-primary/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2">Chi tiết<ArrowUpRight size={15} aria-hidden="true" /></button>
+          <button
+            type="button"
+            onClick={() => onSelect(item.id)}
+            aria-label={`Chi tiết giao dịch ${item.transactionCode || item.id}`}
+            className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 shadow-2xs hover:border-[#d95f00] hover:bg-orange-50/80 hover:text-[#d95f00] active:scale-[0.98] focus-visible:ring-2 focus-visible:ring-brand-primary cursor-pointer transition-all duration-150"
+          >
+            <span>Chi tiết</span>
+            <ArrowUpRight size={14} aria-hidden="true" />
+          </button>
         </td>
       </tr>)}
     </tbody>
