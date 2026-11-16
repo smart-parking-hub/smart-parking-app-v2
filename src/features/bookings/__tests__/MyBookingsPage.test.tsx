@@ -367,9 +367,11 @@ it('filters bookings by search keyword, status, and resets on Xóa lọc (TKT-05
   mount(<MyBookingsPage />, '/bookings', '/bookings')
   expect(await screen.findByText('BK-API-41')).toBeInTheDocument()
 
-  // Type search keyword
+  // Type search keyword and click Lọc
   const searchInput = screen.getByPlaceholderText('Mã vé, biển số, tên bãi…')
   fireEvent.change(searchInput, { target: { value: 'Cát Lái' } })
+  const filterBtn = screen.getByRole('button', { name: /^Lọc$/i })
+  fireEvent.click(filterBtn)
 
   await waitFor(() => {
     expect(apiClient.get).toHaveBeenCalledWith('/api/v1/bookings', expect.objectContaining({
@@ -377,9 +379,10 @@ it('filters bookings by search keyword, status, and resets on Xóa lọc (TKT-05
     }))
   })
 
-  // Select status with no results
+  // Select status and click Lọc to get no results
   const statusSelect = screen.getByLabelText('Trạng thái vé')
   fireEvent.change(statusSelect, { target: { value: 'PENDING_PAYMENT' } })
+  fireEvent.click(filterBtn)
 
   expect(await screen.findByText('Không tìm thấy lượt đặt chỗ nào phù hợp với bộ lọc hiện tại.')).toBeInTheDocument()
 

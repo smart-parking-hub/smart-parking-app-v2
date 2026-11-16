@@ -68,7 +68,9 @@ export function DatePicker({
           onClick={(e) => {
             try {
               e.currentTarget.showPicker?.()
-            } catch {}
+            } catch (_err) {
+              void _err
+            }
           }}
           className={cn(
             'w-full bg-white border border-slate-200 rounded-xl pl-10 pr-4 h-10 text-sm text-slate-900 font-sans transition-all cursor-pointer shadow-2xs',

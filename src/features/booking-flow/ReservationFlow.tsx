@@ -1,10 +1,11 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { Link } from 'react-router-dom'
 import { Field, Notice, button, control, secondary } from '@/shared/components/Workspace'
+import { Select, type SelectOption } from '@/shared/components/Select'
 import { errorMessage } from '@/shared/api/resources'
 import { fetchLot, fetchVehicles, createBooking, formatMoney } from './api'
 import { BookingStatusPanel } from './BookingStatusPanel'
@@ -22,6 +23,12 @@ export function ReservationFlow({ lotId }: { lotId: number }) {
   const [bookingId,setBookingId] = useState<number | null>(null)
   const form = useForm<Values>({ resolver:zodResolver(schema),defaultValues:{vehicleId:0,start:vietnamLocalTime(30),end:vietnamLocalTime(150)} })
   useEffect(()=>{ if(vehicles.data?.length && !form.getValues('vehicleId')) form.setValue('vehicleId',vehicles.data[0].id) },[vehicles.data,form])
+  const vehicleOptions = useMemo<SelectOption[]>(() => {
+    return (vehicles.data ?? []).map(vehicle => ({
+      value: String(vehicle.id),
+      label: `${vehicle.licensePlate} · ${({SEDAN_SUV:'Ô tô con',BUS_COACH:'Xe khách',LIGHT_TRUCK:'Xe tải nhẹ',HEAVY_TRUCK:'Xe tải nặng',CONTAINER:'Xe container'})[vehicle.vehicleType]}`,
+    }))
+  }, [vehicles.data])
   const selected = vehicles.data?.find(vehicle=>vehicle.id===Number(form.watch('vehicleId')))
   const tariff = lot.data?.pricingRules.find(price=>price.vehicleType===selected?.vehicleType)
   const slot = lot.data?.slots.find(slot=>slot.vehicleType===selected?.vehicleType)
@@ -46,7 +53,21 @@ export function ReservationFlow({ lotId }: { lotId: number }) {
     <div className="rounded-xl border border-brand-border bg-brand-surface px-4 py-3"><h3 className="font-sora text-base font-semibold">{lot.data.name}</h3><p className="mt-1 text-xs leading-relaxed text-brand-muted">{lot.data.address}</p></div>
     <fieldset className="grid gap-4 sm:grid-cols-2" disabled={save.isPending}>
       <legend className="sr-only">Phương tiện và giờ đỗ (giờ Việt Nam UTC+7)</legend>
-      <div className="sm:col-span-2"><Field label="Phương tiện của bạn"><select className={control} {...form.register('vehicleId')}>{vehicles.data.map(vehicle=><option key={vehicle.id} value={vehicle.id}>{vehicle.licensePlate} · {({SEDAN_SUV:'Ô tô con',BUS_COACH:'Xe khách',LIGHT_TRUCK:'Xe tải nhẹ',HEAVY_TRUCK:'Xe tải nặng',CONTAINER:'Xe container'})[vehicle.vehicleType]}</option>)}</select></Field></div>
+      <div className="sm:col-span-2">
+        <Field label="Phương tiện của bạn">
+          <Select
+            id="vehicleId"
+            value={String(form.watch('vehicleId') || '')}
+            onChange={(val) => form.setValue('vehicleId', Number(val), { shouldValidate: true })}
+            options={vehicleOptions}
+            placeholder="Chọn phương tiện của bạn..."
+            variant="default"
+            size="md"
+            ariaLabel="Phương tiện của bạn"
+            triggerAriaHidden
+          />
+        </Field>
+      </div>
       <Field label="Giờ vào dự kiến"><input type="datetime-local" className={control} {...form.register('start')}/></Field>
       <Field label="Giờ ra dự kiến"><input type="datetime-local" className={control} {...form.register('end')}/></Field>
     </fieldset>

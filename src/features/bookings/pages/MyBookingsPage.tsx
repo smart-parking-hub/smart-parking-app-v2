@@ -97,33 +97,61 @@ export function MyBookingsPage() {
   const [page, setPage] = useState(0)
   const [expandedId, setExpandedId] = useState<number | null | undefined>(undefined)
 
-  // Filters state (TKT-05)
-  const [search, setSearch] = useState('')
-  const [status, setStatus] = useState('')
-  const [fromDate, setFromDate] = useState('')
-  const [toDate, setToDate] = useState('')
+  // Filters state (TKT-05 Manual Filter Action)
+  const [draftSearch, setDraftSearch] = useState('')
+  const [draftStatus, setDraftStatus] = useState('')
+  const [draftFromDate, setDraftFromDate] = useState('')
+  const [draftToDate, setDraftToDate] = useState('')
+
+  const [appliedFilters, setAppliedFilters] = useState<{
+    search: string
+    status: string
+    fromDate: string
+    toDate: string
+  }>({
+    search: '',
+    status: '',
+    fromDate: '',
+    toDate: '',
+  })
 
   const activeFilters = useMemo(() => {
-    const hasSearch = search.trim().length > 0
-    const hasStatus = status.trim().length > 0
-    const hasFrom = fromDate.trim().length > 0
-    const hasTo = toDate.trim().length > 0
+    const hasSearch = appliedFilters.search.trim().length > 0
+    const hasStatus = appliedFilters.status.trim().length > 0
+    const hasFrom = appliedFilters.fromDate.trim().length > 0
+    const hasTo = appliedFilters.toDate.trim().length > 0
     return {
       hasFilters: hasSearch || hasStatus || hasFrom || hasTo,
       filters: {
-        search: hasSearch ? search.trim() : undefined,
-        status: hasStatus ? status.trim() : undefined,
-        from: hasFrom ? `${fromDate}T00:00:00` : undefined,
-        to: hasTo ? `${toDate}T23:59:59` : undefined,
+        search: hasSearch ? appliedFilters.search.trim() : undefined,
+        status: hasStatus ? appliedFilters.status.trim() : undefined,
+        from: hasFrom ? `${appliedFilters.fromDate}T00:00:00` : undefined,
+        to: hasTo ? `${appliedFilters.toDate}T23:59:59` : undefined,
       },
     }
-  }, [search, status, fromDate, toDate])
+  }, [appliedFilters])
+
+  const handleApplyFilters = () => {
+    setAppliedFilters({
+      search: draftSearch.trim(),
+      status: draftStatus,
+      fromDate: draftFromDate,
+      toDate: draftToDate,
+    })
+    setPage(0)
+  }
 
   const handleClearFilters = () => {
-    setSearch('')
-    setStatus('')
-    setFromDate('')
-    setToDate('')
+    setDraftSearch('')
+    setDraftStatus('')
+    setDraftFromDate('')
+    setDraftToDate('')
+    setAppliedFilters({
+      search: '',
+      status: '',
+      fromDate: '',
+      toDate: '',
+    })
     setPage(0)
   }
 
@@ -148,6 +176,48 @@ export function MyBookingsPage() {
     retry: false,
     refetchInterval: 10000,
   })
+
+  const filteredBookings = useMemo(() => {
+    const content = query.data?.content ?? []
+    if (!activeFilters.hasFilters) return content
+
+    return content.filter((b) => {
+      if (activeFilters.filters.search) {
+        const q = activeFilters.filters.search.toLowerCase()
+        const cleanQ = q.replace(/^#/, '')
+        const idMatch = String(b.id).includes(cleanQ)
+        const codeMatch = (b.bookingCode ?? '').toLowerCase().includes(q)
+        const plateMatch = (b.vehiclePlate ?? '').toLowerCase().includes(q)
+        const lotMatch = (b.parkingLotName ?? '').toLowerCase().includes(q)
+        const addressMatch = (b.parkingLotAddress ?? '').toLowerCase().includes(q)
+        if (!idMatch && !codeMatch && !plateMatch && !lotMatch && !addressMatch) {
+          return false
+        }
+      }
+
+      if (activeFilters.filters.status) {
+        if (b.status !== activeFilters.filters.status) {
+          return false
+        }
+      }
+
+      if (appliedFilters.fromDate) {
+        const checkInDate = b.expectedCheckInTime ? b.expectedCheckInTime.substring(0, 10) : ''
+        if (checkInDate && checkInDate < appliedFilters.fromDate) {
+          return false
+        }
+      }
+
+      if (appliedFilters.toDate) {
+        const checkInDate = b.expectedCheckInTime ? b.expectedCheckInTime.substring(0, 10) : ''
+        if (checkInDate && checkInDate > appliedFilters.toDate) {
+          return false
+        }
+      }
+
+      return true
+    })
+  }, [query.data?.content, activeFilters, appliedFilters])
 
   const disputesLookupQuery = useQuery({
     queryKey: ['driver-disputes-lookup'],
@@ -257,14 +327,14 @@ export function MyBookingsPage() {
         </Panel>
       )}
 
-      {/* Filter and Search Bar (TKT-05 Refined UI/UX) */}
+      {/* Filter and Search Bar (TKT-05 Refined UI/UX with dedicated "Lọc" button) */}
       <section
         aria-label="Bộ lọc tìm kiếm vé đặt chỗ"
-        className="rounded-2xl border border-slate-200 bg-white p-4 sm:p-5 shadow-xs transition-all space-y-3"
+        className="rounded-2xl border border-slate-200 bg-white p-4 sm:p-5 shadow-xs transition-all space-y-3.5"
       >
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-3 items-end">
           {/* Keyword Search */}
-          <div className="space-y-1.5">
+          <div className="space-y-1.5 sm:col-span-1 lg:col-span-4">
             <label htmlFor="search-input" className="block text-xs font-semibold text-slate-700">
               Tìm kiếm
             </label>
@@ -275,21 +345,20 @@ export function MyBookingsPage() {
               <input
                 id="search-input"
                 type="text"
-                value={search}
-                onChange={(e) => {
-                  setSearch(e.target.value)
-                  setPage(0)
+                value={draftSearch}
+                onChange={(e) => setDraftSearch(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    handleApplyFilters()
+                  }
                 }}
                 placeholder="Mã vé, biển số, tên bãi…"
-                className="w-full h-10 rounded-xl border border-slate-200 bg-white pl-9 pr-8 text-xs text-slate-900 placeholder:text-slate-400 hover:border-slate-300 focus:border-brand-primary focus:outline-none focus:ring-2 focus:ring-brand-primary/20 transition-all"
+                className="w-full h-10 rounded-xl border border-slate-200 bg-white pl-9 pr-8 text-xs text-slate-900 placeholder:text-slate-400 hover:border-slate-300 focus:border-[#d95f00] focus:outline-none focus:ring-2 focus:ring-[#d95f00]/20 transition-all"
               />
-              {search && (
+              {draftSearch && (
                 <button
                   type="button"
-                  onClick={() => {
-                    setSearch('')
-                    setPage(0)
-                  }}
+                  onClick={() => setDraftSearch('')}
                   aria-label="Xóa từ khóa tìm kiếm"
                   className="absolute right-2.5 p-1 rounded-md text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
                 >
@@ -300,7 +369,7 @@ export function MyBookingsPage() {
           </div>
 
           {/* Status Filter */}
-          <div className="space-y-1.5">
+          <div className="space-y-1.5 sm:col-span-1 lg:col-span-3">
             <label htmlFor="status-select" className="block text-xs font-semibold text-slate-700">
               Trạng thái vé
             </label>
@@ -309,11 +378,8 @@ export function MyBookingsPage() {
               ariaLabel="Trạng thái vé"
               triggerAriaHidden={true}
               prefixIcon={<Filter className="h-4 w-4 text-slate-400 shrink-0" aria-hidden="true" />}
-              value={status}
-              onChange={(val) => {
-                setStatus(val)
-                setPage(0)
-              }}
+              value={draftStatus}
+              onChange={(val) => setDraftStatus(val)}
               options={bookingStatusFilterOptions}
               placeholder="Tất cả trạng thái"
               size="md"
@@ -323,7 +389,7 @@ export function MyBookingsPage() {
           </div>
 
           {/* From Date Filter */}
-          <div className="space-y-1.5">
+          <div className="space-y-1.5 sm:col-span-1 lg:col-span-2">
             <label htmlFor="from-date" className="block text-xs font-semibold text-slate-700">
               Ngày vào (Từ ngày)
             </label>
@@ -334,16 +400,15 @@ export function MyBookingsPage() {
               <input
                 id="from-date"
                 type="date"
-                value={fromDate}
-                max={toDate || undefined}
-                onChange={(e) => {
-                  setFromDate(e.target.value)
-                  setPage(0)
-                }}
+                value={draftFromDate}
+                max={draftToDate || undefined}
+                onChange={(e) => setDraftFromDate(e.target.value)}
                 onClick={(e) => {
                   try {
                     e.currentTarget.showPicker?.()
-                  } catch {}
+                  } catch (_err) {
+                    void _err
+                  }
                 }}
                 title="Vào bãi từ ngày"
                 className={cn(
@@ -351,16 +416,15 @@ export function MyBookingsPage() {
                   'hover:border-[#d95f00] hover:bg-orange-50/10 hover:shadow-xs',
                   'focus:border-[#d95f00] focus:outline-none focus:ring-2 focus:ring-[#d95f00]/20',
                   '[&::-webkit-calendar-picker-indicator]:cursor-pointer [&::-webkit-calendar-picker-indicator]:opacity-60 hover:[&::-webkit-calendar-picker-indicator]:opacity-100 hover:[&::-webkit-calendar-picker-indicator]:scale-110 [&::-webkit-calendar-picker-indicator]:transition-all',
-                  fromDate ? 'border-orange-300 bg-orange-50/15' : 'border-slate-200'
+                  draftFromDate ? 'border-orange-300 bg-orange-50/15' : 'border-slate-200'
                 )}
               />
-              {fromDate && (
+              {draftFromDate && (
                 <button
                   type="button"
                   onClick={(e) => {
                     e.stopPropagation()
-                    setFromDate('')
-                    setPage(0)
+                    setDraftFromDate('')
                   }}
                   aria-label="Xóa ngày bắt đầu"
                   title="Xóa ngày bắt đầu"
@@ -373,21 +437,11 @@ export function MyBookingsPage() {
           </div>
 
           {/* To Date Filter */}
-          <div className="space-y-1.5">
+          <div className="space-y-1.5 sm:col-span-1 lg:col-span-2">
             <div className="flex items-center justify-between">
               <label htmlFor="to-date" className="block text-xs font-semibold text-slate-700">
                 Ngày vào (Đến ngày)
               </label>
-              {activeFilters.hasFilters && (
-                <button
-                  type="button"
-                  onClick={handleClearFilters}
-                  className="inline-flex items-center gap-1 text-[11px] font-semibold text-[#d95f00] hover:text-[#b34e00] transition-colors cursor-pointer"
-                >
-                  <RotateCcw className="h-3 w-3" />
-                  <span>Xóa lọc</span>
-                </button>
-              )}
             </div>
             <div className="relative flex items-center group">
               <div className="pointer-events-none absolute left-3 flex items-center text-slate-400 group-hover:text-[#d95f00] transition-colors">
@@ -396,16 +450,15 @@ export function MyBookingsPage() {
               <input
                 id="to-date"
                 type="date"
-                value={toDate}
-                min={fromDate || undefined}
-                onChange={(e) => {
-                  setToDate(e.target.value)
-                  setPage(0)
-                }}
+                value={draftToDate}
+                min={draftFromDate || undefined}
+                onChange={(e) => setDraftToDate(e.target.value)}
                 onClick={(e) => {
                   try {
                     e.currentTarget.showPicker?.()
-                  } catch {}
+                  } catch (_err) {
+                    void _err
+                  }
                 }}
                 title="Vào bãi đến ngày"
                 className={cn(
@@ -413,16 +466,15 @@ export function MyBookingsPage() {
                   'hover:border-[#d95f00] hover:bg-orange-50/10 hover:shadow-xs',
                   'focus:border-[#d95f00] focus:outline-none focus:ring-2 focus:ring-[#d95f00]/20',
                   '[&::-webkit-calendar-picker-indicator]:cursor-pointer [&::-webkit-calendar-picker-indicator]:opacity-60 hover:[&::-webkit-calendar-picker-indicator]:opacity-100 hover:[&::-webkit-calendar-picker-indicator]:scale-110 [&::-webkit-calendar-picker-indicator]:transition-all',
-                  toDate ? 'border-orange-300 bg-orange-50/15' : 'border-slate-200'
+                  draftToDate ? 'border-orange-300 bg-orange-50/15' : 'border-slate-200'
                 )}
               />
-              {toDate && (
+              {draftToDate && (
                 <button
                   type="button"
                   onClick={(e) => {
                     e.stopPropagation()
-                    setToDate('')
-                    setPage(0)
+                    setDraftToDate('')
                   }}
                   aria-label="Xóa ngày kết thúc"
                   title="Xóa ngày kết thúc"
@@ -433,19 +485,33 @@ export function MyBookingsPage() {
               )}
             </div>
           </div>
+
+          {/* Action Button: Lọc */}
+          <div className="flex items-center gap-2 sm:col-span-2 lg:col-span-1">
+            <button
+              type="button"
+              onClick={handleApplyFilters}
+              className="w-full inline-flex items-center justify-center gap-1.5 h-10 px-4 rounded-xl bg-[#d95f00] text-white hover:bg-[#b84f00] text-xs font-semibold shadow-xs transition-all cursor-pointer shrink-0"
+              title="Áp dụng bộ lọc"
+            >
+              <Filter className="h-3.5 w-3.5" />
+              <span>Lọc</span>
+            </button>
+          </div>
         </div>
 
         {/* Active filter summary pill */}
         {activeFilters.hasFilters && (
           <div className="flex flex-wrap items-center gap-2 pt-2.5 border-t border-slate-100 text-xs">
             <span className="text-slate-500 font-medium">Đang lọc theo:</span>
-            {search && (
+            {appliedFilters.search && (
               <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-orange-50 text-[#d95f00] font-medium border border-orange-200/60">
-                Từ khóa: "{search}"
+                Từ khóa: "{appliedFilters.search}"
                 <button
                   type="button"
                   onClick={() => {
-                    setSearch('')
+                    setDraftSearch('')
+                    setAppliedFilters((prev) => ({ ...prev, search: '' }))
                     setPage(0)
                   }}
                   className="hover:text-red-700 cursor-pointer"
@@ -454,13 +520,14 @@ export function MyBookingsPage() {
                 </button>
               </span>
             )}
-            {status && (
+            {appliedFilters.status && (
               <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-blue-50 text-blue-700 font-medium border border-blue-200/60">
-                Trạng thái: {statusLabels[status as keyof typeof statusLabels] ?? status}
+                Trạng thái: {statusLabels[appliedFilters.status as keyof typeof statusLabels] ?? appliedFilters.status}
                 <button
                   type="button"
                   onClick={() => {
-                    setStatus('')
+                    setDraftStatus('')
+                    setAppliedFilters((prev) => ({ ...prev, status: '' }))
                     setPage(0)
                   }}
                   className="hover:text-red-700 cursor-pointer"
@@ -469,13 +536,14 @@ export function MyBookingsPage() {
                 </button>
               </span>
             )}
-            {fromDate && (
+            {appliedFilters.fromDate && (
               <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-100 text-slate-700 font-medium border border-slate-200">
-                Từ ngày: {fromDate}
+                Từ ngày: {appliedFilters.fromDate}
                 <button
                   type="button"
                   onClick={() => {
-                    setFromDate('')
+                    setDraftFromDate('')
+                    setAppliedFilters((prev) => ({ ...prev, fromDate: '' }))
                     setPage(0)
                   }}
                   className="hover:text-red-700 cursor-pointer"
@@ -484,13 +552,14 @@ export function MyBookingsPage() {
                 </button>
               </span>
             )}
-            {toDate && (
+            {appliedFilters.toDate && (
               <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-100 text-slate-700 font-medium border border-slate-200">
-                Đến ngày: {toDate}
+                Đến ngày: {appliedFilters.toDate}
                 <button
                   type="button"
                   onClick={() => {
-                    setToDate('')
+                    setDraftToDate('')
+                    setAppliedFilters((prev) => ({ ...prev, toDate: '' }))
                     setPage(0)
                   }}
                   className="hover:text-red-700 cursor-pointer"
@@ -522,7 +591,7 @@ export function MyBookingsPage() {
             </button>
           </div>
         </Notice>
-      ) : !query.data.content.length ? (
+      ) : !filteredBookings.length ? (
         <Notice>
           {activeFilters.hasFilters ? (
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
@@ -545,7 +614,7 @@ export function MyBookingsPage() {
       ) : (
         <>
           <p className="text-sm text-brand-muted">
-            {query.data.totalElements ?? query.data.content.length} lượt đặt chỗ{' '}
+            {activeFilters.hasFilters ? filteredBookings.length : (query.data.totalElements ?? filteredBookings.length)} lượt đặt chỗ{' '}
             {activeFilters.hasFilters ? '(theo bộ lọc)' : ''} · Mở từng vé để xem QR, thanh toán và chi tiết.
           </p>
 
@@ -564,7 +633,7 @@ export function MyBookingsPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
-                {query.data.content
+                {filteredBookings
                   .filter((booking) => !selected.data || booking.id !== selectedId)
                   .map((booking, idx) => {
                     const existingDispute = disputeByBookingId.get(booking.id)
@@ -668,15 +737,16 @@ export function MyBookingsPage() {
                           {/* 7. Thao tác: Nút Chi tiết, Đánh giá, Tác vụ */}
                           <td className="py-3.5 px-4 whitespace-nowrap align-middle text-right">
                             <div className="flex items-center justify-end gap-1.5">
-                              {/* Nút Xem QR vé (cho PENDING_CHECKIN) */}
-                              {booking.status === 'PENDING_CHECKIN' && (
+                              {/* Nút Xem QR vé (cho PENDING_CHECKIN hoặc PARKING / OVERTIME) */}
+                              {['PENDING_CHECKIN', 'PARKING', 'OVERTIME'].includes(booking.status) && (
                                 <button
                                   type="button"
                                   onClick={() => setQrModalBooking(booking)}
-                                  className="inline-flex items-center gap-1 rounded-xl bg-[#341100] px-2.5 py-1.5 text-xs font-semibold text-[#d95f00] border border-[#d95f00]/30 hover:bg-[#4a1800] focus-visible:ring-2 focus-visible:ring-[#d95f00] transition-colors cursor-pointer"
+                                  className="inline-flex items-center gap-1.5 rounded-xl bg-[#d95f00] px-3 py-1.5 text-xs font-semibold text-white hover:bg-[#b84e00] focus-visible:ring-2 focus-visible:ring-[#d95f00] shadow-2xs hover:shadow transition-all cursor-pointer"
+                                  title={booking.status === 'PENDING_CHECKIN' ? 'Xem mã QR check-in vào bãi' : 'Xem mã QR check-out ra bãi'}
                                 >
-                                  <QrCode className="h-3.5 w-3.5" aria-hidden="true" />
-                                  <span>Xem QR vé</span>
+                                  <QrCode className="h-3.5 w-3.5 text-white" aria-hidden="true" />
+                                  <span>{booking.status === 'PENDING_CHECKIN' ? 'Xem QR vé' : 'QR check-out'}</span>
                                 </button>
                               )}
 
@@ -737,6 +807,14 @@ export function MyBookingsPage() {
                                       onClick={() => setQrModalBooking(booking)}
                                     >
                                       Xem mã QR check-in
+                                    </DropdownItem>
+                                  )}
+                                  {['PARKING', 'OVERTIME'].includes(booking.status) && (
+                                    <DropdownItem
+                                      icon={<QrCode className="h-4 w-4 text-brand-orange" />}
+                                      onClick={() => setQrModalBooking(booking)}
+                                    >
+                                      Xem mã QR check-out
                                     </DropdownItem>
                                   )}
                                   {existingDispute ? (
@@ -853,10 +931,11 @@ export function MyBookingsPage() {
             setExpandedId(null)
           }}
           maxWidth="xl"
+          className="flex flex-col max-h-[90vh] overflow-hidden p-0 max-w-3xl"
         >
-          <div className="space-y-4">
-            <div className="border-b border-slate-100 pb-3">
-              <h3 className="font-sora text-lg font-semibold text-slate-900">
+          <div className="flex flex-col max-h-[90vh] overflow-hidden">
+            <div className="border-b border-slate-100 px-6 py-4 shrink-0 pr-12">
+              <h3 className="font-sora text-lg font-semibold text-slate-900 break-all">
                 Chi tiết lượt đặt chỗ #{detailModalBooking.bookingCode}
               </h3>
               <p className="text-xs text-slate-500 mt-1">
@@ -866,7 +945,7 @@ export function MyBookingsPage() {
                 )}
               </p>
             </div>
-            <div className="max-h-[75vh] overflow-y-auto pr-1">
+            <div className="flex-1 overflow-y-auto px-6 py-4">
               <BookingStatusPanel
                 bookingId={detailModalBooking.id}
                 booking={detailModalBooking}
@@ -874,7 +953,7 @@ export function MyBookingsPage() {
                 hideReview
               />
             </div>
-            <div className="flex justify-end border-t border-slate-100 pt-3">
+            <div className="flex justify-end border-t border-slate-100 px-6 py-3 shrink-0 bg-slate-50/50">
               <button
                 type="button"
                 className={`${secondary} !min-h-10 !px-4 !py-2 !text-xs cursor-pointer`}

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import {
@@ -34,7 +34,7 @@ export function DriverPaymentsPage() {
     queryFn: () => fetchPaymentPage(page),
     retry: false,
   })
-  const rows = query.data?.content ?? []
+  const rows = useMemo(() => query.data?.content ?? [], [query.data?.content])
 
   useEffect(() => {
     if (bookingParam && rows.length > 0 && selectedId === null) {
@@ -47,16 +47,17 @@ export function DriverPaymentsPage() {
     }
   }, [bookingParam, rows, selectedId])
 
-  const filtered = rows.filter(
-    (item) =>
-      (!status || item.status === status) &&
-      `${item.transactionCode ?? ''} ${item.bookingId}`
-        .toLowerCase()
-        .includes(search.trim().toLowerCase())
-  )
+  const filtered = useMemo(() => {
+    return rows.filter(
+      (item) =>
+        (!status || item.status === status) &&
+        `${item.transactionCode ?? ''} ${item.bookingId}`
+          .toLowerCase()
+          .includes(search.trim().toLowerCase())
+    )
+  }, [rows, status, search])
 
-  // Tối đa 5 giao dịch mỗi trang
-  const displayedRows = filtered.slice(0, 5)
+  const displayedRows = filtered
 
   const selected = rows.find((item) => item.id === selectedId)
   const resetFilters = () => {
@@ -219,7 +220,7 @@ export function DriverPaymentsPage() {
                 </div>
 
                 <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 text-[11px] leading-relaxed text-brand-muted">
-                  <p>Số liệu thanh toán và bộ lọc áp dụng cho trang hiện tại (tối đa 5 giao dịch/trang).</p>
+                  <p>Số liệu thanh toán và bộ lọc áp dụng cho trang hiện tại.</p>
                   <span>Giờ Việt Nam · UTC+7</span>
                 </div>
               </div>

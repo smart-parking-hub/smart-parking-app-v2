@@ -108,7 +108,7 @@ export function Select({
 
   const sizeStyles = {
     sm: 'h-8 px-2.5 text-xs rounded-lg gap-1.5',
-    md: 'h-10 px-3 text-xs lg:text-sm rounded-xl gap-2',
+    md: 'min-h-[44px] h-[44px] px-3.5 text-xs lg:text-sm rounded-xl gap-2',
     lg: 'h-12 px-4 text-sm lg:text-base rounded-xl gap-2.5',
   }[size]
 
@@ -195,7 +195,7 @@ export function Select({
           role="listbox"
           aria-label={ariaLabel}
           className={cn(
-            'absolute left-0 top-full mt-1.5 z-50 min-w-full w-max max-w-[420px] bg-white rounded-xl shadow-xl border border-slate-200 py-1.5 overflow-hidden animate-in fade-in-0 zoom-in-95 max-h-72 overflow-y-auto',
+            'absolute left-0 top-full mt-1.5 z-50 min-w-full w-full bg-white rounded-xl shadow-xl border border-slate-200 py-1.5 overflow-hidden animate-in fade-in-0 zoom-in-95 max-h-72 overflow-y-auto',
             dropdownClassName,
           )}
         >
