@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { Fragment, useEffect, useMemo, useRef, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import {
@@ -12,6 +12,7 @@ import {
   RotateCcw,
   Calendar,
   Filter,
+  Star,
   X,
 } from 'lucide-react'
 import type { Dispute } from '@/entities/operations'
@@ -24,7 +25,7 @@ import {
 } from '@/shared/components/Dropdown'
 import { Toast, ToastContainer } from '@/shared/components/Toast'
 import { Workspace, Panel, Notice, Badge, secondary } from '@/shared/components/Workspace'
-import { errorMessage, getData, type Page } from '@/shared/api/resources'
+import { errorMessage, getData, sendData, type Page } from '@/shared/api/resources'
 import {
   fetchBooking,
   fetchBookingsPage,
@@ -37,6 +38,7 @@ import {
 import { CreateDisputeModal } from '../components/CreateDisputeModal'
 import { BookingPaymentHistoryModal } from '../components/BookingPaymentHistoryModal'
 import { BookingQrModal } from '../components/BookingQrModal'
+import { ReviewBookingModal } from '../components/ReviewBookingModal'
 import { bookingReference } from '@/entities/booking/bookingReference'
 import { isBookingEligibleForDispute } from '../schemas/disputeSchemas'
 
@@ -72,6 +74,8 @@ export function MyBookingsPage() {
   const [disputeBooking, setDisputeBooking] = useState<Booking | null>(null)
   const [paymentHistoryBooking, setPaymentHistoryBooking] = useState<Booking | null>(null)
   const [qrModalBooking, setQrModalBooking] = useState<Booking | null>(null)
+  const [reviewBooking, setReviewBooking] = useState<Booking | null>(null)
+  const [reviewNotice, setReviewNotice] = useState<string | null>(null)
   const [createdNotice, setCreatedNotice] = useState<Dispute | null>(null)
 
   const [page, setPage] = useState(0)
@@ -145,6 +149,18 @@ export function MyBookingsPage() {
     return map
   }, [disputesLookupQuery.data])
 
+  const handleReviewSubmit = async (rating: number, comment: string) => {
+    if (!reviewBooking) return
+    await sendData('post', '/api/v1/reviews', {
+      bookingId: reviewBooking.id,
+      rating,
+      comment,
+    })
+    setReviewNotice(`Đã gửi đánh giá cho lượt đặt chỗ #${reviewBooking.bookingCode}`)
+    setReviewBooking(null)
+    await query.refetch()
+  }
+
   return (
     <Workspace
       title="Các lượt đặt chỗ của tôi"
@@ -175,6 +191,21 @@ export function MyBookingsPage() {
             <Link to={`/disputes/${createdNotice.id}`} className={`${secondary} self-start text-xs`}>
               Xem tiến độ xử lý #KN-{createdNotice.id}
             </Link>
+          </div>
+        </ToastContainer>
+      )}
+
+      {reviewNotice && (
+        <ToastContainer>
+          <div className="pointer-events-auto flex flex-col gap-2 rounded-2xl border border-emerald-200 bg-emerald-50/95 p-4 shadow-xl backdrop-blur-md">
+            <Toast
+              variant="success"
+              title="Đánh giá thành công"
+              message={reviewNotice}
+              duration={6000}
+              onClose={() => setReviewNotice(null)}
+              className="border-0 bg-transparent p-0 shadow-none"
+            />
           </div>
         </ToastContainer>
       )}
@@ -461,212 +492,258 @@ export function MyBookingsPage() {
             {activeFilters.hasFilters ? '(theo bộ lọc)' : ''} · Mở từng vé để xem QR, thanh toán và chi tiết.
           </p>
 
-          {/* Cards Grid (TKT-03 restructured layout) */}
-          <div className="grid items-start gap-4 xl:grid-cols-2">
-            {query.data.content
-              .filter((booking) => !selected.data || booking.id !== selectedId)
-              .map((booking) => {
-                const existingDispute = disputeByBookingId.get(booking.id)
-                const canDispute = isBookingEligibleForDispute(booking.status)
-                const expanded =
-                  expandedId === booking.id ||
-                  (!validSelection && expandedId === undefined && query.data.content.length === 1)
+          {/* Bookings Table (Dạng Table theo yêu cầu Hình 5) */}
+          <div className="overflow-x-auto rounded-2xl border border-slate-200 bg-white shadow-xs">
+            <table className="w-full text-left border-collapse text-xs">
+              <thead className="border-b border-slate-200 bg-slate-50/80 text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
+                <tr>
+                  <th scope="col" className="py-3.5 px-4 font-semibold">Mã vé / Đơn</th>
+                  <th scope="col" className="py-3.5 px-4 font-semibold">Bãi đỗ xe</th>
+                  <th scope="col" className="py-3.5 px-4 font-semibold">Biển số</th>
+                  <th scope="col" className="py-3.5 px-4 font-semibold">Thời gian vào / ra</th>
+                  <th scope="col" className="py-3.5 px-4 font-semibold">Cọc & Phí</th>
+                  <th scope="col" className="py-3.5 px-4 font-semibold">Trạng thái</th>
+                  <th scope="col" className="py-3.5 px-4 font-semibold text-right">Thao tác</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {query.data.content
+                  .filter((booking) => !selected.data || booking.id !== selectedId)
+                  .map((booking) => {
+                    const existingDispute = disputeByBookingId.get(booking.id)
+                    const canDispute = isBookingEligibleForDispute(booking.status)
+                    const expanded =
+                      expandedId === booking.id ||
+                      (!validSelection && expandedId === undefined && query.data.content.length === 1)
 
-                return (
-                  <Panel
-                    key={booking.id}
-                    className="!p-4 sm:!p-5 flex flex-col justify-between transition-shadow hover:shadow-md border border-slate-200/90 rounded-2xl"
-                  >
-                    <div>
-                      {/* 1. Header: Mã vé + Trạng thái + Tác vụ */}
-                      <div className="flex items-center justify-between gap-2 border-b border-slate-100 pb-3">
-                        <div className="flex flex-wrap items-center gap-2">
-                          <span
-                            className="max-w-56 truncate rounded-md bg-slate-100 px-2.5 py-1 font-mono text-xs font-bold text-slate-800"
-                            title={bookingReference(booking)}
-                          >
-                            {booking.status === 'PENDING_PAYMENT'
-                              ? `Số đơn #${booking.id}`
-                              : `#${booking.id} · ${booking.bookingCode}`}
-                          </span>
-                          <Badge value={booking.status} size="sm">
-                            {statusLabels[booking.status] ?? booking.status}
-                          </Badge>
-                          {existingDispute && (
-                            <Badge value={existingDispute.status} size="sm" dot>
-                              Khiếu nại KN-{existingDispute.id}
-                            </Badge>
-                          )}
-                        </div>
-
-                        {/* Menu tác vụ (TKT-01, TKT-02) */}
-                        <div
-                          role="region"
-                          aria-label={`Menu tác vụ đơn ${bookingReference(booking)}`}
-                          className="flex items-center gap-1.5"
+                    return (
+                      <Fragment key={booking.id}>
+                        <tr
+                          className={`hover:bg-slate-50/70 transition-colors ${
+                            expanded ? 'bg-orange-50/20' : ''
+                          }`}
                         >
-                          <Dropdown>
-                            <DropdownTrigger
-                              className="gap-1 rounded-xl border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 hover:border-slate-300 focus-visible:ring-2 focus-visible:ring-brand-primary transition-colors shadow-2xs"
+                          {/* 1. Mã vé */}
+                          <td className="py-3.5 px-4 whitespace-nowrap align-middle">
+                            <span
+                              className="font-mono font-bold text-slate-900 block truncate max-w-44"
+                              title={bookingReference(booking)}
                             >
-                              <MoreHorizontal className="h-4 w-4 text-slate-500" aria-hidden="true" />
-                              <span className="hidden sm:inline">Tác vụ</span>
-                              <span className="sr-only">cho đơn {bookingReference(booking)}</span>
-                              <ChevronDown className="h-3.5 w-3.5 text-slate-400" aria-hidden="true" />
-                            </DropdownTrigger>
-                            <DropdownContent align="right" width="w-60">
-                              {booking.status === 'PENDING_CHECKIN' && (
-                                <DropdownItem
-                                  icon={<QrCode className="h-4 w-4 text-brand-orange" />}
-                                  onClick={() => setQrModalBooking(booking)}
-                                >
-                                  Xem mã QR check-in
-                                </DropdownItem>
-                              )}
-                              {existingDispute ? (
-                                <DropdownItem
-                                  icon={<ExternalLink className="h-4 w-4 text-brand-primary" />}
-                                  onClick={() => navigate(`/disputes/${existingDispute.id}`)}
-                                >
-                                  Xem khiếu nại #KN-{existingDispute.id}
-                                </DropdownItem>
-                              ) : (
-                                <DropdownItem
-                                  icon={<ShieldAlert className="h-4 w-4 text-brand-primary" />}
-                                  disabled={!canDispute}
-                                  onClick={() => setDisputeBooking(booking)}
-                                >
-                                  {canDispute ? 'Gửi khiếu nại sự cố / phí' : 'Chưa thể khiếu nại ở trạng thái này'}
-                                </DropdownItem>
-                              )}
-                              <DropdownSeparator />
-                              <DropdownItem
-                                icon={<Receipt className="h-4 w-4 text-slate-500" />}
-                                onClick={() => setPaymentHistoryBooking(booking)}
-                              >
-                                Lịch sử thanh toán
-                              </DropdownItem>
-                            </DropdownContent>
-                          </Dropdown>
-                        </div>
-                      </div>
+                              {booking.status === 'PENDING_PAYMENT'
+                                ? `Số đơn #${booking.id}`
+                                : `#${booking.id} · ${booking.bookingCode}`}
+                            </span>
+                          </td>
 
-                      {/* 2. Body: Tên bãi, địa chỉ, Biển số */}
-                      <div className="py-3">
-                        <div className="flex items-start justify-between gap-3">
-                          <div className="min-w-0 flex-1">
-                            <h2
-                              className="font-sora text-base font-semibold text-slate-900 truncate"
+                          {/* 2. Bãi đỗ */}
+                          <td className="py-3.5 px-4 max-w-[200px] align-middle">
+                            <div
+                              className="font-semibold text-slate-900 truncate"
                               title={booking.parkingLotName || `Bãi đỗ #${booking.parkingLotId}`}
                             >
                               {booking.parkingLotName || `Bãi đỗ #${booking.parkingLotId}`}
-                            </h2>
-                            <p
-                              className="mt-1 line-clamp-1 text-xs text-brand-muted"
-                              title={booking.parkingLotAddress ?? undefined}
-                            >
-                              {booking.parkingLotAddress || 'Chưa có địa chỉ chi tiết'}
-                            </p>
-                          </div>
-                          {booking.vehiclePlate && (
-                            <span className="shrink-0 rounded-md border border-slate-200 bg-slate-50 px-2.5 py-1 font-mono text-xs font-bold text-slate-800">
-                              {booking.vehiclePlate}
-                            </span>
-                          )}
-                        </div>
-
-                        {/* 3. Time & Pricing (TKT-03) */}
-                        <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-2.5 rounded-xl bg-slate-50/80 p-3 border border-slate-100 text-xs">
-                          <div>
-                            <div className="text-slate-500 text-[11px] font-medium">Khung giờ dự kiến:</div>
-                            <div className="mt-0.5 space-y-0.5">
-                              <div>
-                                Vào: <strong className="font-medium text-slate-900">{bookingTimeLabel(booking.expectedCheckInTime)}</strong>
-                              </div>
-                              <div>
-                                Ra: <strong className="font-medium text-slate-900">{bookingTimeLabel(booking.expectedCheckOutTime)}</strong>
-                              </div>
                             </div>
-                          </div>
-                          <div className="sm:border-l sm:border-slate-200 sm:pl-3">
-                            <div className="text-slate-500 text-[11px] font-medium">Thông tin tiền:</div>
-                            <div className="mt-0.5 space-y-0.5">
-                              <div>
-                                Tiền cọc: <strong className="font-semibold text-emerald-700">{formatMoney(booking.advanceDeposit)}</strong>
+                            {booking.parkingLotAddress && (
+                              <div
+                                className="text-[11px] text-slate-500 truncate mt-0.5"
+                                title={booking.parkingLotAddress}
+                              >
+                                {booking.parkingLotAddress}
                               </div>
-                              <div>
-                                {['AWAITING_FINAL_PAYMENT', 'COMPLETED', 'REVIEWED'].includes(booking.status)
-                                  ? 'Phí quyết toán: '
-                                  : 'Phí dự kiến: '}
-                                <strong className="font-medium text-slate-900">
-                                  {booking.totalAmount == null ? 'Chưa có' : formatMoney(booking.totalAmount)}
-                                </strong>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
+                            )}
+                          </td>
 
-                    {/* 4. Footer: Action Buttons (TKT-02, TKT-04) */}
-                    <div className="mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-slate-100 pt-3">
-                      <div className="flex flex-wrap items-center gap-2">
-                        {booking.status === 'PENDING_CHECKIN' && (
-                          <button
-                            type="button"
-                            onClick={() => setQrModalBooking(booking)}
-                            className="inline-flex items-center gap-1.5 rounded-xl bg-[#341100] px-3 py-1.5 text-xs font-semibold text-[#d95f00] border border-[#d95f00]/30 hover:bg-[#4a1800] focus-visible:ring-2 focus-visible:ring-[#d95f00] transition-colors cursor-pointer"
-                          >
-                            <QrCode className="h-3.5 w-3.5" aria-hidden="true" />
-                            <span>Xem QR vé</span>
-                          </button>
+                          {/* 3. Biển số xe */}
+                          <td className="py-3.5 px-4 whitespace-nowrap align-middle">
+                            {booking.vehiclePlate ? (
+                              <span className="rounded-md border border-slate-200 bg-slate-50 px-2 py-0.5 font-mono text-xs font-bold text-slate-800">
+                                {booking.vehiclePlate}
+                              </span>
+                            ) : (
+                              <span className="text-slate-400">—</span>
+                            )}
+                          </td>
+
+                          {/* 4. Khung giờ */}
+                          <td className="py-3.5 px-4 whitespace-nowrap align-middle text-[11px] leading-relaxed">
+                            <div>
+                              Vào: <strong className="font-medium text-slate-900">{bookingTimeLabel(booking.expectedCheckInTime)}</strong>
+                            </div>
+                            <div>
+                              Ra: <strong className="font-medium text-slate-900">{bookingTimeLabel(booking.expectedCheckOutTime)}</strong>
+                            </div>
+                          </td>
+
+                          {/* 5. Tiền cọc & Phí */}
+                          <td className="py-3.5 px-4 whitespace-nowrap align-middle text-[11px] leading-relaxed">
+                            <div>
+                              Cọc: <strong className="font-semibold text-emerald-700">{formatMoney(booking.advanceDeposit)}</strong>
+                            </div>
+                            <div>
+                              {['AWAITING_FINAL_PAYMENT', 'COMPLETED', 'REVIEWED'].includes(booking.status)
+                                ? 'Quyết toán: '
+                                : 'Dự kiến: '}
+                              <strong className="font-medium text-slate-900">
+                                {booking.totalAmount == null ? 'Chưa có' : formatMoney(booking.totalAmount)}
+                              </strong>
+                            </div>
+                          </td>
+
+                          {/* 6. Trạng thái */}
+                          <td className="py-3.5 px-4 whitespace-nowrap align-middle">
+                            <div className="flex flex-col gap-1 items-start">
+                              <Badge value={booking.status} size="sm">
+                                {statusLabels[booking.status] ?? booking.status}
+                              </Badge>
+                              {existingDispute && (
+                                <Badge value={existingDispute.status} size="sm" dot>
+                                  Khiếu nại KN-{existingDispute.id}
+                                </Badge>
+                              )}
+                            </div>
+                          </td>
+
+                          {/* 7. Thao tác: Nút Chi tiết, Đánh giá, Tác vụ */}
+                          <td className="py-3.5 px-4 whitespace-nowrap align-middle text-right">
+                            <div className="flex items-center justify-end gap-1.5">
+                              {/* Nút Xem QR vé (cho PENDING_CHECKIN) */}
+                              {booking.status === 'PENDING_CHECKIN' && (
+                                <button
+                                  type="button"
+                                  onClick={() => setQrModalBooking(booking)}
+                                  className="inline-flex items-center gap-1 rounded-xl bg-[#341100] px-2.5 py-1.5 text-xs font-semibold text-[#d95f00] border border-[#d95f00]/30 hover:bg-[#4a1800] focus-visible:ring-2 focus-visible:ring-[#d95f00] transition-colors cursor-pointer"
+                                >
+                                  <QrCode className="h-3.5 w-3.5" aria-hidden="true" />
+                                  <span>Xem QR vé</span>
+                                </button>
+                              )}
+
+                              {/* Nút Đánh giá (cho COMPLETED hoặc REVIEWED) */}
+                              {['COMPLETED', 'REVIEWED'].includes(booking.status) && (
+                                <button
+                                  type="button"
+                                  onClick={() => setReviewBooking(booking)}
+                                  className={`inline-flex items-center gap-1 rounded-xl px-2.5 py-1.5 text-xs font-semibold transition-colors cursor-pointer shadow-2xs ${
+                                    booking.status === 'COMPLETED'
+                                      ? 'border border-amber-200 bg-amber-50 text-amber-800 hover:bg-amber-100'
+                                      : 'border border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-100'
+                                  }`}
+                                >
+                                  <Star
+                                    size={13}
+                                    className={
+                                      booking.status === 'COMPLETED'
+                                        ? 'fill-amber-500 text-amber-500'
+                                        : 'fill-slate-400 text-slate-400'
+                                    }
+                                  />
+                                  <span>{booking.status === 'COMPLETED' ? 'Đánh giá' : 'Đã đánh giá'}</span>
+                                </button>
+                              )}
+
+                              {/* Khiếu nại CTA */}
+                              {existingDispute ? (
+                                <Link
+                                  to={`/disputes/${existingDispute.id}`}
+                                  className="inline-flex items-center gap-1 rounded-xl border border-orange-200 bg-orange-50 px-2.5 py-1.5 text-xs font-semibold text-brand-primary-active hover:bg-orange-100 focus-visible:ring-2 focus-visible:ring-brand-primary transition-colors"
+                                >
+                                  <ExternalLink className="h-3.5 w-3.5" aria-hidden="true" />
+                                  <span>Xem khiếu nại #KN-{existingDispute.id}</span>
+                                </Link>
+                              ) : canDispute ? (
+                                <button
+                                  type="button"
+                                  onClick={() => setDisputeBooking(booking)}
+                                  aria-label={`Gửi khiếu nại đơn ${bookingReference(booking)}`}
+                                  className="inline-flex items-center gap-1 rounded-xl border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-semibold text-slate-700 hover:border-brand-primary hover:bg-brand-primary-subtle hover:text-brand-primary-active focus-visible:ring-2 focus-visible:ring-brand-primary transition-colors shadow-2xs cursor-pointer"
+                                >
+                                  <ShieldAlert className="h-3.5 w-3.5 text-brand-primary" aria-hidden="true" />
+                                  <span>Gửi khiếu nại</span>
+                                </button>
+                              ) : null}
+
+                              {/* Nút Chi tiết */}
+                              <button
+                                type="button"
+                                className={`${secondary} !px-2.5 !py-1.5 !text-xs gap-1 hover:border-brand-primary/40 focus-visible:ring-2 focus-visible:ring-brand-primary cursor-pointer transition-colors`}
+                                aria-expanded={expanded}
+                                aria-controls={`booking-detail-${booking.id}`}
+                                onClick={() => setExpandedId(expanded ? null : booking.id)}
+                              >
+                                <span>Xem vé & chi tiết</span>
+                                <ChevronDown
+                                  size={13}
+                                  className={`transition-transform duration-200 ${expanded ? 'rotate-180' : ''}`}
+                                  aria-hidden="true"
+                                />
+                              </button>
+
+                              {/* Dropdown Tác vụ */}
+                              <Dropdown>
+                                <DropdownTrigger
+                                  className="gap-1 rounded-xl border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 hover:border-slate-300 focus-visible:ring-2 focus-visible:ring-brand-primary transition-colors shadow-2xs"
+                                >
+                                  <MoreHorizontal className="h-4 w-4 text-slate-500" aria-hidden="true" />
+                                  <span className="hidden sm:inline">Tác vụ</span>
+                                  <span className="sr-only">cho đơn {bookingReference(booking)}</span>
+                                  <ChevronDown className="h-3.5 w-3.5 text-slate-400" aria-hidden="true" />
+                                </DropdownTrigger>
+                                <DropdownContent align="right" width="w-60">
+                                  {booking.status === 'PENDING_CHECKIN' && (
+                                    <DropdownItem
+                                      icon={<QrCode className="h-4 w-4 text-brand-orange" />}
+                                      onClick={() => setQrModalBooking(booking)}
+                                    >
+                                      Xem mã QR check-in
+                                    </DropdownItem>
+                                  )}
+                                  {existingDispute ? (
+                                    <DropdownItem
+                                      icon={<ExternalLink className="h-4 w-4 text-brand-primary" />}
+                                      onClick={() => navigate(`/disputes/${existingDispute.id}`)}
+                                    >
+                                      Xem khiếu nại #KN-{existingDispute.id}
+                                    </DropdownItem>
+                                  ) : (
+                                    <DropdownItem
+                                      icon={<ShieldAlert className="h-4 w-4 text-brand-primary" />}
+                                      disabled={!canDispute}
+                                      onClick={() => setDisputeBooking(booking)}
+                                    >
+                                      {canDispute ? 'Gửi khiếu nại sự cố / phí' : 'Chưa thể khiếu nại ở trạng thái này'}
+                                    </DropdownItem>
+                                  )}
+                                  <DropdownSeparator />
+                                  <DropdownItem
+                                    icon={<Receipt className="h-4 w-4 text-slate-500" />}
+                                    onClick={() => setPaymentHistoryBooking(booking)}
+                                  >
+                                    Lịch sử thanh toán
+                                  </DropdownItem>
+                                </DropdownContent>
+                              </Dropdown>
+                            </div>
+                          </td>
+                        </tr>
+
+                        {/* Expanded Detail Row */}
+                        {expanded && (
+                          <tr className="bg-slate-50/80 border-b border-slate-200">
+                            <td colSpan={7} className="p-4 sm:p-5">
+                              <div
+                                id={`booking-detail-${booking.id}`}
+                                className="rounded-xl border border-slate-200 bg-white p-4 shadow-2xs"
+                              >
+                                <BookingStatusPanel bookingId={booking.id} booking={booking} embedded />
+                              </div>
+                            </td>
+                          </tr>
                         )}
-
-                        {existingDispute ? (
-                          <Link
-                            to={`/disputes/${existingDispute.id}`}
-                            className="inline-flex items-center gap-1.5 rounded-xl border border-orange-200 bg-orange-50 px-3 py-1.5 text-xs font-semibold text-brand-primary-active hover:bg-orange-100 focus-visible:ring-2 focus-visible:ring-brand-primary transition-colors"
-                          >
-                            <ExternalLink className="h-3.5 w-3.5" aria-hidden="true" />
-                            <span>Xem khiếu nại #KN-{existingDispute.id}</span>
-                          </Link>
-                        ) : canDispute ? (
-                          <button
-                            type="button"
-                            onClick={() => setDisputeBooking(booking)}
-                            aria-label={`Gửi khiếu nại đơn ${bookingReference(booking)}`}
-                            className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 hover:border-brand-primary hover:bg-brand-primary-subtle hover:text-brand-primary-active focus-visible:ring-2 focus-visible:ring-brand-primary transition-colors shadow-2xs cursor-pointer"
-                          >
-                            <ShieldAlert className="h-3.5 w-3.5 text-brand-primary" aria-hidden="true" />
-                            <span>Gửi khiếu nại</span>
-                          </button>
-                        ) : null}
-                      </div>
-
-                      <button
-                        type="button"
-                        className={`${secondary} !px-3 !py-1.5 !text-xs hover:border-brand-primary/40 focus-visible:ring-2 focus-visible:ring-brand-primary cursor-pointer transition-colors`}
-                        aria-expanded={expanded}
-                        aria-controls={`booking-detail-${booking.id}`}
-                        onClick={() => setExpandedId(expanded ? null : booking.id)}
-                      >
-                        <span>{expanded ? 'Thu gọn' : 'Xem vé & chi tiết'}</span>
-                        <ChevronDown
-                          size={14}
-                          className={`transition-transform duration-200 ${expanded ? 'rotate-180' : ''}`}
-                          aria-hidden="true"
-                        />
-                      </button>
-                    </div>
-
-                    {expanded && (
-                      <div id={`booking-detail-${booking.id}`} className="mt-4 border-t border-brand-border pt-4">
-                        <BookingStatusPanel bookingId={booking.id} booking={booking} embedded />
-                      </div>
-                    )}
-                  </Panel>
-                )
-              })}
+                      </Fragment>
+                    )
+                  })}
+              </tbody>
+            </table>
           </div>
 
           {(query.data.totalPages ?? 1) > 1 && (
@@ -727,6 +804,15 @@ export function MyBookingsPage() {
           isOpen={Boolean(qrModalBooking)}
           booking={qrModalBooking}
           onClose={() => setQrModalBooking(null)}
+        />
+      )}
+
+      {reviewBooking && (
+        <ReviewBookingModal
+          isOpen={Boolean(reviewBooking)}
+          booking={reviewBooking}
+          onClose={() => setReviewBooking(null)}
+          onSubmitReview={handleReviewSubmit}
         />
       )}
     </Workspace>

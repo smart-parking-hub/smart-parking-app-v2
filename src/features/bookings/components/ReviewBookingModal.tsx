@@ -6,7 +6,7 @@ import { reviewBookingSchema } from '../schemas/bookingSchemas'
 interface ReviewBookingModalProps {
   isOpen: boolean
   onClose: () => void
-  booking: BookingItemDto | null
+  booking: { id: number; parkingLotName?: string | null } | null
   onSubmitReview: (rating: number, comment: string) => Promise<void>
 }
 
