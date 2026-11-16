@@ -158,7 +158,7 @@ describe('Layouts and Navigation System Comprehensive Tests', () => {
       expect(screen.getByRole('link', { name: 'Đổi mật khẩu' })).toHaveAttribute('href', '/profile#bao-mat')
     })
 
-    it('links DriverHeader account menu change-password action to /profile#bao-mat', () => {
+    it('does not have change-password in DriverHeader account menu and requires logout confirmation', () => {
       const queryClient = createTestQueryClient()
 
       render(
@@ -170,7 +170,21 @@ describe('Layouts and Navigation System Comprehensive Tests', () => {
       )
 
       fireEvent.click(screen.getByRole('button', { name: 'Menu tài khoản' }))
-      expect(screen.getByRole('link', { name: 'Đổi mật khẩu' })).toHaveAttribute('href', '/profile#bao-mat')
+      // DRV-03: Bỏ mục Đổi mật khẩu trong dropdown header
+      expect(screen.queryByRole('link', { name: 'Đổi mật khẩu' })).not.toBeInTheDocument()
+
+      // DRV-02: Modal xác nhận đăng xuất
+      const logoutBtn = screen.getByRole('button', { name: 'Đăng xuất' })
+      fireEvent.click(logoutBtn)
+
+      expect(screen.getByRole('dialog')).toBeInTheDocument()
+      expect(screen.getByText('Xác nhận đăng xuất')).toBeInTheDocument()
+      expect(screen.getByText('Bạn có chắc muốn đăng xuất khỏi tài khoản?')).toBeInTheDocument()
+      expect(screen.getByRole('button', { name: 'Hủy' })).toBeInTheDocument()
+
+      // Closing / cancelling dismisses the dialog
+      fireEvent.click(screen.getByRole('button', { name: 'Hủy' }))
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
     })
 
     it('renders unread notification badge on Bell link and caps at 99+', async () => {
