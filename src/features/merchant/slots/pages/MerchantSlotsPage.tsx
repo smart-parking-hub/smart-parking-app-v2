@@ -2,7 +2,8 @@ import { useState, useMemo, useEffect, useCallback } from 'react'
 import './MerchantSlotsPage.css'
 import { useParams } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { CheckCircle2, AlertCircle, X } from 'lucide-react'
+import { AlertCircle } from 'lucide-react'
+import { NotificationDialog } from '@/shared/components/NotificationDialog'
 
 import {
   vehicleNames,
@@ -75,9 +76,6 @@ export function MerchantSlotsPage() {
   const showToast = useCallback((message: string, isError = false) => {
     const id = Date.now() + Math.random()
     setToasts((prev) => [...prev, { id, message, isError }])
-    setTimeout(() => {
-      setToasts((prev) => prev.filter((t) => t.id !== id))
-    }, 4000)
   }, [])
 
   // Sync drafts when slots data is fetched
@@ -237,35 +235,10 @@ export function MerchantSlotsPage() {
 
   return (
     <div className="merchant-slots">
-      {/* Toast floating notices */}
-      <div className="fixed top-20 right-4 sm:right-6 z-[100] flex flex-col gap-2.5 max-w-sm sm:max-w-md pointer-events-none w-[calc(100%-2rem)] sm:w-auto">
-        {toasts.map((toast) => (
-          <div
-            key={toast.id}
-            role={toast.isError ? 'alert' : 'status'}
-            className={`px-4 py-3 rounded-xl shadow-xl text-white text-xs font-semibold flex items-center gap-2.5 transition-all transform duration-300 pointer-events-auto border ${
-              toast.isError
-                ? 'bg-[#ba1a1a] border-red-400 text-white'
-                : 'bg-[#131b2e] border-slate-700 text-white'
-            }`}
-          >
-            {toast.isError ? (
-              <AlertCircle className="w-4 h-4 text-red-200 shrink-0" />
-            ) : (
-              <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
-            )}
-            <span>{toast.message}</span>
-            <button
-              type="button"
-              aria-label="Đóng thông báo"
-              onClick={() => setToasts((prev) => prev.filter((t) => t.id !== toast.id))}
-              className="ml-2 text-white/60 hover:text-white"
-            >
-              <X className="w-3.5 h-3.5" />
-            </button>
-          </div>
-        ))}
-      </div>
+      {toasts.slice(0, 1).map(toast => <NotificationDialog key={toast.id}
+        title={toast.isError ? 'Không thể lưu cấu hình' : 'Đã cập nhật cấu hình'}
+        message={toast.message} variant={toast.isError ? 'error' : 'success'}
+        onClose={() => setToasts(previous => previous.filter(item => item.id !== toast.id))} />)}
 
       {/* Main Container */}
       <div className="slots-container">

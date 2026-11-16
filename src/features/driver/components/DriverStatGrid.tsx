@@ -8,12 +8,13 @@ import {
   QrCode,
 } from 'lucide-react'
 import type { BookingDto } from '../types/driverTypes'
+import { canShowCheckoutQr, dashboardTime, ticketAction, ticketUrl } from '../lib/dashboardBooking'
 
 interface DriverStatGridProps {
   vehicleTotal: number
   bookingTotal: number
   activeCount: number
-  queueCount?: number
+  queueCount?: number | null
   activeBooking?: BookingDto
   onOpenQr: () => void
 }
@@ -29,12 +30,9 @@ export function DriverStatGrid({
   const formattedVehicle = String(vehicleTotal).padStart(2, '0')
   const formattedBooking = String(bookingTotal).padStart(2, '0')
   const formattedActive = String(activeCount).padStart(2, '0')
-  const formattedQueue = String(queueCount).padStart(2, '0')
+  const formattedQueue = queueCount == null ? '—' : String(queueCount).padStart(2, '0')
 
-  const berthDisplay = activeBooking?.berthNumber || '#C-12'
-  const yardName = activeBooking?.parkingLotName
-    ? activeBooking.parkingLotName.split(' ')[0] + ' ' + (activeBooking.parkingLotName.split(' ')[1] || '')
-    : 'Bãi Sóng Thần'
+  const yardName = activeBooking?.parkingLotName || 'Chưa có chuyến đang hoạt động'
 
   return (
     <section className="w-full mb-6">
@@ -50,10 +48,10 @@ export function DriverStatGrid({
           </div>
           <div>
             <span className="block font-sora text-2xl font-bold text-slate-900 tracking-tight tabular-nums group-hover:text-[#d95f00] transition-colors whitespace-nowrap">
-              {formattedVehicle} Đầu Kéo
+              {formattedVehicle} Phương Tiện
             </span>
             <p className="text-xs text-slate-600 mt-1">
-              Phương tiện đã xác thực an toàn
+              Phương tiện đã đăng ký
             </p>
           </div>
           <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs font-medium text-slate-600 group-hover:text-slate-900 transition-colors">
@@ -76,7 +74,7 @@ export function DriverStatGrid({
               {formattedBooking} Lượt Đỗ
             </span>
             <p className="text-xs text-slate-600 mt-1">
-              100% hoàn thành xuất bãi an toàn
+              Tổng số lượt đặt chỗ
             </p>
           </div>
           <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs font-medium text-slate-600 group-hover:text-slate-900 transition-colors">
@@ -99,21 +97,21 @@ export function DriverStatGrid({
               {formattedActive} Chuyến Đang Đỗ
             </span>
             <p className="text-xs text-slate-600 mt-1 truncate">
-              {yardName} · Slot <span className="font-semibold text-slate-900">{berthDisplay}</span>
+              {yardName}
             </p>
             <p className="text-xs text-slate-600 mt-0.5">
-              Thời hạn ra bãi trước 22:00
+              {activeBooking?.expectedCheckOutTime ? `Giờ ra dự kiến: ${dashboardTime(activeBooking.expectedCheckOutTime)}` : 'Chọn vé để xem thông tin chuyến'}
             </p>
           </div>
           <div className="mt-4 pt-3 border-t border-slate-100">
-            <button
+            {canShowCheckoutQr(activeBooking) ? <button
               type="button"
               onClick={onOpenQr}
               className="w-full py-2 px-3 rounded-lg bg-brand-primary hover:bg-brand-primary-hover text-white font-medium text-xs flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
             >
               <QrCode className="w-3.5 h-3.5" />
               <span>Mở vé QR check-out</span>
-            </button>
+            </button> : <Link to={activeBooking ? ticketUrl(activeBooking) : '/bookings'} className="inline-flex min-h-9 w-full items-center justify-center rounded-lg bg-brand-primary px-3 py-2 text-xs font-medium text-white">{activeBooking ? ticketAction(activeBooking) : 'Xem các lượt đặt chỗ'}</Link>}
           </div>
         </div>
 
@@ -131,7 +129,7 @@ export function DriverStatGrid({
               {formattedQueue} Suất Chờ
             </span>
             <p className="text-xs text-slate-600 mt-1">
-              Hàng đợi điều phối tự động cảng biển
+              {queueCount == null ? 'Chưa tải được hàng đợi' : 'Lượt đang chờ nhận chỗ'}
             </p>
           </div>
           <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs font-medium text-slate-600 group-hover:text-slate-900 transition-colors">

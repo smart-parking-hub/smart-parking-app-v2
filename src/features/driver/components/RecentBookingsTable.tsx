@@ -1,5 +1,8 @@
 import { Link } from 'react-router-dom'
-import { ArrowRight, CheckCircle2, Inbox } from 'lucide-react'
+import { ArrowRight, Inbox } from 'lucide-react'
+import { Badge, money } from '@/shared/components/Workspace'
+import { bookingReference } from '@/entities/booking/bookingReference'
+import { dashboardTime, parkingDuration, ticketUrl } from '../lib/dashboardBooking'
 import type { BookingDto } from '../types/driverTypes'
 
 interface RecentBookingsTableProps {
@@ -9,12 +12,8 @@ interface RecentBookingsTableProps {
 
 export function RecentBookingsTable({
   bookings,
-  totalCount = 48,
+  totalCount = bookings.length,
 }: RecentBookingsTableProps) {
-  const formatCurrency = (val?: number) => {
-    if (typeof val !== 'number') return '0 ₫'
-    return new Intl.NumberFormat('vi-VN').format(val) + ' ₫'
-  }
 
   return (
     <section className="w-full bg-white rounded-xl border border-slate-200 overflow-hidden mb-6">
@@ -25,7 +24,7 @@ export function RecentBookingsTable({
             Lịch Sử Đỗ Xe Gần Đây
           </h3>
           <p className="text-xs text-slate-500 mt-0.5">
-            3 lượt đặt chỗ hoàn thành gần nhất trên toàn hệ thống cảng bãi
+            Các lượt đặt chỗ gần đây của bạn
           </p>
         </div>
         <Link
@@ -62,7 +61,7 @@ export function RecentBookingsTable({
                   className="hover:bg-slate-50/60 transition-colors"
                 >
                   <td className="py-3.5 px-4 lg:px-6 font-mono font-semibold text-xs text-slate-700 tabular-nums whitespace-nowrap">
-                    {b.bookingCode}
+                    <Link to={ticketUrl(b)} className="hover:text-brand-primary focus-visible:outline-2 focus-visible:outline-brand-primary">{bookingReference(b)}</Link>
                   </td>
                   <td className="py-3.5 px-4 lg:px-6">
                     <span className="font-semibold text-slate-900 block leading-snug">
@@ -77,25 +76,22 @@ export function RecentBookingsTable({
                       {b.vehicleLicensePlate}
                     </span>
                     <span className="font-mono text-xs text-slate-500 block mt-0.5 tabular-nums">
-                      Rơ-moóc: {b.trailerLicensePlate || '51R-024.89'}
+                      {b.trailerLicensePlate ? `Rơ-moóc: ${b.trailerLicensePlate}` : ''}
                     </span>
                   </td>
                   <td className="py-3.5 px-4 lg:px-6 whitespace-nowrap">
                     <span className="text-xs font-medium text-slate-900 block">
-                      18/02/2026
+                      {dashboardTime(b.checkInTime ?? b.expectedCheckInTime)}
                     </span>
                     <span className="text-slate-500 text-xs block mt-0.5">
-                      {b.parkingDuration || '10h 30m (Qua đêm)'}
+                      {b.checkInTime ? parkingDuration(b) : 'Chưa check-in'}
                     </span>
                   </td>
                   <td className="py-3.5 px-4 lg:px-6 font-mono font-semibold text-sm text-slate-900 text-right tabular-nums whitespace-nowrap">
-                    {formatCurrency(b.totalPrice)}
+                    {money(b.totalPrice)}
                   </td>
                   <td className="py-3.5 px-4 lg:px-6 text-right whitespace-nowrap">
-                    <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-emerald-50 text-emerald-800 text-xs font-medium border border-emerald-200">
-                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
-                      Hoàn thành
-                    </span>
+                    <Badge value={b.status} />
                   </td>
                 </tr>
               ))}

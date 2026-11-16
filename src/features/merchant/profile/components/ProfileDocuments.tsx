@@ -4,6 +4,7 @@ import type { MerchantProfile } from '../types/merchantProfileTypes'
 import { uploadMerchantDocumentApi } from '../api/merchantProfileApi'
 import { errorMessage } from '@/shared/api/resources'
 import { Notice } from '@/shared/components/Workspace'
+import { NotificationDialog } from '@/shared/components/NotificationDialog'
 import { ProfileSection, ProfileField, profileInput, profileButton } from './ProfileSection'
 
 export function ProfileDocuments({ profile, onUpdated }: { profile: MerchantProfile; onUpdated: (profile: MerchantProfile) => void }) {
@@ -39,7 +40,7 @@ export function ProfileDocuments({ profile, onUpdated }: { profile: MerchantProf
       <p id="profile-file-help" className="text-sm text-brand-muted">PDF, JPEG, PNG hoặc WEBP · Tối đa 5 MB.</p>
       {validation && <Notice error>{validation}</Notice>}
       {upload.isError && <Notice error>{errorMessage(upload.error)}</Notice>}
-      {upload.isSuccess && <Notice>Đã gửi giấy tờ thành công.</Notice>}
+      {upload.isSuccess && <NotificationDialog title="Gửi giấy tờ thành công" message="Đã gửi giấy tờ thành công." onClose={() => upload.reset()} onAfterClose={() => input.current?.focus()} />}
       <button className={profileButton} disabled={(!file && (!license.trim() || license.trim() === profile.businessLicense)) || upload.isPending}>{upload.isPending ? 'Đang gửi…' : 'Gửi giấy tờ'}</button>
     </form>
   </ProfileSection>

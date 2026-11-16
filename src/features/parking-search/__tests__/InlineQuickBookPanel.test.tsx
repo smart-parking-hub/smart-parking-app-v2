@@ -205,7 +205,7 @@ describe('InlineQuickBookPanel - Real Server Booking Integration', () => {
     })
 
     // Server booking code and PENDING_PAYMENT status is displayed
-    expect(await screen.findByText('BK-SERVER-101')).toBeInTheDocument()
+    expect(await screen.findByText('#101')).toBeInTheDocument()
     expect(screen.getByText('Chờ thanh toán cọc')).toBeInTheDocument()
 
     // NO fake localStorage hold was written
@@ -243,7 +243,7 @@ describe('InlineQuickBookPanel - Real Server Booking Integration', () => {
     currentBookings.push(created)
     resolvePost!({ data: { data: created } })
 
-    expect(await screen.findByText('BK-SERVER-101')).toBeInTheDocument()
+    expect(await screen.findByText('#101')).toBeInTheDocument()
   })
 
   it('AC3: booking created in panel appears in /bookings via shared QueryClient and reloads cleanly', async () => {
@@ -281,19 +281,19 @@ describe('InlineQuickBookPanel - Real Server Booking Integration', () => {
     await user.click(submitBtn)
 
     // Real booking appears in panel
-    expect(await screen.findByText('BK-SERVER-101')).toBeInTheDocument()
+    expect(await screen.findByText('#101')).toBeInTheDocument()
 
     // Click link to /bookings (from BookingStatusPanel)
     const bookingsLink = screen.getByRole('link', { name: 'Xem các lượt đặt chỗ' })
     await user.click(bookingsLink)
 
     // Now on /bookings: see the server booking
-    expect(await screen.findByText('BK-SERVER-101')).toBeInTheDocument()
+    expect(await screen.findByText('#101')).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: /Vé vừa xem.*Bãi Xe Miền Nam/ })).toBeInTheDocument()
 
     // Simulate query refetch / reload: server data remains intact
     await queryClient.refetchQueries({ queryKey: ['real-bookings'] })
-    expect(await screen.findByText('BK-SERVER-101')).toBeInTheDocument()
+    expect(await screen.findByText('#101')).toBeInTheDocument()
 
     // Pre-existing legacy active_hold in localStorage does not appear as a booking
     localStorage.setItem(
@@ -427,7 +427,7 @@ describe('InlineQuickBookPanel - Real Server Booking Integration', () => {
     expect(firstPayload.requestId).not.toBe('')
 
     await user.click(submit)
-    expect(await screen.findByText('BK-SERVER-101')).toBeInTheDocument()
+    expect(await screen.findByText('#101')).toBeInTheDocument()
     expect(apiClient.post).toHaveBeenCalledTimes(2)
     expect(vi.mocked(apiClient.post).mock.calls[1][1]).toEqual(
       expect.objectContaining({ requestId: firstPayload.requestId }),

@@ -21,7 +21,7 @@ export function DriverWelcomeBanner({
             </span>
             <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-slate-800 text-slate-300 text-xs font-normal border border-slate-700">
               <Activity className="w-3.5 h-3.5 text-blue-400" />
-              <span>Lưu thông: Ổn định tại Cát Lái &amp; Đình Vũ</span>
+              <span>Thông tin phương tiện và lượt đặt chỗ</span>
             </span>
           </div>
 
@@ -32,8 +32,7 @@ export function DriverWelcomeBanner({
           </h1>
 
           <p className="text-xs sm:text-sm text-slate-400 leading-relaxed">
-            Điều phối hành trình xe container, kiểm tra 320+ cụm bãi đỗ an toàn trên các tuyến vành
-            đai và cao tốc Bắc - Nam.
+            Theo dõi phương tiện, kiểm tra trạng thái vé và xử lý các chuyến đỗ của bạn.
           </p>
         </div>
 

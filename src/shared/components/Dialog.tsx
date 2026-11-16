@@ -5,6 +5,7 @@ import { cn } from '@/shared/utils/cn'
 export interface DialogProps {
   isOpen?: boolean
   onClose: () => void
+  onAfterClose?: () => void
   title: string
   description?: string
   children: ReactNode
@@ -16,6 +17,7 @@ export interface DialogProps {
 export function Dialog({
   isOpen = true,
   onClose,
+  onAfterClose,
   title,
   description,
   children,
@@ -26,10 +28,13 @@ export function Dialog({
   const dialogRef = useRef<HTMLDialogElement>(null)
   const titleId = useId()
   const descId = useId()
+  const afterClose = useRef(onAfterClose)
+  useEffect(() => { afterClose.current = onAfterClose }, [onAfterClose])
 
   useEffect(() => {
     const element = dialogRef.current
     const previous = document.activeElement
+    const previousOverflow = document.body.style.overflow
 
     if (isOpen && element) {
       if (typeof element.showModal === 'function' && !element.open) {
@@ -45,7 +50,7 @@ export function Dialog({
     }
 
     return () => {
-      document.body.style.overflow = 'unset'
+      if (isOpen) document.body.style.overflow = previousOverflow
       if (element) {
         if (typeof element.close === 'function' && element.open) {
           try {
@@ -57,9 +62,13 @@ export function Dialog({
           element.removeAttribute('open')
         }
       }
-      if (previous instanceof HTMLElement) {
-        previous.focus()
+      if (previous instanceof HTMLElement && previous !== document.body && previous.isConnected) {
+        const target = previous.matches(':disabled')
+          ? previous.closest('form')?.querySelector<HTMLElement>('input:not(:disabled), select:not(:disabled), button:not(:disabled)')
+          : previous
+        target?.focus()
       }
+      if (isOpen) afterClose.current?.()
     }
   }, [isOpen])
 
@@ -108,7 +117,7 @@ export function Dialog({
           type="button"
           onClick={onClose}
           aria-label="Đóng"
-          className="inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white p-2 text-slate-500 hover:bg-slate-100 hover:text-slate-800 transition-colors cursor-pointer"
+          className="inline-flex size-10 shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-500 hover:bg-slate-100 hover:text-slate-800 transition-colors cursor-pointer focus-visible:outline-2 focus-visible:outline-brand-primary focus-visible:outline-offset-2"
         >
           <X className="w-5 h-5" aria-hidden="true" />
         </button>

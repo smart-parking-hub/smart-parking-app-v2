@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 import { Eye } from 'lucide-react'
 import type { Booking } from '@/entities/operations'
+import { bookingReference } from '@/entities/booking/bookingReference'
 import { Badge } from '@/shared/components/Badge'
 import {
   Table,
@@ -72,7 +73,7 @@ export function MerchantBookingsTable({
                     to={`/merchant/bookings/${row.id}`}
                     className="font-mono font-semibold text-slate-900 hover:text-[#9e4300] hover:underline underline-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d95f00] focus-visible:ring-offset-1 rounded transition-colors"
                   >
-                    {row.bookingCode}
+                    {row.status === 'PENDING_PAYMENT' ? `Số đơn ${bookingReference(row)}` : bookingReference(row)}
                   </Link>
                 </TableCell>
 
@@ -119,7 +120,7 @@ export function MerchantBookingsTable({
                 <TableCell align="right" className="py-2.5 whitespace-nowrap">
                   <Link
                     to={`/merchant/bookings/${row.id}`}
-                    aria-label={`Xem chi tiết đơn ${row.bookingCode}`}
+                    aria-label={`Xem chi tiết đơn ${bookingReference(row)}`}
                     className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-white px-2.5 py-1 text-xs font-semibold text-slate-800 hover:border-[#d95f00]/50 hover:bg-orange-50/70 hover:text-[#9e4300] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d95f00] focus-visible:ring-offset-1 transition-colors shadow-2xs"
                   >
                     <Eye className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />

@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Check, Clock, Copy, MapPin, Truck } from 'lucide-react'
 import { Notice } from '@/shared/components/Workspace'
+import { bookingReference } from '@/entities/booking/bookingReference'
 import { formatMoney, statusLabels, type Booking } from './api'
 import { bookingTimeLabel } from './time'
 
@@ -13,8 +14,8 @@ export function QuickBookingPaymentSummary({ booking, expired }: { booking: Book
     : final ? null : booking.advanceDeposit
   const copyCode = async () => {
     try {
-      await navigator.clipboard.writeText(booking.bookingCode)
-      setCopyNotice('Đã sao chép mã đặt chỗ')
+      await navigator.clipboard.writeText(bookingReference(booking))
+      setCopyNotice(final ? 'Đã sao chép mã đặt chỗ' : 'Đã sao chép số đơn')
     } catch { setCopyNotice('Không thể sao chép. Bạn có thể chọn mã vé để sao chép.') }
   }
   return <section aria-label="Thông tin vé chờ thanh toán" className="overflow-hidden rounded-xl border border-brand-border">
@@ -35,7 +36,14 @@ export function QuickBookingPaymentSummary({ booking, expired }: { booking: Book
       {!final && !expired && <p className="mt-2 flex items-start gap-1.5 text-xs leading-relaxed text-brand-muted"><Clock size={13} className="mt-0.5 shrink-0" aria-hidden="true"/><span>Thanh toán cọc trước <strong className="font-medium text-brand-navy">{bookingTimeLabel(booking.expiresAt)}</strong></span></p>}
       {!final && expired && <div className="mt-3"><Notice error>Đã quá hạn thanh toán. Đang chờ server cập nhật trạng thái hết hạn; không thanh toán thêm cho đơn này.</Notice></div>}
     </div>
-    <div className="flex min-w-0 items-center gap-2 px-4 py-2.5 text-xs"><span className="shrink-0 text-brand-muted">Mã vé</span><span className="min-w-0 flex-1 truncate font-mono" title={booking.bookingCode}>{booking.bookingCode}</span><button type="button" aria-label="Sao chép mã đặt chỗ" title="Sao chép mã đặt chỗ" onClick={() => void copyCode()} className="shrink-0 rounded-lg p-2 text-brand-muted transition-colors hover:bg-brand-surface hover:text-brand-navy focus-visible:outline-2 focus-visible:outline-brand-primary">{copyNotice.startsWith('Đã') ? <Check size={14} aria-hidden="true"/> : <Copy size={14} aria-hidden="true"/>}</button></div>
+    <div className="flex min-w-0 items-center gap-2 px-4 py-2.5 text-xs">
+      <span className="shrink-0 text-brand-muted">{final ? 'Mã vé' : 'Số đơn'}</span>
+      <span className="min-w-0 flex-1 truncate font-mono">{bookingReference(booking)}</span>
+      <button type="button" aria-label={final ? 'Sao chép mã đặt chỗ' : 'Sao chép số đơn'} title={final ? 'Sao chép mã đặt chỗ' : 'Sao chép số đơn'} onClick={() => void copyCode()} className="shrink-0 rounded-lg p-2 text-brand-muted transition-colors hover:bg-brand-surface hover:text-brand-navy focus-visible:outline-2 focus-visible:outline-brand-primary">
+        {copyNotice.startsWith('Đã') ? <Check size={14} aria-hidden="true"/> : <Copy size={14} aria-hidden="true"/>}
+      </button>
+    </div>
+    {!final && <p className="px-4 pb-3 text-xs leading-relaxed text-brand-muted">Mã check-in và QR sẽ hiển thị sau khi xác nhận thanh toán cọc.</p>}
     {copyNotice && <p role="status" className="px-4 pb-3 text-xs text-brand-muted">{copyNotice}</p>}
   </section>
 }

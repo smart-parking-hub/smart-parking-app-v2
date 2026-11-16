@@ -248,6 +248,14 @@ describe('SCR-035: MerchantBookingDetailPage & Barrier Timeline Utilities', () =
     expect(gateLink.className).not.toContain('bg-[#d95f00]')
   })
 
+  it('shows the order ID without exposing the check-in code before deposit payment', async () => {
+    mockGetData.mockResolvedValueOnce({ ...completedBooking, status: 'PENDING_PAYMENT', checkInTime: null, checkOutTime: null })
+    renderDetailApp(<Routes><Route path="/merchant/bookings/:id" element={<MerchantBookingDetailPage />} /></Routes>)
+    expect(await screen.findByText('Số đơn')).toBeInTheDocument()
+    expect(document.body.innerHTML).not.toContain(completedBooking.bookingCode)
+    expect(screen.getByRole('button', { name: /Sao chép mã vé để tra cứu/i })).toBeDisabled()
+  })
+
   it('guards malformed :id params with EmptyState without firing API calls, and handles empty response payload', async () => {
     renderDetailApp(
       <Routes>

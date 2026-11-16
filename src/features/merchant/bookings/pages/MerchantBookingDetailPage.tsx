@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { RefreshCw } from 'lucide-react'
+import { bookingReference } from '@/entities/booking/bookingReference'
 import { errorMessage } from '@/shared/api/resources'
 import { Alert } from '@/shared/components/Alert'
 import { Badge } from '@/shared/components/Badge'
@@ -199,9 +200,9 @@ export function MerchantBookingDetailPage() {
             className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5 lg:gap-4"
           >
             <div className="rounded-2xl border border-brand-border bg-white p-4 md:p-5 shadow-2xs">
-              <p className="font-mono text-xs uppercase text-brand-muted">Mã vé</p>
+              <p className="text-xs font-medium text-brand-muted">{data.status === 'PENDING_PAYMENT' ? 'Số đơn' : 'Mã vé'}</p>
               <p className="mt-2.5 break-all font-mono font-sora text-xl md:text-2xl font-bold text-brand-navy">
-                {data.bookingCode}
+                {bookingReference(data)}
               </p>
               <p className="mt-1.5 text-xs text-brand-muted tabular-nums">
                 Khởi tạo: {formatBookingDateTime(data.createdAt)}

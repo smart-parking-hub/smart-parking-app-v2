@@ -6,6 +6,7 @@ import { apiClient } from '@/shared/api/client'
 import { DriverDashboardPage } from '../pages/DriverDashboardPage'
 import { DriverLayout } from '@/layouts/DriverLayout'
 import * as driverApi from '../api/driverApi'
+import { fallbackDashboardData } from './dashboardFixtures'
 
 vi.mock('@/shared/api/client', () => ({
   apiClient: {
@@ -33,6 +34,8 @@ describe('SCR-014: Driver Dashboard Home (Tổng quan Tài xế)', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     vi.mocked(apiClient.get).mockImplementation((url: string) => {
+      if (url === '/api/v1/users/me') return Promise.resolve({ data: { data: { fullName: 'Trần Quốc Tuấn' } } })
+      if (url === '/api/v1/queues/me') return Promise.resolve({ data: { data: null } })
       if (url.includes('vehicles')) {
         return Promise.resolve({
           data: {data: {
@@ -48,8 +51,8 @@ describe('SCR-014: Driver Dashboard Home (Tổng quan Tài xế)', () => {
         return Promise.resolve({
           data: {data: {
             content: [
-              driverApi.fallbackDashboardData.activeBooking!,
-              ...driverApi.fallbackDashboardData.recentBookings,
+              fallbackDashboardData.activeBooking!,
+              ...fallbackDashboardData.recentBookings,
             ].map(b=>({...b,vehiclePlate:b.vehicleLicensePlate,advanceDeposit:b.depositAmount,totalAmount:b.totalPrice})),
             totalElements: 48,
             totalPages: 3,
@@ -75,16 +78,16 @@ describe('SCR-014: Driver Dashboard Home (Tổng quan Tài xế)', () => {
     ).toBeInTheDocument()
 
     // 2. Bento Grid 4 KPIs
-    expect(screen.getByText(/03 Đầu Kéo/i)).toBeInTheDocument()
+    expect(screen.getByText(/03 Phương Tiện/i)).toBeInTheDocument()
     expect(screen.getByText(/48 Lượt/i)).toBeInTheDocument()
     expect(screen.getByText(/01 Chuyến Đang Đỗ/i)).toBeInTheDocument()
     expect(screen.getByText(/00 Suất Chờ/i)).toBeInTheDocument()
 
     // 3. Active Trip Card details
-    expect(screen.getByText(/CHUYẾN ĐỖ ĐANG HOẠT ĐỘNG THỜI GIAN THỰC/i)).toBeInTheDocument()
-    expect(screen.getByText(/Bãi Đỗ Xe Container Sóng Thần 2/i)).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Chuyến đỗ đang hoạt động' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Bãi Đỗ Xe Container Sóng Thần 2' })).toBeInTheDocument()
     expect(screen.getAllByText(/51D-894.12/i).length).toBeGreaterThan(0)
-    expect(screen.getAllByText(/BERTH C-12/i).length).toBeGreaterThan(0)
+    expect(screen.getByText('Chưa được phân vị trí')).toBeInTheDocument()
 
     // 4. Quick Shortcuts Matrix
     expect(screen.getByText(/Nghiệp Vụ Tài Xế Nhanh/i)).toBeInTheDocument()
@@ -104,25 +107,25 @@ describe('SCR-014: Driver Dashboard Home (Tổng quan Tài xế)', () => {
 
     // Wait for content to render
     await waitFor(() => {
-      expect(screen.getByText(/MÃ QR XUẤT BÃI \(BARIE CHECK-OUT\)/i)).toBeInTheDocument()
+      expect(screen.getByRole('button', { name: 'Mã QR xuất bãi' })).toBeInTheDocument()
     })
 
     // Click to open QR Modal
-    const openBtn = screen.getByText(/MÃ QR XUẤT BÃI \(BARIE CHECK-OUT\)/i)
+    const openBtn = screen.getByRole('button', { name: 'Mã QR xuất bãi' })
     fireEvent.click(openBtn)
 
     // Modal elements should be visible
-    expect(screen.getByText(/ALPR FAST-CHECKOUT PASS/i)).toBeInTheDocument()
-    expect(screen.getByText(/Mã QR Barie Xuất Bãi/i)).toBeInTheDocument()
-    expect(screen.getByText(/BK-2026-9081-OUT/i)).toBeInTheDocument()
+    expect(screen.getByRole('dialog', { name: 'Mã QR xuất bãi' })).toBeInTheDocument()
+    expect(screen.getByRole('img', { name: 'QR xuất bãi BK-2026-9081' })).toBeInTheDocument()
+    expect(screen.queryByText(/BK-2026-9081-OUT/i)).not.toBeInTheDocument()
 
     // Close modal via confirm button
-    const closeBtn = screen.getByText(/HOÀN TẤT & ĐÓNG MÃ QR/i)
+    const closeBtn = screen.getByRole('button', { name: 'Đóng' })
     fireEvent.click(closeBtn)
 
     // Modal should be closed
     await waitFor(() => {
-      expect(screen.queryByText(/ALPR FAST-CHECKOUT PASS/i)).not.toBeInTheDocument()
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
     })
   })
 

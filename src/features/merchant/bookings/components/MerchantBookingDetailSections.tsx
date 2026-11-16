@@ -383,7 +383,7 @@ export function MerchantBookingDetailSidebar({
 
         <Link
           className={`${actionable ? button : secondary} w-full`}
-          to={`/merchant/qr-scanner?code=${encodeURIComponent(booking.bookingCode)}&lot=${booking.parkingLotId ?? ''}`}
+          to={`/merchant/qr-scanner?${booking.status === 'PENDING_PAYMENT' ? '' : `code=${encodeURIComponent(booking.bookingCode)}&`}lot=${booking.parkingLotId ?? ''}`}
         >
           <span>Xử lý tại trạm QR →</span>
           <ArrowRight className="h-4 w-4 shrink-0" aria-hidden="true" />
@@ -434,6 +434,7 @@ export function MerchantBookingDetailSidebar({
         <div className="mt-5 border-t border-slate-100 pt-4">
           <button
             type="button"
+            disabled={booking.status === 'PENDING_PAYMENT'}
             onClick={() => onCopyBookingCode(booking.bookingCode)}
             className="inline-flex min-h-[40px] w-full items-center justify-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2 text-xs font-semibold text-slate-700 transition-colors hover:bg-slate-100 hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d95f00] cursor-pointer"
           >

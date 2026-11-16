@@ -178,7 +178,7 @@ test.describe('Flow 3: Check-out Barie, Tính Giá Lũy Tiến & Thu Tiền Mặ
 
     // 9. Xác minh thông báo thành công và giải phóng slot xe
     await expect(
-      page.getByText('Đã xác nhận thu tiền mặt và trả chỗ thành công.'),
+      page.getByRole('dialog', { name: 'Hoàn tất giao dịch' }).getByText('Đã hoàn tất checkout và trả chỗ.'),
     ).toBeVisible({ timeout: 5000 })
 
     // 10. Chuyển sang màn hình quản lý đơn (/merchant/bookings) và xác minh trạng thái Đã hoàn tất

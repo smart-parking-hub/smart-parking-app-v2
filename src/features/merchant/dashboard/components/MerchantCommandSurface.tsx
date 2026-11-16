@@ -46,8 +46,8 @@ export function MerchantCommandSurface() {
               onClick={() => navigate('/merchant/parking-lots/new')}
               className="h-11 px-5 bg-[#341100] text-[#d95f00] hover:bg-black hover:text-white font-bold text-xs lg:text-sm rounded-xl flex items-center gap-2 transition-all shadow-xs border border-[#d95f00]/40 cursor-pointer"
             >
-              <Plus className="w-4 h-4 text-[#d95f00]" />
-              <span>+ Đăng Ký Bãi Đỗ Mới</span>
+              <Plus className="w-4 h-4 text-[#d95f00]" aria-hidden="true" />
+              <span>Đăng Ký Bãi Đỗ Mới</span>
             </button>
           </div>
         </div>

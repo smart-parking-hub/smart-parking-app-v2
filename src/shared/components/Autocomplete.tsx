@@ -42,7 +42,7 @@ export const Autocomplete = forwardRef<HTMLInputElement, AutocompleteProps>(func
     <input {...inputProps} id={id} ref={input} role="combobox" aria-autocomplete="list"
       aria-expanded={expanded} aria-controls={listId}
       aria-activedescendant={expanded && active >= 0 && active < matches.length ? `${listId}-${active}` : undefined}
-      autoComplete="off" disabled={disabled} value={value} className={`${control} pl-10 pr-11 ${className}`}
+      autoComplete="off" disabled={disabled} value={value} className={`${control} h-12 pl-10 pr-11 ${className}`}
       onFocus={event => { setOpen(true); inputProps.onFocus?.(event) }}
       onChange={event => { onValueChange(event.target.value); setOpen(true); setActive(-1) }}
       onKeyDown={event => {

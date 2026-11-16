@@ -16,6 +16,9 @@ import { DashboardSkeleton } from '../components/DashboardSkeleton'
 import { DashboardEmptyState } from '../components/DashboardEmptyState'
 import { useDriverDashboardStore } from '../store/driverDashboardStore'
 import type { QuickSearchFormData } from '../types/driverTypes'
+import { bookingReference } from '@/entities/booking/bookingReference'
+import { canShowCheckoutQr } from '../lib/dashboardBooking'
+import { errorMessage } from '@/shared/api/resources'
 
 // Zod schema for quick dashboard manifest search
 const quickSearchSchema = z.object({
@@ -27,13 +30,15 @@ const quickSearchSchema = z.object({
 })
 
 export function DriverDashboardPage() {
-  const { qrModalOpen, setQrModalOpen, successToast, setSuccessToast, clearToast } =
+  const { successToast, setSuccessToast, clearToast } =
     useDriverDashboardStore()
+  const [qrBookingId, setQrBookingId] = useState<number | null>(null)
 
   const { data, isLoading, error, refetch, isRefetching } = useQuery({
     queryKey: ['driver-dashboard'],
-    queryFn: fetchDriverDashboardData,
-    staleTime: 60000,
+    queryFn: ({ signal }) => fetchDriverDashboardData(signal),
+    staleTime: 0,
+    refetchInterval: query => query.state.data?.activeBooking ? 15000 : false,
   })
 
   const {
@@ -47,6 +52,11 @@ export function DriverDashboardPage() {
   })
 
   const [searchFilter, setSearchFilter] = useState('')
+  const qrBooking = (data?.bookings ?? [data?.activeBooking, ...(data?.recentBookings ?? [])]).find(booking => booking?.id === qrBookingId)
+  const openQr = () => {
+    const booking = data?.activeBooking
+    if (booking && canShowCheckoutQr(booking)) setQrBookingId(booking.id)
+  }
 
   const onQuickSearch = (formData: QuickSearchFormData) => {
     setSearchFilter(formData.query.trim().toLowerCase())
@@ -59,10 +69,10 @@ export function DriverDashboardPage() {
     if (!searchFilter) return data.recentBookings
     return data.recentBookings.filter(
       (b) =>
-        b.bookingCode.toLowerCase().includes(searchFilter) ||
-        b.parkingLotName.toLowerCase().includes(searchFilter) ||
-        b.vehicleLicensePlate.toLowerCase().includes(searchFilter) ||
-        (b.berthNumber && b.berthNumber.toLowerCase().includes(searchFilter)),
+        bookingReference(b).toLowerCase().includes(searchFilter) ||
+        (b.parkingLotName ?? '').toLowerCase().includes(searchFilter) ||
+        (b.vehicleLicensePlate ?? '').toLowerCase().includes(searchFilter) ||
+        (b.physicalSlotCode ?? '').toLowerCase().includes(searchFilter),
     )
   }, [data?.recentBookings, searchFilter])
 
@@ -104,8 +114,7 @@ export function DriverDashboardPage() {
               Không thể tải dữ liệu điều phối bến bãi
             </h3>
             <p className="text-xs text-rose-700 mt-1 mb-4 max-w-md mx-auto">
-              Hệ thống tạm thời không phản hồi (Mã lỗi: ERR_DISPATCH_TIMEOUT). Vui lòng kiểm tra lại
-              kết nối mạng hoặc bấm nút thử lại.
+              {errorMessage(error)}
             </p>
             <button
               type="button"
@@ -163,13 +172,13 @@ export function DriverDashboardPage() {
               activeCount={data.activeCount}
               queueCount={data.queueCount}
               activeBooking={data.activeBooking}
-              onOpenQr={() => setQrModalOpen(true)}
+              onOpenQr={openQr}
             />
 
             {/* Detailed Active Trip Card (Split Pane) */}
             <ActiveTripCard
               booking={data.activeBooking}
-              onOpenQr={() => setQrModalOpen(true)}
+              onOpenQr={openQr}
             />
 
             {/* Quick Shortcuts Matrix */}
@@ -198,9 +207,10 @@ export function DriverDashboardPage() {
 
             {/* ALPR Fast-Checkout QR Modal */}
             <QrCheckoutModal
-              open={qrModalOpen}
-              onClose={() => setQrModalOpen(false)}
-              booking={data.activeBooking}
+              key={qrBookingId}
+              open={qrBookingId !== null}
+              onClose={() => setQrBookingId(null)}
+              booking={qrBooking}
               onSuccessNotice={(msg) => setSuccessToast(msg)}
             />
           </>

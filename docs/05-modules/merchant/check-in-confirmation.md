@@ -1,5 +1,9 @@
 # Merchant check-in confirmation
 
+## Scanner rejection wording — 2026-11-17
+
+Wrong-lot scans now display **Mã QR không hợp lệ tại bãi đang chọn**, explain that the ticket belongs to another lot, and ask the attendant to select the correct lot or scan again. Unknown booking code `BOOK_001` displays **Mã QR không hợp lệ** with a retry hint. Early check-in, invalid booking state, permission and network errors retain their actual reason. Both XE VÀO and XE RA use the same presentation helper; backend checks and requests are unchanged. Evidence: `scannerErrorFeedback`, its tests, and `operations.test.tsx`.
+
 ## Update 2026-11-15
 
 Owner: SPH frontend. `last_verified`: 2026-11-15. Evidence: `ScannerPage`, `operations.test.tsx`, `e2e/test-02-merchant-qr-checkin.spec.ts`.

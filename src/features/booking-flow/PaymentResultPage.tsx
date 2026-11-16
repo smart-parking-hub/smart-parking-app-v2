@@ -4,6 +4,7 @@ import { Link, useSearchParams } from 'react-router-dom'
 import { CircleCheck, CirclePause, Copy, LoaderCircle, ShieldAlert } from 'lucide-react'
 import { Dialog, Notice, button, secondary } from '@/shared/components/Workspace'
 import { errorMessage } from '@/shared/api/resources'
+import { bookingReference } from '@/entities/booking/bookingReference'
 import { cancelBooking, fetchBooking, formatMoney, paymentLink, statusLabels, syncPayment } from './api'
 import { bookingTimeLabel, bookingTimestamp } from './time'
 import { paymentRecovery } from './paymentRecovery'
@@ -90,8 +91,8 @@ function PaymentResultContent({ cancelled }: {cancelled:boolean}) {
   const copyCode = async () => {
     try {
       if (!booking || !navigator.clipboard) throw new Error('Clipboard unavailable')
-      await navigator.clipboard.writeText(booking.bookingCode)
-      setCopyNotice('Đã sao chép mã đặt chỗ')
+      await navigator.clipboard.writeText(bookingReference(booking))
+      setCopyNotice(booking.status === 'PENDING_PAYMENT' ? 'Đã sao chép số đơn' : 'Đã sao chép mã đặt chỗ')
     } catch { setCopyNotice('Không thể sao chép. Bạn có thể chọn mã vé để sao chép.') }
   }
   return <section aria-label="Kết quả thanh toán" className="mx-auto w-full max-w-[720px] space-y-5 px-4 py-8 font-inter text-brand-navy sm:py-12">
@@ -111,8 +112,8 @@ function PaymentResultContent({ cancelled }: {cancelled:boolean}) {
           <div><dt className="text-brand-muted">Giờ vào dự kiến</dt><dd className="mt-1">{bookingTimeLabel(booking.expectedCheckInTime)}</dd></div>
           <div><dt className="text-brand-muted">Giờ ra dự kiến</dt><dd className="mt-1">{bookingTimeLabel(booking.expectedCheckOutTime)}</dd></div>
         </dl>
-        <div className="flex min-w-0 items-center justify-between gap-2 text-sm"><div className="min-w-0"><p className="text-brand-muted">Mã đặt chỗ</p><p className="mt-1 break-all font-mono text-xs">{booking.bookingCode}</p></div>
-          <button type="button" aria-label="Sao chép mã đặt chỗ" className={`${secondary} shrink-0 !p-2`} onClick={() => void copyCode()}><Copy size={16}/></button>
+        <div className="flex min-w-0 items-center justify-between gap-2 text-sm"><div className="min-w-0"><p className="text-brand-muted">{booking.status === 'PENDING_PAYMENT' ? 'Số đơn' : 'Mã đặt chỗ'}</p><p className="mt-1 break-all font-mono text-xs">{bookingReference(booking)}</p></div>
+          <button type="button" aria-label={booking.status === 'PENDING_PAYMENT' ? 'Sao chép số đơn' : 'Sao chép mã đặt chỗ'} className={`${secondary} shrink-0 !p-2`} onClick={() => void copyCode()}><Copy size={16}/></button>
         </div>
         {copyNotice && <p role="status" className="text-xs text-brand-muted">{copyNotice}</p>}
         <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl bg-brand-surface p-4"><span className="text-sm text-brand-muted">{final ? 'Phần còn lại cần thanh toán' : ['COMPLETED','REVIEWED'].includes(booking.status) ? 'Tổng phí lượt đỗ' : 'Tiền cọc của vé'}</span><strong className="text-xl">{formatMoney(['COMPLETED','REVIEWED'].includes(booking.status) ? booking.totalAmount ?? 0 : amount)}</strong></div>

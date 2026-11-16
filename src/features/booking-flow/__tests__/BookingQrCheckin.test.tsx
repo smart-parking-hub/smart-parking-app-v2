@@ -74,6 +74,7 @@ describe('BookingStatusPanel - QR Check-in Integration', () => {
     // Assert
     expect(screen.queryByText(/Vé QR Check-in Mở Barie Tự Động/i)).not.toBeInTheDocument()
     expect(screen.queryByTestId('checkin-qr-container')).not.toBeInTheDocument()
+    expect(document.body.innerHTML).not.toContain(samplePendingPaymentBooking.bookingCode)
   })
 
   it('copies bookingCode to clipboard when copy button is clicked', async () => {

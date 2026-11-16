@@ -2,7 +2,7 @@ import { useId } from 'react'
 import { Controller, useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useMutation } from '@tanstack/react-query'
-import { Info, Truck } from 'lucide-react'
+import { ChevronDown, Info, Truck } from 'lucide-react'
 import { Notice, Panel, button, control, secondary } from '@/shared/components/Workspace'
 import { Autocomplete } from '@/shared/components/Autocomplete'
 import { errorMessage } from '@/shared/api/resources'
@@ -56,29 +56,32 @@ export function VehicleEditor({ vehicle, onClose, onSaved }: {
       <div className="min-w-0 space-y-6">
         <fieldset disabled={save.isPending} className="grid gap-x-5 gap-y-6 sm:grid-cols-2">
           <legend className="sr-only">Thông tin phương tiện</legend>
-          <div className="space-y-2">
+          <div className="grid content-start gap-2">
             <label htmlFor={`${id}-plate`} className="text-sm font-semibold">Biển số xe <span aria-hidden="true" className="text-brand-orange-ink">*</span></label>
-            <input id={`${id}-plate`} aria-label="Biển số xe" className={`${control} font-semibold tracking-wide uppercase`} autoComplete="off" autoCapitalize="characters" spellCheck={false} maxLength={20} placeholder="Ví dụ: 51C-123.45" aria-required="true" aria-invalid={Boolean(errors.licensePlate)} aria-describedby={describedBy('licensePlate')}
+            <input id={`${id}-plate`} aria-label="Biển số xe" className={`${control} h-12 font-semibold tracking-wide uppercase`} autoComplete="off" autoCapitalize="characters" spellCheck={false} maxLength={20} placeholder="Ví dụ: 51C-123.45" aria-required="true" aria-invalid={Boolean(errors.licensePlate)} aria-describedby={describedBy('licensePlate')}
               {...form.register('licensePlate', { onBlur: event => form.setValue('licensePlate', String(event.target.value).trim().toUpperCase().replace(/\s+/g, ''), { shouldValidate: true }) })} />
             <p id={`${id}-licensePlate-hint`} className="text-xs leading-5 text-brand-muted">Nhập đúng biển số trên xe. Tự chuyển chữ hoa và bỏ khoảng trắng.</p>
             {fieldError('licensePlate')}
           </div>
-          <div className="space-y-2">
+          <div className="grid content-start gap-2">
             <label htmlFor={`${id}-type`} className="text-sm font-semibold">Loại xe <span aria-hidden="true" className="text-brand-orange-ink">*</span></label>
-            <select id={`${id}-type`} defaultValue={vehicle?.vehicleType ?? ''} aria-label="Loại xe" className={control} aria-required="true" aria-invalid={Boolean(errors.vehicleType)} aria-describedby={describedBy('vehicleType')} {...form.register('vehicleType')}>
+            <div className="relative">
+            <select id={`${id}-type`} defaultValue={vehicle?.vehicleType ?? ''} aria-label="Loại xe" className={`${control} h-12 appearance-none pr-11`} aria-required="true" aria-invalid={Boolean(errors.vehicleType)} aria-describedby={describedBy('vehicleType')} {...form.register('vehicleType')}>
               <option value="" disabled>Chọn loại xe</option>
               {Object.entries(vehicleTypes).map(([value, label]) => <option key={value} value={value}>{vehicleIcons[value as VehicleInput['vehicleType']]} {label}</option>)}
             </select>
+            <ChevronDown size={17} aria-hidden="true" className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-brand-muted" />
+            </div>
             <p id={`${id}-vehicleType-hint`} className="text-xs leading-5 text-brand-muted">Chọn theo xe thực tế để tìm đúng loại chỗ đỗ.</p>
             {fieldError('vehicleType')}
           </div>
-          <div className="space-y-2">
+          <div className="grid content-start gap-2">
             <label htmlFor={`${id}-weight`} className="text-sm font-semibold">Trọng tải (tấn) <span aria-hidden="true" className="text-brand-orange-ink">*</span></label>
-            <input id={`${id}-weight`} aria-label="Trọng tải (tấn)" className={control} type="number" inputMode="decimal" min="0.01" max="999.99" step="0.01" placeholder="Ví dụ: 12.5" aria-required="true" aria-invalid={Boolean(errors.weightTon)} aria-describedby={describedBy('weightTon')} {...form.register('weightTon')} />
+            <input id={`${id}-weight`} aria-label="Trọng tải (tấn)" className={`${control} h-12`} type="number" inputMode="decimal" min="0.01" max="999.99" step="0.01" placeholder="Ví dụ: 12.5" aria-required="true" aria-invalid={Boolean(errors.weightTon)} aria-describedby={describedBy('weightTon')} {...form.register('weightTon')} />
             <p id={`${id}-weightTon-hint`} className="text-xs leading-5 text-brand-muted">Nhập theo hồ sơ xe. 1 tấn = 1.000 kg.</p>
             {fieldError('weightTon')}
           </div>
-          <div className="space-y-2">
+          <div className="grid content-start gap-2">
             <label htmlFor={`${id}-brand`} className="text-sm font-semibold">Nhãn hiệu / Model (không bắt buộc)</label>
             <Controller name="brandModel" control={form.control} render={({ field }) => (
               <Autocomplete id={`${id}-brand`} ref={field.ref} name={field.name} value={field.value}

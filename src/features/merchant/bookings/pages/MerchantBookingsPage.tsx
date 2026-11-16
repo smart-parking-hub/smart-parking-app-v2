@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { RefreshCw } from 'lucide-react'
 import type { Booking } from '@/entities/operations'
+import { bookingReference } from '@/entities/booking/bookingReference'
 import { errorMessage } from '@/shared/api/resources'
 import { Alert } from '@/shared/components/Alert'
 import { Button } from '@/shared/components/Button'
@@ -34,7 +35,7 @@ function matchesBookingKeyword(row: Booking, normalizedKeyword: string): boolean
   if (!normalizedKeyword) return true
   const plate = resolveBookingPlate(row)
   const haystack =
-    `${row.bookingCode ?? ''} ${plate} ${row.parkingLotName ?? ''}`.toLocaleLowerCase('vi')
+    `${bookingReference(row)} ${plate} ${row.parkingLotName ?? ''}`.toLocaleLowerCase('vi')
   return haystack.includes(normalizedKeyword)
 }
 

@@ -6,6 +6,7 @@ import { updateMerchantProfileApi } from '../api/merchantProfileApi'
 import type { MerchantProfile, UpdateMerchantProfileRequest } from '../types/merchantProfileTypes'
 import { errorMessage } from '@/shared/api/resources'
 import { Notice } from '@/shared/components/Workspace'
+import { NotificationDialog } from '@/shared/components/NotificationDialog'
 import { ProfileSection, ProfileField, profileInput, profileButton } from './ProfileSection'
 
 const schema = z.object({
@@ -28,7 +29,7 @@ export function MerchantProfileForm({ profile, onUpdated }: { profile: MerchantP
         </ProfileField>)}
       </fieldset>
       {save.isError && <Notice error>{errorMessage(save.error)}</Notice>}
-      {save.isSuccess && <Notice>Đã lưu thông tin liên hệ.</Notice>}
+      {save.isSuccess && <NotificationDialog title="Cập nhật hồ sơ thành công" message="Đã lưu thông tin liên hệ." onClose={() => save.reset()} />}
       <div className="flex flex-wrap items-center justify-between gap-4 border-t border-brand-border pt-5">
         <p className="text-sm text-brand-muted">{isDirty ? 'Bạn có thay đổi chưa lưu.' : 'Thông tin liên hệ hiện tại của bạn.'}</p>
         <div className="flex items-center gap-4"><button type="button" className="rounded-lg px-2 py-3 text-base text-brand-muted underline underline-offset-4 disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-brand-orange" disabled={!isDirty || save.isPending} onClick={() => { form.reset(defaults(profile)); save.reset() }}>Hủy thay đổi</button><button className={profileButton} disabled={!isDirty || save.isPending}>{save.isPending ? 'Đang lưu…' : 'Lưu thay đổi'}</button></div>

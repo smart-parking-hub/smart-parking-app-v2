@@ -1,12 +1,11 @@
 import { useCallback, useState } from 'react'
-import { createPortal } from 'react-dom'
 import { useMutation } from '@tanstack/react-query'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { changeMyPasswordApi } from '../api/profileApi'
 import { Notice } from '@/shared/components/Workspace'
-import { Toast } from '@/shared/components/Toast'
+import { NotificationDialog } from '@/shared/components/NotificationDialog'
 import { errorMessage } from '@/shared/api/resources'
 import { AccountSection, AccountField, accountInput, accountButton } from './AccountSection'
 const schema = z.object({
@@ -35,12 +34,7 @@ export function DriverPasswordForm() {
         {([['currentPassword', 'Mật khẩu hiện tại', 'current-password'], ['newPassword', 'Mật khẩu mới', 'new-password'], ['confirmation', 'Xác nhận mật khẩu mới', 'new-password']] as const).map(([key, label, complete]) => <AccountField key={key} id={`driver-${key}`} label={label} error={errors[key]?.message}><input id={`driver-${key}`} type="password" autoComplete={complete} className={accountInput} aria-invalid={Boolean(errors[key])} aria-describedby={errors[key] ? `driver-${key}-error` : undefined} {...form.register(key, { onChange: () => save.reset() })} /></AccountField>)}
       </fieldset>
       {save.isError && <Notice error>{errorMessage(save.error)}</Notice>}
-      {successToastId !== null && createPortal(
-        <div className="fixed top-20 right-4 sm:right-6 z-[100] w-[calc(100%-2rem)] max-w-sm sm:max-w-md">
-          <Toast key={successToastId} title="Đã đổi mật khẩu thành công." variant="success" duration={5000} onClose={closeSuccessToast} />
-        </div>,
-        document.body,
-      )}
+      {successToastId !== null && <NotificationDialog title="Đổi mật khẩu thành công" message="Đã đổi mật khẩu thành công." duration={5000} onClose={closeSuccessToast} />}
       <div className="border-t border-brand-border pt-5"><button className={accountButton} disabled={save.isPending} aria-busy={save.isPending}>{save.isPending ? 'Đang cập nhật…' : 'Cập nhật mật khẩu'}</button></div>
     </form>
   </AccountSection>
