@@ -2,7 +2,7 @@ import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useForm } from 'react-hook-form'
 import { useSearchParams } from 'react-router-dom'
-import { Camera, Loader2, ScanLine, ShieldCheck, SwitchCamera, Zap } from 'lucide-react'
+import { Camera, Loader2, ScanLine, ShieldCheck, Zap } from 'lucide-react'
 import { NotificationDialog } from '@/shared/components/NotificationDialog'
 import { scannerErrorFeedback } from './scannerErrorFeedback'
 import type { Lot, Settlement } from '@/entities/operations'
@@ -24,53 +24,28 @@ import {
   money,
   secondary,
 } from '@/shared/components/Workspace'
-
-interface ZXingReader {
-  decodeFromConstraints(
-    constraints: MediaStreamConstraints,
-    videoElement: HTMLVideoElement,
-    callback: (result: { getText(): string } | null, error: unknown) => void,
-  ): Promise<unknown>
-  reset(): void
-}
-
-function playBeepSound() {
-  try {
-    const AudioContextClass =
-      window.AudioContext ||
-      (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext
-    if (!AudioContextClass) return
-    const ctx = new AudioContextClass()
-    const osc = ctx.createOscillator()
-    const gain = ctx.createGain()
-    osc.type = 'sine'
-    osc.frequency.setValueAtTime(880, ctx.currentTime) // 880Hz crisp terminal beep
-    gain.gain.setValueAtTime(0.2, ctx.currentTime)
-    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.12)
-    osc.connect(gain)
-    gain.connect(ctx.destination)
-    osc.start()
-    osc.stop(ctx.currentTime + 0.12)
-  } catch {
-    // Ignore audio errors on unsupported environments
-  }
-}
+import {
+  BarieCameraScanner,
+  CameraSecurityNotice,
+  CameraPermissionModal,
+  checkCameraSecurityStatus,
+} from '@/features/merchant/qr'
 
 export function MerchantScannerPage() {
   const [params] = useSearchParams()
   const [mode, setMode] = useState<'check-in' | 'check-out'>('check-in')
   const [camera, setCamera] = useState(false)
   const [cameraError, setCameraError] = useState('')
+  const [isPermModalOpen, setIsPermModalOpen] = useState(false)
   const [success, setSuccess] = useState('')
   const [confirmedCheckIn, setConfirmedCheckIn] = useState<string | null>(null)
   const [completedSettlement, setCompletedSettlement] = useState<Settlement | null>(null)
   const [facingMode, setFacingMode] = useState<'environment' | 'user'>('environment')
   const [autoSubmit, setAutoSubmit] = useState(true)
-  const video = useRef<HTMLVideoElement>(null)
-  const readerRef = useRef<ZXingReader | null>(null)
   const scanPending = useRef(false)
   const checkedIn = useRef(new Set<string>())
   const cache = useQueryClient()
+  const securityStatus = checkCameraSecurityStatus()
   const form = useForm<{ bookingCode: string; parkingLotId: number }>({
     defaultValues: {
       bookingCode: params.get('code') || '',
@@ -149,94 +124,23 @@ export function MerchantScannerPage() {
     },
   })
 
-  useEffect(() => {
-    if (!camera) return
-    let stopped = false
-    let currentReader: ZXingReader | null = null
-    const videoEl = video.current
-
-    const start = async () => {
-      try {
-        setCameraError('')
-        const ZXing = (await import(
-          'html5-qrcode/third_party/zxing-js.umd.js'
-        )) as unknown as { BrowserQRCodeReader: new () => ZXingReader }
-        if (stopped) return
-
-        const reader: ZXingReader = new ZXing.BrowserQRCodeReader()
-        readerRef.current = reader
-        currentReader = reader
-
-        if (!videoEl) return
-
-        await reader.decodeFromConstraints(
-          {
-            audio: false,
-            video: {
-              facingMode: { ideal: facingMode },
-              width: { ideal: 1280 },
-              height: { ideal: 720 },
-            },
-          },
-          videoEl,
-          (result) => {
-            if (stopped) return
-            const raw = result?.getText()?.trim()
-            if (raw) {
-              stopped = true
-              playBeepSound()
-              if (typeof navigator !== 'undefined' && navigator.vibrate) {
-                navigator.vibrate([40, 50, 40])
-              }
-              form.setValue('bookingCode', raw, {
-                shouldValidate: true,
-              })
-              setCamera(false)
-
-              // Instant Auto-Confirm (Quét phát ăn ngay)
-              const lotId = form.getValues('parkingLotId')
-              if (autoSubmit && lotId) {
-                submitScanRef.current({ bookingCode: raw, parkingLotId: lotId })
-              }
-            }
-          },
-        )
-
-        if (stopped) {
-          reader.reset()
-          if (videoEl?.srcObject) {
-            const stream = videoEl.srcObject as MediaStream
-            stream.getTracks().forEach((t) => t.stop())
-            videoEl.srcObject = null
-          }
-        }
-      } catch {
-        if (stopped) return
-        setCameraError(
-          'Không thể khởi động camera. Hãy kiểm tra quyền camera hoặc dùng kết nối HTTPS / localhost.',
-        )
-        setCamera(false)
-      }
+  const handleCameraScanSuccess = (raw: string) => {
+    form.setValue('bookingCode', raw, { shouldValidate: true })
+    setCamera(false)
+    const lotId = form.getValues('parkingLotId')
+    if (autoSubmit && lotId) {
+      submitScanRef.current({ bookingCode: raw, parkingLotId: lotId })
     }
+  }
 
-    void start()
-    return () => {
-      stopped = true
-      if (currentReader) {
-        try {
-          currentReader.reset()
-        } catch {
-          // ignore reset error
-        }
-      }
-      if (videoEl?.srcObject) {
-        const stream = videoEl.srcObject as MediaStream
-        stream.getTracks().forEach((t) => t.stop())
-        videoEl.srcObject = null
-      }
-      readerRef.current = null
+  const handleCameraError = (errInfo: { type: string; message: string }) => {
+    if (errInfo.type === 'PERMISSION_DENIED') {
+      setIsPermModalOpen(true)
+    } else {
+      setCameraError(errInfo.message)
     }
-  }, [camera, facingMode, autoSubmit, form])
+    setCamera(false)
+  }
 
   function changeMode(next: typeof mode) {
     setMode(next)
@@ -266,28 +170,34 @@ export function MerchantScannerPage() {
             <Badge value={camera ? 'CAMERA ĐANG BẬT' : 'CAMERA TẮT'} />
           </div>
 
-          {/* Video Container with Clean Symmetrical Square Tracking Box */}
-          <div className="relative flex aspect-video items-center justify-center overflow-hidden rounded-xl border border-slate-700 bg-black shadow-inner">
-            {/* A previous reader can finish asynchronously after a camera switch. */}
-            <video
-              key={camera ? `${facingMode}:${autoSubmit}` : 'off'}
-              ref={video}
-              muted
-              playsInline
-              autoPlay
-              className={`absolute inset-0 h-full w-full object-cover ${camera ? '' : 'hidden'}`}
-            />
-            {camera && (
-              <div
-                aria-hidden="true"
-                className="pointer-events-none absolute w-[min(230px,65%)] aspect-square rounded-2xl border-2 border-emerald-400 shadow-[0_0_20px_rgba(52,211,153,0.35)] animate-pulse z-10"
+          {/* Security Notice for Insecure Context (Mobile HTTP) */}
+          {!securityStatus.isSupported && (
+            <div className="mb-4">
+              <CameraSecurityNotice
+                onFocusManualInput={() => form.setFocus('bookingCode')}
               />
+            </div>
+          )}
+
+          {/* Video Container with Clean Unified Aspect Ratio for both Camera ON & OFF */}
+          <div className="relative flex aspect-video items-center justify-center overflow-hidden rounded-xl border border-slate-700 bg-black shadow-inner">
+            {camera ? (
+              <BarieCameraScanner
+                initialFacingMode={facingMode}
+                onFacingModeChange={setFacingMode}
+                autoSubmit={autoSubmit}
+                onScan={handleCameraScanSuccess}
+                onClose={() => setCamera(false)}
+                onError={handleCameraError}
+                onFocusManualInput={() => form.setFocus('bookingCode')}
+              />
+            ) : (
+              <Camera size={48} className="text-slate-600" />
             )}
-            {!camera && <Camera size={48} className="text-slate-600" />}
           </div>
 
           <div className="mt-4 flex flex-col gap-3">
-            {/* Auto-Confirm Switch */}
+            {/* Auto-Confirm Switch (Consistent in both ON & OFF states) */}
             <div className="flex items-center justify-between bg-slate-900/90 px-3.5 py-2.5 rounded-xl border border-slate-700/70">
               <label className="flex items-center gap-2.5 cursor-pointer text-xs text-slate-200 hover:text-white select-none">
                 <input
@@ -310,19 +220,6 @@ export function MerchantScannerPage() {
                   : 'Mã nhận diện sẽ điền vào ô vé để bạn kiểm tra.'}
               </p>
               <div className="flex items-center gap-2">
-                {camera && (
-                  <button
-                    type="button"
-                    className="text-xs px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-600 flex items-center gap-1.5 cursor-pointer transition-colors"
-                    onClick={() => {
-                      setFacingMode((prev) => (prev === 'environment' ? 'user' : 'environment'))
-                    }}
-                    title="Đổi camera trước / sau"
-                  >
-                    <SwitchCamera className="w-3.5 h-3.5 text-emerald-400" />
-                    <span>Đổi camera</span>
-                  </button>
-                )}
                 <button
                   className={button}
                   onClick={() => {
@@ -529,6 +426,15 @@ export function MerchantScannerPage() {
           </div>
         </Dialog>
       )}
+
+      <CameraPermissionModal
+        isOpen={isPermModalOpen}
+        onClose={() => setIsPermModalOpen(false)}
+        onRetry={() => {
+          setIsPermModalOpen(false)
+          setCamera(true)
+        }}
+      />
     </Workspace>
   )
 }
