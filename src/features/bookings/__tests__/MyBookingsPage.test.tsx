@@ -261,7 +261,7 @@ it('opens payment history modal for specific booking when clicking Lịch sử t
   })
 })
 
-it('displays ticket payment details directly without intermediate list when booking has multiple transactions', async () => {
+it('displays single representative payment detail directly when booking has multiple transactions', async () => {
   const depositPayment = {
     id: 101,
     bookingId: 41,
@@ -320,12 +320,10 @@ it('displays ticket payment details directly without intermediate list when book
   const modal = await screen.findByRole('dialog')
   expect(within(modal).getByRole('heading', { name: /Lịch sử thanh toán #BK-API-41/i })).toBeInTheDocument()
 
-  // Verify both payments are directly visible with their transaction codes and amounts
-  expect(await within(modal).findByText('TX-PAY-DEP-101')).toBeInTheDocument()
+  // Verify only 1 primary payment (final payment) is directly visible, no multiple cards or banner
   expect(await within(modal).findByText('TX-PAY-FIN-102')).toBeInTheDocument()
-  expect(within(modal).getByText(/giao dịch thanh toán cho vé này/i)).toBeInTheDocument()
-  expect(within(modal).getByText('TX-PAY-DEP-101')).toBeInTheDocument()
-  expect(within(modal).getByText('TX-PAY-FIN-102')).toBeInTheDocument()
+  expect(within(modal).queryByText(/giao dịch thanh toán cho vé này/i)).not.toBeInTheDocument()
+  expect(within(modal).queryByText('TX-PAY-DEP-101')).not.toBeInTheDocument()
 })
 
 it('opens QR modal with check-in QR code when clicking Xem QR vé on PENDING_CHECKIN card (TKT-04)', async () => {

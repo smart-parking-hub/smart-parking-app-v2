@@ -18,7 +18,7 @@ export interface BookingPaymentHistoryModalProps {
   onClose: () => void
 }
 
-function PaymentDetailCard({ payment, index }: { payment: PaymentRecord; index?: number }) {
+function PaymentDetailCard({ payment }: { payment: PaymentRecord }) {
   return (
     <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-2xs space-y-3">
       {/* Header Banner */}
@@ -29,7 +29,6 @@ function PaymentDetailCard({ payment, index }: { payment: PaymentRecord; index?:
           </span>
           <div>
             <span className="text-xs font-semibold text-slate-800">
-              {typeof index === 'number' ? `Giao dịch #${index + 1}: ` : ''}
               {paymentTypeLabels[payment.type]}
             </span>
           </div>
@@ -96,7 +95,23 @@ export function BookingPaymentHistoryModal({
   if (!isOpen || !booking) return null
 
   const payments = query.data?.content ?? []
-  const totalAmount = payments.reduce((sum, p) => sum + (p.amount ?? 0), 0)
+
+  // Mỗi vé chỉ hiển thị 1 lịch sử thanh toán đại diện duy nhất
+  // Ưu tiên: SUCCESS (FINAL_PAYMENT > DEPOSIT) > PENDING / REQUIRES_REVIEW > giao dịch mới nhất
+  const primaryPayment = (() => {
+    if (payments.length === 0) return null
+    if (payments.length === 1) return payments[0]
+    const successPayments = payments.filter((p) => p.status === 'SUCCESS')
+    if (successPayments.length > 0) {
+      const finalPayment = successPayments.find((p) => p.type === 'FINAL_PAYMENT')
+      return finalPayment ?? successPayments[0]
+    }
+    const pendingPayments = payments.filter(
+      (p) => p.status === 'PENDING' || p.status === 'REQUIRES_REVIEW'
+    )
+    if (pendingPayments.length > 0) return pendingPayments[0]
+    return payments[0]
+  })()
 
   return (
     <Dialog
@@ -138,39 +153,20 @@ export function BookingPaymentHistoryModal({
               </button>
             </div>
           </Notice>
-        ) : payments.length === 0 ? (
+        ) : !primaryPayment ? (
           <div className="py-10 text-center">
             <ReceiptText className="mx-auto mb-2 h-10 w-10 text-slate-300" aria-hidden="true" />
             <h4 className="font-sora text-sm font-semibold text-slate-800">
               Chưa có giao dịch thanh toán nào
             </h4>
             <p className="mt-1 text-xs text-slate-500 max-w-sm mx-auto">
-              Vé #{booking.bookingCode} chưa phát sinh giao dịch cọc hoặc thanh toán cuối nào trên hệ thống.
+              Vé #{booking.bookingCode} chưa phát sinh giao dịch cọc hoặc thanh toán nào trên hệ thống.
             </p>
           </div>
         ) : (
           <div className="space-y-4">
-            {payments.length > 1 && (
-              <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl bg-orange-50/70 border border-orange-200 px-3.5 py-2.5 text-xs">
-                <span className="font-medium text-orange-950">
-                  Có <strong>{payments.length}</strong> giao dịch thanh toán cho vé này:
-                </span>
-                <span className="font-semibold text-brand-primary">
-                  Tổng cộng: {paymentMoney(totalAmount)}
-                </span>
-              </div>
-            )}
-
-            {/* Direct details display for every payment of this booking - NO intermediate list selection */}
-            <div className="space-y-3 max-h-[60vh] overflow-y-auto pr-1">
-              {payments.map((payment, idx) => (
-                <PaymentDetailCard
-                  key={payment.id}
-                  payment={payment}
-                  index={payments.length > 1 ? idx : undefined}
-                />
-              ))}
-            </div>
+            {/* Hiển thị đúng 1 chi tiết giao dịch thanh toán đại diện cho vé */}
+            <PaymentDetailCard payment={primaryPayment} />
           </div>
         )}
 
