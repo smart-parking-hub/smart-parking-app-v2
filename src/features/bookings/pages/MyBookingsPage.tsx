@@ -251,7 +251,7 @@ export function MyBookingsPage() {
               </div>
             </Notice>
           ) : (
-            <BookingStatusPanel key={selectedId} bookingId={selectedId} booking={selected.data} embedded />
+            <BookingStatusPanel key={selectedId} bookingId={selectedId} booking={selected.data} embedded hideReview />
           )}
         </Panel>
       )}
@@ -816,6 +816,7 @@ export function MyBookingsPage() {
                 bookingId={detailModalBooking.id}
                 booking={detailModalBooking}
                 embedded
+                hideReview
               />
             </div>
             <div className="flex justify-end border-t border-slate-100 pt-3">

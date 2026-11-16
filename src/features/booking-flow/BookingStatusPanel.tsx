@@ -39,13 +39,25 @@ function handleDownloadQr(bookingCode: string) {
   }
 }
 
-type StatusPanelProps = { bookingId: number; booking?: Booking; embedded?: boolean; compact?: boolean }
+type StatusPanelProps = {
+  bookingId: number
+  booking?: Booking
+  embedded?: boolean
+  compact?: boolean
+  hideReview?: boolean
+}
 
 export function BookingStatusPanel(props: StatusPanelProps) {
   return <BookingStatusContent key={props.bookingId} {...props} />
 }
 
-function BookingStatusContent({ bookingId, booking, embedded = false, compact = false }: StatusPanelProps) {
+function BookingStatusContent({
+  bookingId,
+  booking,
+  embedded = false,
+  compact = false,
+  hideReview = false,
+}: StatusPanelProps) {
   const cache = useQueryClient()
   const [copied, setCopied] = useState(false)
   const [checkoutIntent, setCheckoutIntent] = useState<string | null>(null)
@@ -291,7 +303,7 @@ function BookingStatusContent({ bookingId, booking, embedded = false, compact = 
         <details className="py-3"><summary className="cursor-pointer font-medium text-brand-muted">Tác vụ khác</summary><div className="flex flex-wrap gap-2 pt-3 [&>a]:!px-3 [&>a]:!py-2 [&>a]:!text-xs [&>button]:!px-3 [&>button]:!py-2 [&>button]:!text-xs">{otherActions}</div></details>
       </div>}
 
-      {data.status === 'COMPLETED' && <BookingReview bookingId={data.id} />}
+      {!hideReview && data.status === 'COMPLETED' && <BookingReview bookingId={data.id} />}
       {demo.isSuccess && data.status === 'PENDING_PAYMENT' && (
         <Notice>
           Đã gửi thanh toán Demo. Đang kiểm tra xác nhận từ server; không bấm tạo giao dịch khác.
