@@ -20,8 +20,9 @@ describe('Driver profile with verified user API fields', () => {
     expect(screen.getByLabelText('Số điện thoại đăng nhập')).toHaveAttribute('readonly')
     expect(screen.getByLabelText('Số điện thoại liên hệ khẩn cấp')).toHaveValue(profile.emergencyContact)
     for (const text of [/eKYC/i, /HẠNG FC/, /CẢNG CÁT LÁI/, /48 chuyến/i, /Cấu hình xuất hóa đơn/, /Trần Quốc Tuấn/, /3 XE/]) expect(screen.queryByText(text)).not.toBeInTheDocument()
-    expect(screen.getByRole('link', { name: /Đội xe của tôi/ })).toHaveAttribute('href', '/vehicles')
-    expect(screen.getByRole('link', { name: /Lịch sử thanh toán/ })).toHaveAttribute('href', '/payments')
+    expect(screen.queryByRole('link', { name: /Đội xe của tôi/ })).not.toBeInTheDocument()
+    expect(screen.queryByRole('link', { name: /Lịch sử thanh toán/ })).not.toBeInTheDocument()
+    expect(screen.getByRole('link', { name: /Bảo mật tài khoản/ })).toHaveAttribute('href', '/profile#bao-mat')
     expect(screen.queryByRole('link', { name: /Thông báo/i })).not.toBeInTheDocument()
   })
   it('shows loading and an empty profile without demo fallback', async () => {
