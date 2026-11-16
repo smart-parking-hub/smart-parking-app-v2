@@ -42,6 +42,7 @@ import { BookingQrModal } from '../components/BookingQrModal'
 import { ReviewBookingModal } from '../components/ReviewBookingModal'
 import { bookingReference } from '@/entities/booking/bookingReference'
 import { isBookingEligibleForDispute } from '../schemas/disputeSchemas'
+import { cn } from '@/shared/utils/cn'
 
 async function fetchDisputesLookupSafe(): Promise<Dispute[]> {
   try {
@@ -326,21 +327,48 @@ export function MyBookingsPage() {
             <label htmlFor="from-date" className="block text-xs font-semibold text-slate-700">
               Ngày vào (Từ ngày)
             </label>
-            <div className="relative flex items-center">
-              <div className="pointer-events-none absolute left-3 flex items-center text-slate-400">
+            <div className="relative flex items-center group">
+              <div className="pointer-events-none absolute left-3 flex items-center text-slate-400 group-hover:text-[#d95f00] transition-colors">
                 <Calendar className="h-4 w-4" aria-hidden="true" />
               </div>
               <input
                 id="from-date"
                 type="date"
                 value={fromDate}
+                max={toDate || undefined}
                 onChange={(e) => {
                   setFromDate(e.target.value)
                   setPage(0)
                 }}
+                onClick={(e) => {
+                  try {
+                    e.currentTarget.showPicker?.()
+                  } catch {}
+                }}
                 title="Vào bãi từ ngày"
-                className="w-full h-10 rounded-xl border border-slate-200 bg-white pl-9 pr-3 text-xs text-slate-900 hover:border-slate-300 focus:border-brand-primary focus:outline-none focus:ring-2 focus:ring-brand-primary/20 transition-all"
+                className={cn(
+                  'w-full h-10 rounded-xl border bg-white pl-9 pr-8 text-xs font-normal text-slate-800 transition-all cursor-pointer shadow-2xs',
+                  'hover:border-[#d95f00] hover:bg-orange-50/10 hover:shadow-xs',
+                  'focus:border-[#d95f00] focus:outline-none focus:ring-2 focus:ring-[#d95f00]/20',
+                  '[&::-webkit-calendar-picker-indicator]:cursor-pointer [&::-webkit-calendar-picker-indicator]:opacity-60 hover:[&::-webkit-calendar-picker-indicator]:opacity-100 hover:[&::-webkit-calendar-picker-indicator]:scale-110 [&::-webkit-calendar-picker-indicator]:transition-all',
+                  fromDate ? 'border-orange-300 bg-orange-50/15' : 'border-slate-200'
+                )}
               />
+              {fromDate && (
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    setFromDate('')
+                    setPage(0)
+                  }}
+                  aria-label="Xóa ngày bắt đầu"
+                  title="Xóa ngày bắt đầu"
+                  className="absolute right-7 p-1 rounded-md text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors cursor-pointer z-10"
+                >
+                  <X className="h-3.5 w-3.5" />
+                </button>
+              )}
             </div>
           </div>
 
@@ -361,21 +389,48 @@ export function MyBookingsPage() {
                 </button>
               )}
             </div>
-            <div className="relative flex items-center">
-              <div className="pointer-events-none absolute left-3 flex items-center text-slate-400">
+            <div className="relative flex items-center group">
+              <div className="pointer-events-none absolute left-3 flex items-center text-slate-400 group-hover:text-[#d95f00] transition-colors">
                 <Calendar className="h-4 w-4" aria-hidden="true" />
               </div>
               <input
                 id="to-date"
                 type="date"
                 value={toDate}
+                min={fromDate || undefined}
                 onChange={(e) => {
                   setToDate(e.target.value)
                   setPage(0)
                 }}
+                onClick={(e) => {
+                  try {
+                    e.currentTarget.showPicker?.()
+                  } catch {}
+                }}
                 title="Vào bãi đến ngày"
-                className="w-full h-10 rounded-xl border border-slate-200 bg-white pl-9 pr-3 text-xs text-slate-900 hover:border-slate-300 focus:border-brand-primary focus:outline-none focus:ring-2 focus:ring-brand-primary/20 transition-all"
+                className={cn(
+                  'w-full h-10 rounded-xl border bg-white pl-9 pr-8 text-xs font-normal text-slate-800 transition-all cursor-pointer shadow-2xs',
+                  'hover:border-[#d95f00] hover:bg-orange-50/10 hover:shadow-xs',
+                  'focus:border-[#d95f00] focus:outline-none focus:ring-2 focus:ring-[#d95f00]/20',
+                  '[&::-webkit-calendar-picker-indicator]:cursor-pointer [&::-webkit-calendar-picker-indicator]:opacity-60 hover:[&::-webkit-calendar-picker-indicator]:opacity-100 hover:[&::-webkit-calendar-picker-indicator]:scale-110 [&::-webkit-calendar-picker-indicator]:transition-all',
+                  toDate ? 'border-orange-300 bg-orange-50/15' : 'border-slate-200'
+                )}
               />
+              {toDate && (
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    setToDate('')
+                    setPage(0)
+                  }}
+                  aria-label="Xóa ngày kết thúc"
+                  title="Xóa ngày kết thúc"
+                  className="absolute right-7 p-1 rounded-md text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors cursor-pointer z-10"
+                >
+                  <X className="h-3.5 w-3.5" />
+                </button>
+              )}
             </div>
           </div>
         </div>
