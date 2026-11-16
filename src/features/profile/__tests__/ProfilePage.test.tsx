@@ -101,4 +101,31 @@ describe('Driver profile with verified user API fields', () => {
     await userEvent.click(securityLink)
     await waitFor(() => expect(scrollSpy).toHaveBeenCalledWith({ behavior: 'smooth' }))
   })
+  it('dynamically switches active sidebar tab between personal info and security on click and hash navigation', async () => {
+    mount(['/profile'])
+    const personalLink = await screen.findByRole('link', { name: /Thông tin cá nhân/ })
+    const securityLink = screen.getByRole('link', { name: /Bảo mật tài khoản/ })
+
+    expect(personalLink).toHaveAttribute('aria-current', 'page')
+    expect(personalLink.className).toContain('bg-brand-surface')
+    expect(securityLink).not.toHaveAttribute('aria-current')
+
+    await userEvent.click(securityLink)
+    expect(securityLink).toHaveAttribute('aria-current', 'page')
+    expect(securityLink.className).toContain('bg-brand-surface')
+    expect(personalLink).not.toHaveAttribute('aria-current')
+
+    await userEvent.click(personalLink)
+    expect(personalLink).toHaveAttribute('aria-current', 'page')
+    expect(securityLink).not.toHaveAttribute('aria-current')
+  })
+  it('initializes with security tab active when starting on /profile#bao-mat', async () => {
+    mount(['/profile#bao-mat'])
+    const personalLink = await screen.findByRole('link', { name: /Thông tin cá nhân/ })
+    const securityLink = screen.getByRole('link', { name: /Bảo mật tài khoản/ })
+
+    expect(securityLink).toHaveAttribute('aria-current', 'page')
+    expect(securityLink.className).toContain('bg-brand-surface')
+    expect(personalLink).not.toHaveAttribute('aria-current')
+  })
 })

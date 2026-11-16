@@ -15,16 +15,18 @@ export interface ProfileSidebarNavProps {
   compact?: boolean
   activeTab?: AccountSidebarTab
   onOpenChangePassword?: () => void
+  onTabChange?: (tab: AccountSidebarTab) => void
 }
 
 export function ProfileSidebarNav({
   compact = false,
   activeTab = 'profile',
+  onTabChange,
 }: ProfileSidebarNavProps) {
   if (compact) {
     const items = [
-      { id: 'profile', to: '/profile', label: 'Thông tin cá nhân', icon: UserCheck },
-      { id: 'change-password', to: '/profile#bao-mat', label: 'Bảo mật tài khoản', icon: KeyRound },
+      { id: 'profile' as const, to: '/profile', label: 'Thông tin cá nhân', icon: UserCheck },
+      { id: 'change-password' as const, to: '/profile#bao-mat', label: 'Bảo mật tài khoản', icon: KeyRound },
     ]
     return <div className="overflow-hidden rounded-2xl border border-brand-border bg-white font-inter text-sm text-brand-navy">
       <div className="flex items-center gap-3 border-b border-brand-border p-5">
@@ -36,6 +38,7 @@ export function ProfileSidebarNav({
           const Icon = item.icon
           const current = item.id === activeTab
           return <Link key={item.id} to={item.to} aria-current={current ? 'page' : undefined}
+            onClick={() => onTabChange?.(item.id)}
             className={`flex min-h-11 items-center gap-3 rounded-lg px-3 py-2.5 font-medium transition-colors focus-visible:outline-2 focus-visible:outline-brand-orange ${current ? 'bg-brand-surface font-semibold text-brand-orange-ink' : 'text-brand-muted hover:bg-brand-surface hover:text-brand-navy'}`}>
             <Icon size={18} aria-hidden="true" /><span className="min-w-0 flex-1">{item.label}</span><ChevronRight size={15} aria-hidden="true" />
           </Link>
