@@ -12,8 +12,10 @@ const paymentSchema = z.object({
 })
 const pageSchema = z.object({ content: z.array(paymentSchema), currentPage: z.number().int().nonnegative(), totalPages: z.number().int().nonnegative(), totalElements: z.number().int().nonnegative() })
 export type PaymentRecord = z.infer<typeof paymentSchema>
-export async function fetchPaymentPage(page: number) {
-  return pageSchema.parse(await getData<unknown>('/api/v1/payments', { page, size: 20, sort: 'id,desc' }))
+export async function fetchPaymentPage(page: number, bookingId?: number) {
+  const params: Record<string, unknown> = { page, size: 20, sort: 'id,desc' }
+  if (bookingId != null) params.bookingId = bookingId
+  return pageSchema.parse(await getData<unknown>('/api/v1/payments', params))
 }
 export const paymentMoney = (amount: number) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND', maximumFractionDigits: 0 }).format(amount)
 export function paymentTime(value: string | null | undefined) {

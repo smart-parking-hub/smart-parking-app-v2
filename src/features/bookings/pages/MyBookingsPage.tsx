@@ -1,7 +1,18 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
-import { ChevronDown, ExternalLink, MoreHorizontal, Receipt, ShieldAlert } from 'lucide-react'
+import {
+  ChevronDown,
+  ExternalLink,
+  MoreHorizontal,
+  Receipt,
+  ShieldAlert,
+  QrCode,
+  Search,
+  RotateCcw,
+  Calendar,
+  Filter,
+} from 'lucide-react'
 import type { Dispute } from '@/entities/operations'
 import {
   Dropdown,
@@ -13,8 +24,18 @@ import {
 import { Toast, ToastContainer } from '@/shared/components/Toast'
 import { Workspace, Panel, Notice, Badge, secondary } from '@/shared/components/Workspace'
 import { errorMessage, getData, type Page } from '@/shared/api/resources'
-import { fetchBooking, fetchBookingsPage, formatMoney, statusLabels, bookingTimeLabel, BookingStatusPanel, type Booking } from '@/features/booking-flow'
+import {
+  fetchBooking,
+  fetchBookingsPage,
+  formatMoney,
+  statusLabels,
+  bookingTimeLabel,
+  BookingStatusPanel,
+  type Booking,
+} from '@/features/booking-flow'
 import { CreateDisputeModal } from '../components/CreateDisputeModal'
+import { BookingPaymentHistoryModal } from '../components/BookingPaymentHistoryModal'
+import { BookingQrModal } from '../components/BookingQrModal'
 import { bookingReference } from '@/entities/booking/bookingReference'
 import { isBookingEligibleForDispute } from '../schemas/disputeSchemas'
 
@@ -46,11 +67,53 @@ export function MyBookingsPage() {
   const [params] = useSearchParams()
   const selectedId = Number(params.get('bookingId'))
   const validSelection = Number.isSafeInteger(selectedId) && selectedId > 0
+
   const [disputeBooking, setDisputeBooking] = useState<Booking | null>(null)
+  const [paymentHistoryBooking, setPaymentHistoryBooking] = useState<Booking | null>(null)
+  const [qrModalBooking, setQrModalBooking] = useState<Booking | null>(null)
   const [createdNotice, setCreatedNotice] = useState<Dispute | null>(null)
+
   const [page, setPage] = useState(0)
   const [expandedId, setExpandedId] = useState<number | null | undefined>(undefined)
-  const selected = useQuery({ queryKey: ['booking', selectedId], queryFn: () => fetchBooking(selectedId), enabled: validSelection, retry: false, refetchInterval: 10000 })
+
+  // Filters state (TKT-05)
+  const [search, setSearch] = useState('')
+  const [status, setStatus] = useState('')
+  const [fromDate, setFromDate] = useState('')
+  const [toDate, setToDate] = useState('')
+
+  const activeFilters = useMemo(() => {
+    const hasSearch = search.trim().length > 0
+    const hasStatus = status.trim().length > 0
+    const hasFrom = fromDate.trim().length > 0
+    const hasTo = toDate.trim().length > 0
+    return {
+      hasFilters: hasSearch || hasStatus || hasFrom || hasTo,
+      filters: {
+        search: hasSearch ? search.trim() : undefined,
+        status: hasStatus ? status.trim() : undefined,
+        from: hasFrom ? `${fromDate}T00:00:00` : undefined,
+        to: hasTo ? `${toDate}T23:59:59` : undefined,
+      },
+    }
+  }, [search, status, fromDate, toDate])
+
+  const handleClearFilters = () => {
+    setSearch('')
+    setStatus('')
+    setFromDate('')
+    setToDate('')
+    setPage(0)
+  }
+
+  const selected = useQuery({
+    queryKey: ['booking', selectedId],
+    queryFn: () => fetchBooking(selectedId),
+    enabled: validSelection,
+    retry: false,
+    refetchInterval: 10000,
+  })
+
   const scrolledSelection = useRef<number | null>(null)
   useEffect(() => {
     if (!selected.data || scrolledSelection.current === selectedId) return
@@ -59,8 +122,8 @@ export function MyBookingsPage() {
   }, [selected.data, selectedId])
 
   const query = useQuery({
-    queryKey: ['real-bookings', page],
-    queryFn: () => fetchBookingsPage(page),
+    queryKey: ['real-bookings', page, activeFilters.filters],
+    queryFn: () => fetchBookingsPage(page, 8, activeFilters.filters),
     retry: false,
     refetchInterval: 10000,
   })
@@ -115,10 +178,153 @@ export function MyBookingsPage() {
         </ToastContainer>
       )}
 
-      {validSelection && <Panel className="space-y-4 ring-2 ring-brand-primary/20">
-        <div id={`selected-booking-${selectedId}`} className="scroll-mt-[calc(var(--driver-header-height)+1rem)]"><h2 className="font-sora text-lg font-semibold">Vé vừa xem{selected.data ? ` · ${selected.data.parkingLotName || `Bãi đỗ #${selected.data.parkingLotId}`}` : ''}</h2><Link to="/bookings" className="mt-2 inline-block text-sm text-brand-muted underline">Đóng vé đang chọn</Link></div>
-        {selected.isPending ? <p role="status">Đang tải vé đang chọn…</p> : selected.isError ? <Notice error><div>{errorMessage(selected.error)}<button className={`${secondary} mt-2`} onClick={() => void selected.refetch()}>Thử tải lại vé</button></div></Notice> : <BookingStatusPanel key={selectedId} bookingId={selectedId} booking={selected.data} embedded />}
-      </Panel>}
+      {/* Selected single booking via deep link ?bookingId=... */}
+      {validSelection && (
+        <Panel className="space-y-4 ring-2 ring-brand-primary/20">
+          <div
+            id={`selected-booking-${selectedId}`}
+            className="scroll-mt-[calc(var(--driver-header-height)+1rem)]"
+          >
+            <h2 className="font-sora text-lg font-semibold">
+              Vé vừa xem{selected.data ? ` · ${selected.data.parkingLotName || `Bãi đỗ #${selected.data.parkingLotId}`}` : ''}
+            </h2>
+            <Link to="/bookings" className="mt-2 inline-block text-sm text-brand-muted underline">
+              Đóng vé đang chọn
+            </Link>
+          </div>
+          {selected.isPending ? (
+            <p role="status">Đang tải vé đang chọn…</p>
+          ) : selected.isError ? (
+            <Notice error>
+              <div>
+                {errorMessage(selected.error)}
+                <button className={`${secondary} mt-2`} onClick={() => void selected.refetch()}>
+                  Thử tải lại vé
+                </button>
+              </div>
+            </Notice>
+          ) : (
+            <BookingStatusPanel key={selectedId} bookingId={selectedId} booking={selected.data} embedded />
+          )}
+        </Panel>
+      )}
+
+      {/* Filter and Search Bar (TKT-05) */}
+      <Panel className="!p-4 bg-slate-50/70 border border-slate-200/80">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+          {/* Keyword Search */}
+          <div className="relative">
+            <label htmlFor="search-input" className="sr-only">
+              Tìm theo mã vé, biển số, tên bãi
+            </label>
+            <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
+              <Search className="h-4 w-4" aria-hidden="true" />
+            </div>
+            <input
+              id="search-input"
+              type="text"
+              value={search}
+              onChange={(e) => {
+                setSearch(e.target.value)
+                setPage(0)
+              }}
+              placeholder="Mã vé, biển số, tên bãi…"
+              className="w-full rounded-xl border border-slate-200 bg-white py-2 pl-9 pr-3 text-xs text-slate-800 placeholder:text-slate-400 focus:border-brand-primary focus:outline-none focus:ring-1 focus:ring-brand-primary"
+            />
+          </div>
+
+          {/* Status Filter */}
+          <div>
+            <label htmlFor="status-select" className="sr-only">
+              Trạng thái vé
+            </label>
+            <div className="relative">
+              <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
+                <Filter className="h-4 w-4" aria-hidden="true" />
+              </div>
+              <select
+                id="status-select"
+                value={status}
+                onChange={(e) => {
+                  setStatus(e.target.value)
+                  setPage(0)
+                }}
+                className="w-full rounded-xl border border-slate-200 bg-white py-2 pl-9 pr-8 text-xs text-slate-800 focus:border-brand-primary focus:outline-none focus:ring-1 focus:ring-brand-primary"
+              >
+                <option value="">Tất cả trạng thái</option>
+                <option value="PENDING_PAYMENT">Chờ thanh toán cọc</option>
+                <option value="PENDING_CHECKIN">Chờ check-in</option>
+                <option value="PARKING">Xe đang đỗ trong bãi</option>
+                <option value="OVERTIME">Đỗ quá giờ</option>
+                <option value="AWAITING_FINAL_PAYMENT">Chờ quyết toán</option>
+                <option value="COMPLETED">Đã hoàn tất</option>
+                <option value="REVIEWED">Đã đánh giá</option>
+                <option value="CANCELLED">Đã hủy</option>
+                <option value="EXPIRED">Đã hết hạn</option>
+              </select>
+            </div>
+          </div>
+
+          {/* From Date Filter */}
+          <div>
+            <label htmlFor="from-date" className="sr-only">
+              Vào bãi từ ngày
+            </label>
+            <div className="relative">
+              <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
+                <Calendar className="h-4 w-4" aria-hidden="true" />
+              </div>
+              <input
+                id="from-date"
+                type="date"
+                value={fromDate}
+                onChange={(e) => {
+                  setFromDate(e.target.value)
+                  setPage(0)
+                }}
+                title="Vào bãi từ ngày"
+                className="w-full rounded-xl border border-slate-200 bg-white py-2 pl-9 pr-3 text-xs text-slate-800 focus:border-brand-primary focus:outline-none focus:ring-1 focus:ring-brand-primary"
+              />
+            </div>
+          </div>
+
+          {/* To Date Filter & Reset Button */}
+          <div className="flex items-center gap-2">
+            <div className="relative flex-1">
+              <label htmlFor="to-date" className="sr-only">
+                Vào bãi đến ngày
+              </label>
+              <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
+                <Calendar className="h-4 w-4" aria-hidden="true" />
+              </div>
+              <input
+                id="to-date"
+                type="date"
+                value={toDate}
+                onChange={(e) => {
+                  setToDate(e.target.value)
+                  setPage(0)
+                }}
+                title="Vào bãi đến ngày"
+                className="w-full rounded-xl border border-slate-200 bg-white py-2 pl-9 pr-3 text-xs text-slate-800 focus:border-brand-primary focus:outline-none focus:ring-1 focus:ring-brand-primary"
+              />
+            </div>
+
+            {activeFilters.hasFilters && (
+              <button
+                type="button"
+                onClick={handleClearFilters}
+                className="inline-flex items-center gap-1 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-100 hover:text-slate-900 transition-colors cursor-pointer shrink-0"
+                title="Xóa bộ lọc"
+              >
+                <RotateCcw className="h-3.5 w-3.5 text-slate-500" />
+                <span className="hidden sm:inline">Xóa lọc</span>
+              </button>
+            )}
+          </div>
+        </div>
+      </Panel>
+
       {query.isPending ? (
         <p role="status">Đang tải đặt chỗ…</p>
       ) : query.isError ? (
@@ -131,125 +337,273 @@ export function MyBookingsPage() {
           </div>
         </Notice>
       ) : !query.data.content.length ? (
-        <Notice>{page === 0 ? 'Bạn chưa có lượt đặt chỗ nào.' : 'Không có lượt đặt chỗ ở trang này.'}{page > 0 && <button className={secondary} onClick={() => setPage(0)}>Về trang đầu</button>}</Notice>
+        <Notice>
+          {activeFilters.hasFilters ? (
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+              <span>Không tìm thấy lượt đặt chỗ nào phù hợp với bộ lọc hiện tại.</span>
+              <button className={`${secondary} !text-xs !py-1.5`} onClick={handleClearFilters}>
+                Xóa bộ lọc
+              </button>
+            </div>
+          ) : page === 0 ? (
+            'Bạn chưa có lượt đặt chỗ nào.'
+          ) : (
+            <>
+              Không có lượt đặt chỗ ở trang này.{' '}
+              <button className={secondary} onClick={() => setPage(0)}>
+                Về trang đầu
+              </button>
+            </>
+          )}
+        </Notice>
       ) : (
         <>
-        <p className="text-sm text-brand-muted">{query.data.totalElements ?? query.data.content.length} lượt đặt chỗ · Mở từng vé để xem QR, thanh toán và chi tiết.</p>
-        <div className="grid items-start gap-3 xl:grid-cols-2">
-        {query.data.content.filter(booking => !selected.data || booking.id !== selectedId).map((booking) => {
-          const existingDispute = disputeByBookingId.get(booking.id)
-          const canDispute = isBookingEligibleForDispute(booking.status)
-          const expanded = expandedId === booking.id || (!validSelection && expandedId === undefined && query.data.content.length === 1)
+          <p className="text-sm text-brand-muted">
+            {query.data.totalElements ?? query.data.content.length} lượt đặt chỗ{' '}
+            {activeFilters.hasFilters ? '(theo bộ lọc)' : ''} · Mở từng vé để xem QR, thanh toán và chi tiết.
+          </p>
 
-          return (
-            <Panel key={booking.id} className="!p-4 sm:!p-5">
-              <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                <div className="min-w-0">
-                  <h2 className="font-sora text-base font-semibold">{booking.parkingLotName || `Bãi đỗ #${booking.parkingLotId}`}</h2>
-                  <p className="mt-1 truncate text-xs text-brand-muted" title={booking.parkingLotAddress ?? undefined}>{booking.parkingLotAddress}</p>
-                  <div className="mt-2 flex flex-wrap items-center gap-2 text-xs">
-                    <span className="max-w-56 truncate rounded-md bg-slate-100 px-2 py-0.5 font-mono font-semibold text-slate-800" title={bookingReference(booking)}>
-                      {booking.status === 'PENDING_PAYMENT' ? `Số đơn #${booking.id}` : `#${booking.id} · ${booking.bookingCode}`}
-                    </span>
-                    {booking.vehiclePlate && (
-                      <span className="rounded-md border border-slate-200 bg-white px-2 py-0.5 font-mono font-semibold text-slate-700">
-                        {booking.vehiclePlate}
-                      </span>
-                    )}
-                    {existingDispute && (
-                      <Badge value={existingDispute.status} size="sm" dot>
-                        Khiếu nại KN-{existingDispute.id}
-                      </Badge>
-                    )}
-                  </div>
-                </div>
+          {/* Cards Grid (TKT-03 restructured layout) */}
+          <div className="grid items-start gap-4 xl:grid-cols-2">
+            {query.data.content
+              .filter((booking) => !selected.data || booking.id !== selectedId)
+              .map((booking) => {
+                const existingDispute = disputeByBookingId.get(booking.id)
+                const canDispute = isBookingEligibleForDispute(booking.status)
+                const expanded =
+                  expandedId === booking.id ||
+                  (!validSelection && expandedId === undefined && query.data.content.length === 1)
 
-                {/* Menu tác vụ đơn đỗ xe */}
-                <div
-                  role="region"
-                  aria-label={`Menu tác vụ đơn ${bookingReference(booking)}`}
-                  className="flex flex-wrap items-center gap-2 self-start sm:self-center"
-                >
-                  {existingDispute ? (
-                    <Link
-                      to={`/disputes/${existingDispute.id}`}
-                      className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-orange-200 bg-orange-50 px-3.5 py-2 text-xs font-semibold text-brand-primary-active hover:bg-orange-100 transition-colors"
-                    >
-                      <ExternalLink className="h-3.5 w-3.5" aria-hidden="true" />
-                      <span>Xem khiếu nại #KN-{existingDispute.id}</span>
-                    </Link>
-                  ) : canDispute ? (
-                    <button
-                      type="button"
-                      onClick={() => setDisputeBooking(booking)}
-                      aria-label={`Gửi khiếu nại đơn ${bookingReference(booking)}`}
-                      className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-xs font-semibold text-slate-800 hover:border-brand-primary hover:bg-brand-primary-subtle hover:text-brand-primary-active transition-colors shadow-2xs cursor-pointer"
-                    >
-                      <ShieldAlert className="h-3.5 w-3.5 text-brand-primary" aria-hidden="true" />
-                      <span>Gửi khiếu nại</span>
-                    </button>
-                  ) : null}
+                return (
+                  <Panel
+                    key={booking.id}
+                    className="!p-4 sm:!p-5 flex flex-col justify-between transition-shadow hover:shadow-md border border-slate-200/90 rounded-2xl"
+                  >
+                    <div>
+                      {/* 1. Header: Mã vé + Trạng thái + Tác vụ */}
+                      <div className="flex items-center justify-between gap-2 border-b border-slate-100 pb-3">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <span
+                            className="max-w-56 truncate rounded-md bg-slate-100 px-2.5 py-1 font-mono text-xs font-bold text-slate-800"
+                            title={bookingReference(booking)}
+                          >
+                            {booking.status === 'PENDING_PAYMENT'
+                              ? `Số đơn #${booking.id}`
+                              : `#${booking.id} · ${booking.bookingCode}`}
+                          </span>
+                          <Badge value={booking.status} size="sm">
+                            {statusLabels[booking.status] ?? booking.status}
+                          </Badge>
+                          {existingDispute && (
+                            <Badge value={existingDispute.status} size="sm" dot>
+                              Khiếu nại KN-{existingDispute.id}
+                            </Badge>
+                          )}
+                        </div>
 
-                  <Dropdown>
-                    <DropdownTrigger
-                      className="gap-1 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 shadow-2xs"
-                    >
-                      <MoreHorizontal className="h-4 w-4 text-slate-500" aria-hidden="true" />
-                      <span className="hidden sm:inline">Tác vụ</span>
-                      <span className="sr-only">cho đơn {bookingReference(booking)}</span>
-                      <ChevronDown className="h-3.5 w-3.5 text-slate-400" aria-hidden="true" />
-                    </DropdownTrigger>
-                    <DropdownContent align="right" width="w-60">
-                      {existingDispute ? (
-                        <DropdownItem
-                          icon={<ExternalLink className="h-4 w-4 text-brand-primary" />}
-                          onClick={() => navigate(`/disputes/${existingDispute.id}`)}
+                        {/* Menu tác vụ (TKT-01, TKT-02) */}
+                        <div
+                          role="region"
+                          aria-label={`Menu tác vụ đơn ${bookingReference(booking)}`}
+                          className="flex items-center gap-1.5"
                         >
-                          Xem khiếu nại #KN-{existingDispute.id}
-                        </DropdownItem>
-                      ) : (
-                        <DropdownItem
-                          icon={<ShieldAlert className="h-4 w-4 text-brand-primary" />}
-                          disabled={!canDispute}
-                          onClick={() => setDisputeBooking(booking)}
-                        >
-                          {canDispute ? 'Gửi khiếu nại sự cố / phí' : 'Chưa thể khiếu nại ở trạng thái này'}
-                        </DropdownItem>
-                      )}
-                      <DropdownSeparator />
-                      <DropdownItem
-                        icon={<Receipt className="h-4 w-4 text-slate-500" />}
-                        onClick={() => navigate('/payments')}
+                          <Dropdown>
+                            <DropdownTrigger
+                              className="gap-1 rounded-xl border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 hover:border-slate-300 focus-visible:ring-2 focus-visible:ring-brand-primary transition-colors shadow-2xs"
+                            >
+                              <MoreHorizontal className="h-4 w-4 text-slate-500" aria-hidden="true" />
+                              <span className="hidden sm:inline">Tác vụ</span>
+                              <span className="sr-only">cho đơn {bookingReference(booking)}</span>
+                              <ChevronDown className="h-3.5 w-3.5 text-slate-400" aria-hidden="true" />
+                            </DropdownTrigger>
+                            <DropdownContent align="right" width="w-60">
+                              {booking.status === 'PENDING_CHECKIN' && (
+                                <DropdownItem
+                                  icon={<QrCode className="h-4 w-4 text-brand-orange" />}
+                                  onClick={() => setQrModalBooking(booking)}
+                                >
+                                  Xem mã QR check-in
+                                </DropdownItem>
+                              )}
+                              {existingDispute ? (
+                                <DropdownItem
+                                  icon={<ExternalLink className="h-4 w-4 text-brand-primary" />}
+                                  onClick={() => navigate(`/disputes/${existingDispute.id}`)}
+                                >
+                                  Xem khiếu nại #KN-{existingDispute.id}
+                                </DropdownItem>
+                              ) : (
+                                <DropdownItem
+                                  icon={<ShieldAlert className="h-4 w-4 text-brand-primary" />}
+                                  disabled={!canDispute}
+                                  onClick={() => setDisputeBooking(booking)}
+                                >
+                                  {canDispute ? 'Gửi khiếu nại sự cố / phí' : 'Chưa thể khiếu nại ở trạng thái này'}
+                                </DropdownItem>
+                              )}
+                              <DropdownSeparator />
+                              <DropdownItem
+                                icon={<Receipt className="h-4 w-4 text-slate-500" />}
+                                onClick={() => setPaymentHistoryBooking(booking)}
+                              >
+                                Lịch sử thanh toán
+                              </DropdownItem>
+                            </DropdownContent>
+                          </Dropdown>
+                        </div>
+                      </div>
+
+                      {/* 2. Body: Tên bãi, địa chỉ, Biển số */}
+                      <div className="py-3">
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="min-w-0 flex-1">
+                            <h2
+                              className="font-sora text-base font-semibold text-slate-900 truncate"
+                              title={booking.parkingLotName || `Bãi đỗ #${booking.parkingLotId}`}
+                            >
+                              {booking.parkingLotName || `Bãi đỗ #${booking.parkingLotId}`}
+                            </h2>
+                            <p
+                              className="mt-1 line-clamp-1 text-xs text-brand-muted"
+                              title={booking.parkingLotAddress ?? undefined}
+                            >
+                              {booking.parkingLotAddress || 'Chưa có địa chỉ chi tiết'}
+                            </p>
+                          </div>
+                          {booking.vehiclePlate && (
+                            <span className="shrink-0 rounded-md border border-slate-200 bg-slate-50 px-2.5 py-1 font-mono text-xs font-bold text-slate-800">
+                              {booking.vehiclePlate}
+                            </span>
+                          )}
+                        </div>
+
+                        {/* 3. Time & Pricing (TKT-03) */}
+                        <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-2.5 rounded-xl bg-slate-50/80 p-3 border border-slate-100 text-xs">
+                          <div>
+                            <div className="text-slate-500 text-[11px] font-medium">Khung giờ dự kiến:</div>
+                            <div className="mt-0.5 space-y-0.5">
+                              <div>
+                                Vào: <strong className="font-medium text-slate-900">{bookingTimeLabel(booking.expectedCheckInTime)}</strong>
+                              </div>
+                              <div>
+                                Ra: <strong className="font-medium text-slate-900">{bookingTimeLabel(booking.expectedCheckOutTime)}</strong>
+                              </div>
+                            </div>
+                          </div>
+                          <div className="sm:border-l sm:border-slate-200 sm:pl-3">
+                            <div className="text-slate-500 text-[11px] font-medium">Thông tin tiền:</div>
+                            <div className="mt-0.5 space-y-0.5">
+                              <div>
+                                Tiền cọc: <strong className="font-semibold text-emerald-700">{formatMoney(booking.advanceDeposit)}</strong>
+                              </div>
+                              <div>
+                                {['AWAITING_FINAL_PAYMENT', 'COMPLETED', 'REVIEWED'].includes(booking.status)
+                                  ? 'Phí quyết toán: '
+                                  : 'Phí dự kiến: '}
+                                <strong className="font-medium text-slate-900">
+                                  {booking.totalAmount == null ? 'Chưa có' : formatMoney(booking.totalAmount)}
+                                </strong>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* 4. Footer: Action Buttons (TKT-02, TKT-04) */}
+                    <div className="mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-slate-100 pt-3">
+                      <div className="flex flex-wrap items-center gap-2">
+                        {booking.status === 'PENDING_CHECKIN' && (
+                          <button
+                            type="button"
+                            onClick={() => setQrModalBooking(booking)}
+                            className="inline-flex items-center gap-1.5 rounded-xl bg-[#341100] px-3 py-1.5 text-xs font-semibold text-[#d95f00] border border-[#d95f00]/30 hover:bg-[#4a1800] focus-visible:ring-2 focus-visible:ring-[#d95f00] transition-colors cursor-pointer"
+                          >
+                            <QrCode className="h-3.5 w-3.5" aria-hidden="true" />
+                            <span>Xem QR vé</span>
+                          </button>
+                        )}
+
+                        {existingDispute ? (
+                          <Link
+                            to={`/disputes/${existingDispute.id}`}
+                            className="inline-flex items-center gap-1.5 rounded-xl border border-orange-200 bg-orange-50 px-3 py-1.5 text-xs font-semibold text-brand-primary-active hover:bg-orange-100 focus-visible:ring-2 focus-visible:ring-brand-primary transition-colors"
+                          >
+                            <ExternalLink className="h-3.5 w-3.5" aria-hidden="true" />
+                            <span>Xem khiếu nại #KN-{existingDispute.id}</span>
+                          </Link>
+                        ) : canDispute ? (
+                          <button
+                            type="button"
+                            onClick={() => setDisputeBooking(booking)}
+                            aria-label={`Gửi khiếu nại đơn ${bookingReference(booking)}`}
+                            className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 hover:border-brand-primary hover:bg-brand-primary-subtle hover:text-brand-primary-active focus-visible:ring-2 focus-visible:ring-brand-primary transition-colors shadow-2xs cursor-pointer"
+                          >
+                            <ShieldAlert className="h-3.5 w-3.5 text-brand-primary" aria-hidden="true" />
+                            <span>Gửi khiếu nại</span>
+                          </button>
+                        ) : null}
+                      </div>
+
+                      <button
+                        type="button"
+                        className={`${secondary} !px-3 !py-1.5 !text-xs hover:border-brand-primary/40 focus-visible:ring-2 focus-visible:ring-brand-primary cursor-pointer transition-colors`}
+                        aria-expanded={expanded}
+                        aria-controls={`booking-detail-${booking.id}`}
+                        onClick={() => setExpandedId(expanded ? null : booking.id)}
                       >
-                        Lịch sử thanh toán
-                      </DropdownItem>
-                    </DropdownContent>
-                  </Dropdown>
-                </div>
-              </div>
+                        <span>{expanded ? 'Thu gọn' : 'Xem vé & chi tiết'}</span>
+                        <ChevronDown
+                          size={14}
+                          className={`transition-transform duration-200 ${expanded ? 'rotate-180' : ''}`}
+                          aria-hidden="true"
+                        />
+                      </button>
+                    </div>
 
-              <div className="mt-3 flex flex-wrap items-center justify-between gap-3 border-t border-brand-border pt-3">
-                <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-xs">
-                  <Badge value={booking.status}>{statusLabels[booking.status]}</Badge>
-                  <span className="text-brand-muted">Vào <strong className="font-medium text-brand-navy">{bookingTimeLabel(booking.expectedCheckInTime)}</strong><br/>Ra <strong className="font-medium text-brand-navy">{bookingTimeLabel(booking.expectedCheckOutTime)}</strong></span>
-                  <span className="text-brand-muted">{['AWAITING_FINAL_PAYMENT','COMPLETED','REVIEWED'].includes(booking.status) ? 'Phí quyết toán' : 'Phí dự kiến'}<strong className="ml-2 text-brand-navy">{booking.totalAmount == null ? 'Chưa có' : formatMoney(booking.totalAmount)}</strong><br/>Cọc <strong className="ml-2 text-brand-navy">{formatMoney(booking.advanceDeposit)}</strong></span>
-                </div>
-                <button type="button" className={`${secondary} !px-3 !py-2 !text-xs`} aria-expanded={expanded} aria-controls={`booking-detail-${booking.id}`} onClick={() => setExpandedId(expanded ? null : booking.id)}>
-                  {expanded ? 'Thu gọn' : 'Xem vé & chi tiết'}<ChevronDown size={14} className={expanded ? 'rotate-180' : ''} aria-hidden="true"/>
+                    {expanded && (
+                      <div id={`booking-detail-${booking.id}`} className="mt-4 border-t border-brand-border pt-4">
+                        <BookingStatusPanel bookingId={booking.id} booking={booking} embedded />
+                      </div>
+                    )}
+                  </Panel>
+                )
+              })}
+          </div>
+
+          {(query.data.totalPages ?? 1) > 1 && (
+            <nav aria-label="Phân trang vé đặt chỗ" className="flex flex-wrap items-center justify-between gap-3 text-sm">
+              <span className="text-brand-muted">
+                Trang {page + 1} / {query.data.totalPages}
+              </span>
+              <div className="flex gap-2">
+                <button
+                  className={secondary}
+                  disabled={page === 0 || query.isFetching}
+                  onClick={() => {
+                    setExpandedId(undefined)
+                    setPage(page - 1)
+                  }}
+                >
+                  Trang trước
+                </button>
+                <button
+                  className={secondary}
+                  disabled={page + 1 >= query.data.totalPages || query.isFetching}
+                  onClick={() => {
+                    setExpandedId(undefined)
+                    setPage(page + 1)
+                  }}
+                >
+                  Trang sau
                 </button>
               </div>
-              {expanded && <div id={`booking-detail-${booking.id}`} className="mt-4 border-t border-brand-border pt-4"><BookingStatusPanel bookingId={booking.id} booking={booking} embedded /></div>}
-            </Panel>
-          )
-        })}
-        </div>
-        {(query.data.totalPages ?? 1) > 1 && <nav aria-label="Phân trang vé đặt chỗ" className="flex flex-wrap items-center justify-between gap-3 text-sm">
-          <span className="text-brand-muted">Trang {page + 1} / {query.data.totalPages}</span>
-          <div className="flex gap-2"><button className={secondary} disabled={page === 0 || query.isFetching} onClick={() => { setExpandedId(undefined); setPage(page - 1) }}>Trang trước</button><button className={secondary} disabled={page + 1 >= query.data.totalPages || query.isFetching} onClick={() => { setExpandedId(undefined); setPage(page + 1) }}>Trang sau</button></div>
-        </nav>}
+            </nav>
+          )}
         </>
       )}
 
+      {/* Modals */}
       {disputeBooking && (
         <CreateDisputeModal
           isOpen={Boolean(disputeBooking)}
@@ -259,6 +613,22 @@ export function MyBookingsPage() {
             setCreatedNotice(created)
             setDisputeBooking(null)
           }}
+        />
+      )}
+
+      {paymentHistoryBooking && (
+        <BookingPaymentHistoryModal
+          isOpen={Boolean(paymentHistoryBooking)}
+          booking={paymentHistoryBooking}
+          onClose={() => setPaymentHistoryBooking(null)}
+        />
+      )}
+
+      {qrModalBooking && (
+        <BookingQrModal
+          isOpen={Boolean(qrModalBooking)}
+          booking={qrModalBooking}
+          onClose={() => setQrModalBooking(null)}
         />
       )}
     </Workspace>
