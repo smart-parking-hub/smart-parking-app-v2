@@ -1,6 +1,5 @@
-import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { ArrowLeft, ChevronRight, ReceiptText, RefreshCw } from 'lucide-react'
+import { CheckCircle2, Clock, CreditCard, ReceiptText, RefreshCw } from 'lucide-react'
 import { Dialog, Notice, Badge, secondary } from '@/shared/components/Workspace'
 import { errorMessage } from '@/shared/api/resources'
 import {
@@ -19,13 +18,74 @@ export interface BookingPaymentHistoryModalProps {
   onClose: () => void
 }
 
+function PaymentDetailCard({ payment, index }: { payment: PaymentRecord; index?: number }) {
+  return (
+    <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-2xs space-y-3">
+      {/* Header Banner */}
+      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-3">
+        <div className="flex items-center gap-2">
+          <span className="flex size-7 items-center justify-center rounded-lg bg-orange-50 text-brand-primary">
+            <CreditCard className="h-4 w-4" aria-hidden="true" />
+          </span>
+          <div>
+            <span className="text-xs font-semibold text-slate-800">
+              {typeof index === 'number' ? `Giao dịch #${index + 1}: ` : ''}
+              {paymentTypeLabels[payment.type]}
+            </span>
+          </div>
+        </div>
+        <Badge value={payment.status}>
+          {paymentStatusLabels[payment.status]}
+        </Badge>
+      </div>
+
+      {/* Amount Display */}
+      <div className="rounded-lg bg-slate-50 p-3">
+        <div className="flex items-baseline justify-between">
+          <span className="text-xs text-slate-500">Số tiền giao dịch:</span>
+          <span className="font-sora text-xl font-bold text-slate-900 tabular-nums">
+            {paymentMoney(payment.amount)}
+          </span>
+        </div>
+      </div>
+
+      {/* Details Grid */}
+      <dl className="divide-y divide-slate-100 text-xs leading-5">
+        {[
+          ['Mã giao dịch', payment.transactionCode || `#${payment.id}`],
+          ['Mã đơn PayOS', payment.orderCode ? String(payment.orderCode) : '—'],
+          ['Loại giao dịch', paymentTypeLabels[payment.type]],
+          [
+            'Kênh thanh toán',
+            payment.gateway === 'DEMO'
+              ? 'Demo (thử nghiệm)'
+              : payment.gateway === 'PAYOS'
+                ? 'PayOS (VietQR)'
+                : payment.gateway,
+          ],
+          ['Thời gian thanh toán', paymentTime(payment.createdAt)],
+        ].map(([label, val]) => (
+          <div key={label} className="grid grid-cols-[140px_minmax(0,1fr)] gap-3 py-2 first:pt-0">
+            <dt className="text-slate-500">{label}</dt>
+            <dd className="break-all text-right font-medium text-slate-900">{val}</dd>
+          </div>
+        ))}
+      </dl>
+
+      {payment.status === 'REQUIRES_REVIEW' && (
+        <Notice>
+          Giao dịch đang cần đối soát. Vui lòng kiểm tra lại trước khi thực hiện giao dịch khác.
+        </Notice>
+      )}
+    </div>
+  )
+}
+
 export function BookingPaymentHistoryModal({
   booking,
   isOpen,
   onClose,
 }: BookingPaymentHistoryModalProps) {
-  const [selectedPayment, setSelectedPayment] = useState<PaymentRecord | null>(null)
-
   const query = useQuery({
     queryKey: ['booking-payments', booking?.id],
     queryFn: () => (booking?.id ? fetchPaymentPage(0, booking.id) : null),
@@ -36,37 +96,34 @@ export function BookingPaymentHistoryModal({
   if (!isOpen || !booking) return null
 
   const payments = query.data?.content ?? []
-  const hasMultiple = payments.length > 1
-  const displayedPayment = selectedPayment ?? (payments.length === 1 ? payments[0] : null)
-
-  const handleClose = () => {
-    setSelectedPayment(null)
-    onClose()
-  }
+  const totalAmount = payments.reduce((sum, p) => sum + (p.amount ?? 0), 0)
 
   return (
     <Dialog
       title={`Lịch sử thanh toán #${booking.bookingCode}`}
-      onClose={handleClose}
+      onClose={onClose}
       maxWidth="md"
     >
       <div className="space-y-4">
-        {/* Context Strip */}
+        {/* Context Strip: Directly displays booking info */}
         <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-xs text-slate-600 flex flex-wrap items-center justify-between gap-2">
           <span>
             Bãi: <strong className="text-slate-900">{booking.parkingLotName || `#${booking.parkingLotId}`}</strong>
           </span>
           {booking.vehiclePlate && (
             <span>
-              Xe: <strong className="font-mono text-slate-900">{booking.vehiclePlate}</strong>
+              Biển số: <strong className="font-mono text-slate-900">{booking.vehiclePlate}</strong>
             </span>
           )}
+          <span>
+            Mã đơn: <strong className="font-mono text-brand-primary">#{booking.bookingCode}</strong>
+          </span>
         </div>
 
         {query.isPending ? (
           <div role="status" className="py-10 text-center text-sm text-brand-muted">
-            <RefreshCw className="mx-auto mb-2 h-6 w-6 animate-spin text-brand-orange" />
-            <p>Đang tải lịch sử giao dịch…</p>
+            <RefreshCw className="mx-auto mb-2 h-6 w-6 animate-spin text-brand-primary" />
+            <p>Đang tải chi tiết thanh toán của vé…</p>
           </div>
         ) : query.isError ? (
           <Notice error>
@@ -87,105 +144,41 @@ export function BookingPaymentHistoryModal({
             <h4 className="font-sora text-sm font-semibold text-slate-800">
               Chưa có giao dịch thanh toán nào
             </h4>
-            <p className="mt-1 text-xs text-slate-500 max-w-xs mx-auto">
-              Chưa phát sinh giao dịch cọc hoặc thanh toán cuối cho lượt đặt chỗ này.
+            <p className="mt-1 text-xs text-slate-500 max-w-sm mx-auto">
+              Vé #{booking.bookingCode} chưa phát sinh giao dịch cọc hoặc thanh toán cuối nào trên hệ thống.
             </p>
-          </div>
-        ) : displayedPayment && (!hasMultiple || selectedPayment) ? (
-          /* Single payment details view */
-          <div className="space-y-4">
-            {hasMultiple && (
-              <button
-                type="button"
-                onClick={() => setSelectedPayment(null)}
-                className="inline-flex items-center gap-1.5 text-xs font-semibold text-brand-orange hover:text-brand-orange-ink cursor-pointer"
-              >
-                <ArrowLeft size={14} />
-                Quay lại danh sách giao dịch ({payments.length})
-              </button>
-            )}
-
-            <div className="rounded-xl border border-brand-border bg-brand-surface/60 p-4">
-              <div className="mb-2 flex items-center justify-between gap-3">
-                <span className="flex items-center gap-1.5 text-xs text-brand-muted">
-                  <ReceiptText size={15} aria-hidden="true" />
-                  {paymentTypeLabels[displayedPayment.type]}
-                </span>
-                <Badge value={displayedPayment.status}>
-                  {paymentStatusLabels[displayedPayment.status]}
-                </Badge>
-              </div>
-              <p className="break-words font-sora text-2xl font-bold tracking-tight text-brand-navy tabular-nums">
-                {paymentMoney(displayedPayment.amount)}
-              </p>
-            </div>
-
-            <dl className="divide-y divide-brand-border text-xs leading-5">
-              {[
-                ['Mã giao dịch', displayedPayment.transactionCode || `#${displayedPayment.id}`],
-                ['Mã đơn PayOS', displayedPayment.orderCode ?? '—'],
-                ['Loại giao dịch', paymentTypeLabels[displayedPayment.type]],
-                ['Kênh thanh toán', displayedPayment.gateway === 'DEMO' ? 'Demo (thử nghiệm)' : displayedPayment.gateway === 'PAYOS' ? 'PayOS' : displayedPayment.gateway],
-                ['Thời gian thanh toán', paymentTime(displayedPayment.createdAt)],
-              ].map(([label, val]) => (
-                <div key={label} className="grid grid-cols-[140px_minmax(0,1fr)] gap-3 py-2.5 first:pt-0">
-                  <dt className="text-slate-500">{label}</dt>
-                  <dd className="break-all text-right font-medium text-slate-900">{val}</dd>
-                </div>
-              ))}
-            </dl>
-
-            {displayedPayment.status === 'REQUIRES_REVIEW' && (
-              <Notice>
-                Giao dịch đang cần đối soát. Vui lòng kiểm tra lại trước khi thực hiện thanh toán khác.
-              </Notice>
-            )}
           </div>
         ) : (
-          /* Multi-payment list view */
-          <div className="space-y-2">
-            <p className="text-xs font-medium text-slate-500 mb-2">
-              Tìm thấy {payments.length} giao dịch liên quan đến đơn này. Chọn một giao dịch để xem chi tiết:
-            </p>
-            <div className="divide-y divide-slate-100 rounded-xl border border-slate-200 overflow-hidden">
-              {payments.map((p) => (
-                <button
-                  key={p.id}
-                  type="button"
-                  onClick={() => setSelectedPayment(p)}
-                  className="flex w-full items-center justify-between p-3.5 text-left text-xs transition-colors hover:bg-slate-50 focus-visible:outline-2 focus-visible:outline-brand-orange cursor-pointer"
-                >
-                  <div className="min-w-0 flex-1 pr-3">
-                    <div className="flex items-center gap-2">
-                      <span className="font-semibold text-slate-900">
-                        {paymentTypeLabels[p.type]}
-                      </span>
-                      <Badge value={p.status} size="sm">
-                        {paymentStatusLabels[p.status]}
-                      </Badge>
-                    </div>
-                    <div className="mt-1 flex items-center gap-3 text-slate-500">
-                      <span>Mã: {p.transactionCode || `#${p.id}`}</span>
-                      <span>{paymentTime(p.createdAt)}</span>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2 shrink-0">
-                    <span className="font-mono font-bold text-slate-900 text-sm">
-                      {paymentMoney(p.amount)}
-                    </span>
-                    <ChevronRight size={15} className="text-slate-400" />
-                  </div>
-                </button>
+          <div className="space-y-4">
+            {payments.length > 1 && (
+              <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl bg-orange-50/70 border border-orange-200 px-3.5 py-2.5 text-xs">
+                <span className="font-medium text-orange-950">
+                  Có <strong>{payments.length}</strong> giao dịch thanh toán cho vé này:
+                </span>
+                <span className="font-semibold text-brand-primary">
+                  Tổng cộng: {paymentMoney(totalAmount)}
+                </span>
+              </div>
+            )}
+
+            {/* Direct details display for every payment of this booking - NO intermediate list selection */}
+            <div className="space-y-3 max-h-[60vh] overflow-y-auto pr-1">
+              {payments.map((payment, idx) => (
+                <PaymentDetailCard
+                  key={payment.id}
+                  payment={payment}
+                  index={payments.length > 1 ? idx : undefined}
+                />
               ))}
             </div>
           </div>
         )}
 
-        <div className="flex justify-end border-t border-brand-border pt-4">
+        <div className="flex justify-end border-t border-slate-200 pt-3">
           <button
             type="button"
             className={`${secondary} !min-h-10 !px-4 !py-2 !text-xs cursor-pointer`}
-            onClick={handleClose}
+            onClick={onClose}
           >
             Đóng
           </button>

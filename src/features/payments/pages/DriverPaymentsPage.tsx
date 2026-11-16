@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { useEffect, useState } from 'react'
+import { Link, useSearchParams } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { ArrowUpRight, ChevronLeft, ChevronRight, ListFilter, ReceiptText, RefreshCw, Search, SearchX } from 'lucide-react'
 import { Workspace, Notice, Field, control, secondary } from '@/shared/components/Workspace'
@@ -10,12 +10,25 @@ import { DriverPaymentList } from '../components/DriverPaymentList'
 import { DriverPaymentDetails } from '../components/DriverPaymentDetails'
 
 export function DriverPaymentsPage() {
+  const [searchParams] = useSearchParams()
+  const bookingParam = searchParams.get('bookingId') ?? searchParams.get('bookingCode') ?? searchParams.get('search') ?? ''
   const [page, setPage] = useState(0)
   const [status, setStatus] = useState<PaymentRecord['status'] | ''>('')
-  const [search, setSearch] = useState('')
+  const [search, setSearch] = useState(bookingParam)
   const [selectedId, setSelectedId] = useState<number | null>(null)
   const query = useQuery({ queryKey: ['driver-payment-page', page], queryFn: () => fetchPaymentPage(page), retry: false })
   const rows = query.data?.content ?? []
+
+  useEffect(() => {
+    if (bookingParam && rows.length > 0 && selectedId === null) {
+      const match = rows.find(
+        (item) => String(item.bookingId) === bookingParam || item.transactionCode === bookingParam
+      )
+      if (match) {
+        setSelectedId(match.id)
+      }
+    }
+  }, [bookingParam, rows, selectedId])
   const filtered = rows.filter(item => (!status || item.status === status) && `${item.transactionCode ?? ''} ${item.bookingId}`.toLowerCase().includes(search.trim().toLowerCase()))
   const selected = rows.find(item => item.id === selectedId)
   const resetFilters = () => { setSearch(''); setStatus('') }

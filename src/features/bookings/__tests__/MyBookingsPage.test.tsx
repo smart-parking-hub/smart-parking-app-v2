@@ -259,6 +259,73 @@ it('opens payment history modal for specific booking when clicking Lịch sử t
   })
 })
 
+it('displays ticket payment details directly without intermediate list when booking has multiple transactions', async () => {
+  const depositPayment = {
+    id: 101,
+    bookingId: 41,
+    orderCode: 900101,
+    transactionCode: 'TX-PAY-DEP-101',
+    amount: 100000,
+    type: 'DEPOSIT',
+    status: 'SUCCESS',
+    gateway: 'PAYOS',
+    createdAt: '2026-11-16T10:00:00Z',
+  }
+  const finalPayment = {
+    id: 102,
+    bookingId: 41,
+    orderCode: 900102,
+    transactionCode: 'TX-PAY-FIN-102',
+    amount: 40000,
+    type: 'FINAL_PAYMENT',
+    status: 'SUCCESS',
+    gateway: 'PAYOS',
+    createdAt: '2026-11-16T12:00:00Z',
+  }
+  vi.mocked(apiClient.get).mockImplementation(async (url) => {
+    const urlStr = String(url)
+    if (urlStr.endsWith('/bookings')) {
+      return { data: { data: { content: [booking] } } }
+    }
+    if (urlStr.includes('/payments')) {
+      return {
+        data: {
+          data: {
+            content: [depositPayment, finalPayment],
+            totalElements: 2,
+            totalPages: 1,
+            currentPage: 0,
+          },
+        },
+      }
+    }
+    if (urlStr.includes('/disputes/me')) {
+      return { data: { data: { content: [] } } }
+    }
+    return { data: { data: booking } }
+  })
+
+  mount(<MyBookingsPage />, '/bookings', '/bookings')
+  expect(await screen.findByText('BK-API-41')).toBeInTheDocument()
+
+  // Open Actions dropdown and click Lịch sử thanh toán
+  const actionTrigger = screen.getByRole('button', { name: /Tác vụ/i })
+  fireEvent.click(actionTrigger)
+  const historyOption = await screen.findByRole('menuitem', { name: /Lịch sử thanh toán/i })
+  fireEvent.click(historyOption)
+
+  // Verify modal is opened
+  const modal = await screen.findByRole('dialog')
+  expect(within(modal).getByRole('heading', { name: /Lịch sử thanh toán #BK-API-41/i })).toBeInTheDocument()
+
+  // Verify both payments are directly visible with their transaction codes and amounts
+  expect(await within(modal).findByText('TX-PAY-DEP-101')).toBeInTheDocument()
+  expect(await within(modal).findByText('TX-PAY-FIN-102')).toBeInTheDocument()
+  expect(within(modal).getByText(/giao dịch thanh toán cho vé này/i)).toBeInTheDocument()
+  expect(within(modal).getByText('TX-PAY-DEP-101')).toBeInTheDocument()
+  expect(within(modal).getByText('TX-PAY-FIN-102')).toBeInTheDocument()
+})
+
 it('opens QR modal with check-in QR code when clicking Xem QR vé on PENDING_CHECKIN card (TKT-04)', async () => {
   mount(<MyBookingsPage />, '/bookings', '/bookings')
   expect(await screen.findByText('BK-API-41')).toBeInTheDocument()
