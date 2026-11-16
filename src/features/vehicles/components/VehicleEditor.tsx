@@ -13,14 +13,6 @@ import { saveVehicle, vehicleInputSchema, vehicleTypes, type VehicleInput, type 
 // Optional input suggestions, not an authoritative vehicle/model registry.
 const brandSuggestions = ['Toyota', 'Ford', 'Hyundai', 'Isuzu', 'Hino', 'Thaco', 'Kia', 'Mazda', 'Mitsubishi', 'Mercedes-Benz', 'Volvo', 'Suzuki']
 
-const vehicleIcons: Record<VehicleInput['vehicleType'], string> = {
-  SEDAN_SUV: '🚗',
-  BUS_COACH: '🚌',
-  LIGHT_TRUCK: '🛻',
-  HEAVY_TRUCK: '🚚',
-  CONTAINER: '🚛',
-}
-
 const weightExamples: Record<VehicleInput['vehicleType'], string> = {
   SEDAN_SUV: '1.8',
   BUS_COACH: '15.0',
@@ -124,7 +116,6 @@ export function VehicleEditor({ vehicle, onClose, onSaved }: {
                   options={Object.entries(vehicleTypes).map(([val, label]) => ({
                     value: val,
                     label,
-                    icon: <span className="text-base mr-1">{vehicleIcons[val as VehicleInput['vehicleType']]}</span>,
                   }))}
                   placeholder="Chọn loại xe"
                   size="lg"

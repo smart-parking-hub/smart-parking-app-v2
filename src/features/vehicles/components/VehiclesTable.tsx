@@ -6,7 +6,7 @@ export function VehiclesTable({ vehicles, onEdit, onDeactivate }: {
   onEdit: (vehicle: VehicleRecord) => void
   onDeactivate: (vehicle: VehicleRecord) => void
 }) {
-  const action = 'inline-flex min-h-10 items-center justify-center gap-2 rounded-lg px-3 text-sm font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-orange'
+  const action = 'inline-flex min-h-9 items-center justify-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition-all duration-150 cursor-pointer shadow-2xs hover:shadow-xs active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-orange'
   return <div className="overflow-x-auto">
     <table className="w-full min-w-[850px] text-left text-sm">
       <caption className="sr-only">Danh sách phương tiện đã đăng ký</caption>
@@ -34,8 +34,26 @@ export function VehiclesTable({ vehicles, onEdit, onDeactivate }: {
           </td>
           <td className="px-5 py-4">
             <div className="flex items-center gap-2">
-              <button type="button" className={`${action} border border-brand-border bg-white hover:border-brand-navy/30 hover:bg-brand-surface`} onClick={() => onEdit(vehicle)} aria-label={`Sửa xe ${vehicle.licensePlate}`}><Pencil size={15} aria-hidden="true" />Sửa</button>
-              {vehicle.status === 'ACTIVE' && <button type="button" className={`${action} text-brand-muted hover:bg-brand-orange/10 hover:text-brand-orange-ink`} onClick={() => onDeactivate(vehicle)} aria-label={`Ngừng sử dụng xe ${vehicle.licensePlate}`}><Power size={15} aria-hidden="true" />Ngừng sử dụng</button>}
+              <button
+                type="button"
+                className={`${action} border border-slate-200 bg-white text-slate-700 hover:border-[#d95f00] hover:bg-orange-50/80 hover:text-[#d95f00]`}
+                onClick={() => onEdit(vehicle)}
+                aria-label={`Sửa xe ${vehicle.licensePlate}`}
+              >
+                <Pencil size={14} aria-hidden="true" />
+                Sửa
+              </button>
+              {vehicle.status === 'ACTIVE' && (
+                <button
+                  type="button"
+                  className={`${action} border border-slate-200 bg-white text-slate-600 hover:border-rose-300 hover:bg-rose-50 hover:text-rose-700`}
+                  onClick={() => onDeactivate(vehicle)}
+                  aria-label={`Ngừng sử dụng xe ${vehicle.licensePlate}`}
+                >
+                  <Power size={14} aria-hidden="true" />
+                  Ngừng sử dụng
+                </button>
+              )}
             </div>
           </td>
         </tr>)}
