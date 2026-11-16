@@ -27,7 +27,7 @@ export function DriverPaymentList({ rows, onSelect }: { rows: PaymentRecord[]; o
           </div>
         </td>
         <td role="cell" className="col-start-1 row-start-3 self-center text-xs text-brand-muted lg:px-5 lg:py-4"><span className="sr-only lg:hidden">Thời gian: </span><time>{paymentTime(item.createdAt)}</time></td>
-        <td role="cell" className="col-start-1 row-start-2 lg:px-5 lg:py-4"><p className="text-xs font-medium lg:text-sm">{paymentTypeLabels[item.type]}</p><p className="mt-1 text-xs text-brand-muted">{item.gateway === 'DEMO' ? 'Demo (thử nghiệm)' : item.gateway === 'PAYOS' ? 'PayOS' : item.gateway}</p></td>
+        <td role="cell" className="col-start-1 row-start-2 lg:px-5 lg:py-4"><p className="text-xs font-medium lg:text-sm">{paymentTypeLabels[item.type]}</p><p className="mt-1 text-xs text-brand-muted">{item.gateway === 'WALLET' ? 'Ví tài xế' : item.gateway === 'DEMO' ? 'Demo (thử nghiệm)' : item.gateway === 'PAYOS' ? 'PayOS' : item.gateway}</p></td>
         <td role="cell" className="col-start-2 row-start-2 self-center whitespace-nowrap text-right font-semibold tabular-nums lg:px-5 lg:py-4"><span className="sr-only lg:hidden">Số tiền: </span>{paymentMoney(item.amount)}</td>
         <td role="cell" className="col-start-2 row-start-1 self-start lg:px-5 lg:py-4"><DriverPaymentStatus status={item.status} /></td>
         <td role="cell" className="col-start-2 row-start-3 justify-self-end lg:px-5 lg:py-4">

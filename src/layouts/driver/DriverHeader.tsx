@@ -21,6 +21,7 @@ const links = [
   ['/bookings', 'Vé & Đặt chỗ'],
   ['/queues', 'Chờ vào bãi'],
   ['/payments', 'Lịch sử cước'],
+  ['/wallet', 'Ví của tôi'],
   ['/vehicles', 'Đội xe của tôi'],
   ['/disputes', 'Khiếu nại'],
 ]

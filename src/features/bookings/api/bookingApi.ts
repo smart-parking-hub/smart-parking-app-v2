@@ -197,27 +197,11 @@ export async function fetchMyBookings(): Promise<BookingItemDto[]> {
   return fallbackBookingsList
 }
 
-export async function cancelBookingApi(
-  req: CancelBookingRequest
-): Promise<{ success: boolean; message: string }> {
-  try {
-    await apiClient.post(`/api/v1/bookings/${req.bookingId}/cancel`, {
-      reason: req.reason,
-      contactPhone: req.bankAccount,
-      preferredResolution: 'REFUND_WALLET',
-      note: req.note,
-    })
-    return {
-      success: true,
-      message: 'Hủy đặt chỗ thành công. Tiền cọc đã được chuyển xử lý hoàn trả.',
-    }
-  } catch {
-    // Fallback simulation
-  }
-  return {
-    success: true,
-    message: 'Hủy đặt chỗ thành công. Tiền cọc sẽ được hoàn trả tự động trong 24h.',
-  }
+export async function cancelBookingApi(req: CancelBookingRequest): Promise<{ success: boolean; message: string }> {
+  await apiClient.post(`/api/v1/bookings/${req.bookingId}/cancel`, {
+    reason: req.reason, note: req.note, acceptWalletRefund: true,
+  })
+  return { success: true, message: 'Đã hủy đặt chỗ. Khoản hoàn hợp lệ đang được xử lý vào ví tài xế.' }
 }
 
 export async function submitReviewApi(

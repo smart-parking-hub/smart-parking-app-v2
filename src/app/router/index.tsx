@@ -104,6 +104,7 @@ const VirtualQueuesPage = lazy(() =>
     default: module.VirtualQueuesPage,
   })),
 )
+const DriverWalletPage = lazy(() => import('@/features/driver-wallet').then(module => ({ default: module.DriverWalletPage })))
 const DriverPaymentsPage = lazy(() =>
   import('@/features/payments').then((module) => ({
     default: module.DriverPaymentsPage,
@@ -403,6 +404,11 @@ export const router = createBrowserRouter([
         element: <VirtualQueuesPage />,
       },
     ],
+  },
+  {
+    path: '/wallet',
+    element: <DriverLayout />,
+    children: [{ index: true, element: <DriverWalletPage /> }],
   },
   {
     path: '/payments',

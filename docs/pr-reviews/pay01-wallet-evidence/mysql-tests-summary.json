@@ -1,0 +1,14 @@
+{
+  "com.smartparking.payment.DriverWalletMySqlIT": {
+    "tests": 1,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "com.smartparking.booking.WalletBookingMySqlIT": {
+    "tests": 1,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  }
+}

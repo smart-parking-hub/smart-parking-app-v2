@@ -1,4 +1,7 @@
 import { test, expect } from '@playwright/test'
+import { mockShellReads } from './fixtures/payment-reads'
+
+test.beforeEach(async ({ page }) => { await mockShellReads(page) })
 test.use({ baseURL: process.env.SLOTS_BASE_URL ?? 'http://127.0.0.1:5174' })
 const token = `test.${Buffer.from(JSON.stringify({ role: 'ROLE_MERCHANT', exp: Math.floor(Date.now() / 1000) + 3600 })).toString('base64url')}.test`
 for (const width of [1440, 390]) {

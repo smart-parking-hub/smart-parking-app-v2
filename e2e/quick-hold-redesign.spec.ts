@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test'
+import { mockEmptyDriverWallet } from './fixtures/payment-reads'
 
 test.use({ baseURL: process.env.QUICK_HOLD_BASE_URL || 'http://127.0.0.1:5174' })
 
@@ -7,6 +8,7 @@ for (const width of [390, 1440]) {
     page,
   }) => {
     await page.setViewportSize({ width, height: 900 })
+    await mockEmptyDriverWallet(page, 88)
     const errors: string[] = []
     page.on('pageerror', (error) => errors.push(error.message))
 

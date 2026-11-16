@@ -34,3 +34,7 @@ Long codes visually truncate in rows, retain full text/title/accessibility name,
 | API, auth, payment state changes, monetary calculations | Unchanged |
 
 Tests: `DriverPaymentsPage.test.tsx` (12), driver integration suite (5), `e2e/driver-payment-history.spec.ts` (4 scenarios including a narrow-phone boundary). Full validation and known unrelated lint warning are documented in `docs/09-audit/payment-history-redesign-2026-11-15.md`.
+
+## SP-PAY-01 extension — 2026-11-17
+
+The payment contract now adds optional refundAmount/refundStatus/refundChannel/refundReference. Details show these separately from source payment status, so a partially refunded SUCCESS payment is understandable. WALLET is displayed as Ví tài xế. Existing page totals remain gross successful payment values, not net spending after refunds. See driver-wallet.md for the new wallet and reconciliation screens.

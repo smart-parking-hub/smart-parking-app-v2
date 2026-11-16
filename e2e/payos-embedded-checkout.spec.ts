@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test'
+import { mockEmptyDriverWallet } from './fixtures/payment-reads'
 
 // Local-network checkout is hosted; embedded behavior retains component coverage.
 for (const width of [390, 1440]) {
@@ -10,6 +11,7 @@ for (const width of [390, 1440]) {
       const token = `test.${Buffer.from(JSON.stringify({role:'ROLE_DRIVER',userId:7,sub:'fixture-driver',exp:Math.floor(Date.now()/1000)+3600})).toString('base64url')}.test`
       await page.addInitScript(value => localStorage.setItem('access_token', value), token)
       await page.route('**/api/v1/**', route => route.fulfill({json:{data:{content:[],totalElements:0,totalPages:1}}}))
+      await mockEmptyDriverWallet(page, 51)
       await page.route('**/api/v1/driver/profile', route => route.fulfill({json:{data:{id:7,fullName:'Tài xế kiểm thử',role:'DRIVER'}}}))
       let status = final ? 'AWAITING_FINAL_PAYMENT' : 'PENDING_PAYMENT'
       let synced = false

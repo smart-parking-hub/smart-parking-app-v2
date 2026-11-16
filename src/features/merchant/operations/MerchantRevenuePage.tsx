@@ -1,3 +1,4 @@
+import { DepositStatements } from '@/features/deposit-statements'
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useForm } from 'react-hook-form'
@@ -55,6 +56,7 @@ export function MerchantRevenuePage() {
         </>
       }}</QueryState>
       <MerchantWalletLedger />
+      <DepositStatements scope="merchant" />
     </Workspace>
   )
 }

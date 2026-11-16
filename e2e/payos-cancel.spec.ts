@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test'
+import { mockEmptyDriverWallet } from './fixtures/payment-reads'
 
 // Uses the production bootstrap/router. Only remote HTTP boundaries are mocked.
 const token = `test.${Buffer.from(JSON.stringify({role: 'ROLE_DRIVER', userId: 7, sub: 'driver-test', exp: Math.floor(Date.now()/1000)+3600})).toString('base64url')}.test`
@@ -14,6 +15,7 @@ const initialBooking = {
 async function prepare(page: Page) {
   await page.addInitScript(token => localStorage.setItem('access_token', token), token)
   await page.route('**/api/v1/**', route => route.fulfill({json: {data: {content: [], totalPages: 1, totalElements: 0}}}))
+  await mockEmptyDriverWallet(page, initialBooking.id)
   await page.route('**/api/v1/driver/profile', route => route.fulfill({json: {data: {id: 7, fullName: 'Tài xế kiểm thử', role: 'DRIVER', phone: '0900000000'}}}))
 }
 

@@ -1,0 +1,62 @@
+{
+  "ai-service": {
+    "tests": 23,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "booking-service": {
+    "tests": 175,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 4
+  },
+  "identity-service": {
+    "tests": 145,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "notification-service": {
+    "tests": 60,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "parking-lot-service": {
+    "tests": 140,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 2
+  },
+  "payment-service": {
+    "tests": 193,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 4
+  },
+  "common-library": {
+    "tests": 8,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "api-gateway": {
+    "tests": 6,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "config-server": {
+    "tests": 1,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "discovery-server": {
+    "tests": 1,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  }
+}

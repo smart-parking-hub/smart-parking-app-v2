@@ -1,0 +1,136 @@
+{
+  "date": "2026-11-18",
+  "sourceHeads": [
+    {
+      "repository": "smart-parking-service-microservice",
+      "branch": "feat/pay01-driver-wallet",
+      "testedHead": "d50c9c8a6f52468bc0eb82e111bbeb2d9efd32c5",
+      "main": "15540b4a69e5f98ed633f17a666255e40b1d6710",
+      "mainAncestor": true,
+      "diffFiles": 58,
+      "clean": true
+    },
+    {
+      "repository": "smart-parking-app-v2",
+      "branch": "feat/pay01-driver-wallet",
+      "testedHead": "c2dfb45065ac412b797104710ad66c684b90a076",
+      "main": "1aef344970c9f2ae3e1d147a9ef6fb9f6ef27df9",
+      "mainAncestor": true,
+      "diffFiles": 31,
+      "clean": true
+    }
+  ],
+  "backend": {
+    "total": {
+      "tests": 764,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 10,
+      "passed": 754
+    },
+    "modules": [
+      {
+        "module": "ai-service",
+        "tests": 23,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "module": "api-gateway",
+        "tests": 6,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "module": "booking-service",
+        "tests": 176,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 4
+      },
+      {
+        "module": "common-library",
+        "tests": 8,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "module": "config-server",
+        "tests": 1,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "module": "discovery-server",
+        "tests": 1,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "module": "identity-service",
+        "tests": 145,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "module": "notification-service",
+        "tests": 60,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "module": "parking-lot-service",
+        "tests": 140,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 2
+      },
+      {
+        "module": "payment-service",
+        "tests": 204,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 4
+      }
+    ],
+    "command": "Gradle test --offline --console=plain",
+    "exitCode": 0,
+    "taskExecution": "8 executed, 47 up-to-date",
+    "database": "H2 in-memory; external database environment overrides removed; Kafka listener disabled"
+  },
+  "frontend": {
+    "numTotalTests": 854,
+    "numPassedTests": 854,
+    "numFailedTests": 0,
+    "numPendingTests": 0,
+    "success": true
+  },
+  "frontendChecks": {
+    "lintExitCode": 0,
+    "typecheckExitCode": 0,
+    "buildExitCode": 0
+  },
+  "browser": {
+    "stats": {
+      "startTime": "2026-11-17T17:59:02.509Z",
+      "duration": 35944.867000000006,
+      "expected": 9,
+      "skipped": 0,
+      "unexpected": 0,
+      "flaky": 0
+    },
+    "api": "HTTP mocks; no real PayOS transfer"
+  },
+  "limitations": [
+    "MySQL tests not rerun; local Docker engine unavailable",
+    "No deployment or production migration",
+    "CI remote not yet verified"
+  ]
+}
