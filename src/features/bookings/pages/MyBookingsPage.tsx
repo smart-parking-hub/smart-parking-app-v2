@@ -640,7 +640,7 @@ export function MyBookingsPage() {
                     const canDispute = isBookingEligibleForDispute(booking.status)
                     const expanded =
                       expandedId === booking.id ||
-                      (!validSelection && expandedId === undefined && query.data.content.length === 1)
+                      (!validSelection && expandedId === undefined && filteredBookings.length === 1)
 
                     return (
                       <Fragment key={booking.id}>
@@ -656,7 +656,10 @@ export function MyBookingsPage() {
                               title={bookingReference(booking)}
                             >
                               {booking.status === 'PENDING_PAYMENT' ? (
-                                `Số đơn #${booking.id}`
+                                <>
+                                  <span>Số đơn</span>
+                                  <span className="text-slate-500 ml-1">#{booking.id}</span>
+                                </>
                               ) : (
                                 <>
                                   <span className="text-slate-400">#{booking.id} · </span>
@@ -936,7 +939,7 @@ export function MyBookingsPage() {
           <div className="flex flex-col max-h-[90vh] overflow-hidden">
             <div className="border-b border-slate-100 px-6 py-4 shrink-0 pr-12">
               <h3 className="font-sora text-lg font-semibold text-slate-900 break-all">
-                Chi tiết lượt đặt chỗ #{detailModalBooking.bookingCode}
+                Chi tiết lượt đặt chỗ {bookingReference(detailModalBooking)}
               </h3>
               <p className="text-xs text-slate-500 mt-1">
                 Bãi đỗ: <strong className="text-slate-800">{detailModalBooking.parkingLotName || `#${detailModalBooking.parkingLotId}`}</strong>
