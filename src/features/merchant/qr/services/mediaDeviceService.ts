@@ -97,7 +97,8 @@ export function parseCameraError(error: unknown): CameraErrorInfo {
   if (
     errName === 'SecurityError' ||
     errMsg.includes('secure origin') ||
-    errMsg.includes('HTTPS')
+    errMsg.includes('HTTPS') ||
+    errMsg.toLowerCase().includes('insecure context')
   ) {
     return {
       type: 'INSECURE_CONTEXT',

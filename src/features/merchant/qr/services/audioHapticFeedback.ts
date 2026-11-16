@@ -21,6 +21,10 @@ export function playScanBeep(frequency = 880, durationMs = 120) {
     osc.connect(gain)
     gain.connect(ctx.destination)
 
+    osc.onended = () => {
+      void ctx.close().catch(() => {})
+    }
+
     osc.start()
     osc.stop(ctx.currentTime + durationMs / 1000)
   } catch {

@@ -97,6 +97,15 @@ describe('mediaDeviceService (SP-S3-INT-04)', () => {
     expect(parsed.canRetry).toBe(false)
   })
 
+  it('correctly maps insecure context error messages to INSECURE_CONTEXT', () => {
+    const error = new Error('Insecure context on mobile')
+
+    const parsed = parseCameraError(error)
+    expect(parsed.type).toBe('INSECURE_CONTEXT')
+    expect(parsed.title).toContain('HTTPS')
+    expect(parsed.canRetry).toBe(false)
+  })
+
   it('correctly detects torch capabilities', () => {
     expect(isTorchSupported({ torch: true } as unknown as MediaTrackCapabilities)).toBe(true)
     expect(isTorchSupported({ torch: false } as unknown as MediaTrackCapabilities)).toBe(false)

@@ -85,7 +85,7 @@ export function BarieCameraScanner({
 
   useEffect(() => {
     if (!securityStatus.isSupported) {
-      const err = parseCameraError(new Error('Insecure context on mobile'))
+      const err = parseCameraError(new Error('Insecure context on mobile: HTTPS required'))
       setErrorInfo(err)
       onErrorRef.current?.(err)
       return
@@ -203,12 +203,20 @@ export function BarieCameraScanner({
           activeScanner
             .stop()
             .then(() => {
-              activeScanner.clear()
+              if (scannerRef.current === activeScanner) {
+                try {
+                  activeScanner.clear()
+                } catch {
+                  // Ignore clear errors
+                }
+              }
             })
             .catch(() => {})
         } else {
           try {
-            activeScanner.clear()
+            if (scannerRef.current === activeScanner) {
+              activeScanner.clear()
+            }
           } catch {
             // Ignore clear errors if not mounted
           }

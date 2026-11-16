@@ -133,13 +133,16 @@ export function MerchantScannerPage() {
     }
   }
 
-  const handleCameraError = (errInfo: { type: string; message: string }) => {
+  const handleCameraError = (errInfo: { type: string; message: string; canRetry?: boolean }) => {
     if (errInfo.type === 'PERMISSION_DENIED') {
       setIsPermModalOpen(true)
+      setCamera(false)
+    } else if (errInfo.canRetry) {
+      // Keep BarieCameraScanner mounted so the operator can view inline error and click "Thử lại với Camera khác"
     } else {
       setCameraError(errInfo.message)
+      setCamera(false)
     }
-    setCamera(false)
   }
 
   function changeMode(next: typeof mode) {
