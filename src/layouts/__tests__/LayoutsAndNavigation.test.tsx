@@ -99,6 +99,37 @@ describe('Layouts and Navigation System Comprehensive Tests', () => {
       expect(screen.getByTestId('driver-outlet')).toBeInTheDocument()
     })
 
+    it('hides DriverFooter on parking search pages (MAP-01)', () => {
+      const queryClient = createTestQueryClient()
+      const { unmount } = render(
+        <QueryClientProvider client={queryClient}>
+          <MemoryRouter initialEntries={['/parking']}>
+            <Routes>
+              <Route element={<DriverLayout />}>
+                <Route path="/parking" element={<div data-testid="search-outlet">Tìm bãi</div>} />
+              </Route>
+            </Routes>
+          </MemoryRouter>
+        </QueryClientProvider>
+      )
+      expect(screen.getByTestId('search-outlet')).toBeInTheDocument()
+      expect(screen.queryByRole('contentinfo')).not.toBeInTheDocument()
+      unmount()
+
+      render(
+        <QueryClientProvider client={queryClient}>
+          <MemoryRouter initialEntries={['/dashboard']}>
+            <Routes>
+              <Route element={<DriverLayout />}>
+                <Route path="/dashboard" element={<div data-testid="dash-outlet">Tổng quan</div>} />
+              </Route>
+            </Routes>
+          </MemoryRouter>
+        </QueryClientProvider>
+      )
+      expect(screen.getByRole('contentinfo')).toBeInTheDocument()
+    })
+
     it('renders DriverHeader with 7 navigation items and active state', () => {
       const queryClient = createTestQueryClient()
 
