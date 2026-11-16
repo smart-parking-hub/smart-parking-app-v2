@@ -20,8 +20,9 @@ describe('Driver profile with verified user API fields', () => {
     expect(screen.getByLabelText('Số điện thoại đăng nhập')).toHaveAttribute('readonly')
     expect(screen.getByLabelText('Số điện thoại liên hệ khẩn cấp')).toHaveValue(profile.emergencyContact)
     for (const text of [/eKYC/i, /HẠNG FC/, /CẢNG CÁT LÁI/, /48 chuyến/i, /Cấu hình xuất hóa đơn/, /Trần Quốc Tuấn/, /3 XE/]) expect(screen.queryByText(text)).not.toBeInTheDocument()
-    expect(screen.getByRole('link', { name: /Đội xe của tôi/ })).toHaveAttribute('href', '/vehicles')
-    expect(screen.getByRole('link', { name: /Lịch sử thanh toán/ })).toHaveAttribute('href', '/payments')
+    expect(screen.queryByRole('link', { name: /Đội xe của tôi/ })).not.toBeInTheDocument()
+    expect(screen.queryByRole('link', { name: /Lịch sử thanh toán/ })).not.toBeInTheDocument()
+    expect(screen.getByRole('link', { name: /Bảo mật tài khoản/ })).toHaveAttribute('href', '/profile#bao-mat')
     expect(screen.queryByRole('link', { name: /Thông báo/i })).not.toBeInTheDocument()
   })
   it('shows loading and an empty profile without demo fallback', async () => {
@@ -99,5 +100,32 @@ describe('Driver profile with verified user API fields', () => {
     expect(securityLink).toHaveAttribute('href', '/profile#bao-mat')
     await userEvent.click(securityLink)
     await waitFor(() => expect(scrollSpy).toHaveBeenCalledWith({ behavior: 'smooth' }))
+  })
+  it('dynamically switches active sidebar tab between personal info and security on click and hash navigation', async () => {
+    mount(['/profile'])
+    const personalLink = await screen.findByRole('link', { name: /Thông tin cá nhân/ })
+    const securityLink = screen.getByRole('link', { name: /Bảo mật tài khoản/ })
+
+    expect(personalLink).toHaveAttribute('aria-current', 'page')
+    expect(personalLink.className).toContain('bg-brand-surface')
+    expect(securityLink).not.toHaveAttribute('aria-current')
+
+    await userEvent.click(securityLink)
+    expect(securityLink).toHaveAttribute('aria-current', 'page')
+    expect(securityLink.className).toContain('bg-brand-surface')
+    expect(personalLink).not.toHaveAttribute('aria-current')
+
+    await userEvent.click(personalLink)
+    expect(personalLink).toHaveAttribute('aria-current', 'page')
+    expect(securityLink).not.toHaveAttribute('aria-current')
+  })
+  it('initializes with security tab active when starting on /profile#bao-mat', async () => {
+    mount(['/profile#bao-mat'])
+    const personalLink = await screen.findByRole('link', { name: /Thông tin cá nhân/ })
+    const securityLink = screen.getByRole('link', { name: /Bảo mật tài khoản/ })
+
+    expect(securityLink).toHaveAttribute('aria-current', 'page')
+    expect(securityLink.className).toContain('bg-brand-surface')
+    expect(personalLink).not.toHaveAttribute('aria-current')
   })
 })

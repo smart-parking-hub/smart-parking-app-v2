@@ -9,9 +9,9 @@ export { Badge, type BadgeProps } from './Badge'
 export const control =
   'w-full rounded-xl border border-brand-border bg-white px-3 py-3 text-sm text-brand-navy outline-none focus:border-brand-primary focus:ring-2 focus:ring-brand-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d95f00] focus-visible:ring-brand-primary focus-visible:ring-offset-1 disabled:opacity-50 transition-colors'
 export const button =
-  'inline-flex items-center justify-center gap-2 rounded-xl bg-[#d95f00] bg-brand-primary px-4 py-3 text-sm font-semibold text-white hover:bg-brand-primary-hover active:bg-brand-primary-active focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d95f00] focus-visible:ring-brand-primary focus-visible:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors shadow-xs'
+  'inline-flex items-center justify-center gap-2 rounded-xl bg-[#d95f00] px-4 py-3 text-sm font-semibold text-white hover:bg-[#b84e00] hover:shadow-md hover:shadow-orange-500/20 active:bg-[#9e4300] active:scale-[0.98] cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d95f00] focus-visible:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-[#d95f00] disabled:hover:shadow-none disabled:active:scale-100 transition-all shadow-xs'
 export const secondary =
-  'inline-flex items-center justify-center gap-2 rounded-xl border border-brand-border bg-white px-4 py-3 text-sm font-semibold text-brand-navy hover:bg-brand-surface disabled:opacity-50 transition-colors'
+  'inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50 hover:border-slate-300 hover:text-slate-900 active:scale-[0.98] cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d95f00] focus-visible:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-white disabled:active:scale-100 transition-all'
 
 export const money = (value: unknown) =>
   typeof value === 'number'

@@ -113,7 +113,7 @@ export function InteractiveMapCanvas({
     const vectorRenderer = canvasRenderer ?? L.svg({ padding: 0.5 })
     const instance = L.map(container.current, {
       zoomControl: false,
-      scrollWheelZoom: false,
+      scrollWheelZoom: true,
       renderer: vectorRenderer,
     }).setView([10.7769, 106.7009], 12)
     map.current = instance

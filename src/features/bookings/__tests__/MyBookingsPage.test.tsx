@@ -105,7 +105,8 @@ it('keeps many tickets compact, expands one at a time and requests the next serv
   expect(toggles[0]).toHaveAttribute('aria-expanded', 'false')
   expect(toggles[1]).toHaveAttribute('aria-expanded', 'true')
   fireEvent.click(screen.getByRole('button', { name: 'Trang sau' }))
-  expect(await screen.findByText('Số đơn #49')).toBeInTheDocument()
+  expect(await screen.findByText(/Số đơn/)).toBeInTheDocument()
+  expect(await screen.findByText('#49')).toBeInTheDocument()
   expect(screen.queryByText(/#41 · BK-API-41/)).not.toBeInTheDocument()
   expect(apiClient.get).toHaveBeenCalledWith('/api/v1/bookings', expect.objectContaining({ params: { page: 1, size: 8, sort: 'createdAt,desc' } }))
   expect(screen.getAllByRole('button', { name: 'Xem vé & chi tiết' })).toHaveLength(8)
@@ -120,7 +121,9 @@ it('reports request errors and retries without sample bookings', async () => {
 })
 it('allows opening CreateDisputeModal from PENDING_CHECKIN booking action menu and submitting with merchantId', async () => {
   mount(<MyBookingsPage />, '/bookings', '/bookings')
-  const disputeBtn = await screen.findByRole('button', { name: /Gửi khiếu nại/i })
+  const actionTrigger = await screen.findByRole('button', { name: /Tác vụ/i })
+  fireEvent.click(actionTrigger)
+  const disputeBtn = await screen.findByRole('menuitem', { name: /Gửi khiếu nại/i })
   fireEvent.click(disputeBtn)
 
   const dialog = screen.getByRole('dialog')
@@ -197,3 +200,200 @@ it('hides dispute CTA for PENDING_PAYMENT and shows existing dispute link when b
   )
   expect(screen.queryByRole('button', { name: /Gửi khiếu nại/i })).not.toBeInTheDocument()
 })
+
+it('opens payment history modal for specific booking when clicking Lịch sử thanh toán in action menu (TKT-01)', async () => {
+  const mockPayment = {
+    id: 101,
+    bookingId: 41,
+    orderCode: 900101,
+    transactionCode: 'TX-PAY-101',
+    amount: 10000,
+    type: 'DEPOSIT',
+    status: 'SUCCESS',
+    gateway: 'PAYOS',
+    createdAt: '2026-11-16T10:00:00Z',
+  }
+  vi.mocked(apiClient.get).mockImplementation(async (url) => {
+    const urlStr = String(url)
+    if (urlStr.endsWith('/bookings')) {
+      return { data: { data: { content: [booking] } } }
+    }
+    if (urlStr.includes('/payments')) {
+      return {
+        data: {
+          data: {
+            content: [mockPayment],
+            totalElements: 1,
+            totalPages: 1,
+            currentPage: 0,
+          },
+        },
+      }
+    }
+    if (urlStr.includes('/disputes/me')) {
+      return { data: { data: { content: [] } } }
+    }
+    return { data: { data: booking } }
+  })
+
+  mount(<MyBookingsPage />, '/bookings', '/bookings')
+  expect(await screen.findByText('BK-API-41')).toBeInTheDocument()
+
+  // Open Actions dropdown
+  const actionTrigger = screen.getByRole('button', { name: /Tác vụ/i })
+  fireEvent.click(actionTrigger)
+
+  // Click "Lịch sử thanh toán"
+  const historyOption = await screen.findByRole('menuitem', { name: /Lịch sử thanh toán/i })
+  fireEvent.click(historyOption)
+
+  // Verify modal is opened with title containing booking code
+  const modal = await screen.findByRole('dialog')
+  expect(within(modal).getByRole('heading', { name: /Lịch sử thanh toán #BK-API-41/i })).toBeInTheDocument()
+  expect(await within(modal).findByText('TX-PAY-101')).toBeInTheDocument()
+  expect(within(modal).getAllByText('Cọc giữ chỗ').length).toBeGreaterThanOrEqual(1)
+  expect(within(modal).getByText('Thành công')).toBeInTheDocument()
+
+  // Close modal
+  const closeBtn = within(modal).getAllByRole('button', { name: 'Đóng' })[0]
+  fireEvent.click(closeBtn)
+  await waitFor(() => {
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+  })
+})
+
+it('displays single representative payment detail directly when booking has multiple transactions', async () => {
+  const depositPayment = {
+    id: 101,
+    bookingId: 41,
+    orderCode: 900101,
+    transactionCode: 'TX-PAY-DEP-101',
+    amount: 100000,
+    type: 'DEPOSIT',
+    status: 'SUCCESS',
+    gateway: 'PAYOS',
+    createdAt: '2026-11-16T10:00:00Z',
+  }
+  const finalPayment = {
+    id: 102,
+    bookingId: 41,
+    orderCode: 900102,
+    transactionCode: 'TX-PAY-FIN-102',
+    amount: 40000,
+    type: 'FINAL_PAYMENT',
+    status: 'SUCCESS',
+    gateway: 'PAYOS',
+    createdAt: '2026-11-16T12:00:00Z',
+  }
+  vi.mocked(apiClient.get).mockImplementation(async (url) => {
+    const urlStr = String(url)
+    if (urlStr.endsWith('/bookings')) {
+      return { data: { data: { content: [booking] } } }
+    }
+    if (urlStr.includes('/payments')) {
+      return {
+        data: {
+          data: {
+            content: [depositPayment, finalPayment],
+            totalElements: 2,
+            totalPages: 1,
+            currentPage: 0,
+          },
+        },
+      }
+    }
+    if (urlStr.includes('/disputes/me')) {
+      return { data: { data: { content: [] } } }
+    }
+    return { data: { data: booking } }
+  })
+
+  mount(<MyBookingsPage />, '/bookings', '/bookings')
+  expect(await screen.findByText('BK-API-41')).toBeInTheDocument()
+
+  // Open Actions dropdown and click Lịch sử thanh toán
+  const actionTrigger = screen.getByRole('button', { name: /Tác vụ/i })
+  fireEvent.click(actionTrigger)
+  const historyOption = await screen.findByRole('menuitem', { name: /Lịch sử thanh toán/i })
+  fireEvent.click(historyOption)
+
+  // Verify modal is opened
+  const modal = await screen.findByRole('dialog')
+  expect(within(modal).getByRole('heading', { name: /Lịch sử thanh toán #BK-API-41/i })).toBeInTheDocument()
+
+  // Verify only 1 primary payment (final payment) is directly visible, no multiple cards or banner
+  expect(await within(modal).findByText('TX-PAY-FIN-102')).toBeInTheDocument()
+  expect(within(modal).queryByText(/giao dịch thanh toán cho vé này/i)).not.toBeInTheDocument()
+  expect(within(modal).queryByText('TX-PAY-DEP-101')).not.toBeInTheDocument()
+})
+
+it('opens QR modal with check-in QR code when clicking Xem QR vé on PENDING_CHECKIN card (TKT-04)', async () => {
+  mount(<MyBookingsPage />, '/bookings', '/bookings')
+  expect(await screen.findByText('BK-API-41')).toBeInTheDocument()
+
+  const qrButton = screen.getByRole('button', { name: /Xem QR vé/i })
+  fireEvent.click(qrButton)
+
+  const modal = await screen.findByRole('dialog')
+  expect(within(modal).getByRole('heading', { name: /Vé QR check-in #BK-API-41/i })).toBeInTheDocument()
+  expect(within(modal).getByTestId('modal-qr-container')).toBeInTheDocument()
+  expect(within(modal).getByText('ĐÃ XÁC NHẬN CỌC · SẴN SÀNG CHECK-IN')).toBeInTheDocument()
+  expect(within(modal).getByRole('button', { name: /Sao chép mã/i })).toBeInTheDocument()
+  expect(within(modal).getByRole('button', { name: /Tải ảnh vé QR/i })).toBeInTheDocument()
+
+  // Close modal
+  const closeBtn = within(modal).getAllByRole('button', { name: 'Đóng' })[0]
+  fireEvent.click(closeBtn)
+  await waitFor(() => {
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+  })
+})
+
+it('filters bookings by search keyword, status, and resets on Xóa lọc (TKT-05)', async () => {
+  vi.mocked(apiClient.get).mockImplementation(async (url, config) => {
+    const urlStr = String(url)
+    if (urlStr.endsWith('/bookings')) {
+      const params = (config?.params as Record<string, unknown>) ?? {}
+      if (params.status === 'PENDING_PAYMENT') {
+        return { data: { data: { content: [], totalElements: 0, totalPages: 0, currentPage: 0 } } }
+      }
+      if (params.search === 'Cát Lái') {
+        return { data: { data: { content: [booking], totalElements: 1, totalPages: 1, currentPage: 0 } } }
+      }
+      return { data: { data: { content: [booking], totalElements: 1, totalPages: 1, currentPage: 0 } } }
+    }
+    return { data: { data: { content: [] } } }
+  })
+
+  mount(<MyBookingsPage />, '/bookings', '/bookings')
+  expect(await screen.findByText('BK-API-41')).toBeInTheDocument()
+
+  // Type search keyword and click Lọc
+  const searchInput = screen.getByPlaceholderText('Mã vé, biển số, tên bãi…')
+  fireEvent.change(searchInput, { target: { value: 'Cát Lái' } })
+  const filterBtn = screen.getByRole('button', { name: /^Lọc$/i })
+  fireEvent.click(filterBtn)
+
+  await waitFor(() => {
+    expect(apiClient.get).toHaveBeenCalledWith('/api/v1/bookings', expect.objectContaining({
+      params: expect.objectContaining({ search: 'Cát Lái' }),
+    }))
+  })
+
+  // Select status and click Lọc to get no results
+  const statusSelect = screen.getByLabelText('Trạng thái vé')
+  fireEvent.change(statusSelect, { target: { value: 'PENDING_PAYMENT' } })
+  fireEvent.click(filterBtn)
+
+  expect(await screen.findByText('Không tìm thấy lượt đặt chỗ nào phù hợp với bộ lọc hiện tại.')).toBeInTheDocument()
+
+  // Click clear filters button
+  const clearButton = screen.getAllByRole('button', { name: /Xóa bộ lọc/i })[0]
+  fireEvent.click(clearButton)
+
+  await waitFor(() => {
+    expect(screen.getByPlaceholderText('Mã vé, biển số, tên bãi…')).toHaveValue('')
+    expect(screen.getByLabelText('Trạng thái vé')).toHaveValue('')
+  })
+})
+

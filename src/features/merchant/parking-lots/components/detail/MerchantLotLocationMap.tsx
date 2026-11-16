@@ -9,7 +9,7 @@ export function MerchantLotLocationMap({ latitude, longitude }: { latitude: numb
   useEffect(() => {
     if (!container.current) return
     setTileError(false)
-    const map = L.map(container.current, { scrollWheelZoom: false }).setView([latitude, longitude], 15)
+    const map = L.map(container.current, { scrollWheelZoom: true }).setView([latitude, longitude], 15)
     const tiles = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
       maxZoom: 19,
       attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',

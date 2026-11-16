@@ -11,6 +11,8 @@ import { QRCodeSVG } from 'qrcode.react'
 import { QrCode, Download, Copy, Check, Clock, ShieldCheck } from 'lucide-react'
 import { PayOsPaymentPanel } from './PayOsPaymentPanel'
 import { QuickBookingPaymentSummary } from './QuickBookingPaymentSummary'
+import { ConfirmationDialog } from '@/shared/components/ConfirmationDialog'
+import { Toast, ToastContainer } from '@/shared/components/Toast'
 
 function handleDownloadQr(bookingCode: string) {
   const svg = document.getElementById(`qr-checkin-${bookingCode}`) as SVGSVGElement | null
@@ -39,16 +41,30 @@ function handleDownloadQr(bookingCode: string) {
   }
 }
 
-type StatusPanelProps = { bookingId: number; booking?: Booking; embedded?: boolean; compact?: boolean }
+type StatusPanelProps = {
+  bookingId: number
+  booking?: Booking
+  embedded?: boolean
+  compact?: boolean
+  hideReview?: boolean
+}
 
 export function BookingStatusPanel(props: StatusPanelProps) {
   return <BookingStatusContent key={props.bookingId} {...props} />
 }
 
-function BookingStatusContent({ bookingId, booking, embedded = false, compact = false }: StatusPanelProps) {
+function BookingStatusContent({
+  bookingId,
+  booking,
+  embedded = false,
+  compact = false,
+  hideReview = false,
+}: StatusPanelProps) {
   const cache = useQueryClient()
   const [copied, setCopied] = useState(false)
   const [checkoutIntent, setCheckoutIntent] = useState<string | null>(null)
+  const [confirmCancelOpen, setConfirmCancelOpen] = useState(false)
+  const [toastMessage, setToastMessage] = useState<string | null>(null)
 
   const query = useQuery({
     queryKey: ['booking', bookingId],
@@ -120,7 +136,7 @@ function BookingStatusContent({ bookingId, booking, embedded = false, compact = 
   const compactPayment = compact && ['PENDING_PAYMENT', 'AWAITING_FINAL_PAYMENT'].includes(data.status)
   const otherActions = <>
     {import.meta.env.DEV && data.status === 'PENDING_PAYMENT' && !expired && <button className={secondary} disabled={busy} onClick={() => demo.mutate()}>Thanh toán Demo (chỉ local)</button>}
-    {['PENDING_PAYMENT', 'PENDING_CHECKIN'].includes(data.status) && <button className={secondary} disabled={busy} onClick={() => cancel.mutate()}>Hủy booking</button>}
+    {['PENDING_PAYMENT', 'PENDING_CHECKIN'].includes(data.status) && <button className={secondary} disabled={busy} onClick={() => setConfirmCancelOpen(true)}>Hủy booking</button>}
     {data.status === 'PENDING_CHECKIN' && <button className={secondary} onClick={() => { void navigator.clipboard.writeText(data.bookingCode).then(() => setCopied(true)) }}>{copied ? 'Đã sao chép' : 'Sao chép mã check-in'}</button>}
     {!embedded && <Link className={secondary} to={compactPayment ? `/bookings?bookingId=${bookingId}` : '/bookings'}>Xem các lượt đặt chỗ</Link>}
   </>
@@ -134,7 +150,7 @@ function BookingStatusContent({ bookingId, booking, embedded = false, compact = 
 
       {/* QR Check-in Hero Box khi đã cọc và chờ check-in */}
       {data.status === 'PENDING_CHECKIN' && (
-        <div className="rounded-2xl border border-orange-200/90 bg-gradient-to-b from-orange-50/40 to-white p-5 sm:p-6 shadow-xs flex flex-col md:flex-row items-center gap-6 my-2">
+        <div className="rounded-2xl border border-orange-200/90 bg-gradient-to-b from-orange-50/40 to-white p-4 sm:p-5 shadow-xs flex flex-col sm:flex-row items-center sm:items-start gap-5 my-2">
           {/* QR Visual Container */}
           <div className="shrink-0 flex flex-col items-center gap-2 p-3.5 bg-white rounded-xl border border-slate-200 shadow-xs">
             <div className="bg-white p-2 rounded-lg" data-testid="checkin-qr-container">
@@ -148,18 +164,18 @@ function BookingStatusContent({ bookingId, booking, embedded = false, compact = 
                 aria-label={`Mã QR Check-in ${data.bookingCode}`}
               />
             </div>
-            <div className="flex items-center gap-1.5 font-mono text-xs font-bold text-slate-900 bg-slate-100 px-2.5 py-1 rounded-md">
-              <QrCode className="w-3.5 h-3.5 text-[#d95f00]" />
-              <span>MÃ: {data.bookingCode}</span>
+            <div className="flex items-center gap-1.5 font-mono text-xs font-bold text-slate-900 bg-slate-100 px-2.5 py-1 rounded-md max-w-full break-all text-center">
+              <QrCode className="w-3.5 h-3.5 text-[#d95f00] shrink-0" />
+              <span className="break-all">MÃ: {data.bookingCode}</span>
             </div>
           </div>
 
           {/* Instructions & Details */}
-          <div className="flex-1 flex flex-col gap-3 text-left w-full">
+          <div className="flex-1 min-w-0 flex flex-col gap-3 text-left w-full">
             <div className="flex flex-wrap items-center gap-2">
               <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-semibold text-xs border border-emerald-300/60">
-                <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
-                ĐÃ XÁC NHẬN CỌC · SẴN SÀNG CHECK-IN
+                <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                <span>ĐÃ XÁC NHẬN CỌC · SẴN SÀNG CHECK-IN</span>
               </span>
               <span className="font-mono text-xs text-slate-600 bg-slate-100 px-2 py-0.5 rounded">
                 Biển số: <strong className="text-slate-900">{data.vehiclePlate}</strong>
@@ -178,7 +194,7 @@ function BookingStatusContent({ bookingId, booking, embedded = false, compact = 
             <div className="bg-white/80 rounded-xl p-3 border border-orange-100/80 flex flex-col gap-1 text-xs text-slate-600">
               <div className="flex items-center gap-1.5">
                 <Clock className="w-3.5 h-3.5 text-[#d95f00] shrink-0" />
-                <span>
+                <span className="break-words">
                   Khung giờ check-in hợp lệ:{' '}
                   <strong>{bookingTimeLabel(bookingTimestamp(data.expectedCheckInTime) - 30 * 60000)}</strong> đến{' '}
                   <strong>{bookingTimeLabel(data.expiresAt)}</strong>
@@ -187,14 +203,14 @@ function BookingStatusContent({ bookingId, booking, embedded = false, compact = 
             </div>
 
             {/* Quick Actions */}
-            <div className="flex flex-wrap gap-2 pt-1">
+            <div className="flex flex-wrap gap-2.5 pt-1">
               <button
                 type="button"
                 onClick={() => {
                   void navigator.clipboard.writeText(data.bookingCode).then(() => setCopied(true))
                   setTimeout(() => setCopied(false), 2500)
                 }}
-                className="text-xs font-semibold px-3 py-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 text-slate-700 transition-colors flex items-center gap-1.5 cursor-pointer"
+                className="text-xs font-semibold px-3.5 py-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 transition-colors flex items-center gap-1.5 cursor-pointer shadow-2xs"
               >
                 {copied ? (
                   <Check className="w-3.5 h-3.5 text-emerald-600" />
@@ -207,9 +223,9 @@ function BookingStatusContent({ bookingId, booking, embedded = false, compact = 
               <button
                 type="button"
                 onClick={() => handleDownloadQr(data.bookingCode)}
-                className="text-xs font-semibold px-3 py-1.5 rounded-lg bg-[#341100] hover:bg-[#4a1800] text-[#d95f00] border border-[#d95f00]/30 transition-colors flex items-center gap-1.5 cursor-pointer"
+                className="text-xs font-semibold px-3.5 py-2 rounded-xl bg-[#d95f00] hover:bg-[#b84e00] text-white shadow-2xs hover:shadow transition-all flex items-center gap-1.5 cursor-pointer"
               >
-                <Download className="w-3.5 h-3.5 text-[#d95f00]" />
+                <Download className="w-3.5 h-3.5 text-white" />
                 <span>Tải ảnh vé QR (PNG Offline)</span>
               </button>
             </div>
@@ -291,10 +307,15 @@ function BookingStatusContent({ bookingId, booking, embedded = false, compact = 
         <details className="py-3"><summary className="cursor-pointer font-medium text-brand-muted">Tác vụ khác</summary><div className="flex flex-wrap gap-2 pt-3 [&>a]:!px-3 [&>a]:!py-2 [&>a]:!text-xs [&>button]:!px-3 [&>button]:!py-2 [&>button]:!text-xs">{otherActions}</div></details>
       </div>}
 
-      {data.status === 'COMPLETED' && <BookingReview bookingId={data.id} />}
+      {!hideReview && data.status === 'COMPLETED' && <BookingReview bookingId={data.id} />}
       {demo.isSuccess && data.status === 'PENDING_PAYMENT' && (
         <Notice>
           Đã gửi thanh toán Demo. Đang kiểm tra xác nhận từ server; không bấm tạo giao dịch khác.
+        </Notice>
+      )}
+      {data.status === 'CANCELLED' && (
+        <Notice>
+          Lượt đặt chỗ này đã được hủy thành công. Chỗ đỗ đã được giải phóng.
         </Notice>
       )}
       {[payment.error, demo.error, cancel.error]
@@ -304,6 +325,54 @@ function BookingStatusContent({ bookingId, booking, embedded = false, compact = 
             {errorMessage(error)}
           </Notice>
         ))}
+
+      <ConfirmationDialog
+        isOpen={confirmCancelOpen}
+        onClose={() => setConfirmCancelOpen(false)}
+        onConfirm={() => {
+          cancel.mutate(undefined, {
+            onSuccess: () => {
+              setConfirmCancelOpen(false)
+              setToastMessage(`Đã hủy lượt đặt chỗ #${data.bookingCode} thành công.`)
+            },
+          })
+        }}
+        title="Xác nhận hủy đặt chỗ"
+        message={
+          <div className="space-y-2 text-left">
+            <p className="text-slate-700">
+              Bạn có chắc chắn muốn hủy lượt đặt chỗ{' '}
+              <strong className="font-semibold text-slate-900">#{data.bookingCode}</strong>?
+            </p>
+            {data.status === 'PENDING_CHECKIN' ? (
+              <div className="bg-amber-50 border border-amber-200 rounded-lg p-2.5 text-xs text-amber-800">
+                <p className="font-semibold">Chính sách bảo chứng hoàn cọc:</p>
+                <p className="mt-0.5">Tiền cọc sẽ được xử lý hoàn tiền theo quy định và chính sách của bãi xe.</p>
+              </div>
+            ) : (
+              <p className="text-xs text-slate-500">
+                Chỗ đỗ đang giữ sẽ được giải phóng ngay lập tức cho các phương tiện khác.
+              </p>
+            )}
+          </div>
+        }
+        confirmText="Xác nhận hủy"
+        cancelText="Đóng"
+        variant="danger"
+        isLoading={cancel.isPending}
+      />
+
+      {toastMessage && (
+        <ToastContainer position="top-right">
+          <Toast
+            title="Thông báo"
+            message={toastMessage}
+            variant="success"
+            duration={4000}
+            onClose={() => setToastMessage(null)}
+          />
+        </ToastContainer>
+      )}
     </div>
   )
 }

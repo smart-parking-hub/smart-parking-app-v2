@@ -16,8 +16,20 @@ export interface Tariff { vehicleType: Vehicle['vehicleType']; basePricePerHour:
 export interface Lot { id: number; name: string; address: string; status: string; merchantId: number; slots: { vehicleType: Vehicle['vehicleType']; availableCapacity: number; totalCapacity: number }[]; pricingRules: Tariff[] }
 export async function fetchBooking(id: number) { return bookingSchema.parse(await getData<unknown>(`/api/v1/bookings/${id}`)) }
 export async function fetchBookings() { const page = await getData<Page<unknown>>('/api/v1/bookings', { size: 100 }); return page.content.map(row => bookingSchema.parse(row)) }
-export async function fetchBookingsPage(page: number, size = 8) {
-  const result = await getData<Page<unknown>>('/api/v1/bookings', { page, size, sort: 'createdAt,desc' })
+export interface BookingFilters {
+  search?: string
+  status?: string
+  from?: string
+  to?: string
+}
+
+export async function fetchBookingsPage(page: number, size = 8, filters?: BookingFilters) {
+  const params: Record<string, unknown> = { page, size, sort: 'createdAt,desc' }
+  if (filters?.search?.trim()) params.search = filters.search.trim()
+  if (filters?.status) params.status = filters.status
+  if (filters?.from) params.from = filters.from
+  if (filters?.to) params.to = filters.to
+  const result = await getData<Page<unknown>>('/api/v1/bookings', params)
   return { ...result, content: result.content.map(row => bookingSchema.parse(row)) }
 }
 export async function fetchVehicles() { const page = await getData<Page<Vehicle>>('/api/v1/vehicles', { size: 100 }); return page.content.filter(vehicle => vehicle.status === 'ACTIVE') }

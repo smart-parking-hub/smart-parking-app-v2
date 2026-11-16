@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { Link, useLocation } from 'react-router-dom'
 import { ArrowLeft } from 'lucide-react'
@@ -7,7 +7,7 @@ import { errorMessage } from '@/shared/api/resources'
 import { Notice } from '@/shared/components/Workspace'
 import { DriverContactForm } from '../components/DriverContactForm'
 import { DriverPasswordForm } from '../components/DriverPasswordForm'
-import { ProfileSidebarNav } from '../components/ProfileSidebarNav'
+import { ProfileSidebarNav, type AccountSidebarTab } from '../components/ProfileSidebarNav'
 import { accountButton } from '../components/AccountSection'
 
 export const driverProfileKey = ['current-user', 'profile'] as const
@@ -17,6 +17,36 @@ export function ProfilePage() {
   const query = useQuery({ queryKey: driverProfileKey, queryFn: fetchMyProfile, staleTime: 30_000, retry: false, refetchOnWindowFocus: false })
   const profile = query.data
   const hasProfile = Boolean(profile)
+
+  const [activeTab, setActiveTab] = useState<AccountSidebarTab>(() =>
+    hash === '#bao-mat' ? 'change-password' : 'profile'
+  )
+
+  useEffect(() => {
+    if (hash === '#bao-mat') {
+      setActiveTab('change-password')
+    } else if (!hash || hash === '#ca-nhan') {
+      setActiveTab('profile')
+    }
+  }, [hash])
+
+  const handleTabChange = useCallback((tab: AccountSidebarTab) => {
+    setActiveTab(tab)
+    if (tab === 'change-password') {
+      const target = document.getElementById('bao-mat')
+      if (typeof target?.scrollIntoView === 'function') {
+        target.scrollIntoView({ behavior: 'smooth' })
+      }
+    } else {
+      const target = document.getElementById('ca-nhan')
+      if (typeof target?.scrollIntoView === 'function') {
+        target.scrollIntoView({ behavior: 'smooth' })
+      } else if (typeof window !== 'undefined' && typeof window.scrollTo === 'function') {
+        window.scrollTo({ top: 0, behavior: 'smooth' })
+      }
+    }
+  }, [])
+
   useEffect(() => {
     if (!hash || !hasProfile) return
     const target = document.getElementById(hash.replace(/^#/, ''))
@@ -24,6 +54,49 @@ export function ProfilePage() {
       target.scrollIntoView({ behavior: 'smooth' })
     }
   }, [hash, key, hasProfile])
+
+  useEffect(() => {
+    if (!hasProfile) return
+
+    let ticking = false
+    const updateActiveSection = () => {
+      ticking = false
+      const baoMat = document.getElementById('bao-mat')
+      if (!baoMat) return
+
+      const rect = baoMat.getBoundingClientRect()
+      const isBottom =
+        typeof window !== 'undefined' &&
+        window.innerHeight + window.scrollY >= (document.documentElement.scrollHeight - 60)
+      const threshold = Math.min(((typeof window !== 'undefined' ? window.innerHeight : 800) || 800) * 0.5, 360)
+
+      if (isBottom || rect.top <= threshold) {
+        setActiveTab('change-password')
+      } else {
+        setActiveTab('profile')
+      }
+    }
+
+    const onScrollOrResize = () => {
+      if (typeof window !== 'undefined' && typeof window.requestAnimationFrame === 'function') {
+        if (!ticking) {
+          ticking = true
+          window.requestAnimationFrame(updateActiveSection)
+        }
+      } else {
+        updateActiveSection()
+      }
+    }
+
+    window.addEventListener('scroll', onScrollOrResize, { passive: true })
+    window.addEventListener('resize', onScrollOrResize, { passive: true })
+
+    return () => {
+      window.removeEventListener('scroll', onScrollOrResize)
+      window.removeEventListener('resize', onScrollOrResize)
+    }
+  }, [hasProfile])
+
   return <div className="mx-auto w-full max-w-[1120px] px-4 py-8 font-inter text-base leading-relaxed text-brand-navy sm:px-8 lg:py-10">
     <header className="mb-8">
       <Link to="/dashboard" className="mb-5 inline-flex items-center gap-2 text-brand-muted hover:text-brand-navy focus-visible:outline-2 focus-visible:outline-brand-orange"><ArrowLeft size={16} aria-hidden="true" /> Tổng quan</Link>
@@ -37,7 +110,7 @@ export function ProfilePage() {
         : !profile ? <Notice>Chưa có thông tin hồ sơ.</Notice>
           : <div className="grid items-start gap-6 lg:grid-cols-[260px_minmax(0,1fr)]">
             <aside aria-label="Tóm tắt tài khoản" className="lg:sticky lg:top-[calc(var(--driver-header-height)+24px)]">
-              <ProfileSidebarNav compact activeTab="profile" />
+              <ProfileSidebarNav compact activeTab={activeTab} onTabChange={handleTabChange} />
             </aside>
             <div className="min-w-0 space-y-6">
               <DriverContactForm profile={profile} onUpdated={data => { cache.setQueryData(driverProfileKey, data); void cache.invalidateQueries({ queryKey: ['current-user', 'header'] }) }} />

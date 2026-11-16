@@ -48,8 +48,8 @@ export function DatePicker({
         </label>
       )}
 
-      <div className="relative flex items-center">
-        <div className="absolute left-3.5 flex items-center pointer-events-none text-slate-400 shrink-0">
+      <div className="relative flex items-center group">
+        <div className="absolute left-3.5 flex items-center pointer-events-none text-slate-400 group-hover:text-[#d95f00] transition-colors shrink-0">
           <Calendar className="w-4 h-4" aria-hidden="true" />
         </div>
 
@@ -65,10 +65,19 @@ export function DatePicker({
           aria-invalid={Boolean(error)}
           aria-describedby={error ? `${inputId}-error` : helperText ? `${inputId}-helper` : undefined}
           onChange={(e) => onChange?.(e.target.value)}
+          onClick={(e) => {
+            try {
+              e.currentTarget.showPicker?.()
+            } catch (_err) {
+              void _err
+            }
+          }}
           className={cn(
-            'w-full bg-white border border-slate-200 rounded-xl pl-10 pr-4 h-10 text-sm text-slate-900 font-sans transition-all',
-            'focus:outline-none focus:ring-2 focus:ring-[#d95f00]/20 focus:border-[#d95f00] hover:border-slate-300',
-            'disabled:bg-slate-50 disabled:text-slate-400 disabled:cursor-not-allowed',
+            'w-full bg-white border border-slate-200 rounded-xl pl-10 pr-4 h-10 text-sm text-slate-900 font-sans transition-all cursor-pointer shadow-2xs',
+            'focus:outline-none focus:ring-2 focus:ring-[#d95f00]/20 focus:border-[#d95f00]',
+            'hover:border-[#d95f00] hover:bg-orange-50/10 hover:shadow-xs',
+            '[&::-webkit-calendar-picker-indicator]:cursor-pointer [&::-webkit-calendar-picker-indicator]:opacity-60 hover:[&::-webkit-calendar-picker-indicator]:opacity-100 hover:[&::-webkit-calendar-picker-indicator]:scale-110 [&::-webkit-calendar-picker-indicator]:transition-all',
+            'disabled:bg-slate-50 disabled:text-slate-400 disabled:cursor-not-allowed disabled:hover:border-slate-200 disabled:hover:bg-slate-50 disabled:hover:shadow-none',
             error && 'border-rose-400 focus:border-rose-500 focus:ring-rose-500/20'
           )}
         />
