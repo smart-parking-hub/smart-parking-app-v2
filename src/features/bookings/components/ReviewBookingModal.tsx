@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react'
 import { X, Star, Loader2 } from 'lucide-react'
-import type { BookingItemDto } from '../types/bookingTypes'
 import { reviewBookingSchema } from '../schemas/bookingSchemas'
 
 interface ReviewBookingModalProps {

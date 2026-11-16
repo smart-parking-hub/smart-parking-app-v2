@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import { CheckCircle2, Clock, CreditCard, ReceiptText, RefreshCw } from 'lucide-react'
+import { CreditCard, ReceiptText, RefreshCw } from 'lucide-react'
 import { Dialog, Notice, Badge, secondary } from '@/shared/components/Workspace'
 import { errorMessage } from '@/shared/api/resources'
 import {
