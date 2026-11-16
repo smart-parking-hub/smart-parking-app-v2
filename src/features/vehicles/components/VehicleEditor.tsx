@@ -2,10 +2,9 @@ import { useId } from 'react'
 import { Controller, useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useMutation } from '@tanstack/react-query'
-import { Info, Truck } from 'lucide-react'
+import { Info, Truck, ChevronDown } from 'lucide-react'
 import { Notice, button, control, secondary } from '@/shared/components/Workspace'
 import { Modal } from '@/shared/components/Modal'
-import { Select } from '@/shared/components/Select'
 import { Autocomplete } from '@/shared/components/Autocomplete'
 import { errorMessage } from '@/shared/api/resources'
 import { saveVehicle, vehicleInputSchema, vehicleTypes, type VehicleInput, type VehicleRecord } from '../api/vehicleDataApi'
@@ -92,38 +91,36 @@ export function VehicleEditor({ vehicle, onClose, onSaved }: {
             {fieldError('licensePlate')}
           </div>
 
-          {/* Loại xe: Sử dụng component Select mẫu dùng chung */}
+          {/* Loại xe */}
           <div className="grid content-start gap-2">
             <label htmlFor={`${id}-type`} className="text-sm font-semibold">
               Loại xe <span aria-hidden="true" className="text-brand-orange-ink">*</span>
             </label>
-            <Controller
-              name="vehicleType"
-              control={form.control}
-              render={({ field }) => (
-                <Select
-                  id={`${id}-type`}
-                  ariaLabel="Loại xe"
-                  triggerAriaHidden={true}
-                  value={field.value ?? ''}
-                  onChange={(val) => {
-                    field.onChange(val)
+            <div className="relative">
+              <select
+                id={`${id}-type`}
+                defaultValue={vehicle?.vehicleType ?? ''}
+                aria-label="Loại xe"
+                className={`${control} h-12 appearance-none pr-11 text-slate-800 transition-colors hover:border-slate-400 focus-visible:outline-2 focus-visible:outline-brand-orange focus-visible:ring-2 focus-visible:ring-brand-orange/20`}
+                disabled={save.isPending}
+                aria-required="true"
+                aria-invalid={Boolean(errors.vehicleType)}
+                aria-describedby={describedBy('vehicleType')}
+                {...form.register('vehicleType', {
+                  onChange: () => {
                     if (form.getValues('weightTon')) {
                       void form.trigger('weightTon')
                     }
-                  }}
-                  disabled={save.isPending}
-                  options={Object.entries(vehicleTypes).map(([val, label]) => ({
-                    value: val,
-                    label,
-                  }))}
-                  placeholder="Chọn loại xe"
-                  size="lg"
-                  variant="default"
-                  triggerClassName="h-12 rounded-xl border-brand-border text-sm font-normal text-slate-800 hover:border-slate-400 focus:border-brand-primary"
-                />
-              )}
-            />
+                  },
+                })}
+              >
+                <option value="" disabled>Chọn loại xe</option>
+                {Object.entries(vehicleTypes).map(([val, label]) => (
+                  <option key={val} value={val}>{label}</option>
+                ))}
+              </select>
+              <ChevronDown size={18} aria-hidden="true" className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-brand-muted" />
+            </div>
             <p id={`${id}-vehicleType-hint`} className="text-xs leading-5 text-brand-muted">
               Chọn theo xe thực tế để tìm đúng loại chỗ đỗ.
             </p>
