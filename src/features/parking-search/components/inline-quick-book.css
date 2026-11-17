@@ -10,12 +10,12 @@
 }
 
 .quick-hold {
-  width: min(100%, 560px);
+  width: min(100%, 680px);
   max-height: calc(100dvh - 40px);
   overflow-y: auto;
   overflow-x: hidden;
   overscroll-behavior: contain;
-  padding: 24px;
+  padding: 24px 32px;
   border: 1px solid var(--color-border-default);
   border-radius: 24px;
   background: var(--color-surface);

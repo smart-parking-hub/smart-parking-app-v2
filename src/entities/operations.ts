@@ -45,6 +45,8 @@ export interface Lot {
 export type ApiDateTimeValue = string | number[] | null | undefined
 
 export interface Booking {
+  finalPaymentMethod?: string | null
+  finalPaymentAmount?: number | null
   id: number
   bookingCode: string
   vehiclePlate: string
@@ -83,6 +85,8 @@ export interface Booking {
   customerPhone?: string | null
 }
 export interface Settlement {
+  bookingId?: number
+  finalPaymentMethod?: string
   bookingCode: string
   totalAmount: number
   advanceDeposit: number

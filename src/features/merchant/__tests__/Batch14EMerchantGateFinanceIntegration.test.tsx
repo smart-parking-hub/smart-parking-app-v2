@@ -357,7 +357,7 @@ describe('BATCH-14E: Merchant Gate, Bookings & Financial Settlement Integration 
       expect(mockSendData).toHaveBeenLastCalledWith(
         'post',
         '/api/v1/merchant/confirm-cash',
-        { bookingCode: 'BK-2026-X02', parkingLotId: 1 },
+        { bookingCode: 'BK-2026-X02', parkingLotId: 1, amount: 110000 },
       )
     })
   })

@@ -197,7 +197,7 @@ describe('Gate settlement contract', () => {
       expect(send).toHaveBeenLastCalledWith(
         'post',
         '/api/v1/merchant/confirm-cash',
-        { bookingCode: 'BK-001', parkingLotId: 12 },
+        { bookingCode: 'BK-001', parkingLotId: 12, amount: 150000 },
       ),
     )
     expect(await screen.findByRole('dialog', { name: 'Hoàn tất giao dịch' })).toBeInTheDocument()
@@ -264,48 +264,24 @@ describe('Gate settlement contract', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Kiểm tra & quyết toán xe ra' }))
     const confirm = await screen.findByRole('button', { name: /Đã nhận đủ tiền mặt/ })
     fireEvent.click(confirm)
-    expect(await screen.findByText('Chưa xác nhận được giao dịch')).toBeInTheDocument()
+    expect(await screen.findByText(/Chưa xác nhận được giao dịch/)).toBeInTheDocument()
     expect(screen.queryByRole('dialog', { name: 'Hoàn tất giao dịch' })).not.toBeInTheDocument()
     fireEvent.click(confirm)
     expect(await screen.findByRole('dialog', { name: 'Hoàn tất giao dịch' })).toHaveTextContent('BK-003')
   })
 
-  it('toggles QR payment view in checkout settlement dialog and confirms settlement', async () => {
-    send.mockResolvedValueOnce({
-      bookingCode: 'BK-QR-001',
-      totalAmount: 20000,
-      advanceDeposit: 4000,
-      amountDue: 16000,
-      parkingMinutes: 120,
-      bookingStatus: 'AWAITING_FINAL_PAYMENT',
-    }).mockResolvedValueOnce(null)
+  it('uses the driver payment flow instead of a fabricated PayOS QR or manual QR confirmation', async () => {
+    send.mockResolvedValueOnce({ bookingCode: 'BK-QR-001', totalAmount: 40000, advanceDeposit: 8000,
+      amountDue: 32000, parkingMinutes: 60, bookingStatus: 'AWAITING_FINAL_PAYMENT' })
     show(<MerchantScannerPage />, '/?code=BK-QR-001&lot=12')
     await screen.findByText('Bãi kiểm thử')
     fireEvent.click(screen.getByRole('button', { name: 'XE RA' }))
     fireEvent.click(screen.getByRole('button', { name: 'Kiểm tra & quyết toán xe ra' }))
-
-    // Initial cash view
     expect(await screen.findByText('Quyết toán lượt đỗ')).toBeInTheDocument()
-    const qrBtn = screen.getByRole('button', { name: /Thanh toán bằng QR/ })
-    expect(qrBtn).toBeInTheDocument()
-
-    // Switch to QR view
-    fireEvent.click(qrBtn)
-    expect(await screen.findByText('Thanh toán qua QR')).toBeInTheDocument()
-    expect(screen.getByTestId('checkout-qr-container')).toBeInTheDocument()
-    expect(screen.getByText('Quay lại Tiền mặt')).toBeInTheDocument()
-    expect(screen.getByText(/16\.000/)).toBeInTheDocument()
-
-    // Switch back to Cash view and then to QR again
-    fireEvent.click(screen.getByText('Quay lại Tiền mặt'))
-    expect(await screen.findByText('Quyết toán lượt đỗ')).toBeInTheDocument()
-    fireEvent.click(screen.getByRole('button', { name: /Thanh toán bằng QR/ }))
-
-    // Confirm settlement from QR view
-    const confirmQrBtn = screen.getByRole('button', { name: /Đã nhận thanh toán QR/ })
-    fireEvent.click(confirmQrBtn)
-
-    expect(await screen.findByRole('dialog', { name: 'Hoàn tất giao dịch' })).toHaveTextContent('BK-QR-001')
+    expect(screen.getByText(/Tài xế mở lượt đặt chỗ/)).toBeInTheDocument()
+    expect(screen.queryByTestId('checkout-qr-container')).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /Đã nhận thanh toán QR/ })).not.toBeInTheDocument()
+    expect(send).toHaveBeenCalledTimes(1)
   })
 
   it('dismisses checkout settlement dialog when closing via X without confirming exit or triggering false success popup', async () => {

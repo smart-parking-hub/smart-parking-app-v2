@@ -3,7 +3,7 @@ import { Check, Plus, Search, X } from 'lucide-react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Workspace, Panel, Notice, button, control, secondary } from '@/shared/components/Workspace'
 import { errorMessage } from '@/shared/api/resources'
-import { fetchVehiclePage, deactivateVehicle, type VehicleRecord } from '../api/vehicleDataApi'
+import { fetchVehiclePage, fetchVehicleParking, deactivateVehicle, type VehicleRecord } from '../api/vehicleDataApi'
 import { VehiclesTable } from '../components/VehiclesTable'
 import { VehicleEditor } from '../components/VehicleEditor'
 
@@ -15,11 +15,16 @@ export function VehiclesPage() {
   const [deleting, setDeleting] = useState<VehicleRecord | null>(null)
   const [success, setSuccess] = useState('')
   const query = useQuery({ queryKey: ['driver-vehicle-page', page], queryFn: () => fetchVehiclePage(page), retry: false })
+  const parking = useQuery({
+    queryKey: ['driver-vehicle-parking'], queryFn: ({ signal }) => fetchVehicleParking(signal),
+    enabled: !!query.data?.totalElements, retry: false, refetchInterval: 15_000,
+  })
   const refresh = async () => {
     await Promise.all([
       cache.invalidateQueries({ queryKey: ['driver-vehicle-page'] }),
       cache.invalidateQueries({ queryKey: ['booking-vehicles'] }),
       cache.invalidateQueries({ queryKey: ['driver-dashboard'] }),
+      cache.invalidateQueries({ queryKey: ['driver-vehicle-parking'] }),
     ])
   }
   const remove = useMutation({ mutationFn: deactivateVehicle, onSuccess: async () => { setDeleting(null); setSuccess('Đã ngừng sử dụng phương tiện.'); await refresh() } })
@@ -27,6 +32,7 @@ export function VehiclesPage() {
   return <Workspace eyebrow="TÀI KHOẢN / PHƯƠNG TIỆN" title="Đội xe của tôi" description="Quản lý phương tiện đăng ký với tài khoản của bạn." actions={<button className={`${button} cursor-pointer hover:bg-[#b84e00] hover:shadow-md hover:shadow-orange-500/25 active:scale-[0.98] transition-all`} disabled={editor !== null} onClick={() => { setSuccess(''); setEditor('new') }}><Plus size={17} aria-hidden="true" />Thêm phương tiện</button>}>
     {success && <div role="status" className="flex items-center gap-3 rounded-xl border border-brand-orange/20 bg-brand-orange/5 px-4 py-3 text-sm text-brand-navy"><Check size={18} aria-hidden="true" className="text-brand-orange-ink" /><span className="flex-1">{success}</span><button type="button" aria-label="Đóng thông báo lưu xe" className="rounded-lg p-2 hover:bg-brand-orange/10" onClick={() => setSuccess('')}><X size={16} aria-hidden="true" /></button></div>}
     {editor && <VehicleEditor key={editor === 'new' ? 'new' : editor.id} vehicle={editor === 'new' ? undefined : editor} onClose={() => setEditor(null)} onSaved={async () => { setEditor(null); setSuccess('Đã lưu phương tiện.'); await refresh() }} />}
+    {parking.isError && <Notice error><div>Chưa tải được bãi hiện tại của xe. {errorMessage(parking.error)}<button className={`${secondary} ml-3`} onClick={() => void parking.refetch()}>Thử lại dữ liệu bãi</button></div></Notice>}
     {deleting && <Panel title="Ngừng sử dụng phương tiện?"><p className="mb-4">Xe {deleting.licensePlate} sẽ không còn được chọn khi đặt chỗ. Thông tin xe vẫn được giữ trong hồ sơ.</p><div className="flex flex-wrap gap-3"><button className={button} disabled={remove.isPending} onClick={() => remove.mutate(deleting.id)}>Xác nhận ngừng sử dụng</button><button className={secondary} disabled={remove.isPending} onClick={() => { setDeleting(null); remove.reset() }}>Hủy</button></div>{remove.isError && <div className="mt-4"><Notice error>{errorMessage(remove.error)}</Notice></div>}</Panel>}
     {query.isPending ? <p role="status">Đang tải phương tiện…</p> : query.isError ? <Notice error><div>{errorMessage(query.error)}<button className={`${secondary} mt-3`} onClick={() => void query.refetch()}>Thử lại</button></div></Notice> : <section aria-labelledby="vehicles-list-title" className="overflow-hidden rounded-2xl border border-brand-border bg-white">
       <div className="flex flex-wrap items-end justify-between gap-4 border-b border-brand-border bg-brand-surface px-5 py-4">
@@ -40,7 +46,7 @@ export function VehiclesPage() {
         </div>}
       </div>
       {query.data.totalElements === 0 ? <div className="p-5"><Notice>Bạn chưa có phương tiện nào. Thêm xe để bắt đầu đặt chỗ.</Notice></div> : <>
-        {!vehicles.length ? <div className="p-5"><Notice>Không có phương tiện phù hợp trong trang này.</Notice></div> : <VehiclesTable vehicles={vehicles} onEdit={vehicle => { setSuccess(''); setEditor(vehicle) }} onDeactivate={vehicle => { setSuccess(''); remove.reset(); setDeleting(vehicle) }} />}
+        {!vehicles.length ? <div className="p-5"><Notice>Không có phương tiện phù hợp trong trang này.</Notice></div> : <VehiclesTable vehicles={vehicles} parking={parking.isError ? undefined : parking.data} parkingLoading={parking.isPending} onEdit={vehicle => { setSuccess(''); setEditor(vehicle) }} onDeactivate={vehicle => { setSuccess(''); remove.reset(); setDeleting(vehicle) }} />}
         <div className="flex flex-wrap items-center justify-between gap-3 border-t border-brand-border bg-brand-surface/60 px-5 py-3">
           <p className="text-xs text-brand-muted">Hiển thị {vehicles.length} phương tiện trên trang này</p>
           <div className="flex flex-wrap items-center gap-2"><span className="mr-2 text-xs text-brand-muted">Trang {query.data.currentPage + 1}/{Math.max(1, query.data.totalPages)}</span><button className={`${secondary} !min-h-9 !px-3 !py-2 !text-xs`} disabled={page === 0} onClick={() => { setSearch(''); setPage(page - 1) }}>Trang trước</button><button className={`${secondary} !min-h-9 !px-3 !py-2 !text-xs`} disabled={page + 1 >= query.data.totalPages} onClick={() => { setSearch(''); setPage(page + 1) }}>Trang sau</button></div>

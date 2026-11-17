@@ -34,6 +34,33 @@ it('blocks a full lot without posting a booking',async()=>{
 it('reports booking failure and never offers success on a rejected request',async()=>{
  vi.mocked(apiClient.post).mockRejectedValue(new Error('Bãi vừa hết chỗ'));mount();await userEvent.click(await screen.findByRole('button',{name:'Tạo booking và xem tiền cọc'}));expect(await screen.findByRole('alert')).toHaveTextContent('Bãi vừa hết chỗ');expect(screen.queryByText('BK-SERVER-41')).not.toBeInTheDocument()
 })
+it('keeps the vehicle and times editable when the server rejects an overlapping vehicle booking',async()=>{
+ vi.mocked(apiClient.post).mockRejectedValue(Object.assign(new AxiosError('Conflict'),{response:{status:409,data:{code:'CONFLICT',message:'Xe này đã có booking trùng thời gian. Vui lòng chọn thời gian khác hoặc hoàn tất lượt đỗ hiện tại.'}}}))
+ mount();await userEvent.click(await screen.findByRole('button',{name:'Tạo booking và xem tiền cọc'}))
+ expect(await screen.findByRole('alert')).toHaveTextContent('Xe này đã có booking trùng thời gian')
+ expect(screen.getByRole('combobox')).toHaveValue('3')
+ expect(screen.getByRole('button',{name:'Tạo booking và xem tiền cọc'})).toBeEnabled()
+ expect(screen.queryByRole('region',{name:'Thanh toán bằng ví'})).not.toBeInTheDocument()
+})
+it('switches to one compact confirmed ticket after successful wallet deposit',async()=>{
+ let paid=false
+ vi.mocked(apiClient.get).mockImplementation(async url=>({data:{data:
+   String(url).endsWith('/payments/wallet')?(paid?{id:71,status:'SUCCESS'}:null):
+   String(url).endsWith('/driver/wallet')?{availableAmount:100000,heldAmount:0,currency:'VND',enabled:true}:
+   String(url).includes('/vehicles')?{content:[vehicle]}:String(url).includes('/parking-lots')?lot:current}}))
+ vi.mocked(apiClient.request).mockImplementation(async config=>{
+   if(config.url==='/api/v1/payments/wallet'){paid=true;current={...current,status:'PENDING_CHECKIN'};return {data:{data:{id:71,status:'SUCCESS'}}}}
+   return apiClient.post(config.url!,config.data)
+ })
+ const user=userEvent.setup();mount();await user.click(await screen.findByRole('button',{name:'Tạo booking và xem tiền cọc'}))
+ const pay=await screen.findByRole('button',{name:/Trả.*bằng ví/});await waitFor(()=>expect(pay).toBeEnabled());await user.click(pay)
+ expect(await screen.findByRole('heading',{name:'Vé check-in của bạn'})).toBeInTheDocument()
+ expect(screen.getAllByText('BK-SERVER-41')).toHaveLength(1)
+ expect(screen.getAllByRole('button',{name:'Sao chép mã check-in'})).toHaveLength(1)
+ expect(screen.queryByRole('region',{name:'Thanh toán bằng ví'})).not.toBeInTheDocument()
+ expect(screen.queryByRole('button',{name:/Thanh toán cọc.*qua PayOS/})).not.toBeInTheDocument()
+ expect(apiClient.request).toHaveBeenCalledWith(expect.objectContaining({url:'/api/v1/payments/wallet',data:{bookingId:41}}))
+})
 it('keeps a cooldown submit disabled and preserves the form without opening payment',async()=>{
  const retryAt=new Date(Date.now()+1800000).toISOString()
  vi.mocked(apiClient.post).mockRejectedValue(Object.assign(new AxiosError('Too many requests'),{response:{data:{code:'BOOKING_HOLD_COOLDOWN',message:'Bạn đã bỏ hai lượt giữ chỗ tại bãi này.',data:{reason:'COOLDOWN',retryAt}}}}))

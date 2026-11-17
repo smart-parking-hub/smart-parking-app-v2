@@ -3,12 +3,17 @@ import { mockEmptyDriverWallet } from './fixtures/payment-reads'
 
 test.use({ baseURL: process.env.QUICK_HOLD_BASE_URL || 'http://127.0.0.1:5174' })
 
-for (const width of [390, 1440]) {
+for (const width of [390, 650, 1440]) {
   test(`quick book real server reservation flow, keyboard and verification at ${width}px`, async ({
     page,
   }) => {
     await page.setViewportSize({ width, height: 900 })
     await mockEmptyDriverWallet(page, 88)
+    if (width === 1440) {
+      await page.route('**/api/v1/driver/wallet', route => route.fulfill({ json: { data: {
+        availableAmount: 1239000, heldAmount: 0, currency: 'VND', enabled: true,
+      } } }))
+    }
     const errors: string[] = []
     page.on('pageerror', (error) => errors.push(error.message))
 
@@ -19,7 +24,7 @@ for (const width of [390, 1440]) {
       parkingLotId: 1,
       merchantId: 5,
       parkingLotName: 'Bãi Xe Phía Nam',
-      parkingLotAddress: '123 Quốc Lộ 1A',
+      parkingLotAddress: '123 Quốc Lộ 1A, Phường Bình Trị Đông B, Quận Bình Tân, Thành phố Hồ Chí Minh',
       vehicleId: 3,
       vehiclePlate: '51C-12345',
       status: 'PENDING_PAYMENT',
@@ -198,6 +203,19 @@ for (const width of [390, 1440]) {
     await expect(dialog.getByText('#88', { exact: true })).toBeVisible()
     expect(await dialog.innerHTML()).not.toContain('BK-SERVER-88')
     await expect(dialog.getByText('Chờ thanh toán cọc')).toBeVisible()
+    await expect(dialog.getByText(serverBooking.parkingLotAddress, { exact: true })).toBeVisible()
+    await expect(dialog.getByRole('region', { name: 'Thanh toán bằng ví' })).toBeVisible()
+    await expect(dialog.getByRole('button', { name: /Thanh toán cọc.*qua PayOS/ })).toBeEnabled()
+    expect(await dialog.evaluate(el => el.scrollWidth <= el.clientWidth)).toBe(true)
+    if (width === 1440) {
+      expect((await dialog.boundingBox())?.width).toBe(680)
+      await expect(dialog.getByRole('button', { name: /Trả.*bằng ví/ })).toBeEnabled()
+    }
+    for (const title of ['Chi tiết giá & phụ phí', 'Tác vụ khác']) {
+      await expect(dialog.locator('details').filter({ has: page.getByText(title, { exact: true }) })).not.toHaveAttribute('open', '')
+    }
+    await dialog.evaluate(el => { el.scrollTop = 0 })
+    await dialog.screenshot({ path: `.artifacts/playwright/quick-hold-payment-${width}.png` })
 
     // Verify POST payload DTO
     expect(bookingRequestBody).toMatchObject({
