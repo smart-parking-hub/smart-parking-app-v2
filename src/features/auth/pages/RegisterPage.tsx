@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
-import { useForm } from 'react-hook-form'
+import { useForm, type FieldErrors } from 'react-hook-form'
 import { useMutation } from '@tanstack/react-query'
 import { ArrowRight, Check, Eye, EyeOff, LoaderCircle, ShieldCheck, Store, Truck } from 'lucide-react'
 import type { AuthFields } from '../model/authFields'
@@ -36,7 +36,10 @@ export function RegisterPage({ mode = 'register' }: { mode?: 'login' | 'register
   const paramAutoVerify = searchParams.get('autoVerify') === 'true'
   const [magicLinkNotice, setMagicLinkNotice] = useState<string | null>(null)
 
-  const form = useForm<AuthFields>({ defaultValues: { role: 'DRIVER' } })
+  const form = useForm<AuthFields>({
+    defaultValues: { role: 'DRIVER' },
+    mode: mode === 'register' ? 'onTouched' : 'onSubmit',
+  })
   const emailValue = (form.watch('email') ?? '').trim().toLowerCase()
   const selectedRole = form.watch('role')
   const [sent, setSent] = useState(false)
@@ -44,7 +47,14 @@ export function RegisterPage({ mode = 'register' }: { mode?: 'login' | 'register
   const [showPassword, setShowPassword] = useState<Record<string, boolean>>({})
   type RegisterStepKey = 'info' | 'bank' | 'email' | 'password'
   const [registerStepKey, setRegisterStepKey] = useState<RegisterStepKey>('info')
+  const [fieldToFocus, setFieldToFocus] = useState<keyof AuthFields | null>(null)
   const [isOtpFocused, setIsOtpFocused] = useState(false)
+  useEffect(() => {
+    if (fieldToFocus) {
+      form.setFocus(fieldToFocus)
+      setFieldToFocus(null)
+    }
+  }, [fieldToFocus, registerStepKey, form])
 
   // Restore registration form draft from sessionStorage
   useEffect(() => {
@@ -124,6 +134,7 @@ export function RegisterPage({ mode = 'register' }: { mode?: 'login' | 'register
   const otp = useMutation({
     mutationFn: async () => {
       const email = form.getValues('email')?.trim()
+      if (mode === 'register' && email && email.length > 100) throw new Error('Email không được vượt quá 100 ký tự.')
       const valid = Boolean(email && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))
       if (!valid)
         throw new Error('Nhập email hợp lệ để nhận mã.')
@@ -168,6 +179,7 @@ export function RegisterPage({ mode = 'register' }: { mode?: 'login' | 'register
       /^\d{6}$/.test(form.getValues('otpCode')))
 
   // Support Magic Link URL pre-filling and auto-verification
+  const verifyMagicLink = verifyOtp.mutate
   useEffect(() => {
     if (mode !== 'register') return
     if (paramEmail && paramOtp && /^\d{6}$/.test(paramOtp)) {
@@ -177,7 +189,7 @@ export function RegisterPage({ mode = 'register' }: { mode?: 'login' | 'register
       setSent(true)
 
       if (paramAutoVerify) {
-        verifyOtp.mutate(
+        verifyMagicLink(
           { email: normalizedEmail, otpCode: paramOtp },
           {
             onSuccess: () => {
@@ -195,7 +207,7 @@ export function RegisterPage({ mode = 'register' }: { mode?: 'login' | 'register
         setRegisterStepKey('email')
       }
     }
-  }, [mode, paramEmail, paramOtp, paramAutoVerify])
+  }, [mode, paramEmail, paramOtp, paramAutoVerify, form, verifyMagicLink])
 
   const submit = useMutation({
     mutationFn: async (data: AuthFields) => {
@@ -208,8 +220,8 @@ export function RegisterPage({ mode = 'register' }: { mode?: 'login' | 'register
           password: data.password,
           email: data.email.trim().toLowerCase(),
           role: data.role,
-          fullName: data.fullName,
-          citizenId: data.citizenId,
+          fullName: data.fullName.trim(),
+          citizenId: data.citizenId?.trim() ?? '',
           otpCode: data.otpCode,
           ...(data.role === 'MERCHANT' && data.bankName
             ? {
@@ -230,23 +242,26 @@ export function RegisterPage({ mode = 'register' }: { mode?: 'login' | 'register
       const msg = errorMessage(error)
       if (/số điện thoại|phone/i.test(msg)) {
         setRegisterStepKey('info')
-        form.setError('phone', { message: msg }, { shouldFocus: true })
+        form.setError('phone', { message: msg })
+        setFieldToFocus('phone')
         return
       }
       if (/cccd|cmnd|citizen/i.test(msg)) {
         setRegisterStepKey('info')
-        form.setError('citizenId', { message: msg }, { shouldFocus: true })
+        form.setError('citizenId', { message: msg })
+        setFieldToFocus('citizenId')
         return
       }
       if (/email/i.test(msg)) {
         setRegisterStepKey('email')
-        form.setError('email', { message: msg }, { shouldFocus: true })
+        form.setError('email', { message: msg })
+        setFieldToFocus('email')
         return
       }
       // Registration rechecks expiry and consumes the code atomically with account creation.
       if (mode === 'register' && /otp/i.test(msg)) {
         setRegisterStepKey('email')
-        form.setFocus('otpCode')
+        setFieldToFocus('otpCode')
       }
     },
   })
@@ -265,41 +280,12 @@ export function RegisterPage({ mode = 'register' }: { mode?: 'login' | 'register
   const advanceRegisterStep = async () => {
     if (verifyOtp.isPending || submit.isPending) return
     if (registerStepKey === 'info') {
-      const valid = await form.trigger(['phone', 'fullName', 'citizenId'])
-      const fullName = (form.getValues('fullName') ?? '').trim()
-      if (fullName.length < 2) {
-        form.setError('fullName', {
-          message: fullName.length === 0 ? 'Vui lòng nhập họ và tên.' : 'Họ và tên phải có ít nhất 2 ký tự.',
-        })
-        form.setFocus('fullName')
-        return
-      }
-
-      if (selectedRole === 'MERCHANT') {
-        const citizenId = (form.getValues('citizenId') ?? '').trim()
-        if (!citizenId) {
-          form.setError('citizenId', { message: 'CCCD / CMND là bắt buộc đối với Chủ bãi xe.' })
-          form.setFocus('citizenId')
-          return
-        }
-        if (!/^(?:[0-9]{9}|[0-9]{12})$/.test(citizenId)) {
-          form.setError('citizenId', { message: 'CCCD / CMND phải gồm 9 hoặc 12 chữ số.' })
-          form.setFocus('citizenId')
-          return
-        }
-      }
-
+      const valid = await form.trigger(['fullName', 'phone', 'citizenId'], { shouldFocus: true })
       if (!valid) return
 
       setRegisterStepKey(selectedRole === 'MERCHANT' ? 'bank' : 'email')
     } else if (registerStepKey === 'bank') {
-      const valid = await form.trigger(['bankName', 'bankAccountNum'])
-      const bankAccountNum = (form.getValues('bankAccountNum') ?? '').trim()
-      if (!/^\d{6,25}$/.test(bankAccountNum)) {
-        form.setError('bankAccountNum', { message: 'Số tài khoản ngân hàng phải gồm từ 6 đến 25 chữ số.' })
-        form.setFocus('bankAccountNum')
-        return
-      }
+      const valid = await form.trigger(['bankName', 'bankAccountNum'], { shouldFocus: true })
       if (valid) setRegisterStepKey('email')
     } else if (registerStepKey === 'email') {
       if (!isVerifiedOrSent || otp.isPending) {
@@ -313,12 +299,29 @@ export function RegisterPage({ mode = 'register' }: { mode?: 'login' | 'register
     }
   }
 
+  const showInvalidRegistrationStep = (errors: FieldErrors<AuthFields>) => {
+    if (mode !== 'register') return
+    const fields: (keyof AuthFields)[] = [
+      'fullName', 'phone', 'citizenId', 'bankName', 'bankAccountNum',
+      'email', 'otpCode', 'password', 'confirmPassword',
+    ]
+    const field = fields.find(name => errors[name])
+    if (!field) return
+    setRegisterStepKey(
+      ['fullName', 'phone', 'citizenId'].includes(field) ? 'info'
+        : ['bankName', 'bankAccountNum'].includes(field) ? 'bank'
+          : ['email', 'otpCode'].includes(field) ? 'email' : 'password',
+    )
+    setFieldToFocus(field)
+  }
+
   const input = (
     name: keyof AuthFields,
     label: string,
     type = 'text',
     options: Parameters<typeof form.register>[1] = {},
     placeholder?: string,
+    hint?: string,
   ) => {
     const isPassword = type === 'password'
     return (
@@ -331,8 +334,10 @@ export function RegisterPage({ mode = 'register' }: { mode?: 'login' | 'register
             id={`auth-${name}`}
             className={`${control} min-h-12 sm:min-h-14 text-base bg-white border border-slate-300 text-black font-normal placeholder:font-normal placeholder:text-slate-400 hover:border-slate-400 focus:border-[#d95f00] focus:ring-2 focus:ring-[#d95f00]/20 focus-visible:ring-2 focus-visible:ring-[#d95f00] focus-visible:ring-offset-1 rounded-xl px-4 py-3 shadow-2xs transition-colors`}
             disabled={submit.isPending}
+            aria-required={Boolean(options.required ?? (name !== 'citizenId' && name !== 'confirmPassword'))}
             aria-invalid={Boolean(form.formState.errors[name])}
-            aria-describedby={form.formState.errors[name] ? `auth-${name}-error` : undefined}
+            aria-describedby={[hint ? `auth-${name}-hint` : '', form.formState.errors[name] ? `auth-${name}-error` : ''].filter(Boolean).join(' ') || undefined}
+            inputMode={name === 'citizenId' || name === 'bankAccountNum' ? 'numeric' : type === 'tel' ? 'tel' : undefined}
             type={isPassword && showPassword[name] ? 'text' : type}
             placeholder={placeholder}
             autoComplete={
@@ -348,12 +353,16 @@ export function RegisterPage({ mode = 'register' }: { mode?: 'login' | 'register
                       ? 'tel'
                       : name === 'email'
                         ? 'email'
-                        : 'off'
+                        : name === 'fullName' ? 'name' : 'off'
             }
             {...form.register(name, {
               required: name !== 'citizenId' && name !== 'confirmPassword',
               ...options,
-              ...(name === 'phone' ? { setValueAs: (value: string) => value.replace(/\s/g, '') } : {}),
+              ...(name === 'phone' ? { setValueAs: (value: string) => {
+                const compact = (value ?? '').replace(/\s/g, '')
+                return mode === 'register' && compact.startsWith('+84') ? `0${compact.slice(3)}` : compact
+              } } : {}),
+              ...(['fullName', 'citizenId', 'bankAccountNum'].includes(name) ? { setValueAs: (value: string) => (value ?? '').trim() } : {}),
             })}
           />
           {isPassword && (
@@ -367,8 +376,9 @@ export function RegisterPage({ mode = 'register' }: { mode?: 'login' | 'register
             </button>
           )}
         </div>
+        {hint && <p id={`auth-${name}-hint`} className="text-xs leading-5 text-slate-600">{hint}</p>}
         {form.formState.errors[name] && (
-          <span id={`auth-${name}-error`} role="alert" className="text-xs text-red-700 font-normal">
+          <span id={`auth-${name}-error`} role="alert" className="block text-xs text-red-700 font-normal">
             {form.formState.errors[name]?.message || 'Thông tin chưa hợp lệ.'}
           </span>
         )}
@@ -437,6 +447,7 @@ export function RegisterPage({ mode = 'register' }: { mode?: 'login' | 'register
             className="space-y-3.5 [&_input:not([role='combobox'])]:min-h-11 [&_input:not([role='combobox'])]:sm:min-h-12 [&_input:not([role='combobox'])]:text-sm [&_input:not([role='combobox'])]:sm:text-base [&_input:not([role='combobox'])]:rounded-xl [&_input:not([role='combobox'])]:px-3.5 [&_select]:min-h-11 [&_select]:sm:min-h-12 [&_select]:text-sm [&_select]:sm:text-base [&_select]:rounded-xl [&_select]:px-3.5 [&_label]:gap-1"
             onChange={() => { if (submit.isError) submit.reset() }}
             onSubmit={async (event) => {
+              if (submit.isPending || verifyOtp.isPending) { event.preventDefault(); return }
               if (mode === 'register' && registerStepKey !== 'password') {
                 event.preventDefault()
                 void advanceRegisterStep()
@@ -448,17 +459,7 @@ export function RegisterPage({ mode = 'register' }: { mode?: 'login' | 'register
                 form.setError('email', { message: 'Vui lòng gửi mã OTP thành công đến email này trước khi tiếp tục.' })
                 return
               }
-              if (mode === 'register') {
-                const fullName = (form.getValues('fullName') ?? '').trim()
-                const phone = (form.getValues('phone') ?? '').trim()
-                if (fullName.length < 2 || !phone) {
-                  event.preventDefault()
-                  setRegisterStepKey('info')
-                  await form.trigger(['fullName', 'phone', 'citizenId'])
-                  return
-                }
-              }
-              void form.handleSubmit((data) => submit.mutate(data))(event)
+              void form.handleSubmit((data) => submit.mutate(data), showInvalidRegistrationStep)(event)
             }}
           >
             {magicLinkNotice && (
@@ -553,12 +554,13 @@ export function RegisterPage({ mode = 'register' }: { mode?: 'login' | 'register
                     'text',
                     {
                       required: 'Vui lòng nhập họ và tên.',
-                      maxLength: 100,
+                      maxLength: { value: 100, message: 'Họ và tên không được vượt quá 100 ký tự.' },
                       validate: (val) =>
                         Boolean(val && val.trim().length >= 2) ||
                         'Họ và tên phải có ít nhất 2 ký tự.',
                     },
                     'Ví dụ: Nguyễn Văn Hùng',
+                    'Bắt buộc · Từ 2 đến 100 ký tự.',
                   )}
                   {input(
                     'phone',
@@ -572,6 +574,7 @@ export function RegisterPage({ mode = 'register' }: { mode?: 'login' | 'register
                       },
                     },
                     'Ví dụ: 0918239485',
+                    'Bắt buộc · Số di động Việt Nam 10 số, chấp nhận đầu +84.',
                   )}
                 </div>
               ) : mode !== 'forgot' ? (
@@ -603,6 +606,7 @@ export function RegisterPage({ mode = 'register' }: { mode?: 'login' | 'register
                     },
                   },
                   'Ví dụ: 079123456789 (9 hoặc 12 số)',
+                  selectedRole === 'MERCHANT' ? 'Bắt buộc với chủ bãi · Nhập đúng 9 hoặc 12 chữ số.' : 'Không bắt buộc với tài xế · Nếu nhập, phải gồm 9 hoặc 12 chữ số.',
                 )}
 
               {mode === 'register' && (
@@ -647,7 +651,10 @@ export function RegisterPage({ mode = 'register' }: { mode?: 'login' | 'register
                     'bankAccountNum',
                     'Số tài khoản ngân hàng',
                     'text',
-                    { required: selectedRole === 'MERCHANT' },
+                    {
+                      required: 'Vui lòng nhập số tài khoản ngân hàng.',
+                      pattern: { value: /^\d{6,25}$/, message: 'Số tài khoản ngân hàng phải gồm từ 6 đến 25 chữ số.' },
+                    },
                     'Ví dụ: 19036789123456',
                   )}
                 </div>
@@ -699,6 +706,7 @@ export function RegisterPage({ mode = 'register' }: { mode?: 'login' | 'register
                         className={`${control} min-h-12 sm:min-h-14 text-base bg-white border border-slate-300 text-black font-normal placeholder:font-normal placeholder:text-slate-400 hover:border-slate-400 focus:border-[#d95f00] focus:ring-2 focus:ring-[#d95f00]/20 rounded-xl px-4 py-3 shadow-2xs transition-colors w-full`}
                         {...form.register('email', {
                           required: 'Nhập email nhận mã xác thực.',
+                          maxLength: mode === 'register' ? { value: 100, message: 'Email không được vượt quá 100 ký tự.' } : undefined,
                           pattern: { value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/, message: 'Nhập email hợp lệ để nhận mã.' },
                           onChange: () => {
                             setSent(false)

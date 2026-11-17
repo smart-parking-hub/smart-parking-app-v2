@@ -7,7 +7,7 @@
 
 ## Result
 
-No unresolved Blocker, Critical or Major finding was identified in the reviewed change. The current revision passes the local build, full unit/component suite and all 55 browser scenarios after synchronization with main.
+No unresolved Blocker, Critical or Major finding was identified in the original reviewed change. That revision passed the local build, full unit/component suite and all 55 browser scenarios after synchronization with main. The registration follow-up is reviewed separately in [REGISTER-VALIDATION-REVIEW.md](REGISTER-VALIDATION-REVIEW.md).
 
 ## Findings and disposition
 
@@ -18,7 +18,7 @@ No unresolved Blocker, Critical or Major finding was identified in the reviewed 
 | Major, fixed | Unpaid check-in codes appeared in payment summaries, return views and booking lists/details. | Use the existing numeric order reference for `PENDING_PAYMENT`, including text, attributes, clipboard and gate links. This is a UI visibility change; backend authorization remains authoritative. |
 | Minor, fixed | Success/error feedback used inconsistent banners, floating notices and dialogs; controls were misaligned. | Reuse native Dialog for modal notifications, retain top-right login toast, align toast contents and vehicle controls, translate the lot status and style navigation as buttons. |
 | Minor, fixed | Mobile floating assistant could cover capacity save controls. | Reserve space below the mobile footer; validate the save/confirm flow at 390px and 1440px. |
-| Minor, existing | `RegisterPage.tsx:198` emits `react-hooks/exhaustive-deps` for `form` and `verifyOtp`. | Recorded as pre-existing, outside this PR. ESLint reports zero errors and one warning. |
+| Minor, fixed in follow-up | `RegisterPage.tsx:198` emitted `react-hooks/exhaustive-deps` for `form` and `verifyOtp`. | The registration validation follow-up uses the stable mutation function and complete dependencies. ESLint now reports zero errors and zero warnings. |
 
 ## Correctness, privacy and contracts
 
