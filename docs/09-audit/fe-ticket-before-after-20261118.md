@@ -31,3 +31,10 @@ Owner: SmartParkingHub. Phạm vi: `fix/quick-book-payment-ticket`; base `f51b71
 Không đổi payload thanh toán, quyền, công thức phí hoặc số dư ví. Browser test dùng API mock, không phải giao dịch ngân hàng thật. Lỗi trùng lịch chỉ được backend quyết định; regression 409 giữ form để chỉnh giờ/xe.
 
 Không merge/deploy hoặc chuyển tiền thật trong lượt publish này. Working tree nguồn được giữ nguyên; bản sửa review của vé nằm trên nhánh PR riêng.
+
+
+## Sửa blocker sau push: assertion hành trình PayOS
+
+CI đầu đã qua TypeScript, lint, 858 unit tests và build; hai browser journeys core lifecycle/deposit còn tìm đoạn notice cũ `Đã xác nhận cọc. Chỉ được check-in`. Vé mới hiển thị cùng thông tin bằng thẻ và khung giờ riêng.
+
+Cập nhật hai hành trình để xác minh region vé đã xác nhận, khung check-in có Từ/Đến và đúng một mã vé; vẫn giữ assertion QR, server transition và toàn bộ bước thanh toán/check-in/checkout. Không bỏ hành trình hay hạ timeout/assertion nghiệp vụ. Chạy lại hai hành trình cùng các ca đặt nhanh/ví và compact deposit: **10/10 đạt** (`pr-ticket-ci-regression.log`). Code ứng dụng không đổi sau vòng 858 unit tests/build đã đạt.

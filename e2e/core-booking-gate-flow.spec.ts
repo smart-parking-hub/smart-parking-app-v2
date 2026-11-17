@@ -293,7 +293,11 @@ test.describe('Core E2E Lifecycle: Booking & cọc PayOS -> Barie Check-in -> Ba
     await page.getByRole('button', { name: 'Thông báo đã quét (fixture)' }).click()
     await page.getByRole('link', { name: 'Xem vé QR' }).click()
     await expect(page.getByRole('img', { name: `Mã QR Check-in ${bookingCode}` })).toBeVisible()
-    await expect(page.getByText(/Đã xác nhận cọc\. Chỉ được check-in/)).toBeVisible()
+    const ticket = page.getByRole('region', { name: 'Vé check-in đã xác nhận' })
+    await expect(ticket.getByText('Khung giờ check-in hợp lệ')).toBeVisible()
+    await expect(ticket.getByText('Từ', { exact: true })).toBeVisible()
+    await expect(ticket.getByText('Đến', { exact: true })).toBeVisible()
+    await expect(ticket.getByText(bookingCode, { exact: true })).toHaveCount(1)
 
     // -------------------------------------------------------------
     // PHASE 2: CỔNG BARIE CHECK-IN XE VÀO BÃI (ROLE MERCHANT)
