@@ -10,7 +10,7 @@ export function DriverWorkflowSection() {
     {
       num: '2',
       title: 'Bước 2: Chỉ Đường Tới Cổng Bãi',
-      desc: 'Bản đồ Google Maps hiển thị đúng vị trí bãi đỗ, quãng đường và thời gian di chuyển tham khảo, hỗ trợ mở trực tiếp ứng dụng Google Maps để dẫn đường.',
+      desc: 'Bản đồ tương tác hiển thị chính xác vị trí cổng bãi đỗ, hỗ trợ mở trực tiếp ứng dụng Google Maps để xem tuyến đường và thời gian di chuyển tham khảo.',
       tagLabel: 'Chủ động:',
       tagText: 'Định vị chính xác tọa độ cổng vào bãi giúp tài xế chủ động lộ trình.',
     },

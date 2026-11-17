@@ -286,7 +286,7 @@ const screens: { path: string; title: string; element: ReactNode }[] = [
   },
   {
     path: 'driver/search',
-    title: 'Thiết kế mới · Driver & bản đồ Google Maps',
+    title: 'Thiết kế mới · Driver & bản đồ OpenStreetMap',
     element: <SearchParkingPage />,
   },
   {
