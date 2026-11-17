@@ -1,50 +1,40 @@
-import { afterEach, describe, expect, it, vi } from 'vitest'
-import { render, screen, waitFor } from '@testing-library/react'
-import * as sharedMaps from '@/shared/maps'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { act, render, screen } from '@testing-library/react'
+import L from 'leaflet'
+import { resetMapRuntimeConfigForTests } from '@/shared/maps'
 import { CreateParkingLotMapPicker } from './CreateParkingLotMapPicker'
 
-describe('CreateParkingLotMapPicker (Google Maps)', () => {
-  afterEach(() => {
-    vi.restoreAllMocks()
+describe('CreateParkingLotMapPicker (Hybrid Leaflet: click + drag + GPS accuracy)', () => {
+  beforeEach(() => {
+    resetMapRuntimeConfigForTests()
+    vi.stubGlobal(
+      'ResizeObserver',
+      class {
+        observe() {}
+        disconnect() {}
+      },
+    )
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({
+        ok: false,
+        status: 404,
+        headers: new Headers(),
+      }),
+    )
   })
 
-  it('mounts Google Maps picker, places AdvancedMarkerElement, and emits 7-decimal coordinates on map click', async () => {
-    let mapClickHandler: ((event: google.maps.MapMouseEvent) => void) | undefined
-    const mapInstance = {
-      addListener: vi.fn((event: string, cb: (e: google.maps.MapMouseEvent) => void) => {
-        if (event === 'click') mapClickHandler = cb
-        return { remove: vi.fn() }
-      }),
-      panTo: vi.fn(),
-      setZoom: vi.fn(),
-    }
+  afterEach(() => {
+    vi.restoreAllMocks()
+    vi.unstubAllGlobals()
+    resetMapRuntimeConfigForTests()
+  })
 
-    const markerInstance: {
-      position: google.maps.LatLngLiteral
-      map: unknown
-      addListener: ReturnType<typeof vi.fn>
-    } = {
-      position: { lat: 10.762622, lng: 106.7865 },
-      map: mapInstance,
-      addListener: vi.fn(() => ({ remove: vi.fn() })),
-    }
-
-    const circleInstance = {
-      setCenter: vi.fn(),
-      setRadius: vi.fn(),
-      setMap: vi.fn(),
-    }
-
-    const MapCtor = vi.fn(() => mapInstance)
-    const CircleCtor = vi.fn(() => circleInstance)
-    const AdvancedMarkerCtor = vi.fn(() => markerInstance)
-
-    vi.spyOn(sharedMaps, 'loadGoogleMapsCore').mockResolvedValue({
-      maps: { Map: MapCtor, Circle: CircleCtor },
-      marker: { AdvancedMarkerElement: AdvancedMarkerCtor },
-    } as never)
-
+  it('mounts Leaflet picker with draggable marker, accuracy circle, and 7-decimal rounding on click & dragend', () => {
+    const markerSpy = vi.spyOn(L, 'marker')
+    const circleSpy = vi.spyOn(L, 'circle')
     const onCoordinatesChange = vi.fn()
+
     render(
       <CreateParkingLotMapPicker
         latitude={10.762622}
@@ -54,34 +44,42 @@ describe('CreateParkingLotMapPicker (Google Maps)', () => {
       />,
     )
 
-    await waitFor(() => {
-      expect(MapCtor).toHaveBeenCalledTimes(1)
-      expect(AdvancedMarkerCtor).toHaveBeenCalledTimes(1)
-    })
-
-    expect(CircleCtor).toHaveBeenCalledWith(
+    expect(markerSpy).toHaveBeenCalledWith(
+      [10.762622, 106.7865],
       expect.objectContaining({
-        center: { lat: 10.762622, lng: 106.7865 },
+        draggable: true,
+        title: 'Nhà xe · Vị trí đang chọn',
+      }),
+    )
+    expect(circleSpy).toHaveBeenCalledWith(
+      [10.762622, 106.7865],
+      expect.objectContaining({
         radius: 25.4,
       }),
     )
     expect(screen.getByText(/10\.7626220, 106\.7865000/)).toBeInTheDocument()
     expect(screen.getByText(/±25 m/)).toBeInTheDocument()
 
-    mapClickHandler?.({
-      latLng: { lat: () => 10.771234567, lng: () => 106.791234567 },
-    } as google.maps.MapMouseEvent)
+    // Simulate dragging the marker to a new coordinate
+    const markerInstance = markerSpy.mock.results[0].value as L.Marker
+    markerInstance.setLatLng([10.771234567, 106.791234567])
+    markerInstance.fire('dragend')
 
     expect(onCoordinatesChange).toHaveBeenCalledWith(10.7712346, 106.7912346)
   })
 
-  it('displays error banner with retry option while preserving coordinate readout when SDK fails', async () => {
-    vi.spyOn(sharedMaps, 'loadGoogleMapsCore').mockRejectedValue(
-      new sharedMaps.GoogleMapsError(
-        'MISSING_API_KEY',
-        'Thiếu cấu hình VITE_GOOGLE_MAPS_API_KEY cho Google Maps.',
-      ),
-    )
+  it('shows non-blocking tile error alert with retry while preserving coordinate readout', () => {
+    const handlers: Record<string, () => void> = {}
+    const fakeTiles = {
+      addTo: vi.fn().mockReturnThis(),
+      on: vi.fn((event: string, cb: () => void) => {
+        handlers[event] = cb
+        return fakeTiles
+      }),
+      redraw: vi.fn(),
+      remove: vi.fn(),
+    }
+    vi.spyOn(L, 'tileLayer').mockReturnValue(fakeTiles as unknown as L.TileLayer)
 
     render(
       <CreateParkingLotMapPicker
@@ -91,10 +89,14 @@ describe('CreateParkingLotMapPicker (Google Maps)', () => {
       />,
     )
 
-    expect(await screen.findByRole('alert')).toHaveTextContent(
-      /VITE_GOOGLE_MAPS_API_KEY/i,
-    )
-    expect(screen.getByRole('button', { name: /Thử tải lại bản đồ/i })).toBeInTheDocument()
+    act(() => {
+      handlers.tileerror?.()
+    })
+
+    expect(screen.getByRole('alert')).toHaveTextContent(/OpenStreetMap/i)
+    expect(
+      screen.getByRole('button', { name: /Thử tải lại bản đồ/i }),
+    ).toBeInTheDocument()
     expect(screen.getByText(/10\.7626220, 106\.7865000/)).toBeInTheDocument()
   })
 })

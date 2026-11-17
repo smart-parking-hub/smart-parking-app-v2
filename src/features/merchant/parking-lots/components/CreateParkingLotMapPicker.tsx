@@ -1,17 +1,16 @@
 import { useEffect, useRef, useState } from 'react'
+import L from 'leaflet'
+import 'leaflet/dist/leaflet.css'
 import { AlertTriangle, RefreshCw } from 'lucide-react'
 import {
   formatCoordinate,
-  fromLatLng,
-  getGoogleMapsConfig,
-  GoogleMapsError,
+  getMapRuntimeConfig,
   isValidCoordinates,
-  loadGoogleMapsCore,
+  loadMapRuntimeConfig,
   roundCoordinate,
-  subscribeGoogleMapsAuthFailure,
-  toLatLngLiteral,
+  toLatLngTuple,
 } from '@/shared/maps'
-import { createParkingMarkerElement } from '@/entities/parking-lot/parkingGoogleMarker'
+import { createParkingLeafletIcon } from '@/entities/parking-lot/parkingMapMarker'
 
 interface CreateParkingLotMapPickerProps {
   latitude: number
@@ -20,7 +19,7 @@ interface CreateParkingLotMapPickerProps {
   onCoordinatesChange: (lat: number, lng: number) => void
 }
 
-const VIETNAM_OVERVIEW_CENTER = { lat: 16.05, lng: 108.2 }
+const VIETNAM_OVERVIEW_CENTER: [number, number] = [16.05, 108.2]
 const VIETNAM_OVERVIEW_ZOOM = 5
 
 export function CreateParkingLotMapPicker({
@@ -30,17 +29,16 @@ export function CreateParkingLotMapPicker({
   onCoordinatesChange,
 }: CreateParkingLotMapPickerProps) {
   const container = useRef<HTMLDivElement>(null)
-  const mapRef = useRef<google.maps.Map | null>(null)
-  const mapsLibRef = useRef<google.maps.MapsLibrary | null>(null)
-  const markerLibRef = useRef<google.maps.MarkerLibrary | null>(null)
-  const markerRef = useRef<google.maps.marker.AdvancedMarkerElement | null>(null)
-  const markerDragListenerRef = useRef<google.maps.MapsEventListener | null>(null)
-  const accuracyCircleRef = useRef<google.maps.Circle | null>(null)
+  const mapRef = useRef<L.Map | null>(null)
+  const tileLayerRef = useRef<L.TileLayer | null>(null)
+  const markerRef = useRef<L.Marker | null>(null)
+  const accuracyCircleRef = useRef<L.Circle | null>(null)
   const onChange = useRef(onCoordinatesChange)
 
   const [ready, setReady] = useState(false)
-  const [mapError, setMapError] = useState<string | null>(null)
-  const [retryToken, setRetryToken] = useState(0)
+  const [tilesState, setTilesState] = useState<'loading' | 'ready' | 'error'>(
+    'loading',
+  )
 
   useEffect(() => {
     onChange.current = onCoordinatesChange
@@ -50,128 +48,129 @@ export function CreateParkingLotMapPicker({
     if (!container.current) return
 
     let disposed = false
+    let tileLoaded = false
     setReady(false)
-    setMapError(null)
+    setTilesState('loading')
 
-    const unsubscribeAuth = subscribeGoogleMapsAuthFailure(() => {
+    const instance = L.map(container.current).setView(
+      VIETNAM_OVERVIEW_CENTER,
+      VIETNAM_OVERVIEW_ZOOM,
+    )
+    mapRef.current = instance
+
+    const initialConfig = getMapRuntimeConfig()
+
+    const attachTiles = (tileUrl: string, attribution: string, maxZoom: number) => {
       if (disposed) return
-      setMapError(
-        'Khóa Google Maps API không hợp lệ hoặc bị từ chối quyền truy cập. Bạn vẫn có thể nhập tọa độ thủ công ở trên.',
-      )
-      setReady(false)
+      if (tileLayerRef.current) {
+        tileLayerRef.current.remove()
+      }
+      const layer = L.tileLayer(tileUrl, {
+        attribution,
+        maxZoom,
+      }).addTo(instance)
+
+      layer.on('tileload', () => {
+        if (disposed) return
+        tileLoaded = true
+        setTilesState('ready')
+      })
+
+      layer.on('tileerror', () => {
+        if (!disposed && !tileLoaded) {
+          setTilesState('error')
+        }
+      })
+
+      tileLayerRef.current = layer
+    }
+
+    attachTiles(
+      initialConfig.tileUrl,
+      initialConfig.tileAttribution,
+      initialConfig.maxZoom,
+    )
+
+    void loadMapRuntimeConfig().then((runtimeConfig) => {
+      if (disposed) return
+      if (
+        runtimeConfig.tileUrl !== initialConfig.tileUrl ||
+        runtimeConfig.tileAttribution !== initialConfig.tileAttribution ||
+        runtimeConfig.maxZoom !== initialConfig.maxZoom
+      ) {
+        attachTiles(
+          runtimeConfig.tileUrl,
+          runtimeConfig.tileAttribution,
+          runtimeConfig.maxZoom,
+        )
+      }
     })
 
-    let clickListener: google.maps.MapsEventListener | null = null
+    instance.on('click', (event: L.LeafletMouseEvent) => {
+      onChange.current(
+        roundCoordinate(event.latlng.lat, 7),
+        roundCoordinate(event.latlng.lng, 7),
+      )
+    })
 
-    void loadGoogleMapsCore()
-      .then(({ maps, marker }) => {
-        if (disposed || !container.current) return
-        const config = getGoogleMapsConfig()
-        const instance = new maps.Map(container.current, {
-          center: VIETNAM_OVERVIEW_CENTER,
-          zoom: VIETNAM_OVERVIEW_ZOOM,
-          mapId: config.mapId,
-          mapTypeControl: false,
-          streetViewControl: false,
-          fullscreenControl: true,
-          zoomControl: true,
-          gestureHandling: 'greedy',
-        })
+    const observer =
+      typeof ResizeObserver !== 'undefined'
+        ? new ResizeObserver(() => instance.invalidateSize())
+        : null
+    observer?.observe(container.current)
 
-        mapRef.current = instance
-        mapsLibRef.current = maps
-        markerLibRef.current = marker
-
-        clickListener = instance.addListener(
-          'click',
-          (event: google.maps.MapMouseEvent) => {
-            if (!event.latLng) return
-            const coords = fromLatLng(event.latLng)
-            onChange.current(
-              roundCoordinate(coords.latitude, 7),
-              roundCoordinate(coords.longitude, 7),
-            )
-          },
-        )
-
-        setReady(true)
-      })
-      .catch((error: unknown) => {
-        if (disposed) return
-        const message =
-          error instanceof GoogleMapsError
-            ? `${error.message} Bạn vẫn có thể nhập tọa độ ở trên.`
-            : 'Không tải được Google Maps. Kiểm tra kết nối mạng hoặc nhập tọa độ ở trên.'
-        setMapError(message)
-      })
+    setReady(true)
 
     return () => {
       disposed = true
-      unsubscribeAuth()
-      clickListener?.remove()
-      markerDragListenerRef.current?.remove()
-      markerDragListenerRef.current = null
-      if (markerRef.current) {
-        markerRef.current.map = null
-        markerRef.current = null
-      }
-      if (accuracyCircleRef.current) {
-        accuracyCircleRef.current.setMap(null)
-        accuracyCircleRef.current = null
-      }
+      observer?.disconnect()
+      markerRef.current = null
+      accuracyCircleRef.current = null
+      tileLayerRef.current = null
+      instance.remove()
       mapRef.current = null
-      mapsLibRef.current = null
-      markerLibRef.current = null
     }
-  }, [retryToken])
+  }, [])
 
   useEffect(() => {
     const instance = mapRef.current
-    const mapsLib = mapsLibRef.current
-    const markerLib = markerLibRef.current
-    if (!instance || !mapsLib || !markerLib || !ready) return
+    if (!instance || !ready) return
 
     const valid = isValidCoordinates({ latitude, longitude })
     if (!valid) {
       if (markerRef.current) {
-        markerRef.current.map = null
+        markerRef.current.remove()
         markerRef.current = null
       }
-      markerDragListenerRef.current?.remove()
-      markerDragListenerRef.current = null
       if (accuracyCircleRef.current) {
-        accuracyCircleRef.current.setMap(null)
+        accuracyCircleRef.current.remove()
         accuracyCircleRef.current = null
       }
       return
     }
 
-    const position = toLatLngLiteral({ latitude, longitude })
+    const position = toLatLngTuple({ latitude, longitude })
 
     if (markerRef.current) {
-      markerRef.current.position = position
+      markerRef.current.setLatLng(position)
     } else {
-      const markerInstance = new markerLib.AdvancedMarkerElement({
-        map: instance,
-        position,
-        title: 'Nhà xe · Vị trí đang chọn',
-        content: createParkingMarkerElement({
+      const markerInstance = L.marker(position, {
+        icon: createParkingLeafletIcon({
           selected: true,
           title: 'Nhà xe · Vị trí đang chọn',
         }),
-        gmpDraggable: true,
-      })
+        title: 'Nhà xe · Vị trí đang chọn',
+        draggable: true,
+        keyboard: true,
+      }).addTo(instance)
 
-      markerDragListenerRef.current =
-        markerInstance.addListener?.('dragend', () => {
-          const currentPos = markerInstance.position
-          if (!currentPos) return
-          const coords = fromLatLng(currentPos)
-          onChange.current(
-            roundCoordinate(coords.latitude, 7),
-            roundCoordinate(coords.longitude, 7),
-          )
-        }) ?? null
+      markerInstance.on('dragend', () => {
+        const nextLatLng = markerInstance.getLatLng()
+        onChange.current(
+          roundCoordinate(nextLatLng.lat, 7),
+          roundCoordinate(nextLatLng.lng, 7),
+        )
+      })
 
       markerRef.current = markerInstance
     }
@@ -179,32 +178,28 @@ export function CreateParkingLotMapPicker({
     if (
       typeof accuracy === 'number' &&
       Number.isFinite(accuracy) &&
-      accuracy > 0 &&
-      typeof mapsLib.Circle === 'function'
+      accuracy > 0
     ) {
       if (accuracyCircleRef.current) {
-        accuracyCircleRef.current.setCenter(position)
+        accuracyCircleRef.current.setLatLng(position)
         accuracyCircleRef.current.setRadius(accuracy)
       } else {
-        accuracyCircleRef.current = new mapsLib.Circle({
-          map: instance,
-          center: position,
+        accuracyCircleRef.current = L.circle(position, {
           radius: accuracy,
-          strokeColor: '#ea580c',
-          strokeOpacity: 0.65,
-          strokeWeight: 1.5,
+          color: '#ea580c',
+          opacity: 0.65,
+          weight: 1.5,
           fillColor: '#ea580c',
           fillOpacity: 0.12,
-          clickable: false,
-        })
+          interactive: false,
+        }).addTo(instance)
       }
     } else if (accuracyCircleRef.current) {
-      accuracyCircleRef.current.setMap(null)
+      accuracyCircleRef.current.remove()
       accuracyCircleRef.current = null
     }
 
-    instance.panTo(position)
-    instance.setZoom(16)
+    instance.setView(position, 16)
   }, [latitude, longitude, accuracy, ready])
 
   const hasFinitePair =
@@ -215,27 +210,40 @@ export function CreateParkingLotMapPicker({
 
   return (
     <div className="space-y-3">
-      <p className="text-sm font-semibold">Chọn vị trí bãi đỗ trên Google Maps</p>
-      <div className="relative h-[360px] w-full overflow-hidden rounded-xl border border-slate-200">
+      <p className="text-sm font-semibold">
+        Chọn vị trí bãi đỗ trên bản đồ OpenStreetMap
+      </p>
+      <div className="parking-map relative h-[360px] w-full overflow-hidden rounded-xl border border-slate-200">
         <div
           ref={container}
           role="region"
           aria-label="Bản đồ chọn vị trí bãi đỗ"
-          data-map-state={mapError ? 'error' : ready ? 'ready' : 'loading'}
+          data-map-state={tilesState}
           className="relative z-0 h-full w-full"
         />
 
-        {mapError && (
+        {tilesState === 'error' && (
           <div
             role="alert"
-            className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-2.5 bg-slate-50/95 p-4 text-center text-xs text-slate-700"
+            className="absolute inset-x-3 bottom-3 z-[1000] flex flex-wrap items-center justify-between gap-2 rounded-xl border border-amber-200 bg-white/95 p-3 text-xs text-slate-700 shadow-md"
           >
-            <AlertTriangle className="h-5 w-5 text-amber-600" aria-hidden="true" />
-            <p className="max-w-md font-medium text-slate-800">{mapError}</p>
+            <div className="flex items-center gap-2">
+              <AlertTriangle
+                className="h-4 w-4 shrink-0 text-amber-600"
+                aria-hidden="true"
+              />
+              <span>
+                Không tải được một số ô bản đồ OpenStreetMap. Bạn vẫn có thể
+                nhập tọa độ hoặc dùng GPS ở trên.
+              </span>
+            </div>
             <button
               type="button"
-              onClick={() => setRetryToken((c) => c + 1)}
-              className="inline-flex items-center gap-1.5 rounded-lg border border-slate-300 bg-white px-3 py-1.5 font-semibold text-slate-800 hover:bg-slate-100 cursor-pointer"
+              onClick={() => {
+                setTilesState('loading')
+                tileLayerRef.current?.redraw()
+              }}
+              className="inline-flex items-center gap-1 rounded-lg border border-slate-300 bg-white px-2.5 py-1 font-semibold text-slate-800 hover:bg-slate-100 cursor-pointer"
             >
               <RefreshCw className="h-3.5 w-3.5" aria-hidden="true" />
               Thử tải lại bản đồ
