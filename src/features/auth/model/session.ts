@@ -1,7 +1,28 @@
 export type Role = 'DRIVER' | 'MERCHANT' | 'ADMIN'
 export const SESSION_EVENT = 'smartparking:session'
-export const roleHome = (role: Role) => role === 'ADMIN' ? '/admin/dashboard' : role === 'MERCHANT' ? '/merchant/dashboard' : '/dashboard'
-export function readSession(token = localStorage.getItem('access_token')): { role: Role; expiresAt: number } | null {
+
+export const roleHome = (role: Role) =>
+  role === 'ADMIN' ? '/admin/dashboard' : role === 'MERCHANT' ? '/merchant/dashboard' : '/dashboard'
+
+/**
+ * Retrieve active JWT access token from sessionStorage or localStorage.
+ * Checks sessionStorage first (for single-tab non-remembered sessions),
+ * falling back to persistent localStorage.
+ */
+export function getToken(): string | null {
+  if (typeof window === 'undefined') return null
+  try {
+    return localStorage.getItem('access_token') ?? sessionStorage.getItem('access_token')
+  } catch {
+    return null
+  }
+}
+
+/**
+ * Parses and validates the JWT session claim.
+ * Returns decoded role and expiration timestamp, or null if expired/invalid.
+ */
+export function readSession(token: string | null = getToken()): { role: Role; expiresAt: number } | null {
   if (!token) return null
   try {
     if (token.split('.').length !== 3) return null
@@ -14,18 +35,61 @@ export function readSession(token = localStorage.getItem('access_token')): { rol
     const role = rawRole.replace(/^ROLE_/, '')
     if (!['DRIVER', 'MERCHANT', 'ADMIN'].includes(role) || claims.exp * 1000 <= Date.now()) return null
     return { role: role as Role, expiresAt: claims.exp * 1000 }
-  } catch { return null }
+  } catch {
+    return null
+  }
 }
+
 export const sessionRole = (): Role | null => readSession()?.role ?? null
+
+/**
+ * Completely clears the active session from both storage layers and notifies listeners.
+ */
 export function clearSession() {
-  localStorage.removeItem('access_token')
-  localStorage.removeItem('smart-truck-parking.auth')
+  try {
+    localStorage.removeItem('access_token')
+    sessionStorage.removeItem('access_token')
+    localStorage.removeItem('smart-truck-parking.auth')
+  } catch {
+    // Ignore storage clear errors
+  }
   window.dispatchEvent(new Event(SESSION_EVENT))
 }
-export function saveSession(token: string) {
-  localStorage.setItem('access_token', token)
+
+/**
+ * Saves access token into storage.
+ * - remember = true: Persists in localStorage across browser restarts / tab closes.
+ * - remember = false: Confines to sessionStorage (destroyed on tab close).
+ */
+export function saveSession(token: string, remember = true) {
+  try {
+    if (remember) {
+      localStorage.setItem('access_token', token)
+      sessionStorage.removeItem('access_token')
+    } else {
+      sessionStorage.setItem('access_token', token)
+      localStorage.removeItem('access_token')
+    }
+  } catch {
+    // Fallback if one storage fails
+    try {
+      localStorage.setItem('access_token', token)
+    } catch {
+      // Ignore
+    }
+  }
   window.dispatchEvent(new Event(SESSION_EVENT))
 }
+
+export function isSessionRemembered(): boolean {
+  if (typeof window === 'undefined') return true
+  try {
+    return Boolean(localStorage.getItem('access_token'))
+  } catch {
+    return true
+  }
+}
+
 export function loginDestination(next: string | null, role: Role) {
   if (!next || !next.startsWith('/') || next.startsWith('//') || /[\\\s]/.test(next)) return roleHome(role)
   const path = next.split(/[?#]/)[0]

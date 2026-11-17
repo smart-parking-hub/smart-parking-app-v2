@@ -12,10 +12,13 @@ import {
   Briefcase,
   FileText,
   PhoneCall,
+  ArrowRight,
+  LogOut,
 } from 'lucide-react'
 import { LandingMetadata } from './LandingMetadata'
 import { cn } from '@/shared/utils/cn'
 import { useScrollToTop } from '@/shared/components/ScrollToTop'
+import { useSession } from '@/features/auth'
 
 interface NavChildItem {
   label: string
@@ -47,6 +50,7 @@ export function LandingNavbar() {
   const [openDropdown, setOpenDropdown] = useState<string | null>(null)
   const location = useLocation()
   const navRef = useRef<HTMLDivElement>(null)
+  const { isAuthenticated, dashboardUrl, logout } = useSession()
 
   const currentPath = location.pathname
 
@@ -418,17 +422,48 @@ export function LandingNavbar() {
             )}
           />
 
-          <Link
-            to="/login"
-            className={cn(
-              'hidden md:inline-flex text-xs sm:text-sm font-semibold transition-colors px-3 py-2 rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-orange',
-              isDarkNav
-                ? 'text-slate-300 hover:text-white hover:bg-white/10'
-                : 'text-slate-700 hover:text-brand-navy hover:bg-slate-100'
-            )}
-          >
-            Đăng nhập
-          </Link>
+          {isAuthenticated ? (
+            <div className="hidden md:flex items-center gap-1.5">
+              <Link
+                to={dashboardUrl}
+                className={cn(
+                  'inline-flex items-center gap-1.5 text-xs sm:text-sm font-bold transition-all px-3 py-2 rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-orange shadow-2xs hover:shadow-xs active:scale-98',
+                  isDarkNav
+                    ? 'text-brand-orange bg-brand-orange/10 hover:bg-brand-orange/20 border border-brand-orange/30'
+                    : 'text-[#d95f00] bg-orange-50 hover:bg-orange-100/80 border border-orange-200'
+                )}
+              >
+                <span>Vào Dashboard</span>
+                <ArrowRight className="h-4 w-4" aria-hidden="true" />
+              </Link>
+              <button
+                type="button"
+                onClick={logout}
+                className={cn(
+                  'inline-flex items-center gap-1 text-xs sm:text-sm font-medium transition-colors px-2.5 py-2 rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-orange cursor-pointer',
+                  isDarkNav
+                    ? 'text-slate-400 hover:text-rose-400 hover:bg-white/5'
+                    : 'text-slate-500 hover:text-rose-600 hover:bg-rose-50'
+                )}
+                title="Đăng xuất khỏi thiết bị này"
+              >
+                <LogOut className="h-3.5 w-3.5" aria-hidden="true" />
+                <span className="hidden 2xl:inline">Đăng xuất</span>
+              </button>
+            </div>
+          ) : (
+            <Link
+              to="/login"
+              className={cn(
+                'hidden md:inline-flex text-xs sm:text-sm font-semibold transition-colors px-3 py-2 rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-orange',
+                isDarkNav
+                  ? 'text-slate-300 hover:text-white hover:bg-white/10'
+                  : 'text-slate-700 hover:text-brand-navy hover:bg-slate-100'
+              )}
+            >
+              Đăng nhập
+            </Link>
+          )}
 
           <a
             href={ctaHref}
