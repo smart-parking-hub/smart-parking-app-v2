@@ -1,27 +1,37 @@
-import { useEffect, useRef, useState } from 'react'
-import L from 'leaflet'
-import 'leaflet/dist/leaflet.css'
-import { createParkingMapIcon } from '@/entities/parking-lot/parkingMapIcon'
+import { GoogleMapView } from '@/shared/maps'
+import { createParkingMarkerElement } from '@/entities/parking-lot/parkingGoogleMarker'
 
-export function MerchantLotLocationMap({ latitude, longitude }: { latitude: number; longitude: number }) {
-  const container = useRef<HTMLDivElement>(null)
-  const [tileError, setTileError] = useState(false)
-  useEffect(() => {
-    if (!container.current) return
-    setTileError(false)
-    const map = L.map(container.current, { scrollWheelZoom: true }).setView([latitude, longitude], 15)
-    const tiles = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      maxZoom: 19,
-      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-    }).addTo(map)
-    tiles.on('tileerror', () => setTileError(true))
-    L.marker([latitude, longitude], {
-      icon: createParkingMapIcon({ selected: true }),
-      title: 'Nhà xe · Vị trí bãi đỗ',
-    }).bindTooltip('Nhà xe · Vị trí bãi đỗ', { direction: 'top' }).addTo(map)
-    const observer = new ResizeObserver(() => map.invalidateSize())
-    observer.observe(container.current)
-    return () => { observer.disconnect(); map.remove() }
-  }, [latitude, longitude])
-  return <div className="lot-location-map"><div ref={container} role="region" aria-label="Bản đồ vị trí bãi đỗ" className="lot-location-map-canvas" />{tileError && <p className="lot-map-error" role="status">Chưa tải được bản đồ. Bạn có thể mở vị trí trên Google Maps bên dưới.</p>}</div>
+interface MerchantLotLocationMapProps {
+  latitude: number
+  longitude: number
+  lotName?: string
+  address?: string
+}
+
+export function MerchantLotLocationMap({
+  latitude,
+  longitude,
+  lotName,
+  address,
+}: MerchantLotLocationMapProps) {
+  const title = lotName ? `${lotName} · Vị trí bãi đỗ` : 'Nhà xe · Vị trí bãi đỗ'
+
+  return (
+    <div className="lot-location-map">
+      <GoogleMapView
+        coordinates={{ latitude, longitude }}
+        markerTitle={title}
+        address={address}
+        zoom={15}
+        ariaLabel="Bản đồ vị trí bãi đỗ"
+        className="lot-location-map-canvas"
+        markerContentFactory={() =>
+          createParkingMarkerElement({
+            selected: true,
+            title,
+          })
+        }
+      />
+    </div>
+  )
 }
