@@ -157,7 +157,7 @@ function BookingStatusContent({
 
       {data.status === 'PENDING_CHECKIN' && <BookingCheckinTicket booking={data}/>}
 
-      {compactPayment ? <QuickBookingPaymentSummary booking={data} expired={expired}/> : !compactCheckin && <>
+      {compactPayment ? <QuickBookingPaymentSummary booking={data} expired={expired}/> : data.status !== 'PENDING_CHECKIN' && <>
       <dl className="grid gap-4 sm:grid-cols-2">
         <div>
           <dt className="text-sm text-brand-muted">{data.status === 'PENDING_PAYMENT' ? 'Số đơn' : 'Mã đặt chỗ'}</dt>
@@ -188,14 +188,6 @@ function BookingStatusContent({
           {expired
             ? 'Đã quá hạn thanh toán. Đang chờ server cập nhật trạng thái hết hạn; không thanh toán thêm cho đơn này.'
             : `Thanh toán cọc trước ${bookingTimeLabel(data.expiresAt)}. Chưa thanh toán thì chưa được check-in.`}
-        </Notice>
-      )}
-
-      {data.status === 'PENDING_CHECKIN' && (
-        <Notice>
-          Đã xác nhận cọc. Chỉ được check-in từ{' '}
-          {bookingTimeLabel(bookingTimestamp(data.expectedCheckInTime) - 30 * 60000)} đến{' '}
-          {bookingTimeLabel(data.expiresAt)}. Đưa mã đặt chỗ cho nhân viên bãi.
         </Notice>
       )}
 

@@ -3,7 +3,7 @@
 - Task ID: quick-payment-layout-2026-11-18
 - Owner: SPH frontend. `last_verified`: 2026-11-18.
 - Summary: Simplify the supplied payment dialog while preserving information and payment behavior; widen it slightly per user follow-up.
-- Status: Requested layout implemented; scoped checks pass. Repository-wide test gate has one failure described below.
+- Status: Requested layout implemented. The duplicate noncompact ticket regression found during pre-push review is fixed in this branch; final verification is recorded in `fe-ticket-before-after-20261118.md`.
 
 ## Files changed
 
@@ -68,5 +68,5 @@ Browser coverage includes keyboard focus/Escape, booking creation and navigation
 
 ## Known limitations
 
-- `MyBookingsPage.test.tsx` → “opens the selected server-owned booking even when it is outside the current list page” fails because `BK-API-41` appears both in the confirmed check-in ticket and the noncompact details. The failing path is `PENDING_CHECKIN` with `compact=false`, outside the payment presentation changed here. Reproduced in isolation; left unchanged to avoid expanding screen scope.
+- Pre-push review reproduced the `MyBookingsPage.test.tsx` selected-booking failure: `BK-API-41` appeared in both the confirmed ticket and generic noncompact details. `PENDING_CHECKIN` now uses the confirmed ticket as its single detail presentation at every width. The existing assertion is retained; this correction belongs to the shared ticket component and does not change booking or payment contracts. The earlier 867/868 suite result above is historical evidence before that correction.
 - The full suite also emits network stderr from layout tests whose API requests are not mocked. Those tests pass. Playwright emits a runner `NO_COLOR`/`FORCE_COLOR` environment warning; this is separate from browser page errors.

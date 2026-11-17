@@ -1,4 +1,5 @@
 import axios, { type AxiosInstance, type InternalAxiosRequestConfig } from 'axios'
+import { getToken } from '@/features/auth/model/session'
 
 let API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api'
 const APP_KEY = import.meta.env.VITE_APP_KEY || 'SP_APP_KEY_2026_xM99qP2!'
@@ -30,7 +31,7 @@ apiClient.interceptors.request.use(
     }
     if (config.headers) {
       config.headers['X-App-Key'] = APP_KEY
-      const token = localStorage.getItem('access_token')
+      const token = getToken()
       if (token) {
         config.headers.Authorization = `Bearer ${token}`
       }

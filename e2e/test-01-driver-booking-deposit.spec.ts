@@ -212,7 +212,11 @@ test.describe('Flow 1: Tạo booking & Đặt cọc PayOS (SP-S3-INT-01)', () =>
     await dialog.getByRole('button', { name: 'Mở PayOS để thanh toán' }).click()
     await page.getByRole('button', { name: 'Thông báo đã quét (fixture)' }).click()
     await page.getByRole('link', { name: 'Xem vé QR' }).click()
-    await expect(page.getByText(/Đã xác nhận cọc\. Chỉ được check-in/)).toBeVisible()
+    const ticket = page.getByRole('region', { name: 'Vé check-in đã xác nhận' })
+    await expect(ticket.getByText('Khung giờ check-in hợp lệ')).toBeVisible()
+    await expect(ticket.getByText('Từ', { exact: true })).toBeVisible()
+    await expect(ticket.getByText('Đến', { exact: true })).toBeVisible()
+    await expect(ticket.getByText('BK-2026-0894', { exact: true })).toHaveCount(1)
     await expect(page.getByRole('img', { name: 'Mã QR Check-in BK-2026-0894' })).toBeVisible()
 
     await page.getByRole('link', { name: 'Đóng vé đang chọn' }).click()
