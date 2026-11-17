@@ -32,7 +32,8 @@ it('only sums successful non-refund transactions on the current page',async()=>{
  mount(<DriverPaymentsPage/>);await screen.findByText('TX-API-71')
  const label=screen.getByText('Đã thanh toán trên trang này');expect(label.parentElement).toHaveTextContent(/15[.\s]000/)
  expect(label.parentElement).not.toHaveTextContent(/900[.\s]000|700[.\s]000/)
- await userEvent.selectOptions(screen.getByLabelText('Trạng thái trong trang hiện tại'),'REQUIRES_REVIEW')
+ expect(screen.getByRole('combobox', { name: /Trạng thái/ })).toBeInTheDocument()
+ await userEvent.selectOptions(screen.getByLabelText(/Trạng thái/), 'REQUIRES_REVIEW')
  expect(screen.getByText('REVIEW')).toBeInTheDocument();expect(screen.queryByText('TX-API-71')).not.toBeInTheDocument()
 })
 it('shows reconciliation details from the selected server transaction',async()=>{
@@ -49,7 +50,7 @@ it('uses server pagination and scopes search and totals to the displayed page',a
  vi.mocked(apiClient.get).mockImplementation(async(_url,config)=>Number((config?.params as {page?:number} | undefined)?.page)===1?page([{...transaction,id:72,transactionCode:'TX-PAGE2',amount:25000}],1,2,21):page([transaction],0,2,21))
  mount(<DriverPaymentsPage/>);await screen.findByText('TX-API-71');await userEvent.click(screen.getByText('Trang sau'))
  expect(await screen.findByText('TX-PAGE2')).toBeInTheDocument();expect(screen.queryByText('TX-API-71')).not.toBeInTheDocument()
- await userEvent.type(screen.getByLabelText('Tìm trong trang hiện tại'),'absent')
+ await userEvent.type(screen.getByLabelText(/Tìm/), 'absent')
  expect(screen.getByText('Không có giao dịch phù hợp trong trang này.')).toBeInTheDocument()
 })
 it('displays a pending loader until the API responds',()=>{
@@ -65,11 +66,11 @@ it('rejects a malformed amount rather than claiming a zero-value payment',async(
 
 it('resets a filtered empty result and keeps the original current-page totals',async()=>{
  const user=userEvent.setup();mount(<DriverPaymentsPage/>);await screen.findByText('TX-API-71')
- await user.type(screen.getByLabelText('Tìm trong trang hiện tại'),'no-match')
+ await user.type(screen.getByLabelText(/Tìm/), 'no-match')
  await user.click(screen.getByRole('button',{name:'Xóa bộ lọc'}))
  expect(screen.getByText('TX-API-71')).toBeInTheDocument()
- expect(screen.getByLabelText('Tìm trong trang hiện tại')).toHaveValue('')
- expect(screen.getByLabelText('Trạng thái trong trang hiện tại')).toHaveValue('')
+ expect(screen.getByLabelText(/Tìm/)).toHaveValue('')
+ expect(screen.getByLabelText(/Trạng thái/)).toHaveValue('')
 })
 
 it('opens the full transaction in a dialog and restores focus when closing it',async()=>{

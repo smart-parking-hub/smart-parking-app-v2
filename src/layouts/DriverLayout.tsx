@@ -8,6 +8,9 @@ export function DriverLayout() {
   const { pathname } = useLocation()
   const isProfile = ['/profile', '/dashboard/profile', '/driver/profile'].includes(pathname)
   const isPaymentResult = /^\/(?:dashboard\/|driver\/)?payment\/(?:cancel|success|return)$/.test(pathname)
+  const isParkingSearch = /^\/(?:dashboard\/|driver\/)?(?:search|parking)(?:\/)?$/.test(pathname)
+  const hideFooter = isProfile || isPaymentResult || isParkingSearch
+
   return (
     <div className="min-h-screen flex flex-col bg-[#f8f9ff]">
       <ScrollToTop />
@@ -15,7 +18,7 @@ export function DriverLayout() {
       <main className="flex-1 w-full pt-[var(--driver-header-height)]">
         <Outlet />
       </main>
-      {!isProfile && !isPaymentResult && <DriverFooter />}
+      {!hideFooter && <DriverFooter />}
       {!isProfile && !isPaymentResult && <AiCopilot />}
     </div>
   )

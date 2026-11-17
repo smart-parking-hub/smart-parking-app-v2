@@ -1,6 +1,5 @@
 import { useState } from 'react'
-import { Check, MapPin, Plus, Search, UserRound, Wallet, X } from 'lucide-react'
-import { Link } from 'react-router-dom'
+import { Check, Plus, Search, X } from 'lucide-react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Workspace, Panel, Notice, button, control, secondary } from '@/shared/components/Workspace'
 import { errorMessage } from '@/shared/api/resources'
@@ -25,12 +24,7 @@ export function VehiclesPage() {
   }
   const remove = useMutation({ mutationFn: deactivateVehicle, onSuccess: async () => { setDeleting(null); setSuccess('Đã ngừng sử dụng phương tiện.'); await refresh() } })
   const vehicles = query.data?.content.filter(vehicle => `${vehicle.licensePlate} ${vehicle.brandModel ?? ''}`.toLocaleLowerCase('vi').includes(search.trim().toLocaleLowerCase('vi'))) ?? []
-  return <Workspace eyebrow="TÀI KHOẢN / PHƯƠNG TIỆN" title="Đội xe của tôi" description="Quản lý phương tiện đăng ký với tài khoản của bạn." actions={<button className={button} disabled={editor !== null} onClick={() => { setSuccess(''); setEditor('new') }}><Plus size={17} aria-hidden="true" />Thêm phương tiện</button>}>
-    <nav aria-label="Liên kết tài khoản" className="flex flex-wrap gap-2 text-sm">
-      <Link to="/profile" className={`${secondary} !min-h-10 !py-2`}><UserRound size={16} aria-hidden="true" />Hồ sơ</Link>
-      <Link to="/payments" className={`${secondary} !min-h-10 !py-2`}><Wallet size={16} aria-hidden="true" />Lịch sử thanh toán</Link>
-      <Link to="/parking" className={`${secondary} !min-h-10 !py-2`}><MapPin size={16} aria-hidden="true" />Tìm bãi đỗ</Link>
-    </nav>
+  return <Workspace eyebrow="TÀI KHOẢN / PHƯƠNG TIỆN" title="Đội xe của tôi" description="Quản lý phương tiện đăng ký với tài khoản của bạn." actions={<button className={`${button} cursor-pointer hover:bg-[#b84e00] hover:shadow-md hover:shadow-orange-500/25 active:scale-[0.98] transition-all`} disabled={editor !== null} onClick={() => { setSuccess(''); setEditor('new') }}><Plus size={17} aria-hidden="true" />Thêm phương tiện</button>}>
     {success && <div role="status" className="flex items-center gap-3 rounded-xl border border-brand-orange/20 bg-brand-orange/5 px-4 py-3 text-sm text-brand-navy"><Check size={18} aria-hidden="true" className="text-brand-orange-ink" /><span className="flex-1">{success}</span><button type="button" aria-label="Đóng thông báo lưu xe" className="rounded-lg p-2 hover:bg-brand-orange/10" onClick={() => setSuccess('')}><X size={16} aria-hidden="true" /></button></div>}
     {editor && <VehicleEditor key={editor === 'new' ? 'new' : editor.id} vehicle={editor === 'new' ? undefined : editor} onClose={() => setEditor(null)} onSaved={async () => { setEditor(null); setSuccess('Đã lưu phương tiện.'); await refresh() }} />}
     {deleting && <Panel title="Ngừng sử dụng phương tiện?"><p className="mb-4">Xe {deleting.licensePlate} sẽ không còn được chọn khi đặt chỗ. Thông tin xe vẫn được giữ trong hồ sơ.</p><div className="flex flex-wrap gap-3"><button className={button} disabled={remove.isPending} onClick={() => remove.mutate(deleting.id)}>Xác nhận ngừng sử dụng</button><button className={secondary} disabled={remove.isPending} onClick={() => { setDeleting(null); remove.reset() }}>Hủy</button></div>{remove.isError && <div className="mt-4"><Notice error>{errorMessage(remove.error)}</Notice></div>}</Panel>}

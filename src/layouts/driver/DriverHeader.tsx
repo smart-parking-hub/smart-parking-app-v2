@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { getData } from '@/shared/api/resources'
 import { Link, useLocation } from 'react-router-dom'
+import { ConfirmationDialog } from '@/shared/components/ConfirmationDialog'
 import {
   Bell,
   ChevronDown,
@@ -11,7 +12,6 @@ import {
   X,
   User,
   LogOut,
-  KeyRound,
   Truck,
 } from 'lucide-react'
 
@@ -30,6 +30,7 @@ export function DriverHeader() {
   const location = useLocation()
   const [mobileOpen, setMobileOpen] = useState(false)
   const [accountOpen, setAccountOpen] = useState(false)
+  const [logoutModalOpen, setLogoutModalOpen] = useState(false)
   const { data: profile } = useQuery({
     queryKey: ['current-user', 'header'],
     queryFn: () => getData<{ fullName?: string }>('/api/v1/users/me'),
@@ -136,13 +137,13 @@ export function DriverHeader() {
                 aria-expanded={accountOpen}
                 aria-controls="driver-account-menu"
                 aria-label="Menu tài khoản"
-                className="group flex min-h-12 shrink-0 items-center gap-3 rounded-xl px-2 py-1.5 text-left transition-colors hover:bg-white/5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-orange sm:pr-3"
+                className="group flex min-h-12 shrink-0 items-center gap-3 rounded-xl px-2 py-1.5 text-left transition-colors hover:bg-white/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-orange cursor-pointer sm:pr-3"
               >
-                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-brand-orange/30 bg-brand-orange/10 font-sora text-sm font-semibold text-brand-orange">
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-brand-orange/30 bg-brand-orange/10 font-sora text-sm font-semibold text-brand-orange group-hover:border-brand-orange group-hover:bg-brand-orange/20 transition-colors">
                   {profile?.fullName?.trim() ? initials : <User size={20} aria-hidden="true" />}
                 </span>
                 <span className="hidden w-36 min-w-0 sm:block">
-                  <span title={identity.name} className="block truncate font-sora text-[13px] font-semibold leading-6">
+                  <span title={identity.name} className="block truncate font-sora text-[13px] font-semibold leading-6 group-hover:text-brand-orange transition-colors">
                     {identity.name}
                   </span>
                   <span className="flex items-center gap-1.5 text-xs leading-5 text-slate-300">
@@ -173,27 +174,18 @@ export function DriverHeader() {
                     <Link
                       to="/profile"
                       onClick={closeMenus}
-                      className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm hover:bg-brand-surface text-slate-700 hover:text-brand-navy transition-colors"
+                      className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-slate-700 hover:bg-brand-surface hover:text-brand-navy focus-visible:outline-2 focus-visible:outline-brand-orange transition-colors cursor-pointer"
                     >
                       <User size={17} />
                       Hồ sơ cá nhân
                     </Link>
-                    <Link
-                      to="/profile#bao-mat"
-                      onClick={closeMenus}
-                      className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm hover:bg-brand-surface text-slate-700 hover:text-brand-navy transition-colors"
-                    >
-                      <KeyRound size={17} />
-                      Đổi mật khẩu
-                    </Link>
                     <button
                       type="button"
                       onClick={() => {
-                        clearSession()
-                        localStorage.removeItem('smart-truck-parking.auth')
-                        window.location.href = '/login'
+                        setAccountOpen(false)
+                        setLogoutModalOpen(true)
                       }}
-                      className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-red-700 hover:bg-red-50 transition-colors cursor-pointer"
+                      className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-red-700 hover:bg-red-50 focus-visible:outline-2 focus-visible:outline-red-600 transition-colors cursor-pointer"
                     >
                       <LogOut size={17} />
                       Đăng xuất
@@ -224,6 +216,20 @@ export function DriverHeader() {
           {nav(true)}
         </nav>
       )}
+      <ConfirmationDialog
+        isOpen={logoutModalOpen}
+        onClose={() => setLogoutModalOpen(false)}
+        onConfirm={() => {
+          clearSession()
+          localStorage.removeItem('smart-truck-parking.auth')
+          window.location.href = '/login'
+        }}
+        title="Xác nhận đăng xuất"
+        message="Bạn có chắc muốn đăng xuất khỏi tài khoản?"
+        confirmText="Đăng xuất"
+        cancelText="Hủy"
+        variant="danger"
+      />
     </header>
   )
 }

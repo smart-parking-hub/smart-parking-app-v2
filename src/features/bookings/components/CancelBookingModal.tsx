@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { X, AlertTriangle, Loader2 } from 'lucide-react'
+import { Select } from '@/shared/components/Select'
 import type { BookingItemDto } from '../types/bookingTypes'
 import { cancelBookingSchema } from '../schemas/bookingSchemas'
 
@@ -124,18 +125,15 @@ export function CancelBookingModal({
             <label htmlFor="cancel-reason-select" className="font-semibold text-slate-700">
               Lý do hủy đặt chỗ:
             </label>
-            <select
+            <Select
               id="cancel-reason-select"
               value={selectedReason}
-              onChange={(e) => setSelectedReason(e.target.value)}
-              className="w-full h-10 px-3 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-900 focus:outline-none focus:border-[#d95f00]"
-            >
-              {CANCEL_REASONS.map((r) => (
-                <option key={r} value={r}>
-                  {r}
-                </option>
-              ))}
-            </select>
+              onChange={setSelectedReason}
+              options={CANCEL_REASONS.map((r) => ({ value: r, label: r }))}
+              variant="default"
+              size="md"
+              ariaLabel="Lý do hủy đặt chỗ"
+            />
           </div>
 
           {selectedReason === 'Lý do cá nhân khác' && (

@@ -1,12 +1,11 @@
 import { useState, useEffect } from 'react'
 import { X, Star, Loader2 } from 'lucide-react'
-import type { BookingItemDto } from '../types/bookingTypes'
 import { reviewBookingSchema } from '../schemas/bookingSchemas'
 
 interface ReviewBookingModalProps {
   isOpen: boolean
   onClose: () => void
-  booking: BookingItemDto | null
+  booking: { id: number; parkingLotName?: string | null } | null
   onSubmitReview: (rating: number, comment: string) => Promise<void>
 }
 
@@ -113,11 +112,10 @@ export function ReviewBookingModal({
                     className="p-1 cursor-pointer transition-transform hover:scale-110"
                   >
                     <Star
-                      className={`w-7 h-7 ${
-                        active
-                          ? 'fill-amber-400 text-amber-400'
-                          : 'fill-slate-100 text-slate-300'
-                      }`}
+                      className={`w-7 h-7 ${active
+                        ? 'fill-amber-400 text-amber-400'
+                        : 'fill-slate-100 text-slate-300'
+                        }`}
                     />
                   </button>
                 )

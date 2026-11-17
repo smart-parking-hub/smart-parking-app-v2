@@ -2,8 +2,9 @@ import { useId } from 'react'
 import { Controller, useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useMutation } from '@tanstack/react-query'
-import { ChevronDown, Info, Truck } from 'lucide-react'
-import { Notice, Panel, button, control, secondary } from '@/shared/components/Workspace'
+import { Info, Truck, ChevronDown } from 'lucide-react'
+import { Notice, button, control, secondary } from '@/shared/components/Workspace'
+import { Modal } from '@/shared/components/Modal'
 import { Autocomplete } from '@/shared/components/Autocomplete'
 import { errorMessage } from '@/shared/api/resources'
 import { saveVehicle, vehicleInputSchema, vehicleTypes, type VehicleInput, type VehicleRecord } from '../api/vehicleDataApi'
@@ -11,12 +12,12 @@ import { saveVehicle, vehicleInputSchema, vehicleTypes, type VehicleInput, type 
 // Optional input suggestions, not an authoritative vehicle/model registry.
 const brandSuggestions = ['Toyota', 'Ford', 'Hyundai', 'Isuzu', 'Hino', 'Thaco', 'Kia', 'Mazda', 'Mitsubishi', 'Mercedes-Benz', 'Volvo', 'Suzuki']
 
-const vehicleIcons: Record<VehicleInput['vehicleType'], string> = {
-  SEDAN_SUV: '🚗',
-  BUS_COACH: '🚌',
-  LIGHT_TRUCK: '🛻',
-  HEAVY_TRUCK: '🚚',
-  CONTAINER: '🚛',
+const weightExamples: Record<VehicleInput['vehicleType'], string> = {
+  SEDAN_SUV: '1.8',
+  BUS_COACH: '15.0',
+  LIGHT_TRUCK: '3.5',
+  HEAVY_TRUCK: '18.0',
+  CONTAINER: '32.0',
 }
 
 export function VehicleEditor({ vehicle, onClose, onSaved }: {
@@ -34,6 +35,9 @@ export function VehicleEditor({ vehicle, onClose, onSaved }: {
       brandModel: vehicle?.brandModel ?? '',
     },
   })
+  const selectedType = form.watch('vehicleType')
+  const isTypeSelected = Boolean(selectedType)
+
   const save = useMutation({
     mutationFn: (values: VehicleInput) => saveVehicle(values, vehicle?.id),
     onSuccess: onSaved,
@@ -44,66 +48,178 @@ export function VehicleEditor({ vehicle, onClose, onSaved }: {
   )
   const describedBy = (field: keyof VehicleInput) => `${id}-${field}-hint${errors[field] ? ` ${id}-${field}-error` : ''}`
 
-  return <Panel>
-    <div className="mb-6 flex items-start gap-3">
-      <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-brand-orange/10 text-brand-orange-ink"><Truck size={22} aria-hidden="true" /></span>
-      <div>
-        <h2 className="font-sora text-xl font-semibold">{vehicle ? 'Cập nhật phương tiện' : 'Thêm phương tiện'}</h2>
-        <p className="mt-1 text-sm leading-6 text-brand-muted">Thông tin dùng khi đặt chỗ. Các mục có dấu * là bắt buộc.</p>
+  return (
+    <Modal isOpen onClose={onClose} maxWidth="xl">
+      <div className="mb-6 flex items-start gap-3">
+        <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-brand-orange/10 text-brand-orange-ink">
+          <Truck size={22} aria-hidden="true" />
+        </span>
+        <div>
+          <h2 className="font-sora text-xl font-semibold">{vehicle ? 'Cập nhật phương tiện' : 'Thêm phương tiện'}</h2>
+          <p className="mt-1 text-sm leading-6 text-brand-muted">Thông tin dùng khi đặt chỗ. Các mục có dấu * là bắt buộc.</p>
+        </div>
       </div>
-    </div>
-    <form noValidate className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_260px]" onSubmit={form.handleSubmit(values => save.mutate(values))}>
-      <div className="min-w-0 space-y-6">
-        <fieldset disabled={save.isPending} className="grid gap-x-5 gap-y-6 sm:grid-cols-2">
+
+      <form noValidate className="space-y-6" onSubmit={form.handleSubmit(values => save.mutate(values))}>
+        <fieldset disabled={save.isPending} className="grid gap-x-5 gap-y-5 sm:grid-cols-2">
           <legend className="sr-only">Thông tin phương tiện</legend>
+
+          {/* Biển số xe */}
           <div className="grid content-start gap-2">
-            <label htmlFor={`${id}-plate`} className="text-sm font-semibold">Biển số xe <span aria-hidden="true" className="text-brand-orange-ink">*</span></label>
-            <input id={`${id}-plate`} aria-label="Biển số xe" className={`${control} h-12 font-semibold tracking-wide uppercase`} autoComplete="off" autoCapitalize="characters" spellCheck={false} maxLength={20} placeholder="Ví dụ: 51C-123.45" aria-required="true" aria-invalid={Boolean(errors.licensePlate)} aria-describedby={describedBy('licensePlate')}
-              {...form.register('licensePlate', { onBlur: event => form.setValue('licensePlate', String(event.target.value).trim().toUpperCase().replace(/\s+/g, ''), { shouldValidate: true }) })} />
-            <p id={`${id}-licensePlate-hint`} className="text-xs leading-5 text-brand-muted">Nhập đúng biển số trên xe. Tự chuyển chữ hoa và bỏ khoảng trắng.</p>
+            <label htmlFor={`${id}-plate`} className="text-sm font-semibold">
+              Biển số xe <span aria-hidden="true" className="text-brand-orange-ink">*</span>
+            </label>
+            <input
+              id={`${id}-plate`}
+              aria-label="Biển số xe"
+              className={`${control} h-12 font-semibold tracking-wide uppercase`}
+              autoComplete="off"
+              autoCapitalize="characters"
+              spellCheck={false}
+              maxLength={20}
+              placeholder="Ví dụ: 51C-123.45"
+              aria-required="true"
+              aria-invalid={Boolean(errors.licensePlate)}
+              aria-describedby={describedBy('licensePlate')}
+              {...form.register('licensePlate', {
+                onBlur: event => form.setValue('licensePlate', String(event.target.value).trim().toUpperCase().replace(/\s+/g, ''), { shouldValidate: true }),
+              })}
+            />
+            <p id={`${id}-licensePlate-hint`} className="text-xs leading-5 text-brand-muted">
+              Nhập đúng biển số trên xe. Tự chuyển chữ hoa và bỏ khoảng trắng.
+            </p>
             {fieldError('licensePlate')}
           </div>
+
+          {/* Loại xe */}
           <div className="grid content-start gap-2">
-            <label htmlFor={`${id}-type`} className="text-sm font-semibold">Loại xe <span aria-hidden="true" className="text-brand-orange-ink">*</span></label>
+            <label htmlFor={`${id}-type`} className="text-sm font-semibold">
+              Loại xe <span aria-hidden="true" className="text-brand-orange-ink">*</span>
+            </label>
             <div className="relative">
-            <select id={`${id}-type`} defaultValue={vehicle?.vehicleType ?? ''} aria-label="Loại xe" className={`${control} h-12 appearance-none pr-11`} aria-required="true" aria-invalid={Boolean(errors.vehicleType)} aria-describedby={describedBy('vehicleType')} {...form.register('vehicleType')}>
-              <option value="" disabled>Chọn loại xe</option>
-              {Object.entries(vehicleTypes).map(([value, label]) => <option key={value} value={value}>{vehicleIcons[value as VehicleInput['vehicleType']]} {label}</option>)}
-            </select>
-            <ChevronDown size={17} aria-hidden="true" className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-brand-muted" />
+              <select
+                id={`${id}-type`}
+                defaultValue={vehicle?.vehicleType ?? ''}
+                aria-label="Loại xe"
+                className={`${control} h-12 appearance-none pr-11 text-slate-800 transition-colors hover:border-slate-400 focus-visible:outline-2 focus-visible:outline-brand-orange focus-visible:ring-2 focus-visible:ring-brand-orange/20`}
+                disabled={save.isPending}
+                aria-required="true"
+                aria-invalid={Boolean(errors.vehicleType)}
+                aria-describedby={describedBy('vehicleType')}
+                {...form.register('vehicleType', {
+                  onChange: () => {
+                    if (form.getValues('weightTon')) {
+                      void form.trigger('weightTon')
+                    }
+                  },
+                })}
+              >
+                <option value="" disabled>Chọn loại xe</option>
+                {Object.entries(vehicleTypes).map(([val, label]) => (
+                  <option key={val} value={val}>{label}</option>
+                ))}
+              </select>
+              <ChevronDown size={18} aria-hidden="true" className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-brand-muted" />
             </div>
-            <p id={`${id}-vehicleType-hint`} className="text-xs leading-5 text-brand-muted">Chọn theo xe thực tế để tìm đúng loại chỗ đỗ.</p>
+            <p id={`${id}-vehicleType-hint`} className="text-xs leading-5 text-brand-muted">
+              Chọn theo xe thực tế để tìm đúng loại chỗ đỗ.
+            </p>
             {fieldError('vehicleType')}
           </div>
+
+          {/* Trọng tải (tấn) */}
           <div className="grid content-start gap-2">
-            <label htmlFor={`${id}-weight`} className="text-sm font-semibold">Trọng tải (tấn) <span aria-hidden="true" className="text-brand-orange-ink">*</span></label>
-            <input id={`${id}-weight`} aria-label="Trọng tải (tấn)" className={`${control} h-12`} type="number" inputMode="decimal" min="0.01" max="999.99" step="0.01" placeholder="Ví dụ: 12.5" aria-required="true" aria-invalid={Boolean(errors.weightTon)} aria-describedby={describedBy('weightTon')} {...form.register('weightTon')} />
-            <p id={`${id}-weightTon-hint`} className="text-xs leading-5 text-brand-muted">Nhập theo hồ sơ xe. 1 tấn = 1.000 kg.</p>
+            <label htmlFor={`${id}-weight`} className="text-sm font-semibold">
+              Trọng tải (tấn) <span aria-hidden="true" className="text-brand-orange-ink">*</span>
+            </label>
+            <input
+              id={`${id}-weight`}
+              aria-label="Trọng tải (tấn)"
+              className={`${control} h-12 ${!isTypeSelected ? 'bg-slate-100 cursor-not-allowed text-slate-500' : ''}`}
+              type="number"
+              inputMode="decimal"
+              min="0.01"
+              max="999.99"
+              step="0.01"
+              disabled={!isTypeSelected || save.isPending}
+              placeholder={isTypeSelected ? `Ví dụ: ${weightExamples[selectedType]} tấn` : 'Vui lòng chọn loại xe trước'}
+              aria-required="true"
+              aria-invalid={Boolean(errors.weightTon)}
+              aria-describedby={describedBy('weightTon')}
+              {...form.register('weightTon')}
+            />
+            <p id={`${id}-weightTon-hint`} className="text-xs leading-5 text-brand-muted">
+              {isTypeSelected
+                ? `Nhập theo hồ sơ xe (Ví dụ: ${weightExamples[selectedType]} tấn). 1 tấn = 1.000 kg.`
+                : 'Vui lòng chọn loại xe trước để nhập trọng tải.'}
+            </p>
             {fieldError('weightTon')}
           </div>
+
+          {/* Nhãn hiệu / Model */}
           <div className="grid content-start gap-2">
-            <label htmlFor={`${id}-brand`} className="text-sm font-semibold">Nhãn hiệu / Model (không bắt buộc)</label>
-            <Controller name="brandModel" control={form.control} render={({ field }) => (
-              <Autocomplete id={`${id}-brand`} ref={field.ref} name={field.name} value={field.value}
-                onValueChange={field.onChange} onBlur={field.onBlur} options={brandSuggestions}
-                disabled={save.isPending} maxLength={100} placeholder="Tìm hãng hoặc nhập hãng, model…"
-                aria-invalid={Boolean(errors.brandModel)} aria-describedby={describedBy('brandModel')} />
-            )} />
-            <p id={`${id}-brandModel-hint`} className="text-xs leading-5 text-brand-muted">Gõ để xem gợi ý hãng; vẫn có thể nhập hãng và model khác.</p>
+            <label htmlFor={`${id}-brand`} className="text-sm font-semibold">
+              Nhãn hiệu / Model (không bắt buộc)
+            </label>
+            <Controller
+              name="brandModel"
+              control={form.control}
+              render={({ field }) => (
+                <Autocomplete
+                  id={`${id}-brand`}
+                  ref={field.ref}
+                  name={field.name}
+                  value={field.value}
+                  onValueChange={field.onChange}
+                  onBlur={field.onBlur}
+                  options={brandSuggestions}
+                  disabled={save.isPending}
+                  maxLength={100}
+                  placeholder="Tìm hãng hoặc nhập hãng, model…"
+                  aria-invalid={Boolean(errors.brandModel)}
+                  aria-describedby={describedBy('brandModel')}
+                />
+              )}
+            />
+            <p id={`${id}-brandModel-hint`} className="text-xs leading-5 text-brand-muted">
+              Gõ để xem gợi ý hãng; vẫn có thể nhập hãng và model khác.
+            </p>
             {fieldError('brandModel')}
           </div>
         </fieldset>
+
+        {/* Thông tin tự khai: Chuyển xuống dưới và mở rộng toàn chiều ngang sang phải */}
+        <aside className="rounded-xl border border-brand-border border-t-2 border-t-brand-orange bg-brand-surface p-4 sm:p-5 text-sm leading-relaxed">
+          <div className="mb-2 flex items-center gap-2 font-semibold text-slate-800">
+            <Info size={18} className="text-brand-orange shrink-0" aria-hidden="true" />
+            <span>Thông tin tự khai</span>
+          </div>
+          <div className="text-brand-muted space-y-1 text-xs sm:text-sm">
+            <p>Kiểm tra biển số, loại xe và trọng tải trước khi lưu.</p>
+            <p>Lưu phương tiện chưa đồng nghĩa với xác minh giấy tờ hoặc quyền sở hữu xe.</p>
+          </div>
+        </aside>
+
         {save.isError && <Notice error>{errorMessage(save.error)}</Notice>}
-        <div className="flex flex-wrap gap-3 border-t border-brand-border pt-5">
-          <button className={`${button} min-h-12`} disabled={save.isPending}>{save.isPending ? 'Đang lưu…' : 'Lưu phương tiện'}</button>
-          <button type="button" className={`${secondary} min-h-12`} disabled={save.isPending} onClick={onClose}>Hủy</button>
+
+        <div className="flex flex-wrap gap-3 border-t border-brand-border pt-4">
+          <button
+            type="submit"
+            className={`${button} min-h-12 cursor-pointer hover:bg-[#b84e00] hover:shadow-md hover:shadow-orange-500/25 active:scale-[0.98] transition-all`}
+            disabled={save.isPending}
+          >
+            {save.isPending ? 'Đang lưu…' : 'Lưu phương tiện'}
+          </button>
+          <button
+            type="button"
+            className={`${secondary} min-h-12 cursor-pointer hover:bg-slate-50 hover:border-slate-300 hover:text-slate-900 active:scale-[0.98] transition-all`}
+            disabled={save.isPending}
+            onClick={onClose}
+          >
+            Hủy
+          </button>
         </div>
-      </div>
-      <aside className="self-start rounded-xl border border-brand-border border-t-2 border-t-brand-orange bg-brand-surface p-5 text-sm leading-6">
-        <div className="mb-3 flex items-center gap-2 font-semibold"><Info size={18} aria-hidden="true" />Thông tin tự khai</div>
-        <p className="text-brand-muted">Kiểm tra biển số, loại xe và trọng tải trước khi lưu.</p>
-        <p className="mt-3 text-brand-muted">Lưu phương tiện chưa đồng nghĩa với xác minh giấy tờ hoặc quyền sở hữu xe.</p>
-      </aside>
-    </form>
-  </Panel>
+      </form>
+    </Modal>
+  )
 }

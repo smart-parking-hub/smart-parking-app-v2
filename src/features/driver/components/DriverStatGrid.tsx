@@ -40,7 +40,7 @@ export function DriverStatGrid({
         {/* Card 1: Personal Fleet */}
         <Link
           to="/vehicles"
-          className="group flex flex-col justify-between p-5 bg-white rounded-xl border border-slate-200 hover:border-slate-300 transition-colors"
+          className="group flex flex-col justify-between p-5 bg-white rounded-xl border border-slate-200 hover:border-brand-primary/40 hover:shadow-sm transition-all focus-visible:outline-2 focus-visible:outline-brand-orange cursor-pointer"
         >
           <div className="flex items-center justify-between mb-2">
             <span className="text-xs font-normal text-slate-500">Đội xe đăng ký</span>
@@ -54,8 +54,8 @@ export function DriverStatGrid({
               Phương tiện đã đăng ký
             </p>
           </div>
-          <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs font-medium text-slate-600 group-hover:text-slate-900 transition-colors">
-            <span>Xem danh sách xe</span>
+          <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs font-medium text-slate-600 group-hover:text-[#d95f00] transition-colors">
+            <span className="group-hover:underline">Xem danh sách xe</span>
             <ChevronRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
           </div>
         </Link>
@@ -63,7 +63,7 @@ export function DriverStatGrid({
         {/* Card 2: Lifetime Bookings */}
         <Link
           to="/bookings"
-          className="group flex flex-col justify-between p-5 bg-white rounded-xl border border-slate-200 hover:border-slate-300 transition-colors"
+          className="group flex flex-col justify-between p-5 bg-white rounded-xl border border-slate-200 hover:border-brand-primary/40 hover:shadow-sm transition-all focus-visible:outline-2 focus-visible:outline-brand-orange cursor-pointer"
         >
           <div className="flex items-center justify-between mb-2">
             <span className="text-xs font-normal text-slate-500">Lịch sử điều phối</span>
@@ -77,8 +77,8 @@ export function DriverStatGrid({
               Tổng số lượt đặt chỗ
             </p>
           </div>
-          <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs font-medium text-slate-600 group-hover:text-slate-900 transition-colors">
-            <span>Lịch sử đặt chỗ</span>
+          <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs font-medium text-slate-600 group-hover:text-[#d95f00] transition-colors">
+            <span className="group-hover:underline">Lịch sử đặt chỗ</span>
             <ChevronRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
           </div>
         </Link>
@@ -118,7 +118,7 @@ export function DriverStatGrid({
         {/* Card 4: Virtual Queue */}
         <Link
           to="/queues"
-          className="group flex flex-col justify-between p-5 bg-white rounded-xl border border-slate-200 hover:border-slate-300 transition-colors"
+          className="group flex flex-col justify-between p-5 bg-white rounded-xl border border-slate-200 hover:border-brand-primary/40 hover:shadow-sm transition-all focus-visible:outline-2 focus-visible:outline-brand-orange cursor-pointer"
         >
           <div className="flex items-center justify-between mb-2">
             <span className="text-xs font-normal text-slate-500">Hàng đợi bến</span>
@@ -132,8 +132,8 @@ export function DriverStatGrid({
               {queueCount == null ? 'Chưa tải được hàng đợi' : 'Lượt đang chờ nhận chỗ'}
             </p>
           </div>
-          <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs font-medium text-slate-600 group-hover:text-slate-900 transition-colors">
-            <span>Hàng đợi của tôi</span>
+          <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs font-medium text-slate-600 group-hover:text-[#d95f00] transition-colors">
+            <span className="group-hover:underline">Hàng đợi của tôi</span>
             <ChevronRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
           </div>
         </Link>
