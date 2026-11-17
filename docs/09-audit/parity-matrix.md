@@ -1,5 +1,13 @@
 # Capability Parity Matrix — 4 Landing Screens: Trang Chủ, Tài Xế, Chủ Bãi & Bảng Giá
 
+## Quick booking payment layout — 2026-11-18
+
+User-requested presentation change: wider dialog and simpler information hierarchy. Lot, full address, vehicle, exact schedule, deposit, fee, deadline, copy order, PayOS, wallet eligibility/reconciliation, expiry handling, QR eligibility, price details, demo gating, cancellation and booking navigation are preserved. [Detailed parity and verification](./quick-payment-layout-2026-11-18.md).
+
+## SCR-020 current vehicle parking — 2026-11-18
+
+Fleet create/edit/deactivate, confirmation, usage status, current-page search and pagination are preserved. Current lot/address/physical slot and operational parking/overtime status are added per user request. Optional parking failures keep fleet actions available and show unknown location with retry. [Contract, capability matrix and verification](../05-modules/driver/vehicle-parking.md).
+
 ## SCR-048 confirmation — 2026-11-15
 
 Amount, bank/holder/merchant, warning, reason validation, approve/reject calls, mutation state and dialog keyboard behavior are preserved. Full `bankAccountNumber` replaces masked-only display inside the confirmation per user request; the ledger remains masked. Bank logos reuse the entity directory/cache with an icon fallback. [Details](../05-modules/admin/withdrawal-confirmation.md).
