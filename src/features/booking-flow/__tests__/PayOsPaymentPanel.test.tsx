@@ -59,7 +59,8 @@ beforeEach(() => {
     sdkConfig = config
     return { open, exit }
   } })
-  vi.mocked(apiClient.get).mockImplementation(async url => ({ data: { data: String(url).endsWith('/driver/wallet') ? { availableAmount: 0, heldAmount: 0, currency: 'VND', enabled: true } : current } }))
+  vi.mocked(apiClient.get).mockImplementation(async url => ({ data: { data: String(url).endsWith('/payments/wallet') ? null
+    : String(url).endsWith('/driver/wallet') ? { availableAmount: 0, heldAmount: 0, currency: 'VND', enabled: true } : current } }))
   vi.mocked(apiClient.post).mockImplementation(async (url) => ({
     data: { data: String(url).endsWith('/sync') ? { status: 'PENDING' } : checkoutUrl },
   }))
@@ -279,8 +280,10 @@ describe('PayOS embedded checkout', () => {
     vi.useFakeTimers()
     try {
       mount({ ...current, expiresAt: new Date(Date.now() + 2000).toISOString() })
+      // Payment is available only after the initial wallet-attempt lookup has completed.
+      await act(async () => { await vi.advanceTimersByTimeAsync(10) })
       expect(screen.getByRole('button', { name: /Thanh toán cọc.*qua PayOS/ })).toBeEnabled()
-      await act(async () => { await vi.advanceTimersByTimeAsync(2000) })
+      await act(async () => { await vi.advanceTimersByTimeAsync(1990) })
       expect(screen.queryByRole('button', { name: /qua PayOS/ })).toBeNull()
     } finally {
       vi.useRealTimers()

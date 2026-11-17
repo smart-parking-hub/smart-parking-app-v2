@@ -145,7 +145,13 @@ function BookingStatusContent({ bookingId, booking, embedded = false, compact = 
       </Dialog>}
       {data.status === 'CANCELLED' && <Notice><div className="space-y-2">
         <p>Khoản được hoàn: {formatMoney(data.refundAmount ?? 0)} · {refundStatusLabels[data.refundStatus ?? 'NONE'] ?? data.refundStatus}</p>
-        {data.refundChannel === 'WALLET' && <p>{data.refundStatus === 'COMPLETED' ? 'Đã cộng vào ví tài xế.' : 'Khoản hoàn vào ví đang được xử lý; chưa cộng vào số dư khả dụng.'} <Link className="text-brand-primary underline" to="/wallet">Xem ví</Link></p>}
+        {data.refundChannel === 'WALLET' && (data.refundAmount ?? 0) > 0 && data.refundStatus !== 'NONE' && <p>
+          {data.refundStatus === 'COMPLETED' ? 'Đã cộng vào ví tài xế.'
+            : data.refundStatus === 'REQUESTED' || data.refundStatus === 'PROCESSING' ? 'Khoản hoàn vào ví đang được xử lý; chưa cộng vào số dư khả dụng.'
+            : data.refundStatus === 'REQUIRES_RECONCILIATION' ? 'Khoản hoàn vào ví cần đối soát; chưa cộng vào số dư khả dụng.'
+            : 'Khoản hoàn vào ví chưa hoàn thành; cần kiểm tra trạng thái xử lý.'}
+          {' '}<Link className="text-brand-primary underline" to="/wallet">Xem ví</Link>
+        </p>}
         {data.refundReference && <p>Mã hoàn: {data.refundReference}</p>}
       </div></Notice>}
       {data.status === 'PENDING_PAYMENT' && !expired && <WalletDepositPayment bookingId={bookingId} amount={data.advanceDeposit} onComplete={refresh} onPendingChange={setWalletPending} disabled={payment.isPending || checkoutOpen || cancel.isPending} />}
