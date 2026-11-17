@@ -1,22 +1,31 @@
 import { useEffect, useRef, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
-import L from 'leaflet'
-import 'leaflet/dist/leaflet.css'
 import {
   Navigation,
   LocateFixed,
   ArrowUpRight,
   Plus,
   Minus,
+  ExternalLink,
+  AlertTriangle,
+  RefreshCw,
 } from 'lucide-react'
-import { createParkingMapIcon } from '@/entities/parking-lot/parkingMapIcon'
-import type { ParkingLotItem } from '../types/parkingSearchTypes'
 import {
-  getDrivingRoute,
-  validCoordinates,
+  buildGoogleMapsDirectionsUrl,
+  DEFAULT_MAP_CENTER,
+  DEFAULT_MAP_ZOOM,
+  getGoogleMapsConfig,
+  GoogleMapsError,
+  isValidCoordinates,
+  loadGoogleMapsCore,
+  subscribeGoogleMapsAuthFailure,
+  toLatLngLiteral,
   type Coordinates,
-} from '../api/mapProvider'
+} from '@/shared/maps'
+import { createParkingMarkerElement } from '@/entities/parking-lot/parkingGoogleMarker'
+import type { ParkingLotItem } from '../types/parkingSearchTypes'
+import { getDrivingRoute } from '../api/mapProvider'
 
 interface Props {
   lots: ParkingLotItem[]
@@ -26,27 +35,37 @@ interface Props {
   onQuickBook: (lot: ParkingLotItem) => void
 }
 
-function fitAllParkingLots(instance: L.Map, lots: ParkingLotItem[]) {
-  const points = lots
-    .filter(validCoordinates)
-    .map((lot) => [lot.latitude, lot.longitude] as [number, number])
-  if (!points.length) return
-  const isDesktop = instance.getSize().x >= 960
-  instance.fitBounds(points, {
-    paddingTopLeft: isDesktop ? [470, 88] : [48, 48],
-    paddingBottomRight: isDesktop ? [80, 120] : [48, 48],
-    maxZoom: 14,
-  })
+function getContainerWidth(container: HTMLDivElement | null): number {
+  return container?.clientWidth ?? 0
 }
 
-function hasCanvas2dSupport(): boolean {
-  if (typeof document === 'undefined') return false
-  try {
-    const canvas = document.createElement('canvas')
-    return Boolean(canvas.getContext?.('2d'))
-  } catch {
-    return false
+function getBoundsPadding(isDesktop: boolean): google.maps.Padding {
+  return isDesktop
+    ? { top: 88, right: 80, bottom: 120, left: 470 }
+    : { top: 48, right: 48, bottom: 48, left: 48 }
+}
+
+function fitAllParkingLots(
+  mapInstance: google.maps.Map,
+  lots: ParkingLotItem[],
+  container: HTMLDivElement | null,
+) {
+  const validLots = lots.filter(isValidCoordinates)
+  if (!validLots.length) return
+
+  if (validLots.length === 1) {
+    const target = toLatLngLiteral(validLots[0])
+    mapInstance.panTo(target)
+    mapInstance.setZoom(14)
+    return
   }
+
+  const bounds = new google.maps.LatLngBounds()
+  for (const lot of validLots) {
+    bounds.extend(toLatLngLiteral(lot))
+  }
+  const isDesktop = getContainerWidth(container) >= 960
+  mapInstance.fitBounds(bounds, getBoundsPadding(isDesktop))
 }
 
 function resolveRouteColor(element: HTMLElement | null): string {
@@ -58,10 +77,34 @@ function resolveRouteColor(element: HTMLElement | null): string {
   return value || '#ea580c'
 }
 
-/** Respect the user's reduced-motion preference for map fly animations. */
-function flyDuration(): number {
-  if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return 0.5
-  return window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 0.5
+function createOriginMarkerElement(color: string): HTMLDivElement {
+  const dot = document.createElement('div')
+  dot.className = 'parking-map-origin-dot'
+  dot.style.width = '18px'
+  dot.style.height = '18px'
+  dot.style.borderRadius = '9999px'
+  dot.style.backgroundColor = color
+  dot.style.border = '3px solid #ffffff'
+  dot.style.boxShadow = '0 2px 8px rgba(13, 28, 46, 0.35)'
+  dot.setAttribute('aria-label', 'Điểm xuất phát của bạn')
+  return dot
+}
+
+function createLotPopupContent(lot: ParkingLotItem): HTMLDivElement {
+  const popup = document.createElement('div')
+  popup.className = 'parking-map-popup'
+
+  const name = document.createElement('strong')
+  name.textContent = lot.name
+
+  const address = document.createElement('p')
+  address.textContent = lot.address
+
+  const details = document.createElement('p')
+  details.textContent = `${lot.availableSlots > 0 ? `Còn ${lot.availableSlots} chỗ` : 'Hết chỗ'} · ${new Intl.NumberFormat('vi-VN').format(lot.hourlyRate)} đ/h`
+
+  popup.append(name, address, details)
+  return popup
 }
 
 export function InteractiveMapCanvas({
@@ -72,15 +115,19 @@ export function InteractiveMapCanvas({
   onQuickBook,
 }: Props) {
   const container = useRef<HTMLDivElement>(null)
-  const map = useRef<L.Map | null>(null)
-  const tileLayer = useRef<L.TileLayer | null>(null)
+  const mapRef = useRef<google.maps.Map | null>(null)
+  const mapsLibRef = useRef<google.maps.MapsLibrary | null>(null)
+  const markerLibRef = useRef<google.maps.MarkerLibrary | null>(null)
+  const infoWindowRef = useRef<google.maps.InfoWindow | null>(null)
   const lastFocusedKey = useRef<string | null>(null)
   const lastFittedRouteKey = useRef<string | null>(null)
   const hadOriginRef = useRef(false)
   const pendingOriginResetFit = useRef(false)
-  const [tilesUnavailable, setTilesUnavailable] = useState(false)
-  const [ready, setReady] = useState(false)
   const select = useRef(onSelectLot)
+
+  const [ready, setReady] = useState(false)
+  const [mapError, setMapError] = useState<string | null>(null)
+  const [retryToken, setRetryToken] = useState(0)
 
   useEffect(() => {
     select.current = onSelectLot
@@ -88,151 +135,161 @@ export function InteractiveMapCanvas({
 
   useEffect(() => {
     if (!container.current) return
-    // Render route vectors on a generous-padding Canvas layer (fallback SVG 0.5)
-    // so horizontal/vertical map panning glides cleanly without Chromium SVG viewBox desync.
-    const canvasRenderer = hasCanvas2dSupport()
-      ? L.canvas({ padding: 0.5 })
-      : null
-    if (canvasRenderer) {
-      // Guard orphaned requestAnimationFrame redraws if map unmounts right after _update()
-      const rendererProto = Object.getPrototypeOf(canvasRenderer) as {
-        _redraw?: (this: { _ctx?: CanvasRenderingContext2D }) => void
-      }
-      const baseRedraw = rendererProto._redraw
-      if (baseRedraw) {
-        ;(
-          canvasRenderer as unknown as {
-            _redraw: (this: { _ctx?: CanvasRenderingContext2D }) => void
-          }
-        )._redraw = function guardedRedraw() {
-          if (!this._ctx) return
-          baseRedraw.call(this)
-        }
-      }
-    }
-    const vectorRenderer = canvasRenderer ?? L.svg({ padding: 0.5 })
-    const instance = L.map(container.current, {
-      zoomControl: false,
-      scrollWheelZoom: true,
-      renderer: vectorRenderer,
-    }).setView([10.7769, 106.7009], 12)
-    map.current = instance
 
-    const tiles = L.tileLayer(
-      import.meta.env.VITE_OSM_TILE_URL ||
-        'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-      {
-        maxZoom: 19,
-        attribution:
-          '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-      },
-    ).addTo(instance)
-    tileLayer.current = tiles
+    let disposed = false
+    setReady(false)
+    setMapError(null)
 
-    let loaded = false
-    const tileTimeout = setTimeout(() => {
-      if (!loaded) setTilesUnavailable(true)
-    }, 12000)
-
-    tiles.on('tileerror', () => {
-      if (!loaded) setTilesUnavailable(true)
-    })
-    tiles.on('tileload', () => {
-      loaded = true
-      setTilesUnavailable(false)
+    const unsubscribeAuth = subscribeGoogleMapsAuthFailure(() => {
+      if (disposed) return
+      setMapError(
+        'Khóa Google Maps API không hợp lệ hoặc bị giới hạn trên domain hiện tại.',
+      )
+      setReady(false)
     })
 
-    const resize = new ResizeObserver(() => instance.invalidateSize())
-    resize.observe(container.current)
-    setReady(true)
+    void loadGoogleMapsCore()
+      .then(({ maps, marker }) => {
+        if (disposed || !container.current) return
+        const config = getGoogleMapsConfig()
+        const instance = new maps.Map(container.current, {
+          center: toLatLngLiteral(DEFAULT_MAP_CENTER),
+          zoom: DEFAULT_MAP_ZOOM,
+          mapId: config.mapId,
+          zoomControl: false,
+          mapTypeControl: false,
+          streetViewControl: false,
+          fullscreenControl: false,
+          gestureHandling: 'greedy',
+        })
+
+        mapRef.current = instance
+        mapsLibRef.current = maps
+        markerLibRef.current = marker
+        infoWindowRef.current = new maps.InfoWindow({
+          disableAutoPan: true,
+        })
+        setReady(true)
+      })
+      .catch((error: unknown) => {
+        if (disposed) return
+        const message =
+          error instanceof GoogleMapsError
+            ? error.message
+            : 'Chưa tải được nền Google Maps. Kiểm tra kết nối mạng hoặc cấu hình khóa API.'
+        setMapError(message)
+      })
 
     return () => {
-      clearTimeout(tileTimeout)
-      resize.disconnect()
+      disposed = true
+      unsubscribeAuth()
+      infoWindowRef.current?.close()
+      infoWindowRef.current = null
       lastFocusedKey.current = null
       lastFittedRouteKey.current = null
       hadOriginRef.current = false
       pendingOriginResetFit.current = false
-      instance.remove()
-      map.current = null
-      tileLayer.current = null
+      mapRef.current = null
+      mapsLibRef.current = null
+      markerLibRef.current = null
     }
-  }, [])
+  }, [retryToken])
 
   useEffect(() => {
-    const instance = map.current
-    if (!instance || !ready) return
-    const layer = L.layerGroup().addTo(instance)
-    let selectedMarker: L.Marker | null = null
+    const instance = mapRef.current
+    const markerLib = markerLibRef.current
+    const infoWindow = infoWindowRef.current
+    if (!instance || !markerLib || !ready) return
 
-    for (const lot of lots.filter(validCoordinates)) {
+    const createdMarkers: google.maps.marker.AdvancedMarkerElement[] = []
+    const cleanupListeners: (() => void)[] = []
+    let selectedMarker: google.maps.marker.AdvancedMarkerElement | null = null
+    let selectedLotMatch: ParkingLotItem | null = null
+
+    for (const lot of lots.filter(isValidCoordinates)) {
       const isSelected = lot.id === selectedLot?.id
-
-      const marker = L.marker([lot.latitude, lot.longitude], {
-        icon: createParkingMapIcon({
-          hourlyRate: lot.hourlyRate,
-          availableSlots: lot.availableSlots,
-          selected: isSelected,
-          full: lot.isFull || lot.availableSlots === 0,
-        }),
+      const content = createParkingMarkerElement({
+        hourlyRate: lot.hourlyRate,
+        availableSlots: lot.availableSlots,
+        selected: isSelected,
+        full: lot.isFull || lot.availableSlots === 0,
         title: lot.name,
-        keyboard: true,
-        zIndexOffset: isSelected ? 1000 : 100,
       })
-        // Build the popup with DOM nodes + textContent so lot data is never parsed as HTML.
-        .bindPopup(() => {
-          const popup = document.createElement('div')
-          popup.className = 'parking-map-popup'
-          const name = document.createElement('strong')
-          name.textContent = lot.name
-          const address = document.createElement('p')
-          address.textContent = lot.address
-          const details = document.createElement('p')
-          details.textContent = `${lot.availableSlots > 0 ? `Còn ${lot.availableSlots} chỗ` : 'Hết chỗ'} · ${new Intl.NumberFormat('vi-VN').format(lot.hourlyRate)} đ/h`
-          popup.append(name, address, details)
-          return popup
-        }, { closeButton: true, autoPan: false })
-        .on('click', () => select.current(lot))
-        .on('keydown', (event: L.LeafletKeyboardEvent) => {
-          if (event.originalEvent.key === 'Enter' || event.originalEvent.key === ' ') {
-            event.originalEvent.preventDefault()
-            select.current(lot)
-          }
-        })
-        .addTo(layer)
+
+      const markerInstance = new markerLib.AdvancedMarkerElement({
+        map: instance,
+        position: toLatLngLiteral(lot),
+        title: lot.name,
+        content,
+        zIndex: isSelected ? 1000 : 100,
+        gmpClickable: true,
+      })
+
+      const handleSelect = () => select.current(lot)
+      const clickListener = markerInstance.addListener?.(
+        'gmp-click',
+        handleSelect,
+      )
+      const keydownHandler = (event: KeyboardEvent) => {
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault()
+          handleSelect()
+        }
+      }
+      content.tabIndex = 0
+      content.setAttribute('role', 'button')
+      content.addEventListener('keydown', keydownHandler)
+
+      cleanupListeners.push(() => {
+        clickListener?.remove()
+        content.removeEventListener('keydown', keydownHandler)
+      })
+      createdMarkers.push(markerInstance)
 
       if (isSelected) {
-        selectedMarker = marker
+        selectedMarker = markerInstance
+        selectedLotMatch = lot
       }
     }
 
-    if (selectedMarker) {
-      selectedMarker.openPopup()
+    if (selectedMarker && selectedLotMatch && infoWindow) {
+      infoWindow.setContent(createLotPopupContent(selectedLotMatch))
+      infoWindow.open({
+        map: instance,
+        anchor: selectedMarker,
+        shouldFocus: false,
+      })
+    } else {
+      infoWindow?.close()
     }
 
-    if (origin && validCoordinates(origin)) {
+    if (origin && isValidCoordinates(origin)) {
       const routeColor = resolveRouteColor(container.current)
-      L.circleMarker([origin.latitude, origin.longitude], {
-        radius: 9,
-        color: 'white',
-        weight: 3,
-        fillColor: routeColor,
-        fillOpacity: 1,
+      const originMarker = new markerLib.AdvancedMarkerElement({
+        map: instance,
+        position: toLatLngLiteral(origin),
+        title: 'Điểm xuất phát của bạn',
+        content: createOriginMarkerElement(routeColor),
+        zIndex: 900,
       })
-        .bindTooltip('Điểm xuất phát của bạn')
-        .addTo(layer)
+      createdMarkers.push(originMarker)
     }
 
     return () => {
-      layer.remove()
+      for (const cleanup of cleanupListeners) {
+        cleanup()
+      }
+      for (const markerInstance of createdMarkers) {
+        markerInstance.map = null
+      }
     }
   }, [lots, selectedLot?.id, origin, ready])
 
   useEffect(() => {
-    const instance = map.current
+    const instance = mapRef.current
     if (!instance || !ready) return
-    const validLots = lots.filter(validCoordinates)
-    const hasOrigin = Boolean(origin && validCoordinates(origin))
+    const validLots = lots.filter(isValidCoordinates)
+    const hasOrigin = Boolean(origin && isValidCoordinates(origin))
 
     if (hasOrigin) {
       hadOriginRef.current = true
@@ -243,7 +300,7 @@ export function InteractiveMapCanvas({
     }
 
     const focusKey =
-      selectedLot && validCoordinates(selectedLot)
+      selectedLot && isValidCoordinates(selectedLot)
         ? `lot:${selectedLot.id}:${selectedLot.latitude},${selectedLot.longitude}`
         : hasOrigin
           ? `origin:${origin!.latitude},${origin!.longitude}`
@@ -253,43 +310,32 @@ export function InteractiveMapCanvas({
       if (!validLots.length) return
       pendingOriginResetFit.current = false
       lastFocusedKey.current = focusKey
-      fitAllParkingLots(instance, validLots)
+      fitAllParkingLots(instance, validLots, container.current)
       return
     }
 
     if (lastFocusedKey.current === focusKey) return
     lastFocusedKey.current = focusKey
 
-    if (selectedLot && validCoordinates(selectedLot)) {
-      const targetZoom = Math.max(instance.getZoom(), 15)
-      const isDesktop = instance.getSize().x >= 960
-      if (isDesktop) {
-        const projected = instance.project(
-          [selectedLot.latitude, selectedLot.longitude],
-          targetZoom,
-        )
-        const offsetLatLng = instance.unproject(
-          projected.subtract([215, 0]),
-          targetZoom,
-        )
-        instance.flyTo(offsetLatLng, targetZoom, { duration: flyDuration() })
-      } else {
-        instance.flyTo(
-          [selectedLot.latitude, selectedLot.longitude],
-          targetZoom,
-          { duration: flyDuration() },
-        )
+    if (selectedLot && isValidCoordinates(selectedLot)) {
+      const currentZoom = instance.getZoom() ?? DEFAULT_MAP_ZOOM
+      const targetZoom = Math.max(currentZoom, 15)
+      instance.panTo(toLatLngLiteral(selectedLot))
+      instance.setZoom(targetZoom)
+      if (getContainerWidth(container.current) >= 960) {
+        instance.panBy(-215, 0)
       }
     } else if (validLots.length > 0) {
-      fitAllParkingLots(instance, validLots)
+      fitAllParkingLots(instance, validLots, container.current)
     } else if (hasOrigin && origin) {
-      instance.flyTo([origin.latitude, origin.longitude], 13, { duration: flyDuration() })
+      instance.panTo(toLatLngLiteral(origin))
+      instance.setZoom(13)
     }
   }, [selectedLot, lots, origin, ready])
 
   const route = useQuery({
     queryKey: [
-      'osm-driving-route',
+      'google-driving-route',
       origin?.latitude,
       origin?.longitude,
       selectedLot?.latitude,
@@ -298,8 +344,8 @@ export function InteractiveMapCanvas({
     enabled: Boolean(
       origin &&
       selectedLot &&
-      validCoordinates(origin) &&
-      validCoordinates(selectedLot),
+      isValidCoordinates(origin) &&
+      isValidCoordinates(selectedLot),
     ),
     queryFn: ({ signal }) => getDrivingRoute(origin!, selectedLot!, signal),
     retry: false,
@@ -308,75 +354,117 @@ export function InteractiveMapCanvas({
   })
 
   useEffect(() => {
-    const instance = map.current
-    if (!instance || !ready) return
+    const instance = mapRef.current
+    const mapsLib = mapsLibRef.current
+    if (!instance || !mapsLib || !ready) return
     if (!route.data) {
       lastFittedRouteKey.current = null
       return
     }
+
     const routeColor = resolveRouteColor(container.current)
-    const line = L.polyline(route.data.points, {
-      color: routeColor,
-      weight: 5,
-      opacity: 0.9,
-      lineCap: 'round',
-      lineJoin: 'round',
-      smoothFactor: 1,
-      noClip: true,
-      interactive: false,
-    }).addTo(instance)
+    const path = route.data.points.map(toLatLngLiteral)
+    const line = new mapsLib.Polyline({
+      map: instance,
+      path,
+      strokeColor: routeColor,
+      strokeWeight: 5,
+      strokeOpacity: 0.9,
+      clickable: false,
+    })
 
     const routeKey = `${origin?.latitude},${origin?.longitude}->${selectedLot?.id}`
-    if (lastFittedRouteKey.current !== routeKey) {
+    if (lastFittedRouteKey.current !== routeKey && path.length > 0) {
       lastFittedRouteKey.current = routeKey
-      const isDesktop = instance.getSize().x >= 960
-      instance.fitBounds(line.getBounds(), {
-        paddingTopLeft: isDesktop ? [470, 90] : [55, 90],
-        paddingBottomRight: isDesktop ? [90, 130] : [55, 100],
-      })
+      const bounds = new google.maps.LatLngBounds()
+      for (const point of path) {
+        bounds.extend(point)
+      }
+      const isDesktop = getContainerWidth(container.current) >= 960
+      instance.fitBounds(
+        bounds,
+        isDesktop
+          ? { top: 90, right: 90, bottom: 130, left: 470 }
+          : { top: 90, right: 55, bottom: 100, left: 55 },
+      )
     }
+
     return () => {
-      line.remove()
+      line.setMap(null)
     }
   }, [route.data, ready, origin?.latitude, origin?.longitude, selectedLot?.id])
 
+  const selectedDirectionsUrl = selectedLot
+    ? buildGoogleMapsDirectionsUrl({
+        destination: isValidCoordinates(selectedLot) ? selectedLot : null,
+        destinationAddress: selectedLot.address,
+        origin: origin && isValidCoordinates(origin) ? origin : null,
+      })
+    : null
+
   return (
     <section
-      aria-label="Bản đồ bãi đỗ OpenStreetMap"
+      aria-label="Bản đồ bãi đỗ Google Maps"
       className="parking-map relative w-full lg:h-full isolate"
     >
       {/* Full-bleed Map Canvas */}
       <div className="relative w-full h-[440px] sm:h-[520px] lg:h-full">
         <div ref={container} className="h-full w-full" />
 
-        {tilesUnavailable && (
+        {mapError && (
           <div
             role="status"
             className="absolute top-20 left-4 right-4 lg:left-[448px] xl:left-[476px] lg:right-4 z-[1000] rounded-2xl border border-brand-border bg-white/95 backdrop-blur-md p-4 text-sm text-brand-muted shadow-lg"
           >
-            <p>
-              Chưa tải được nền bản đồ. Kiểm tra kết nối mạng để tải dữ liệu
-              OpenStreetMap.
-            </p>
-            <button
-              type="button"
-              className="mt-2 font-semibold text-brand-navy underline underline-offset-4 cursor-pointer"
-              onClick={() => tileLayer.current?.redraw()}
-            >
-              Thử tải lại bản đồ
-            </button>
+            <div className="flex items-start gap-2.5">
+              <AlertTriangle
+                size={18}
+                className="mt-0.5 shrink-0 text-amber-600"
+                aria-hidden="true"
+              />
+              <div className="space-y-2">
+                <p className="text-brand-navy font-medium">{mapError}</p>
+                <p className="text-xs text-brand-muted">
+                  Bạn vẫn có thể xem danh sách bãi đỗ, lọc theo loại xe và đặt
+                  giữ chỗ bình thường.
+                </p>
+                <div className="flex flex-wrap items-center gap-3">
+                  <button
+                    type="button"
+                    className="inline-flex items-center gap-1.5 font-semibold text-brand-navy underline underline-offset-4 cursor-pointer"
+                    onClick={() => setRetryToken((count) => count + 1)}
+                  >
+                    <RefreshCw size={14} aria-hidden="true" />
+                    Thử tải lại bản đồ
+                  </button>
+                  {selectedDirectionsUrl && (
+                    <a
+                      href={selectedDirectionsUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1 font-semibold text-brand-orange underline underline-offset-4"
+                    >
+                      Mở chỉ đường Google Maps
+                      <ExternalLink size={13} aria-hidden="true" />
+                    </a>
+                  )}
+                </div>
+              </div>
+            </div>
           </div>
         )}
 
-        {/* Bottom-Right Map Controls (Google Maps style, placed cleanly above AiCopilot) */}
-        <div className="absolute bottom-4 right-3 lg:bottom-24 lg:right-4 z-[1000] flex flex-col items-end gap-2">
+        {/* Bottom-Right Map Controls (positioned cleanly above Google attribution & AiCopilot) */}
+        <div className="absolute bottom-8 right-3 lg:bottom-24 lg:right-4 z-[1000] flex flex-col items-end gap-2">
           <button
             type="button"
             aria-label="Hiển thị tất cả bãi trên bản đồ"
             title="Toàn khu vực"
             className="flex h-10 items-center gap-1.5 rounded-xl border border-brand-border bg-white/95 backdrop-blur-md px-3 text-xs font-semibold text-brand-navy shadow-lg hover:bg-slate-50 hover:text-brand-orange transition-colors cursor-pointer"
             onClick={() => {
-              if (map.current) fitAllParkingLots(map.current, lots)
+              if (mapRef.current) {
+                fitAllParkingLots(mapRef.current, lots, container.current)
+              }
             }}
           >
             <LocateFixed size={16} className="text-brand-orange shrink-0" />
@@ -388,7 +476,11 @@ export function InteractiveMapCanvas({
               type="button"
               aria-label="Phóng to bản đồ"
               title="Phóng to"
-              onClick={() => map.current?.zoomIn()}
+              onClick={() => {
+                const instance = mapRef.current
+                if (!instance) return
+                instance.setZoom((instance.getZoom() ?? DEFAULT_MAP_ZOOM) + 1)
+              }}
               className="flex h-10 w-10 items-center justify-center text-brand-navy hover:bg-slate-50 hover:text-brand-orange transition-colors cursor-pointer"
             >
               <Plus size={18} />
@@ -397,7 +489,11 @@ export function InteractiveMapCanvas({
               type="button"
               aria-label="Thu nhỏ bản đồ"
               title="Thu nhỏ"
-              onClick={() => map.current?.zoomOut()}
+              onClick={() => {
+                const instance = mapRef.current
+                if (!instance) return
+                instance.setZoom((instance.getZoom() ?? DEFAULT_MAP_ZOOM) - 1)
+              }}
               className="flex h-10 w-10 items-center justify-center text-brand-navy hover:bg-slate-50 hover:text-brand-orange transition-colors cursor-pointer"
             >
               <Minus size={18} />
@@ -408,7 +504,7 @@ export function InteractiveMapCanvas({
 
       {/* Bottom Selected Lot & Route HUD (Floating over open map on desktop, stacked below map on mobile) */}
       {(selectedLot || origin) && (
-        <div className="mx-3 mt-3 lg:mx-0 lg:mt-0 lg:absolute lg:bottom-4 lg:left-[432px] xl:left-[464px] lg:right-24 lg:max-w-[540px] lg:z-[1000]">
+        <div className="mx-3 mt-3 lg:mx-0 lg:mt-0 lg:absolute lg:bottom-8 lg:left-[432px] xl:left-[464px] lg:right-24 lg:max-w-[540px] lg:z-[1000]">
           <div className="rounded-2xl border border-brand-border/90 bg-white/95 backdrop-blur-md p-3.5 shadow-xl">
             {selectedLot && (
               <div className="flex flex-wrap items-center justify-between gap-3">
@@ -427,7 +523,10 @@ export function InteractiveMapCanvas({
                       {selectedLot.availableSlots} chỗ trống
                     </span>
                     <span className="tabular-nums text-xs font-bold text-brand-navy">
-                      {new Intl.NumberFormat('vi-VN').format(selectedLot.hourlyRate)} đ/h
+                      {new Intl.NumberFormat('vi-VN').format(
+                        selectedLot.hourlyRate,
+                      )}{' '}
+                      đ/h
                     </span>
                   </div>
                   <h3 className="font-sora text-sm font-bold text-brand-navy truncate">
@@ -438,6 +537,18 @@ export function InteractiveMapCanvas({
                   </p>
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
+                  {selectedDirectionsUrl && (
+                    <a
+                      href={selectedDirectionsUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex h-9 items-center gap-1 rounded-xl border border-brand-border bg-white px-2.5 text-xs font-semibold text-brand-navy hover:bg-slate-50 transition-colors"
+                      title="Mở chỉ đường trên Google Maps"
+                    >
+                      Chỉ đường
+                      <ExternalLink size={13} aria-hidden="true" />
+                    </a>
+                  )}
                   <Link
                     to={`/parking/${selectedLot.id}`}
                     className="inline-flex h-9 items-center justify-center rounded-xl border border-brand-border bg-white px-3 text-xs font-semibold text-brand-navy hover:bg-slate-50 transition-colors"
@@ -446,7 +557,9 @@ export function InteractiveMapCanvas({
                   </Link>
                   <button
                     type="button"
-                    disabled={selectedLot.isFull || selectedLot.availableSlots === 0}
+                    disabled={
+                      selectedLot.isFull || selectedLot.availableSlots === 0
+                    }
                     className="inline-flex h-9 items-center gap-1.5 rounded-xl bg-brand-primary hover:bg-brand-primary-hover px-3.5 text-xs font-bold text-white disabled:opacity-40 transition-colors shadow-sm cursor-pointer"
                     onClick={() => onQuickBook(selectedLot)}
                   >
@@ -462,20 +575,25 @@ export function InteractiveMapCanvas({
                 selectedLot ? 'mt-2.5 pt-2 border-t border-slate-100' : ''
               }`}
             >
-              <Navigation size={14} className="mt-0.5 shrink-0 text-brand-orange" />
+              <Navigation
+                size={14}
+                className="mt-0.5 shrink-0 text-brand-orange"
+              />
               <div className="min-w-0 flex-1">
                 {route.isFetching ? (
-                  <p>Đang tìm tuyến đường…</p>
+                  <p>Đang tính tuyến đường Google Maps…</p>
                 ) : route.data ? (
                   <p className="font-semibold text-brand-navy">
                     {route.data.distanceKm.toFixed(1)} km · Khoảng{' '}
                     {route.data.durationMinutes} phút{' '}
-                    <span className="font-normal text-brand-muted">qua OSRM</span>
+                    <span className="font-normal text-brand-muted">
+                      (tuyến lái xe tham khảo Google Maps)
+                    </span>
                   </p>
                 ) : (
                   <p>
                     {route.isError
-                      ? 'Chưa tải được tuyến đường. Bạn vẫn có thể xem vị trí bãi.'
+                      ? 'Chưa tải được tuyến đường Google Maps. Bạn vẫn có thể xem vị trí bãi hoặc mở chỉ đường trực tiếp.'
                       : 'Chọn vị trí xuất phát hoặc bật định vị để xem tuyến đường.'}
                   </p>
                 )}

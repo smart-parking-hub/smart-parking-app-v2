@@ -1,10 +1,11 @@
-import { useEffect, useId, useMemo, useRef, useState } from 'react'
-import { useQuery } from '@tanstack/react-query'
+import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react'
 import { Loader2, MapPin, Navigation, Search, Warehouse, X } from 'lucide-react'
+import { GoogleMapsError } from '@/shared/maps'
 import {
-  autocompleteLocations,
+  createPlacesAutocompleteSession,
   type Coordinates,
   type Place,
+  type PlaceSuggestion,
 } from '../api/mapProvider'
 import type { ParkingLotItem } from '../types/parkingSearchTypes'
 
@@ -32,6 +33,19 @@ function normalizeVietnamese(text: string): string {
     .trim()
 }
 
+function getPlacesErrorMessage(error: unknown): string {
+  if (error instanceof GoogleMapsError) {
+    if (error.code === 'MISSING_API_KEY') {
+      return 'Chưa cấu hình khóa Google Maps để gợi ý địa điểm. Bạn vẫn có thể chọn bãi trong danh sách hoặc dùng GPS.'
+    }
+    if (error.code === 'AUTH_FAILURE') {
+      return 'Khóa Google Maps API không hợp lệ. Bạn vẫn có thể chọn bãi trong danh sách.'
+    }
+    return error.message
+  }
+  return 'Không tải được gợi ý từ Google Maps. Hãy thử địa chỉ khác hoặc chọn bãi trong danh sách.'
+}
+
 export function SmartLocationBar({
   value,
   onChange,
@@ -51,15 +65,29 @@ export function SmartLocationBar({
   const [debouncedQuery, setDebouncedQuery] = useState('')
   const [showResults, setShowResults] = useState(false)
   const [activeIndex, setActiveIndex] = useState(-1)
+  const [remotePlaces, setRemotePlaces] = useState<PlaceSuggestion[]>([])
+  const [isFetchingPlaces, setIsFetchingPlaces] = useState(false)
+  const [placesError, setPlacesError] = useState<string | null>(null)
+  const [resolvingPlaceId, setResolvingPlaceId] = useState<string | null>(null)
+
   const wrapperRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
+  const sessionRef = useRef(createPlacesAutocompleteSession())
+  const requestSeqRef = useRef(0)
   const listboxId = useId()
 
   const trimmedValue = value.trim()
 
   useEffect(() => {
     if (trimmedValue.length < 2) {
+      requestSeqRef.current += 1
       setDebouncedQuery('')
+      setRemotePlaces([])
+      setIsFetchingPlaces(false)
+      setPlacesError(null)
+      if (trimmedValue.length === 0) {
+        sessionRef.current.reset()
+      }
       return
     }
     const timer = window.setTimeout(() => {
@@ -70,7 +98,10 @@ export function SmartLocationBar({
 
   useEffect(() => {
     const handleOutsideClick = (event: MouseEvent) => {
-      if (wrapperRef.current && !wrapperRef.current.contains(event.target as Node)) {
+      if (
+        wrapperRef.current &&
+        !wrapperRef.current.contains(event.target as Node)
+      ) {
         setShowResults(false)
         setActiveIndex(-1)
       }
@@ -79,14 +110,38 @@ export function SmartLocationBar({
     return () => document.removeEventListener('mousedown', handleOutsideClick)
   }, [])
 
-  const places = useQuery({
-    queryKey: ['osm-places-autocomplete', debouncedQuery],
-    queryFn: ({ signal }) => autocompleteLocations(debouncedQuery, signal),
-    enabled: showResults && debouncedQuery.length >= 2,
-    staleTime: 300000,
-    retry: false,
-    refetchOnWindowFocus: false,
-  })
+  const runPlacesSearch = useCallback((query: string) => {
+    const normalized = query.trim()
+    if (normalized.length < 2) {
+      setRemotePlaces([])
+      setIsFetchingPlaces(false)
+      setPlacesError(null)
+      return
+    }
+
+    const requestId = ++requestSeqRef.current
+    setIsFetchingPlaces(true)
+    setPlacesError(null)
+
+    void sessionRef.current
+      .suggest(normalized)
+      .then((suggestions) => {
+        if (requestSeqRef.current !== requestId) return
+        setRemotePlaces(suggestions)
+        setIsFetchingPlaces(false)
+      })
+      .catch((error: unknown) => {
+        if (requestSeqRef.current !== requestId) return
+        setRemotePlaces([])
+        setIsFetchingPlaces(false)
+        setPlacesError(getPlacesErrorMessage(error))
+      })
+  }, [])
+
+  useEffect(() => {
+    if (!showResults || debouncedQuery.length < 2) return
+    runPlacesSearch(debouncedQuery)
+  }, [showResults, debouncedQuery, runPlacesSearch])
 
   const matchingLots = useMemo(() => {
     if (trimmedValue.length < 2 || parkingLots.length === 0) return []
@@ -99,8 +154,6 @@ export function SmartLocationBar({
       .slice(0, 4)
   }, [parkingLots, trimmedValue])
 
-  const remotePlaces = useMemo(() => places.data ?? [], [places.data])
-
   const selectableItems = useMemo(
     () => [
       ...matchingLots.map((lot) => ({ kind: 'lot' as const, lot })),
@@ -112,19 +165,33 @@ export function SmartLocationBar({
   const isDebouncing =
     showResults && trimmedValue.length >= 2 && trimmedValue !== debouncedQuery
   const isSearchingRemote =
-    showResults && trimmedValue.length >= 2 && (isDebouncing || places.isFetching)
+    showResults &&
+    trimmedValue.length >= 2 &&
+    (isDebouncing || isFetchingPlaces)
 
   const handleChooseLot = (lot: ParkingLotItem) => {
+    sessionRef.current.reset()
     onChange(lot.name)
     onSelectLot?.(lot)
     setShowResults(false)
     setActiveIndex(-1)
+    setLocationError('')
   }
 
-  const handleChoosePlace = (place: Place) => {
-    onSelectPlace(place)
-    setShowResults(false)
-    setActiveIndex(-1)
+  const handleChoosePlace = async (suggestion: PlaceSuggestion) => {
+    setResolvingPlaceId(suggestion.id)
+    setLocationError('')
+    try {
+      const resolved = await sessionRef.current.resolveSuggestion(suggestion)
+      onSelectPlace(resolved)
+      setRemotePlaces([])
+      setShowResults(false)
+      setActiveIndex(-1)
+    } catch (error) {
+      setLocationError(getPlacesErrorMessage(error))
+    } finally {
+      setResolvingPlaceId(null)
+    }
   }
 
   const locate = () => {
@@ -139,7 +206,9 @@ export function SmartLocationBar({
     navigator.geolocation.getCurrentPosition(
       (position) => {
         setLocating(false)
+        sessionRef.current.reset()
         setDebouncedQuery('')
+        setRemotePlaces([])
         setShowResults(false)
         setActiveIndex(-1)
         onLocateMe({
@@ -169,7 +238,7 @@ export function SmartLocationBar({
             if (trimmedValue.length >= 2) {
               setShowResults(true)
               if (debouncedQuery === trimmedValue) {
-                void places.refetch()
+                runPlacesSearch(trimmedValue)
               } else {
                 setDebouncedQuery(trimmedValue)
               }
@@ -201,6 +270,7 @@ export function SmartLocationBar({
               onChange={(event) => {
                 const nextValue = event.target.value
                 if (nextValue === '' && onClear) {
+                  sessionRef.current.reset()
                   onClear()
                 } else {
                   onChange(nextValue)
@@ -240,7 +310,7 @@ export function SmartLocationBar({
                   if (picked.kind === 'lot') {
                     handleChooseLot(picked.lot)
                   } else {
-                    handleChoosePlace(picked.place)
+                    void handleChoosePlace(picked.place)
                   }
                 } else if (event.key === 'Escape' && dropdownVisible) {
                   event.preventDefault()
@@ -250,7 +320,7 @@ export function SmartLocationBar({
               }}
               className="w-full min-w-0 bg-transparent text-xs sm:text-sm text-brand-navy outline-none placeholder:text-brand-muted"
             />
-            {isSearchingRemote && (
+            {(isSearchingRemote || resolvingPlaceId) && (
               <Loader2
                 size={14}
                 aria-hidden="true"
@@ -262,12 +332,16 @@ export function SmartLocationBar({
                 aria-label="Xóa tìm kiếm"
                 type="button"
                 onClick={() => {
+                  requestSeqRef.current += 1
+                  sessionRef.current.reset()
                   if (onClear) {
                     onClear()
                   } else {
                     onChange('')
                   }
                   setDebouncedQuery('')
+                  setRemotePlaces([])
+                  setPlacesError(null)
                   setShowResults(false)
                   setActiveIndex(-1)
                   setLocationError('')
@@ -281,11 +355,11 @@ export function SmartLocationBar({
           </div>
           <div className="flex items-center gap-1.5 w-full sm:w-auto justify-end shrink-0">
             <button
-              disabled={places.isFetching || trimmedValue.length < 2}
+              disabled={isFetchingPlaces || trimmedValue.length < 2}
               className="flex h-9 items-center gap-1.5 rounded-xl bg-brand-navy px-3 text-xs font-semibold text-white whitespace-nowrap hover:bg-brand-navy-light transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
             >
               <Search size={14} />
-              {places.isFetching ? 'Đang tìm…' : 'Tìm địa điểm'}
+              {isFetchingPlaces ? 'Đang tìm…' : 'Tìm địa điểm'}
             </button>
             <button
               type="button"
@@ -362,12 +436,13 @@ export function SmartLocationBar({
               <div>
                 {matchingLots.length > 0 && (
                   <p className="px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-brand-muted border-t border-slate-100 mt-1 pt-1.5">
-                    Địa điểm &amp; khu vực bản đồ
+                    Địa điểm &amp; khu vực Google Maps
                   </p>
                 )}
                 {remotePlaces.map((place, rIdx) => {
                   const combinedIdx = matchingLots.length + rIdx
                   const isActive = activeIndex === combinedIdx
+                  const isResolving = resolvingPlaceId === place.id
                   return (
                     <button
                       id={`${listboxId}-option-${combinedIdx}`}
@@ -375,17 +450,25 @@ export function SmartLocationBar({
                       type="button"
                       role="option"
                       aria-selected={isActive}
+                      disabled={Boolean(resolvingPlaceId)}
                       onMouseDown={(e) => e.preventDefault()}
                       onMouseEnter={() => setActiveIndex(combinedIdx)}
-                      onClick={() => handleChoosePlace(place)}
-                      className={`flex w-full items-start gap-2.5 rounded-xl px-2.5 py-2 text-left text-xs leading-5 text-brand-navy transition-colors cursor-pointer ${
+                      onClick={() => void handleChoosePlace(place)}
+                      className={`flex w-full items-start gap-2.5 rounded-xl px-2.5 py-2 text-left text-xs leading-5 text-brand-navy transition-colors cursor-pointer disabled:opacity-60 ${
                         isActive ? 'bg-orange-50' : 'hover:bg-brand-surface'
                       }`}
                     >
-                      <MapPin
-                        size={15}
-                        className="mt-0.5 shrink-0 text-brand-orange"
-                      />
+                      {isResolving ? (
+                        <Loader2
+                          size={15}
+                          className="mt-0.5 shrink-0 animate-spin text-brand-orange"
+                        />
+                      ) : (
+                        <MapPin
+                          size={15}
+                          className="mt-0.5 shrink-0 text-brand-orange"
+                        />
+                      )}
                       <span className="line-clamp-2">{place.label}</span>
                     </button>
                   )
@@ -401,7 +484,7 @@ export function SmartLocationBar({
                 <Loader2 size={13} className="animate-spin text-brand-orange" />
                 <span>
                   {matchingLots.length > 0
-                    ? 'Đang tìm thêm địa điểm trên bản đồ…'
+                    ? 'Đang tìm thêm địa điểm trên Google Maps…'
                     : 'Đang tìm địa điểm gợi ý…'}
                 </span>
               </div>
@@ -410,13 +493,14 @@ export function SmartLocationBar({
             {!isSearchingRemote &&
               matchingLots.length === 0 &&
               remotePlaces.length === 0 &&
-              (places.isError ? (
+              (placesError ? (
                 <p role="alert" className="p-3 text-xs text-red-700">
-                  Không tải được gợi ý từ bản đồ. Hãy thử địa chỉ khác hoặc chọn bãi trong danh sách.
+                  {placesError}
                 </p>
               ) : (
                 <p className="p-3 text-xs text-brand-muted">
-                  Không tìm thấy địa điểm phù hợp. Hãy thử tên đường, cảng hoặc KCN cụ thể hơn.
+                  Không tìm thấy địa điểm phù hợp. Hãy thử tên đường, cảng hoặc
+                  KCN cụ thể hơn.
                 </p>
               ))}
           </div>

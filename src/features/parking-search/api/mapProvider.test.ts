@@ -1,165 +1,191 @@
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import {
-  autocompleteLocations,
+  createPlacesAutocompleteSession,
   getDrivingRoute,
-  searchLocations,
 } from './mapProvider'
 import { fetchParkingLots } from './parkingSearchApi'
 import { apiClient } from '@/shared/api/client'
-afterEach(() => {
-  vi.restoreAllMocks()
-  vi.unstubAllGlobals()
-})
-describe('Real OpenStreetMap services', () => {
-  it('sends longitude/latitude to OSRM and converts returned GeoJSON to Leaflet order', async () => {
-    const fetchMock = vi.fn().mockResolvedValue({
-      ok: true,
-      json: async () => ({
-        code: 'Ok',
-        routes: [
-          {
-            distance: 12500,
-            duration: 900,
-            geometry: {
-              coordinates: [
-                [106.7, 10.7],
-                [106.8, 10.8],
-              ],
-            },
-          },
-        ],
-      }),
+import * as sharedMaps from '@/shared/maps'
+
+describe('Google Maps parking-search services (Places New & Routes)', () => {
+  beforeEach(() => {
+    vi.restoreAllMocks()
+  })
+
+  afterEach(() => {
+    vi.restoreAllMocks()
+    vi.unstubAllGlobals()
+  })
+
+  it('calls Google Routes Route.computeRoutes with DRIVING mode and minimal field mask', async () => {
+    const computeRoutes = vi.fn().mockResolvedValue({
+      routes: [
+        {
+          distanceMeters: 12500,
+          durationMillis: 900000,
+          path: [
+            { lat: 10.7, lng: 106.7 },
+            { lat: 10.8, lng: 106.8 },
+          ],
+        },
+      ],
     })
-    vi.stubGlobal('fetch', fetchMock)
+
+    vi.spyOn(sharedMaps, 'loadGoogleMapsLibrary').mockResolvedValue({
+      Route: { computeRoutes },
+    } as never)
+
     const result = await getDrivingRoute(
       { latitude: 10.7, longitude: 106.7 },
       { latitude: 10.8, longitude: 106.8 },
     )
-    expect(fetchMock.mock.calls[0][0]).toContain('/106.7,10.7;106.8,10.8?')
+
+    expect(computeRoutes).toHaveBeenCalledWith(
+      expect.objectContaining({
+        origin: { lat: 10.7, lng: 106.7 },
+        destination: { lat: 10.8, lng: 106.8 },
+        travelMode: 'DRIVING',
+        fields: ['durationMillis', 'distanceMeters', 'path'],
+        language: 'vi',
+        region: 'VN',
+      }),
+    )
+
     expect(result).toEqual({
       points: [
-        [10.7, 106.7],
-        [10.8, 106.8],
+        { latitude: 10.7, longitude: 106.7 },
+        { latitude: 10.8, longitude: 106.8 },
       ],
       distanceKm: 12.5,
       durationMinutes: 15,
     })
   })
-  it('reports a routing failure rather than drawing an invented route', async () => {
-    vi.stubGlobal(
-      'fetch',
-      vi
-        .fn()
-        .mockResolvedValue({
-          ok: true,
-          json: async () => ({ code: 'NoRoute', routes: [] }),
-        }),
-    )
+
+  it('reports a routing failure rather than drawing an invented straight-line route', async () => {
+    const computeRoutes = vi.fn().mockResolvedValue({ routes: [] })
+    vi.spyOn(sharedMaps, 'loadGoogleMapsLibrary').mockResolvedValue({
+      Route: { computeRoutes },
+    } as never)
+
     await expect(
       getDrivingRoute(
-        { latitude: 10, longitude: 106 },
-        { latitude: 11, longitude: 107 },
+        { latitude: 10.7, longitude: 106.7 },
+        { latitude: 10.8, longitude: 106.8 },
       ),
     ).rejects.toThrow('Chưa tìm thấy tuyến đường')
   })
-  it('parses geocoder strings and limits results to Vietnam', async () => {
-    const fetchMock = vi
-      .fn()
-      .mockResolvedValue({
-        ok: true,
-        json: async () => [
-          { place_id: 1, display_name: 'Cát Lái', lat: '10.7', lon: '106.7' },
-        ],
-      })
-    vi.stubGlobal('fetch', fetchMock)
-    expect(await searchLocations('Cát Lái')).toEqual([
-      { id: '1', label: 'Cát Lái', latitude: 10.7, longitude: 106.7 },
-    ])
-    expect(fetchMock.mock.calls[0][0]).toContain('countrycodes=vn')
-  })
-  it('filters Photon autocomplete results to Vietnam and falls back to Nominatim on failure', async () => {
-    const fetchMock = vi
-      .fn()
-      .mockResolvedValueOnce({
-        ok: true,
-        json: async () => ({
-          features: [
-            {
-              geometry: { coordinates: [106.7865, 10.7715] },
-              properties: {
-                osm_id: 10,
-                osm_type: 'N',
-                name: 'Cảng Cát Lái',
-                district: 'Phường Cát Lái',
-                city: 'TP. Thủ Đức',
-                countrycode: 'VN',
-              },
-            },
-            {
-              geometry: { coordinates: [100.5, 13.7] },
-              properties: {
-                osm_id: 11,
-                name: 'Outside VN',
-                countrycode: 'TH',
-              },
-            },
-          ],
-        }),
-      })
-      .mockResolvedValueOnce({ ok: false, status: 503 })
-      .mockResolvedValueOnce({
-        ok: true,
-        json: async () => [
-          {
-            place_id: 99,
-            display_name: 'KCN Sóng Thần, Dĩ An, Bình Dương',
-            lat: '10.8924',
-            lon: '106.7725',
-          },
-        ],
-      })
-    vi.stubGlobal('fetch', fetchMock)
 
-    const live = await autocompleteLocations('Cát Lái')
-    expect(live).toHaveLength(1)
-    expect(live[0]).toMatchObject({
+  it('uses Places Autocomplete (New) restricted to VN, manages session tokens, and fetches Details on selection', async () => {
+    let tokenCounter = 0
+    class FakeSessionToken {
+      readonly id = ++tokenCounter
+    }
+
+    const fetchFields = vi.fn().mockImplementation(async function (this: {
+      location?: { lat: () => number; lng: () => number }
+      formattedAddress?: string
+      displayName?: string
+    }) {
+      this.location = { lat: () => 10.7715, lng: () => 106.7865 }
+      this.formattedAddress = 'Cảng Cát Lái, Phường Cát Lái, TP. Thủ Đức'
+      this.displayName = 'Cảng Cát Lái'
+    })
+
+    const fetchAutocompleteSuggestions = vi.fn().mockResolvedValue({
+      suggestions: [
+        {
+          placePrediction: {
+            placeId: 'place-cat-lai',
+            text: { text: 'Cảng Cát Lái, TP. Thủ Đức' },
+            mainText: { text: 'Cảng Cát Lái' },
+            secondaryText: { text: 'TP. Thủ Đức' },
+            toPlace: () => ({ fetchFields }),
+          },
+        },
+      ],
+    })
+
+    vi.spyOn(sharedMaps, 'loadGoogleMapsLibrary').mockResolvedValue({
+      AutocompleteSessionToken: FakeSessionToken,
+      AutocompleteSuggestion: { fetchAutocompleteSuggestions },
+    } as never)
+
+    const session = createPlacesAutocompleteSession()
+    const firstBatch = await session.suggest('Cát')
+    const secondBatch = await session.suggest('Cát Lái')
+
+    expect(fetchAutocompleteSuggestions).toHaveBeenCalledTimes(2)
+    const firstReq = fetchAutocompleteSuggestions.mock.calls[0][0]
+    const secondReq = fetchAutocompleteSuggestions.mock.calls[1][0]
+
+    expect(firstReq.includedRegionCodes).toEqual(['vn'])
+    expect(firstReq.language).toBe('vi')
+    expect(firstReq.sessionToken).toBe(secondReq.sessionToken)
+
+    expect(firstBatch).toHaveLength(1)
+    expect(secondBatch[0]).toMatchObject({
+      id: 'place-cat-lai',
+      label: 'Cảng Cát Lái, TP. Thủ Đức',
+    })
+
+    const resolved = await session.resolveSuggestion(secondBatch[0])
+    expect(fetchFields).toHaveBeenCalledWith({
+      fields: ['location', 'formattedAddress', 'displayName'],
+    })
+    expect(resolved).toEqual({
+      id: 'place-cat-lai',
+      placeId: 'place-cat-lai',
       label: 'Cảng Cát Lái, Phường Cát Lái, TP. Thủ Đức',
       latitude: 10.7715,
       longitude: 106.7865,
     })
 
-    const fallback = await autocompleteLocations('Sóng Thần')
-    expect(fallback).toEqual([
-      {
-        id: '99',
-        label: 'KCN Sóng Thần, Dĩ An, Bình Dương',
-        latitude: 10.8924,
-        longitude: 106.7725,
-      },
-    ])
+    // Next query after selection must start a new session token.
+    await session.suggest('Sóng Thần')
+    const thirdReq = fetchAutocompleteSuggestions.mock.calls[2][0]
+    expect(thirdReq.sessionToken).not.toBe(firstReq.sessionToken)
   })
+
+  it('propagates Google Places errors without silently falling back to Nominatim or Photon', async () => {
+    const fetchSpy = vi.fn()
+    vi.stubGlobal('fetch', fetchSpy)
+
+    vi.spyOn(sharedMaps, 'loadGoogleMapsLibrary').mockResolvedValue({
+      AutocompleteSessionToken: class {},
+      AutocompleteSuggestion: {
+        fetchAutocompleteSuggestions: vi
+          .fn()
+          .mockRejectedValue(new Error('OVER_QUERY_LIMIT')),
+      },
+    } as never)
+
+    const session = createPlacesAutocompleteSession()
+    await expect(session.suggest('Cát Lái')).rejects.toMatchObject({
+      code: 'PLACES_ERROR',
+    })
+    expect(fetchSpy).not.toHaveBeenCalled()
+  })
+
   it('preserves zero capacity and prices and sends real search coordinates to the backend', async () => {
-    const request = vi
-      .spyOn(apiClient, 'get')
-      .mockResolvedValue({
+    const request = vi.spyOn(apiClient, 'get').mockResolvedValue({
+      data: {
         data: {
-          data: {
-            content: [
-              {
-                id: 1,
-                name: 'Bãi',
-                address: 'Địa chỉ',
-                latitude: 10.7,
-                longitude: 106.7,
-                availableCapacity: 0,
-                basePricePerHour: 0,
-                distanceKm: 0,
-                averageRating: 0,
-              },
-            ],
-          },
+          content: [
+            {
+              id: 1,
+              name: 'Bãi',
+              address: 'Địa chỉ',
+              latitude: 10.7,
+              longitude: 106.7,
+              availableCapacity: 0,
+              basePricePerHour: 0,
+              distanceKm: 0,
+              averageRating: 0,
+            },
+          ],
         },
-      })
+      },
+    })
     const result = await fetchParkingLots({
       selectedVehicleId: 'type:BUS_COACH',
       vehicleType: 'BUS_COACH',

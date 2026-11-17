@@ -1,5 +1,6 @@
 import { useEffect } from 'react'
 import { useQuery } from '@tanstack/react-query'
+import axios from 'axios'
 import { AlertCircle, RefreshCw } from 'lucide-react'
 
 import {
@@ -22,6 +23,47 @@ import { InteractiveMapCanvas } from '../components/InteractiveMapCanvas'
 import { InlineQuickBookPanel } from '../components/InlineQuickBookPanel'
 import { SearchParkingSkeleton } from '../components/SearchParkingSkeleton'
 import type { Coordinates, Place } from '../api/mapProvider'
+
+function classifyParkingSearchError(error: unknown): {
+  title: string
+  description: string
+} {
+  if (axios.isAxiosError(error)) {
+    const status = error.response?.status
+    if (status === 401 || status === 403) {
+      return {
+        title: 'Phiên đăng nhập hết hạn hoặc không có quyền truy cập',
+        description:
+          'Vui lòng đăng nhập lại để tải danh sách bãi đỗ xe từ hệ thống.',
+      }
+    }
+    if (error.code === 'ECONNABORTED') {
+      return {
+        title: 'Quá thời gian phản hồi từ máy chủ bãi xe',
+        description:
+          'Yêu cầu tìm kiếm bãi đỗ vượt quá thời gian chờ. Vui lòng thử lại.',
+      }
+    }
+    if (!error.response) {
+      return {
+        title: 'Không thể kết nối tới máy chủ bãi xe',
+        description:
+          'Kiểm tra kết nối mạng hoặc trạng thái API Gateway rồi thử tải lại.',
+      }
+    }
+    return {
+      title: `Không thể tải danh sách bãi đỗ (HTTP ${status})`,
+      description:
+        'Dịch vụ tìm kiếm bãi đỗ đang gặp sự cố. Bạn vẫn có thể xem bản đồ và thử tải lại sau ít giây.',
+    }
+  }
+
+  return {
+    title: 'Không thể tải danh sách bãi đỗ từ hệ thống',
+    description:
+      'Dịch vụ tìm kiếm bãi xe tạm thời gián đoạn. Vui lòng kiểm tra mạng hoặc thử tải lại.',
+  }
+}
 
 export function SearchParkingPage() {
   useEffect(() => {
@@ -131,30 +173,34 @@ export function SearchParkingPage() {
             {isLoading ? (
               <SearchParkingSkeleton />
             ) : error ? (
-              <div
-                role="alert"
-                className="bg-rose-50 border border-rose-200 rounded-xl p-5 text-center my-auto"
-              >
-                <AlertCircle className="w-9 h-9 text-rose-600 mx-auto mb-2" />
-                <h4 className="font-sora text-sm font-bold text-rose-900">
-                  Không thể tải dữ liệu bản đồ bãi xe (Mã lỗi: ERR_GEO_DISPATCH_TIMEOUT)
-                </h4>
-                <p className="text-xs text-rose-700 mt-1 mb-4">
-                  Hệ thống tìm kiếm định vị tạm thời gián đoạn. Vui lòng kiểm tra
-                  mạng hoặc thử lại.
-                </p>
-                <button
-                  type="button"
-                  onClick={() => void refetch()}
-                  disabled={isRefetching}
-                  className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-brand-orange text-white text-xs font-semibold hover:bg-brand-orange-hover transition-colors cursor-pointer disabled:opacity-50"
-                >
-                  <RefreshCw
-                    className={`w-4 h-4 ${isRefetching ? 'animate-spin' : ''}`}
-                  />
-                  <span>{isRefetching ? 'Đang thử lại...' : 'Tải lại bãi xe'}</span>
-                </button>
-              </div>
+              (() => {
+                const errorInfo = classifyParkingSearchError(error)
+                return (
+                  <div
+                    role="alert"
+                    className="bg-rose-50 border border-rose-200 rounded-xl p-5 text-center my-auto"
+                  >
+                    <AlertCircle className="w-9 h-9 text-rose-600 mx-auto mb-2" />
+                    <h4 className="font-sora text-sm font-bold text-rose-900">
+                      {errorInfo.title}
+                    </h4>
+                    <p className="text-xs text-rose-700 mt-1 mb-4">
+                      {errorInfo.description}
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => void refetch()}
+                      disabled={isRefetching}
+                      className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-brand-orange text-white text-xs font-semibold hover:bg-brand-orange-hover transition-colors cursor-pointer disabled:opacity-50"
+                    >
+                      <RefreshCw
+                        className={`w-4 h-4 ${isRefetching ? 'animate-spin' : ''}`}
+                      />
+                      <span>{isRefetching ? 'Đang thử lại...' : 'Tải lại bãi xe'}</span>
+                    </button>
+                  </div>
+                )
+              })()
             ) : (
               <YardCardList
                 lots={lots}
