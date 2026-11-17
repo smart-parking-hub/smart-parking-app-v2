@@ -2,8 +2,8 @@ import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useForm } from 'react-hook-form'
 import { useSearchParams } from 'react-router-dom'
-import { ArrowLeft, Camera, CheckCircle2, Loader2, QrCode, ScanLine, ShieldCheck, Zap } from 'lucide-react'
-import { QRCodeSVG } from 'qrcode.react'
+import { Camera, Loader2, ScanLine, ShieldCheck, Zap } from 'lucide-react'
+import { GateSettlementDialog } from './GateSettlementDialog'
 import { NotificationDialog } from '@/shared/components/NotificationDialog'
 import { scannerErrorFeedback } from './scannerErrorFeedback'
 import type { Lot, Settlement } from '@/entities/operations'
@@ -15,7 +15,6 @@ import {
 } from '@/shared/api/resources'
 import {
   Badge,
-  Dialog,
   Field,
   Notice,
   Panel,
@@ -41,7 +40,6 @@ export function MerchantScannerPage() {
   const [success, setSuccess] = useState('')
   const [confirmedCheckIn, setConfirmedCheckIn] = useState<string | null>(null)
   const [completedSettlement, setCompletedSettlement] = useState<Settlement | null>(null)
-  const [settlementMethod, setSettlementMethod] = useState<'cash' | 'qr'>('cash')
   const [facingMode, setFacingMode] = useState<'environment' | 'user'>('environment')
   const [autoSubmit, setAutoSubmit] = useState(true)
   const scanPending = useRef(false)
@@ -99,29 +97,12 @@ export function MerchantScannerPage() {
     }
     scanPending.current = true
     setConfirmedCheckIn(null)
-    setSettlementMethod('cash')
     setSuccess('')
-    cash.reset()
     scan.mutate(data)
   }
   const submitScanRef = useRef(submitScan)
   useLayoutEffect(() => {
     submitScanRef.current = submitScan
-  })
-
-  const cash = useMutation({
-    mutationFn: () =>
-      sendData('post', '/api/v1/merchant/confirm-cash', scan.variables),
-    onSuccess: () => {
-      if (scan.data) setCompletedSettlement(scan.data)
-      setSettlementMethod('cash')
-      scan.reset()
-      setSuccess('Đã xác nhận thu tiền mặt và trả chỗ thành công.')
-      void cache.invalidateQueries({ queryKey: ['merchant-bookings'] })
-      void cache.invalidateQueries({ queryKey: ['merchant-booking'] })
-      void cache.invalidateQueries({ queryKey: ['real-bookings'] })
-      void cache.invalidateQueries({ queryKey: ['booking'] })
-    },
   })
 
   const handleCameraScanSuccess = (raw: string) => {
@@ -148,9 +129,7 @@ export function MerchantScannerPage() {
   function changeMode(next: typeof mode) {
     setMode(next)
     setConfirmedCheckIn(null)
-    setSettlementMethod('cash')
     scan.reset()
-    cash.reset()
     setSuccess('')
   }
 
@@ -356,7 +335,8 @@ export function MerchantScannerPage() {
                 ['Mã đặt chỗ', completedSettlement.bookingCode],
                 ['Tổng phí', money(completedSettlement.totalAmount)],
                 ['Tiền cọc đã khấu trừ', money(completedSettlement.advanceDeposit)],
-                [completedSettlement.amountDue > 0 ? 'Tiền mặt vừa xác nhận' : 'Còn phải thanh toán', money(completedSettlement.amountDue)],
+                ['Phương thức thanh toán phần còn lại', completedSettlement.finalPaymentMethod === 'CASH' ? 'Tiền mặt' : completedSettlement.finalPaymentMethod === 'PAYOS' ? 'PayOS' : 'Máy chủ đã xác nhận'],
+                ['Còn phải thanh toán', money(0)],
               ].map(([label, value]) => (
                 <div key={label} className="flex justify-between gap-4">
                   <dt className="text-brand-muted">{label}</dt>
@@ -375,146 +355,17 @@ export function MerchantScannerPage() {
       )}
 
       {scan.data && mode === 'check-out' && !completedSettlement && (
-        <Dialog
-          title={settlementMethod === 'qr' ? 'Thanh toán qua QR' : 'Quyết toán lượt đỗ'}
-          onClose={() => {
-            if (!cash.isPending) {
-              setSettlementMethod('cash')
-              setSuccess('')
-              scan.reset()
-            }
+        <GateSettlementDialog
+          key={`${scan.variables?.parkingLotId}:${scan.data.bookingCode}`}
+          settlement={scan.data}
+          parkingLotId={scan.variables!.parkingLotId}
+          onClose={() => { setSuccess(''); scan.reset() }}
+          onComplete={result => {
+            setCompletedSettlement(result)
+            for (const queryKey of [['merchant-bookings'], ['merchant-booking'], ['real-bookings'], ['booking'], ['merchant-revenue']])
+              void cache.invalidateQueries({ queryKey })
           }}
-        >
-          {settlementMethod === 'qr' ? (
-            <div className="space-y-4">
-              <div className="flex items-center justify-between pb-2 border-b border-slate-100">
-                <button
-                  type="button"
-                  onClick={() => setSettlementMethod('cash')}
-                  className="text-xs text-brand-muted hover:text-slate-900 flex items-center gap-1 font-medium transition-colors cursor-pointer"
-                >
-                  <ArrowLeft className="w-3.5 h-3.5" />
-                  <span>Quay lại Tiền mặt</span>
-                </button>
-                <span className="text-[11px] font-mono font-bold text-[#d95f00] uppercase bg-[#fff7ed] px-2 py-0.5 rounded border border-[#ffedd5]">
-                  VIETQR · PAYOS
-                </span>
-              </div>
-
-              <div className="rounded-xl bg-[#0a1120] p-4 text-white border border-slate-800 text-center shadow-xs">
-                <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400">SỐ TIỀN CÒN PHẢI THU</p>
-                <p className="mt-1 font-sora text-3xl font-extrabold text-amber-400 tabular-nums">
-                  {money(scan.data.amountDue)}
-                </p>
-                <p className="text-xs font-mono text-slate-300 mt-1 truncate">Mã đơn: {scan.data.bookingCode}</p>
-              </div>
-
-              <div className="border border-dashed border-slate-200 p-4 rounded-xl flex flex-col items-center gap-3 bg-slate-50/70">
-                <div className="bg-white p-3 rounded-xl shadow-xs border border-slate-200" data-testid="checkout-qr-container">
-                  <QRCodeSVG
-                    id={`qr-checkout-${scan.data.bookingCode}`}
-                    value={`https://pay.payos.vn/web/checkout?code=${scan.data.bookingCode}&amount=${scan.data.amountDue}`}
-                    size={180}
-                    level="M"
-                    marginSize={2}
-                    role="img"
-                    aria-label={`Mã QR Thanh toán ${scan.data.bookingCode}`}
-                  />
-                </div>
-                <div className="text-center space-y-1">
-                  <p className="text-xs font-semibold text-slate-800">
-                    Đưa mã QR cho tài xế quét bằng App Ngân hàng
-                  </p>
-                  <p className="text-[11px] text-brand-muted">
-                    Hỗ trợ tất cả ứng dụng Mobile Banking, VietQR và Napas247
-                  </p>
-                </div>
-              </div>
-
-              {cash.isError && <Notice error>{errorMessage(cash.error)}</Notice>}
-
-              <button
-                disabled={cash.isPending || cash.isSuccess}
-                aria-busy={cash.isPending}
-                className={`${button} w-full flex items-center justify-center gap-2`}
-                onClick={() => {
-                  if (cash.isPending || cash.isSuccess) return
-                  cash.mutate()
-                }}
-              >
-                {cash.isPending ? (
-                  <>
-                    <Loader2 className="h-4 w-4 animate-spin shrink-0" />
-                    <span>Đang xác nhận…</span>
-                  </>
-                ) : (
-                  <>
-                    <CheckCircle2 className="w-4 h-4 text-white" />
-                    <span>Đã nhận thanh toán QR · Hoàn tất lượt đỗ</span>
-                  </>
-                )}
-              </button>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              <p className="font-mono">{scan.data.bookingCode}</p>
-              <Badge value={scan.data.bookingStatus} />
-              <dl className="space-y-3">
-                {[
-                  ['Thời gian đỗ', `${scan.data.parkingMinutes} phút`],
-                  ['Tổng phí', money(scan.data.totalAmount)],
-                  ['Cọc đã khấu trừ', money(scan.data.advanceDeposit)],
-                ].map(([label, value]) => (
-                  <div key={label} className="flex justify-between text-sm">
-                    <dt className="text-brand-muted">{label}</dt>
-                    <dd className="font-semibold font-mono tabular-nums text-slate-900">{value}</dd>
-                  </div>
-                ))}
-              </dl>
-              <div className="rounded-xl bg-[#0a1120] p-6 text-white border border-slate-800 shadow-md">
-                <p className="text-xs font-bold uppercase tracking-wider text-slate-400">CÒN PHẢI THU</p>
-                <p className="mt-2 font-sora text-3xl font-extrabold text-amber-400 tabular-nums">
-                  {money(scan.data.amountDue)}
-                </p>
-              </div>
-              {cash.isError && <Notice error>{errorMessage(cash.error)}</Notice>}
-              {scan.data.amountDue > 0 && (
-                <div className="space-y-2.5">
-                  <button
-                    disabled={cash.isPending || cash.isSuccess}
-                    aria-busy={cash.isPending}
-                    className={`${button} w-full flex items-center justify-center gap-2`}
-                    onClick={() => {
-                      if (cash.isPending || cash.isSuccess) return
-                      cash.mutate()
-                    }}
-                  >
-                    {cash.isPending ? (
-                      <>
-                        <Loader2 className="h-4 w-4 animate-spin shrink-0" />
-                        <span>Đang xác nhận…</span>
-                      </>
-                    ) : (
-                      'Đã nhận đủ tiền mặt · Hoàn tất lượt đỗ'
-                    )}
-                  </button>
-                  <button
-                    type="button"
-                    className="w-full py-2.5 px-4 rounded-xl border border-[#d95f00] text-[#d95f00] hover:bg-[#fff7ed] font-semibold text-sm flex items-center justify-center gap-2 transition-colors cursor-pointer"
-                    onClick={() => setSettlementMethod('qr')}
-                  >
-                    <QrCode className="w-4 h-4" />
-                    <span>Thanh toán bằng QR</span>
-                  </button>
-                </div>
-              )}
-              <p className="text-xs text-brand-muted">
-                Chỉ xác nhận sau khi đã nhận đủ tiền. Việc điều khiển barie vật lý
-                cần hệ thống cổng tích hợp riêng.
-              </p>
-            </div>
-          )}
-        </Dialog>
+        />
       )}
 
       <CameraPermissionModal

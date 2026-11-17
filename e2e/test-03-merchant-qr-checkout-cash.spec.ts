@@ -21,10 +21,14 @@ const mockMerchantLot = {
 
 test.describe('Flow 3: Check-out Barie, Tính Giá Lũy Tiến & Thu Tiền Mặt (SP-S3-INT-01)', () => {
   let isSettled = false
+  let finalMethod: 'CASH' | 'PAYOS' | undefined
+  let cashCalls = 0
 
   test.beforeEach(async ({ page }) => {
     await mockShellReads(page)
     isSettled = false
+    finalMethod = undefined
+    cashCalls = 0
 
     // Inject authenticated MERCHANT session
     await page.addInitScript((token) => {
@@ -74,8 +78,9 @@ test.describe('Flow 3: Check-out Barie, Tính Giá Lũy Tiến & Thu Tiền Mặ
       return route.fulfill({
         json: {
           data: {
+            bookingId: 501,
             bookingCode: 'BK-2026-0894',
-            bookingStatus: 'CHECKED_OUT',
+            bookingStatus: 'AWAITING_FINAL_PAYMENT',
             parkingMinutes: 240,
             totalAmount: 160000,
             advanceDeposit: 100000,
@@ -92,6 +97,9 @@ test.describe('Flow 3: Check-out Barie, Tính Giá Lũy Tiến & Thu Tiền Mặ
       expect(payload.bookingCode).toBe('BK-2026-0894')
       expect(payload.parkingLotId).toBe(12)
 
+      expect(payload.amount).toBe(60000)
+      cashCalls += 1
+      finalMethod = 'CASH'
       isSettled = true
       return route.fulfill({
         json: {
@@ -130,6 +138,11 @@ test.describe('Flow 3: Check-out Barie, Tính Giá Lũy Tiến & Thu Tiền Mặ
         },
       }),
     )
+    await page.route('**/api/v1/merchant/bookings/501', route => route.fulfill({ json: { data: {
+      id: 501, bookingCode: 'BK-2026-0894', parkingLotId: 12,
+      status: isSettled ? 'COMPLETED' : 'AWAITING_FINAL_PAYMENT', finalPaymentMethod: finalMethod,
+      totalAmount: 160000, advanceDeposit: 100000,
+    } } }))
   })
 
   test('Chủ bãi quét mã QR tại cổng ra, kiểm tra số tiền lũy tiến và xác nhận thu tiền mặt', async ({
@@ -189,5 +202,37 @@ test.describe('Flow 3: Check-out Barie, Tính Giá Lũy Tiến & Thu Tiền Mặ
     await expect(page.getByText('BK-2026-0894')).toBeVisible()
     await expect(page.getByText('Đã hoàn tất')).toBeVisible()
   })
+  test('Cổng chờ xác nhận PayOS thật, không dùng nút xác nhận QR thủ công', async ({ page }) => {
+    await page.goto('/merchant/qr-scanner?code=BK-2026-0894&lot=12')
+    await page.getByRole('button', { name: 'XE RA', exact: true }).click()
+    await page.getByLabel('Bãi kiểm soát').selectOption('12')
+    await page.getByRole('button', { name: 'Kiểm tra & quyết toán xe ra' }).click()
+    await expect(page.getByText('Quyết toán lượt đỗ', { exact: true })).toBeVisible()
+    await expect(page.getByText(/Tài xế mở lượt đặt chỗ/)).toBeVisible()
+    await expect(page.getByRole('button', { name: /Đã nhận thanh toán QR/ })).toHaveCount(0)
+    await expect(page.getByRole('dialog', { name: 'Hoàn tất giao dịch' })).toHaveCount(0)
+    isSettled = true
+    finalMethod = 'PAYOS'
+    await page.getByRole('button', { name: 'Kiểm tra thanh toán' }).click()
+    const completed = page.getByRole('dialog', { name: 'Hoàn tất giao dịch' })
+    await expect(completed).toBeVisible()
+    await expect(completed.getByText('PayOS', { exact: true })).toBeVisible()
+    await expect(completed.getByText('0 ₫', { exact: true })).toBeVisible()
+    expect(cashCalls).toBe(0)
+  })
+
+  test('Cổng giữ nguyên khoản nợ khi backend chặn cash do phiên PayOS chưa kết thúc', async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 })
+    await page.route('**/api/v1/merchant/confirm-cash', route => route.fulfill({ status: 409, json: { message: 'Phiên PayOS đang xử lý; chưa được xác nhận tiền mặt' } }))
+    await page.goto('/merchant/qr-scanner?code=BK-2026-0894&lot=12')
+    await page.getByRole('button', { name: 'XE RA', exact: true }).click()
+    await page.getByLabel('Bãi kiểm soát').selectOption('12')
+    await page.getByRole('button', { name: 'Kiểm tra & quyết toán xe ra' }).click()
+    await page.getByRole('button', { name: /Đã nhận đủ tiền mặt/ }).click()
+    await expect(page.getByText(/Phiên PayOS đang xử lý/)).toBeVisible()
+    await expect(page.getByRole('dialog', { name: 'Hoàn tất giao dịch' })).toHaveCount(0)
+    expect(isSettled).toBe(false)
+  })
+
 })
 
