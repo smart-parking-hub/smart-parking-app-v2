@@ -15,10 +15,9 @@ import { QueryState } from '@/shared/components/QueryState'
 import { ApiImage } from '@/shared/components/ApiImage'
 import {
   buildGoogleMapsSearchUrl,
-  GoogleMapView,
   isValidCoordinates,
+  LeafletMapView,
 } from '@/shared/maps'
-import { createParkingMarkerElement } from '@/entities/parking-lot/parkingGoogleMarker'
 import {
   Workspace,
   Panel,
@@ -171,19 +170,13 @@ export function LotOverview({ lot, showMap = false }: { lot: Lot; showMap?: bool
             latitude: lot.latitude,
             longitude: lot.longitude,
           }) ? (
-            <GoogleMapView
+            <LeafletMapView
               coordinates={{ latitude: lot.latitude, longitude: lot.longitude }}
               markerTitle={lot.name}
               address={lot.address}
               zoom={16}
               ariaLabel={`Bản đồ vị trí ${lot.name}`}
               className="h-80 w-full rounded-xl border border-brand-border sm:h-96"
-              markerContentFactory={() =>
-                createParkingMarkerElement({
-                  selected: true,
-                  title: lot.name,
-                })
-              }
             />
           ) : (
             <Notice>

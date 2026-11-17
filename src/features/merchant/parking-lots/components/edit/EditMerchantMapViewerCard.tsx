@@ -1,7 +1,7 @@
 import { Layers, ExternalLink } from 'lucide-react'
 import {
   buildGoogleMapsSearchUrl,
-  GoogleMapView,
+  LeafletMapView,
 } from '@/shared/maps'
 
 interface EditMerchantMapViewerCardProps {
@@ -9,6 +9,7 @@ interface EditMerchantMapViewerCardProps {
   longitude: number
   isCalibrated?: boolean
   locationName?: string
+  googleMapsEmbedUrl?: string | null
 }
 
 export function EditMerchantMapViewerCard({
@@ -16,6 +17,7 @@ export function EditMerchantMapViewerCard({
   longitude,
   isCalibrated = true,
   locationName = '',
+  googleMapsEmbedUrl,
 }: EditMerchantMapViewerCardProps) {
   const googleMapsUrl = buildGoogleMapsSearchUrl({
     coordinates: { latitude, longitude },
@@ -32,15 +34,16 @@ export function EditMerchantMapViewerCard({
           </h3>
         </div>
         <span className="font-mono text-xs px-2 py-0.5 rounded-md bg-[#e6eeff] text-[#131b2e] font-semibold border border-slate-200">
-          {isCalibrated ? 'Google Maps' : 'Chưa hiệu chỉnh'}
+          {isCalibrated ? 'OpenStreetMap' : 'Chưa hiệu chỉnh'}
         </span>
       </div>
 
       <div className="relative w-full h-72 rounded-xl overflow-hidden border border-slate-300 shadow-inner">
-        <GoogleMapView
+        <LeafletMapView
           coordinates={{ latitude, longitude }}
           markerTitle={locationName || 'Vị trí bãi đỗ'}
           address={locationName}
+          googleMapsEmbedUrl={googleMapsEmbedUrl}
           zoom={16}
           ariaLabel="Bản đồ xem trước tọa độ bãi đỗ"
           className="w-full h-full"

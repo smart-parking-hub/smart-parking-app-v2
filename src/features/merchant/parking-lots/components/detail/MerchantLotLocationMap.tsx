@@ -1,11 +1,11 @@
-import { GoogleMapView } from '@/shared/maps'
-import { createParkingMarkerElement } from '@/entities/parking-lot/parkingGoogleMarker'
+import { LeafletMapView } from '@/shared/maps'
 
 interface MerchantLotLocationMapProps {
   latitude: number
   longitude: number
   lotName?: string
   address?: string
+  googleMapsEmbedUrl?: string | null
 }
 
 export function MerchantLotLocationMap({
@@ -13,24 +13,20 @@ export function MerchantLotLocationMap({
   longitude,
   lotName,
   address,
+  googleMapsEmbedUrl,
 }: MerchantLotLocationMapProps) {
   const title = lotName ? `${lotName} · Vị trí bãi đỗ` : 'Nhà xe · Vị trí bãi đỗ'
 
   return (
     <div className="lot-location-map">
-      <GoogleMapView
+      <LeafletMapView
         coordinates={{ latitude, longitude }}
         markerTitle={title}
         address={address}
+        googleMapsEmbedUrl={googleMapsEmbedUrl}
         zoom={15}
         ariaLabel="Bản đồ vị trí bãi đỗ"
         className="lot-location-map-canvas"
-        markerContentFactory={() =>
-          createParkingMarkerElement({
-            selected: true,
-            title,
-          })
-        }
       />
     </div>
   )

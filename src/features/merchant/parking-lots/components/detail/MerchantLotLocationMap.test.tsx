@@ -1,22 +1,47 @@
-import { afterEach, describe, expect, it, vi } from 'vitest'
-import { render, screen, waitFor } from '@testing-library/react'
-import * as sharedMaps from '@/shared/maps'
-import * as mapsLoader from '@/shared/maps/loader'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { act, render, screen } from '@testing-library/react'
+import L from 'leaflet'
+import { resetMapRuntimeConfigForTests } from '@/shared/maps'
 import { MerchantLotLocationMap } from './MerchantLotLocationMap'
 
-describe('MerchantLotLocationMap (Google Maps viewer)', () => {
+describe('MerchantLotLocationMap (Hybrid Leaflet viewer)', () => {
+  beforeEach(() => {
+    resetMapRuntimeConfigForTests()
+    vi.stubGlobal(
+      'ResizeObserver',
+      class {
+        observe() {}
+        disconnect() {}
+      },
+    )
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({
+        ok: false,
+        status: 404,
+        headers: new Headers(),
+      }),
+    )
+  })
+
   afterEach(() => {
     vi.restoreAllMocks()
+    vi.unstubAllGlobals()
+    resetMapRuntimeConfigForTests()
   })
 
-  it('renders Google Map with AdvancedMarkerElement at lot coordinates', async () => {
-    const MapCtor = vi.fn(() => ({ setCenter: vi.fn() }))
-    const AdvancedMarkerCtor = vi.fn(() => ({ map: null }))
-
-    vi.spyOn(mapsLoader, 'loadGoogleMapsCore').mockResolvedValue({
-      maps: { Map: MapCtor },
-      marker: { AdvancedMarkerElement: AdvancedMarkerCtor },
-    } as never)
+  it('mounts Leaflet map without Google key and transitions to ready on tileload', () => {
+    const handlers: Record<string, () => void> = {}
+    const fakeTiles = {
+      addTo: vi.fn().mockReturnThis(),
+      on: vi.fn((event: string, cb: () => void) => {
+        handlers[event] = cb
+        return fakeTiles
+      }),
+      redraw: vi.fn(),
+      remove: vi.fn(),
+    }
+    vi.spyOn(L, 'tileLayer').mockReturnValue(fakeTiles as unknown as L.TileLayer)
 
     render(
       <MerchantLotLocationMap
@@ -26,35 +51,41 @@ describe('MerchantLotLocationMap (Google Maps viewer)', () => {
       />,
     )
 
-    await waitFor(() => {
-      expect(MapCtor).toHaveBeenCalledTimes(1)
-      expect(AdvancedMarkerCtor).toHaveBeenCalledTimes(1)
+    const region = screen.getByRole('region', { name: 'Bản đồ vị trí bãi đỗ' })
+    expect(region).toHaveAttribute('data-map-state', 'loading')
+
+    act(() => {
+      handlers.tileload?.()
+    })
+    expect(region).toHaveAttribute('data-map-state', 'ready')
+  })
+
+  it('shows tile error fallback and Google Maps link when OpenStreetMap tiles fail', () => {
+    const handlers: Record<string, () => void> = {}
+    const fakeTiles = {
+      addTo: vi.fn().mockReturnThis(),
+      on: vi.fn((event: string, cb: () => void) => {
+        handlers[event] = cb
+        return fakeTiles
+      }),
+      redraw: vi.fn(),
+      remove: vi.fn(),
+    }
+    vi.spyOn(L, 'tileLayer').mockReturnValue(fakeTiles as unknown as L.TileLayer)
+
+    render(
+      <MerchantLotLocationMap
+        latitude={10.7721328}
+        longitude={106.6948199}
+        lotName="Bến Cảng Quận 1"
+      />,
+    )
+
+    act(() => {
+      handlers.tileerror?.()
     })
 
-    expect(
-      screen.getByRole('region', { name: 'Bản đồ vị trí bãi đỗ' }),
-    ).toHaveAttribute('data-map-state', 'ready')
-  })
-
-  it('shows fallback UI and Google Maps link when SDK fails to load', async () => {
-    vi.spyOn(mapsLoader, 'loadGoogleMapsCore').mockRejectedValue(
-      new sharedMaps.GoogleMapsError(
-        'SDK_LOAD_ERROR',
-        'Không thể tải thư viện Google Maps.',
-      ),
-    )
-
-    render(
-      <MerchantLotLocationMap
-        latitude={10.7721328}
-        longitude={106.6948199}
-        lotName="Bến Cảng Quận 1"
-      />,
-    )
-
-    expect(await screen.findByRole('alert')).toHaveTextContent(
-      /Không thể tải thư viện Google Maps/i,
-    )
+    expect(screen.getByRole('alert')).toHaveTextContent(/OpenStreetMap/i)
     expect(
       screen.getByRole('link', { name: /Mở trên Google Maps/i }),
     ).toHaveAttribute(
