@@ -1,5 +1,9 @@
 # Screen Inventory — Smart Parking CRM Hub v2
 
+> 2026-11-18 / quick booking payment: 680px dialog, horizontal lot/schedule on sufficient container width, full address, prominent deposit/deadline, primary PayOS and compact secondary wallet. Other actions and price details remain disclosed. [Parity and verification](./quick-payment-layout-2026-11-18.md).
+
+> 2026-11-18 / SCR-020: fleet table displays current lot/address/slot and parking/overtime status using paginated driver booking reads. Existing fleet actions and usage statuses are preserved. [Contract and parity](../05-modules/driver/vehicle-parking.md).
+
 > 2026-11-15 / SCR-048: withdrawal confirmation now emphasizes the full API account number and receiving bank/logo. Approval/rejection behavior is preserved. [Contract and parity](../05-modules/admin/withdrawal-confirmation.md).
 
 > 2026-11-15 — PayOS cancellation: checkout becomes a compact stopped/closed panel after SDK exit/cancel or frame navigation, including Chrome local-network-blocked redirects. Embedded return pages notify the parent; payment authority remains server-side. See [module behavior](../05-modules/bookings/payos-checkout.md).

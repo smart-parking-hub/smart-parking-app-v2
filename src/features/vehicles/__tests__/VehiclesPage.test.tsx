@@ -1,5 +1,5 @@
 import { beforeEach, afterEach, it, expect, vi } from 'vitest'
-import { render, screen, cleanup } from '@testing-library/react'
+import { render, screen, cleanup, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { MemoryRouter } from 'react-router-dom'
@@ -18,7 +18,7 @@ const vehicle = {id:91,licensePlate:'51C-REAL91',vehicleType:'HEAVY_TRUCK',weigh
 let rows = [vehicle]
 beforeEach(()=>{
  vi.clearAllMocks(); rows=[{...vehicle}]
- vi.mocked(apiClient.get).mockImplementation(async()=>page(rows))
+ vi.mocked(apiClient.get).mockImplementation(async url=>page(url === '/api/v1/bookings' ? [] : rows))
  vi.mocked(apiClient.request).mockImplementation(async config=>{
   const saved={...vehicle,...vehicleInputSchema.parse(config.data)};rows=[saved]; return {data:{data:saved}}
  })
@@ -147,4 +147,73 @@ it('selects a brand by pointer and closes suggestions when focus leaves',async()
  expect(input).toHaveValue('Ford');expect(screen.queryByRole('listbox')).not.toBeInTheDocument()
  await userEvent.click(screen.getByRole('button',{name:'Hiện gợi ý'}));expect(screen.getByRole('listbox')).toBeInTheDocument()
  await userEvent.click(screen.getByLabelText('Biển số xe'));expect(screen.queryByRole('listbox')).not.toBeInTheDocument()
+})
+
+const parkedBooking = { id: 700, vehicleId: 91, parkingLotId: 12, parkingLotName: 'Bãi Sóng Thần', parkingLotAddress: 'Dĩ An, Bình Dương', physicalSlotCode: 'A-07', status: 'PARKING', checkOutTime: null }
+
+it('matches the current lot by vehicle ID and shows its address, slot and parking status',async()=>{
+ rows=[vehicle,{...vehicle,id:92,licensePlate:'51C-OTHER'}]
+ vi.mocked(apiClient.get).mockImplementation(async (url,config)=>url === '/api/v1/bookings'
+  ? page((config?.params as {status?:string} | undefined)?.status === 'PARKING' ? [parkedBooking] : []) : page(rows))
+ mount(<VehiclesPage/>);
+ const lot=await screen.findByText('Bãi Sóng Thần')
+ const row=within(lot.closest('tr')!)
+ expect(row.getByText(vehicle.licensePlate)).toBeInTheDocument()
+ expect(row.getByText('Dĩ An, Bình Dương')).toBeInTheDocument()
+ expect(row.getByText('Vị trí: A-07')).toBeInTheDocument()
+ expect(row.getByText('Đang đỗ',{exact:true})).toBeInTheDocument()
+ expect(row.getByText('Đang sử dụng')).toBeInTheDocument()
+ expect(within(screen.getByText('51C-OTHER').closest('tr')!).getByText('Không đỗ tại bãi')).toBeInTheDocument()
+})
+
+it('reads subsequent parking pages and preserves the inactive fleet status for an overtime vehicle',async()=>{
+ rows=[{...vehicle,status:'INACTIVE'}]
+ vi.mocked(apiClient.get).mockImplementation(async (url,config)=>{
+  if(url !== '/api/v1/bookings') return page(rows)
+  const {status,page:pageNumber}=config?.params as {status?:string;page?:number} ?? {}
+  return status === 'OVERTIME'
+   ? page(pageNumber === 1 ? [{...parkedBooking,status:'OVERTIME'}] : [{...parkedBooking,id:701,vehicleId:999}],pageNumber,2,2)
+   : page([])
+ })
+ mount(<VehiclesPage/>);
+ expect(await screen.findByText('Đỗ quá giờ')).toBeInTheDocument()
+ expect(screen.getByText('Bãi Sóng Thần')).toBeInTheDocument()
+ expect(screen.getByText('Ngừng sử dụng',{exact:true})).toBeInTheDocument()
+ expect(apiClient.get).toHaveBeenCalledWith('/api/v1/bookings',expect.objectContaining({params:expect.objectContaining({page:1,status:'OVERTIME'})}))
+})
+
+it('does not treat a reservation, settled trip or a checked-out vehicle as currently parked',async()=>{
+ vi.mocked(apiClient.get).mockImplementation(async url=>url === '/api/v1/bookings'
+  ? page([...['PENDING_CHECKIN','PENDING_PAYMENT','AWAITING_FINAL_PAYMENT','COMPLETED','CANCELLED','EXPIRED','REVIEWED'].map((status,id)=>({...parkedBooking,id,status})),{...parkedBooking,checkOutTime:'2026-11-18T10:00:00'}]) : page(rows))
+ mount(<VehiclesPage/>);
+ expect(await screen.findByText('Không đỗ tại bãi')).toBeInTheDocument()
+ expect(screen.queryByText('Bãi Sóng Thần')).not.toBeInTheDocument()
+})
+
+it('keeps fleet actions available on parking failure and retries without asserting an empty lot',async()=>{
+ vi.mocked(apiClient.get).mockImplementation(async url=>{
+  if(url === '/api/v1/bookings') throw new Error('Dữ liệu bãi tạm gián đoạn')
+  return page(rows)
+ })
+ mount(<VehiclesPage/>);
+ expect(await screen.findByRole('alert')).toHaveTextContent('Chưa tải được bãi hiện tại')
+ expect(screen.getByText('Chưa xác định')).toBeInTheDocument()
+ expect(screen.queryByText('Không đỗ tại bãi')).not.toBeInTheDocument()
+ expect(screen.getByRole('button',{name:`Sửa xe ${vehicle.licensePlate}`})).toBeEnabled()
+ vi.mocked(apiClient.get).mockImplementation(async (url,config)=>url === '/api/v1/bookings'
+  ? page((config?.params as {status?:string} | undefined)?.status === 'PARKING' ? [{...parkedBooking,parkingLotName:null}] : []) : page(rows))
+ await userEvent.click(screen.getByRole('button',{name:'Thử lại dữ liệu bãi'}))
+ expect(await screen.findByText('Bãi #12')).toBeInTheDocument()
+ expect(screen.queryByRole('alert')).not.toBeInTheDocument()
+})
+
+it('shows an explicit loading state until both parking status requests complete',async()=>{
+ let resolveParking!: (value: ReturnType<typeof page>)=>void
+ const pending=new Promise<ReturnType<typeof page>>(resolve=>{resolveParking=resolve})
+ vi.mocked(apiClient.get).mockImplementation(url=>url === '/api/v1/bookings' ? pending : Promise.resolve(page(rows)))
+ mount(<VehiclesPage/>);
+ expect(await screen.findByText('Đang tải bãi…')).toBeInTheDocument()
+ expect(screen.queryByText('Không đỗ tại bãi')).not.toBeInTheDocument()
+ resolveParking(page([]))
+ expect(await screen.findByText('Không đỗ tại bãi')).toBeInTheDocument()
 })

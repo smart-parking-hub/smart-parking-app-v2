@@ -1,6 +1,7 @@
 import { z } from 'zod'
 import { apiClient } from '@/shared/api/client'
 import { getData, sendData } from '@/shared/api/resources'
+import { bookingSchema } from '@/features/booking-flow'
 
 export const vehicleTypes = {
   SEDAN_SUV: 'Ô tô con / SUV', BUS_COACH: 'Xe khách', LIGHT_TRUCK: 'Xe tải nhẹ',
@@ -29,6 +30,32 @@ const pageSchema = z.object({
 })
 export type VehicleRecord = z.infer<typeof vehicleSchema>
 export type VehicleInput = z.infer<typeof vehicleInputSchema>
+const parkingBookingSchema = bookingSchema.pick({
+  id: true, vehicleId: true, status: true, parkingLotId: true,
+  parkingLotName: true, parkingLotAddress: true,
+}).extend({ checkOutTime: z.string().nullish(), physicalSlotCode: z.string().nullish() })
+const parkingPageSchema = z.object({
+  content: z.array(parkingBookingSchema), totalPages: z.number().int().nonnegative(),
+})
+export type VehicleParking = z.infer<typeof parkingBookingSchema>
+
+export async function fetchVehicleParking(signal?: AbortSignal): Promise<VehicleParking[]> {
+  const groups = await Promise.all(['PARKING', 'OVERTIME'].map(async status => {
+    const bookings: VehicleParking[] = []
+    let totalPages = 1
+    for (let page = 0; page < totalPages; page++) {
+      const result = parkingPageSchema.parse(await getData<unknown>('/api/v1/bookings',
+        { page, size: 100, status, sort: 'createdAt,desc' }, { signal }))
+      bookings.push(...result.content)
+      totalPages = result.totalPages
+    }
+    return bookings
+  }))
+  // Only these two server states represent a vehicle still inside a parking lot.
+  return groups.flat().filter(booking =>
+    (booking.status === 'PARKING' || booking.status === 'OVERTIME') && !booking.checkOutTime)
+}
+
 export async function fetchVehiclePage(page: number) {
   return pageSchema.parse(await getData<unknown>('/api/v1/vehicles', { page, size: 20, sort: 'id,desc' }))
 }
