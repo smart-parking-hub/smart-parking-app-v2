@@ -1,3 +1,6 @@
+import { ExternalLink } from 'lucide-react'
+import { buildGoogleMapsSearchUrl } from '@/shared/maps'
+
 export function ContactStationsSection() {
   const stations = [
     {
@@ -96,29 +99,45 @@ export function ContactStationsSection() {
 
           {/* 6 Permanent Dispatch Stations List (5 Cols) */}
           <div className="lg:col-span-5 flex flex-col justify-between space-y-3">
-            {stations.map((st) => (
-              <div
-                key={st.num}
-                className="p-3.5 bg-white border border-slate-200 rounded-lg shadow-sm flex items-center justify-between hover:border-[#d95f00] transition-colors"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded bg-[#0F172A] text-white flex items-center justify-center font-sora text-xs font-bold shrink-0">
-                    {st.num}
-                  </div>
-                  <div>
-                    <div className="font-sora font-semibold text-sm text-[#0F172A]">
-                      {st.name}
+            {stations.map((st) => {
+              const mapUrl = buildGoogleMapsSearchUrl({
+                query: `${st.name}, ${st.address}`,
+              })
+              return (
+                <div
+                  key={st.num}
+                  className="p-3.5 bg-white border border-slate-200 rounded-lg shadow-sm flex items-center justify-between gap-2 hover:border-[#d95f00] transition-colors"
+                >
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="w-9 h-9 rounded bg-[#0F172A] text-white flex items-center justify-center font-sora text-xs font-bold shrink-0">
+                      {st.num}
                     </div>
-                    <div className="text-xs text-slate-500 leading-tight">
-                      {st.address}
+                    <div className="min-w-0">
+                      <div className="font-sora font-semibold text-sm text-[#0F172A]">
+                        {st.name}
+                      </div>
+                      <div className="text-xs text-slate-500 leading-tight">
+                        {st.address}
+                      </div>
+                      {mapUrl && (
+                        <a
+                          href={mapUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="mt-1 inline-flex items-center gap-1 text-[11px] font-semibold text-[#d95f00] hover:underline"
+                        >
+                          Xem trên Google Maps
+                          <ExternalLink className="h-3 w-3" aria-hidden="true" />
+                        </a>
+                      )}
                     </div>
                   </div>
+                  <span className="font-sora text-xs bg-orange-50 text-[#d95f00] border border-orange-200 px-2.5 py-1 rounded font-bold shrink-0 ml-2">
+                    {st.trucks}
+                  </span>
                 </div>
-                <span className="font-sora text-xs bg-orange-50 text-[#d95f00] border border-orange-200 px-2.5 py-1 rounded font-bold shrink-0 ml-2">
-                  {st.trucks}
-                </span>
-              </div>
-            ))}
+              )
+            })}
           </div>
         </div>
       </div>

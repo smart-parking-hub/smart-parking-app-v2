@@ -1,4 +1,5 @@
 import { Navigation, MapPin, ExternalLink } from 'lucide-react'
+import { buildGoogleMapsDirectionsUrl } from '@/shared/maps'
 import type { YardOperationalProfile } from '../../types/merchantParkingLotTypes'
 
 interface MerchantLotGpsGuideCardProps {
@@ -19,9 +20,17 @@ export function MerchantLotGpsGuideCard({
     distanceToPort,
   } = operationalProfile
 
+  const directionsUrl = buildGoogleMapsDirectionsUrl({
+    destination: {
+      latitude: gpsCoordinates.lat,
+      longitude: gpsCoordinates.lng,
+    },
+    destinationAddress: lotName,
+  })
+
   const handleOpenGoogleMaps = () => {
-    const url = `https://www.google.com/maps/search/?api=1&query=${gpsCoordinates.lat},${gpsCoordinates.lng}`
-    window.open(url, '_blank', 'noopener,noreferrer')
+    if (!directionsUrl) return
+    window.open(directionsUrl, '_blank', 'noopener,noreferrer')
   }
 
   return (

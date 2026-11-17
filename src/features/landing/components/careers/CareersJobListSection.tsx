@@ -40,7 +40,7 @@ export function CareersJobListSection({ onApply }: CareersJobListSectionProps) {
       title: 'Senior Frontend Engineer (React / TypeScript / Tailwind)',
       description:
         'Phát triển hệ thống Dashboard điều phối bến bãi theo bản đồ số tương tác cao. Xây dựng portal quản trị chủ bãi đỗ với trải nghiệm mượt mà, tối ưu hiệu năng render bản đồ.',
-      tags: ['React 19', 'TypeScript', 'Tailwind CSS', 'Leaflet OpenStreetMap', 'Web Performance'],
+      tags: ['React 19', 'TypeScript', 'Tailwind CSS', 'Google Maps Platform', 'Web Performance'],
       salary: '30 - 45 Triệu VNĐ',
       salaryExtra: '',
     },

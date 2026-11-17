@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { MapPin, Navigation, QrCode, Truck } from 'lucide-react'
 import { Badge, button, money, secondary } from '@/shared/components/Workspace'
+import { buildGoogleMapsDirectionsUrl } from '@/shared/maps'
 import { bookingReference } from '@/entities/booking/bookingReference'
 import { canShowCheckoutQr, dashboardTime, isParking, parkingDuration, ticketAction, ticketUrl } from '../lib/dashboardBooking'
 import type { BookingDto } from '../types/driverTypes'
@@ -43,7 +44,32 @@ export function ActiveTripCard({ booking, onOpenQr }: { booking?: BookingDto; on
           <div><dt className="text-brand-muted">Giờ vào thực tế</dt><dd className="mt-1">{booking.checkInTime ? dashboardTime(booking.checkInTime) : 'Chưa check-in'}</dd></div>
           <div><dt className="text-brand-muted">Thời gian đỗ</dt><dd className="mt-1">{booking.checkInTime ? parkingDuration(booking, now) : 'Chưa bắt đầu'}</dd></div>
         </dl>
-        {booking.parkingLotAddress && <a className={secondary} href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${booking.parkingLotName} ${booking.parkingLotAddress}`)}`} target="_blank" rel="noreferrer"><Navigation size={16} aria-hidden="true" />Chỉ đường tới bãi</a>}
+        {(() => {
+          const directionsUrl = buildGoogleMapsDirectionsUrl({
+            destination:
+              booking.parkingLotLatitude !== undefined &&
+              booking.parkingLotLongitude !== undefined
+                ? {
+                    latitude: booking.parkingLotLatitude,
+                    longitude: booking.parkingLotLongitude,
+                  }
+                : null,
+            destinationAddress: booking.parkingLotAddress
+              ? `${booking.parkingLotName ? `${booking.parkingLotName}, ` : ''}${booking.parkingLotAddress}`
+              : null,
+          })
+          return directionsUrl ? (
+            <a
+              className={secondary}
+              href={directionsUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <Navigation size={16} aria-hidden="true" />
+              Chỉ đường tới bãi
+            </a>
+          ) : null
+        })()}
       </div>
       <div className="flex flex-col justify-between gap-5 rounded-xl border border-brand-border bg-brand-surface p-5">
         <dl className="space-y-4 text-sm">

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { buildGoogleMapsDirectionsUrl } from '@/shared/maps'
 import {
   MapPin,
   Clock,
@@ -280,15 +281,22 @@ export function ActiveQueueCard({
               </>
             ) : (
               <>
-                <a
-                  href={`https://maps.google.com/?q=${encodeURIComponent(item.parkingLotAddress)}`}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="h-11 px-5 rounded-xl bg-brand-primary hover:bg-brand-primary-hover text-white text-xs font-semibold transition-colors shadow-md cursor-pointer inline-flex items-center justify-center gap-2"
-                >
-                  <Navigation className="w-4 h-4 text-white" />
-                  <span>Chỉ đường tới cổng bãi</span>
-                </a>
+                {(() => {
+                  const directionsUrl = buildGoogleMapsDirectionsUrl({
+                    destinationAddress: item.parkingLotAddress,
+                  })
+                  return directionsUrl ? (
+                    <a
+                      href={directionsUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="h-11 px-5 rounded-xl bg-brand-primary hover:bg-brand-primary-hover text-white text-xs font-semibold transition-colors shadow-md cursor-pointer inline-flex items-center justify-center gap-2"
+                    >
+                      <Navigation className="w-4 h-4 text-white" />
+                      <span>Chỉ đường tới cổng bãi</span>
+                    </a>
+                  ) : null
+                })()}
 
                 <button
                   type="button"
