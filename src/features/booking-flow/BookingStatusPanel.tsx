@@ -3,7 +3,8 @@ import { bookingTimestamp, bookingTimeLabel } from './time'
 import { BookingReview } from './BookingReview'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
-import { Notice, button, secondary } from '@/shared/components/Workspace'
+import { WalletDepositPayment, refundStatusLabels } from '@/features/driver-wallet'
+import { Notice, button, secondary, Dialog } from '@/shared/components/Workspace'
 import { bookingReference } from '@/entities/booking/bookingReference'
 import { errorMessage } from '@/shared/api/resources'
 import { fetchBooking, paymentLink, payDemo, cancelBooking, formatMoney, statusLabels, type Booking } from './api'
@@ -48,6 +49,9 @@ export function BookingStatusPanel(props: StatusPanelProps) {
 function BookingStatusContent({ bookingId, booking, embedded = false, compact = false }: StatusPanelProps) {
   const cache = useQueryClient()
   const [copied, setCopied] = useState(false)
+  const [walletPending, setWalletPending] = useState(false)
+  const [cancelOpen, setCancelOpen] = useState(false)
+  const [acceptWallet, setAcceptWallet] = useState(false)
   const [checkoutIntent, setCheckoutIntent] = useState<string | null>(null)
 
   const query = useQuery({
@@ -69,6 +73,8 @@ function BookingStatusContent({ bookingId, booking, embedded = false, compact = 
       cache.invalidateQueries({ queryKey: ['booking', bookingId] }),
       cache.invalidateQueries({ queryKey: ['real-bookings'] }),
       cache.invalidateQueries({ queryKey: ['parking-lots-search'] }),
+      cache.invalidateQueries({ queryKey: ['driver-wallet'] }),
+      cache.invalidateQueries({ queryKey: ['driver-payment-page'] }),
     ])
   }
 
@@ -85,7 +91,7 @@ function BookingStatusContent({ bookingId, booking, embedded = false, compact = 
     })
   }
   const demo = useMutation({ mutationFn: () => payDemo(bookingId), onSuccess: refresh })
-  const cancel = useMutation({ mutationFn: () => cancelBooking(bookingId), onSuccess: refresh })
+  const cancel = useMutation({ mutationFn: () => cancelBooking(bookingId), onSuccess: async () => { setCancelOpen(false); setAcceptWallet(false); await refresh() } })
 
   const data = booking ?? query.data
   const deadline = data?.status === 'PENDING_PAYMENT' ? bookingTimestamp(data.expiresAt) : NaN
@@ -116,11 +122,11 @@ function BookingStatusContent({ bookingId, booking, embedded = false, compact = 
   const payable = (data.status === 'PENDING_PAYMENT' && !expired) || data.status === 'AWAITING_FINAL_PAYMENT'
   const finalPayment = data.status === 'AWAITING_FINAL_PAYMENT'
   const checkoutOpen = checkoutIntent === `${bookingId}:${finalPayment ? 'FINAL_PAYMENT' : 'DEPOSIT'}`
-  const busy = payment.isPending || demo.isPending || cancel.isPending
+  const busy = payment.isPending || demo.isPending || cancel.isPending || walletPending
   const compactPayment = compact && ['PENDING_PAYMENT', 'AWAITING_FINAL_PAYMENT'].includes(data.status)
   const otherActions = <>
     {import.meta.env.DEV && data.status === 'PENDING_PAYMENT' && !expired && <button className={secondary} disabled={busy} onClick={() => demo.mutate()}>Thanh toán Demo (chỉ local)</button>}
-    {['PENDING_PAYMENT', 'PENDING_CHECKIN'].includes(data.status) && <button className={secondary} disabled={busy} onClick={() => cancel.mutate()}>Hủy booking</button>}
+    {['PENDING_PAYMENT', 'PENDING_CHECKIN'].includes(data.status) && <button className={secondary} disabled={busy} onClick={() => { setAcceptWallet(false); setCancelOpen(true) }}>Hủy booking</button>}
     {data.status === 'PENDING_CHECKIN' && <button className={secondary} onClick={() => { void navigator.clipboard.writeText(data.bookingCode).then(() => setCopied(true)) }}>{copied ? 'Đã sao chép' : 'Sao chép mã check-in'}</button>}
     {!embedded && <Link className={secondary} to={compactPayment ? `/bookings?bookingId=${bookingId}` : '/bookings'}>Xem các lượt đặt chỗ</Link>}
   </>
@@ -128,6 +134,21 @@ function BookingStatusContent({ bookingId, booking, embedded = false, compact = 
 
   return (
     <div className={`${compactPayment ? 'space-y-4 text-sm' : 'space-y-5 text-base'} text-brand-navy`}>
+      {cancelOpen && <Dialog title="Xác nhận hủy đặt chỗ" onClose={() => { if (!cancel.isPending) setCancelOpen(false) }}>
+        <div className="space-y-4">
+          <p>Hủy trước hoặc đúng 2 giờ trước giờ dự kiến check-in: hoàn 100% cọc. Trong 2 giờ trước giờ dự kiến: hoàn 50%. Từ giờ dự kiến trở đi hoặc no-show: không hoàn. Số tiền được tính tại thời điểm xác nhận hủy.</p>
+          <p>Khoản hoàn hợp lệ được cộng vào ví tài xế để trả cọc lần sau. Hiện chưa hỗ trợ rút số dư về ngân hàng.</p>
+          <label className="flex items-start gap-3"><input type="checkbox" checked={acceptWallet} onChange={event => setAcceptWallet(event.target.checked)} /><span>Tôi đồng ý chính sách và nhận khoản hoàn hợp lệ vào ví.</span></label>
+          {cancel.isError && <Notice error>{errorMessage(cancel.error)}</Notice>}
+          <button className={button} disabled={!acceptWallet || cancel.isPending} onClick={() => cancel.mutate()}>{cancel.isPending ? 'Đang hủy…' : 'Xác nhận hủy và hoàn vào ví'}</button>
+        </div>
+      </Dialog>}
+      {data.status === 'CANCELLED' && <Notice><div className="space-y-2">
+        <p>Khoản được hoàn: {formatMoney(data.refundAmount ?? 0)} · {refundStatusLabels[data.refundStatus ?? 'NONE'] ?? data.refundStatus}</p>
+        {data.refundChannel === 'WALLET' && <p>{data.refundStatus === 'COMPLETED' ? 'Đã cộng vào ví tài xế.' : 'Khoản hoàn vào ví đang được xử lý; chưa cộng vào số dư khả dụng.'} <Link className="text-brand-primary underline" to="/wallet">Xem ví</Link></p>}
+        {data.refundReference && <p>Mã hoàn: {data.refundReference}</p>}
+      </div></Notice>}
+      {data.status === 'PENDING_PAYMENT' && !expired && <WalletDepositPayment bookingId={bookingId} amount={data.advanceDeposit} onComplete={refresh} onPendingChange={setWalletPending} disabled={payment.isPending || checkoutOpen || cancel.isPending} />}
       {!embedded && !compactPayment && <p role="status" className="font-semibold">
         {statusLabels[data.status]}
       </p>}

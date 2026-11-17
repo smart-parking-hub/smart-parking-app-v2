@@ -59,7 +59,7 @@ beforeEach(() => {
     sdkConfig = config
     return { open, exit }
   } })
-  vi.mocked(apiClient.get).mockImplementation(async () => ({ data: { data: current } }))
+  vi.mocked(apiClient.get).mockImplementation(async url => ({ data: { data: String(url).endsWith('/driver/wallet') ? { availableAmount: 0, heldAmount: 0, currency: 'VND', enabled: true } : current } }))
   vi.mocked(apiClient.post).mockImplementation(async (url) => ({
     data: { data: String(url).endsWith('/sync') ? { status: 'PENDING' } : checkoutUrl },
   }))

@@ -6,6 +6,7 @@ export const bookingSchema = z.object({
   id: z.number(), bookingCode: z.string(), parkingLotId: z.number(), merchantId: z.number().nullable(),
   parkingLotName: z.string().nullish(), parkingLotAddress: z.string().nullish(), vehicleId: z.number(), vehiclePlate: z.string().nullish(),
   status: z.enum(['PENDING_PAYMENT','PENDING_CHECKIN','PARKING','OVERTIME','AWAITING_FINAL_PAYMENT','COMPLETED','CANCELLED','EXPIRED','REVIEWED']),
+  refundAmount: money.nullish(), refundPercentage: z.number().nullish(), refundStatus: z.string().nullish(), refundChannel: z.string().nullish(), refundReference: z.string().nullish(),
   advanceDeposit: money, totalAmount: money.nullable(), hourlyRate: money.nullable(),
   surgeMultiplier: money.nullish(), surgeStartTime: z.string().nullish(), surgeEndTime: z.string().nullish(), overtimePenaltyMultiplier: money.nullish(),
   expectedCheckInTime: z.string(), expectedCheckOutTime: z.string(), expiresAt: z.string(),
@@ -29,7 +30,7 @@ export async function paymentLink(bookingId: number, final = false) {
   return validatePaymentUrl(url)
 }
 export const payDemo = (bookingId: number) => sendData('post', '/api/v1/payments/demo-confirm', { bookingId })
-export const cancelBooking = (id: number) => sendData('post', `/api/v1/bookings/${id}/cancel`, { reason: 'Tài xế chủ động hủy trước check-in' })
+export const cancelBooking = (id: number) => sendData('post', `/api/v1/bookings/${id}/cancel`, { reason: 'Tài xế chủ động hủy trước check-in', acceptWalletRefund: true })
 export interface PaymentResult {
   status: string
   bookingId?: number

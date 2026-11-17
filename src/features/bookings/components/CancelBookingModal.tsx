@@ -26,7 +26,6 @@ export function CancelBookingModal({
 }: CancelBookingModalProps) {
   const [selectedReason, setSelectedReason] = useState(CANCEL_REASONS[0])
   const [customReason, setCustomReason] = useState('')
-  const [bankAccount, setBankAccount] = useState('')
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({})
   const [isSubmitting, setIsSubmitting] = useState(false)
 
@@ -56,7 +55,7 @@ export function CancelBookingModal({
 
     const validation = cancelBookingSchema.safeParse({
       reason: effectiveReason,
-      bankAccount: bankAccount.trim(),
+
       preferredResolution: 'REFUND_WALLET',
     })
 
@@ -72,7 +71,7 @@ export function CancelBookingModal({
 
     setIsSubmitting(true)
     try {
-      await onConfirmCancel(effectiveReason, bankAccount.trim() || undefined)
+      await onConfirmCancel(effectiveReason)
       onClose()
     } finally {
       setIsSubmitting(false)
@@ -160,24 +159,9 @@ export function CancelBookingModal({
             </div>
           )}
 
-          <div className="flex flex-col gap-1.5">
-            <label htmlFor="bank-account-input" className="font-semibold text-slate-700">
-              Số tài khoản hoàn tiền (nếu không dùng ví SmartTruck Pay):
-            </label>
-            <input
-              id="bank-account-input"
-              type="text"
-              placeholder="VD: 1903... Techcombank - NGUYEN VAN TUAN"
-              value={bankAccount}
-              onChange={(e) => setBankAccount(e.target.value)}
-              className="w-full h-10 px-3 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-900 focus:outline-none focus:border-[#d95f00]"
-            />
-            {validationErrors.bankAccount && (
-              <span className="text-[11px] text-red-600 font-medium">
-                {validationErrors.bankAccount}
-              </span>
-            )}
-          </div>
+          <p className="rounded-xl border border-brand-border bg-brand-surface p-3 text-sm">
+            Khoản hoàn hợp lệ được cộng vào ví tài xế để trả cọc lần sau. Chưa hỗ trợ rút số dư về ngân hàng. Xác nhận hủy đồng nghĩa bạn đồng ý phương thức hoàn này.
+          </p>
 
           <div className="flex items-center gap-2 pt-2">
             <button

@@ -1,3 +1,4 @@
+import { DepositStatements } from '@/features/deposit-statements'
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { QueryState } from '@/shared/components/QueryState'
@@ -24,6 +25,7 @@ export function AdminTransactionsPage() {
     description="Theo dõi các giao dịch thanh toán toàn hệ thống. Chọn giao dịch để xem thông tin mới nhất và đối chiếu."
     actions={<button type="button" className={secondary} disabled={query.isFetching}
       aria-busy={query.isFetching} onClick={() => void query.refetch()}>Làm mới danh sách</button>}>
+    <DepositStatements scope="admin" />
     <Field label="Sắp xếp giao dịch">
       <select className={`${control} sm:max-w-xs`} value={sort} onChange={event => {
         const option = transactionSortOptions.find(item => item.value === event.target.value)

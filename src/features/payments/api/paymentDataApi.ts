@@ -9,6 +9,7 @@ const paymentSchema = z.object({
   type: z.enum(['DEPOSIT', 'FINAL_PAYMENT', 'PENALTY', 'REFUND']),
   status: z.enum(['PENDING', 'SUCCESS', 'FAILED', 'REFUNDED', 'REQUIRES_REVIEW']),
   createdAt: z.string().nullish(),
+  refundAmount: z.coerce.number().finite().nonnegative().nullish(), refundStatus: z.string().nullish(), refundChannel: z.string().nullish(), refundReference: z.string().nullish(),
 })
 const pageSchema = z.object({ content: z.array(paymentSchema), currentPage: z.number().int().nonnegative(), totalPages: z.number().int().nonnegative(), totalElements: z.number().int().nonnegative() })
 export type PaymentRecord = z.infer<typeof paymentSchema>

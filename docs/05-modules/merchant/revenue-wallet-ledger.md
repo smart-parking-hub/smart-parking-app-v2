@@ -45,3 +45,7 @@ The original backend revenue API's default dates, single-bound handling and dail
 ## Verification
 
 See [task report](../../09-audit/sp-s3-pay-03-report.md) for exact commands, results, artifacts and pending sign-off.
+
+## SP-PAY-01 extension — 2026-11-17
+
+An on-demand “Xem đối soát tiền cọc” panel now reads GET /api/v1/merchant/revenue/deposits. It shows actual payment-linked postings for collected deposits, policy refunds, completed/outstanding refunds, remaining escrow, platform fee and merchant net. This panel is separate from the legacy cumulative KPI/chart limitations above and never recomputes historical fees using the current rate. See ../payments/driver-wallet.md and the backend driver-wallet contract.
