@@ -1,5 +1,7 @@
 # SP-PAY-01 — Review bổ sung phục hồi ví và quyết toán
 
+> Bổ sung CI FE: xem [fixture PayOS, API ví và toàn bộ nhóm E2E](SP-PAY-01-FRONTEND-CI-REVIEW.md). Số liệu bên dưới thuộc lượt kiểm tra trước đó.
+
 Ngày 18/11/2026. Báo cáo mới nhất cho các sửa F1/P1, F2/P2, F3/P2, đã tích hợp main. Báo cáo gốc [SP-PAY-01-REVIEW.md](SP-PAY-01-REVIEW.md) mô tả toàn bộ luồng ví; số kiểm thử và giới hạn mới nhất nằm ở bản bổ sung này.
 
 ## 1. Thông tin chung

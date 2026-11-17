@@ -1,4 +1,5 @@
 import { expect, type Page } from '@playwright/test'
+import { mockEmptyDriverWallet } from './payment-reads'
 
 // The SDK and checkout page are intercepted: these tests never create a PayOS transaction.
 export const sdkFixture = `
@@ -36,6 +37,7 @@ export const checkoutFixture = `<!doctype html><html lang="vi"><head><meta name=
 
 // Payment and SDK responses are local fixtures; no real transaction is created.
 export async function mockPayOSDeposit(page: Page, bookingId: number, confirmDeposit: () => void) {
+  await mockEmptyDriverWallet(page, bookingId)
   await page.route('**/api/v1/payments', async (route) => {
     expect(route.request().method()).toBe('POST')
     expect(route.request().postDataJSON()).toEqual({ bookingId, paymentType: 'DEPOSIT' })

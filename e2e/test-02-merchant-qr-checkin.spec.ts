@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test'
+import { mockShellReads } from './fixtures/payment-reads'
 
 const merchantToken = `test.${Buffer.from(
   JSON.stringify({
@@ -22,6 +23,7 @@ test.describe('Flow 2: Check-in Barie Cổng Vào (SP-S3-INT-01)', () => {
   let isCheckedIn = false
 
   test.beforeEach(async ({ page }) => {
+    await mockShellReads(page)
     isCheckedIn = false
 
     // Inject authenticated MERCHANT session

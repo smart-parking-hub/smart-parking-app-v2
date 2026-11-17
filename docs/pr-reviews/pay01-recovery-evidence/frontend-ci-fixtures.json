@@ -1,0 +1,57 @@
+{
+  "date": "2026-11-18",
+  "previousRun": {
+    "id": 43924780654,
+    "head": "9a41f189fa96e5dfb0e0ae1b41c735376e4c7aeb",
+    "conclusion": "cancelled",
+    "url": "https://github.com/smart-parking-hub/smart-parking-app-v2/actions/runs/43924780654",
+    "configuredTimeoutMinutes": 10,
+    "observedDurationSeconds": 615
+  },
+  "redPayOsDeposit": {
+    "startTime": "2026-11-17T18:40:45.502Z",
+    "duration": 14240.063999999998,
+    "expected": 0,
+    "skipped": 0,
+    "unexpected": 1,
+    "flaky": 0
+  },
+  "focused": {
+    "startTime": "2026-11-17T18:44:21.442Z",
+    "duration": 65776.086,
+    "expected": 24,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  },
+  "fullCISelectionWithWallet": {
+    "startTime": "2026-11-17T18:46:26.658Z",
+    "duration": 158096.39599999998,
+    "expected": 60,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  },
+  "unit": {
+    "numTotalTests": 854,
+    "numPassedTests": 854,
+    "numFailedTests": 0,
+    "numPendingTests": 0,
+    "success": true
+  },
+  "checks": {
+    "lintExitCode": 0,
+    "typecheckExitCode": 0,
+    "buildExitCode": 0,
+    "proxyErrors": 0
+  },
+  "scope": {
+    "productCodeChanged": false,
+    "timeoutChanged": false,
+    "retryChanged": false,
+    "assertionsPreserved": true,
+    "walletAddedToCI": true
+  },
+  "localBrowser": "Chrome/Chromium engine with localhost HTTP fixtures; remote CI uses bundled Chromium",
+  "remoteCI": "Verify the new pushed commit in PR checks; these are local results"
+}

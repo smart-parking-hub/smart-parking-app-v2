@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test'
+import { mockEmptyDriverWallet, mockShellReads } from './fixtures/payment-reads'
 
 const profile = { merchantId: 7, userId: 12, fullName: 'Chủ bãi kiểm thử', phone: '0901234567' }
 const lot = { id: 12, name: 'Bãi Tân Cảng', address: 'Thủ Đức', status: 'CHANGES_REQUESTED' }
@@ -30,6 +31,8 @@ async function initialize(page: Page, role: 'MERCHANT' | 'DRIVER') {
       : { content: [], currentPage: 0, totalPages: 0, totalElements: 0 }
     await route.fulfill({ json: { data } })
   })
+  if (role === 'DRIVER') await mockEmptyDriverWallet(page, booking.id)
+  else await mockShellReads(page)
   return errors
 }
 
