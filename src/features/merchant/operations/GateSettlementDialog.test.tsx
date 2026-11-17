@@ -9,8 +9,8 @@ vi.mock('@/shared/api/resources', async original => ({ ...await original<typeof 
 interface MockPayOsConfig {
   ELEMENT_ID?: string
   CHECKOUT_URL?: string
-  onSuccess?: (event: unknown) => void
-  onCancel?: (event: unknown) => void
+  onSuccess?: (event?: unknown) => void
+  onCancel?: (event?: unknown) => void
   onExit?: () => void
 }
 let payosConfig: MockPayOsConfig | undefined
@@ -57,7 +57,7 @@ describe('Gate final payment confirmation', () => {
     await waitFor(() => expect(send).toHaveBeenCalledWith('post', '/api/v1/payments/gate/final-link', { bookingId: 41 }))
     await waitFor(() => expect(payosConfig).toBeDefined())
     get.mockResolvedValueOnce({ ...booking, status: 'COMPLETED', finalPaymentMethod: 'PAYOS' })
-    await act(async () => { payosConfig.onSuccess() })
+    await act(async () => { payosConfig?.onSuccess?.() })
     await waitFor(() => expect(onComplete).toHaveBeenCalledWith(expect.objectContaining({ amountDue: 0, bookingStatus: 'COMPLETED', finalPaymentMethod: 'PAYOS' })))
   })
   it('sends exactly the outstanding amount and completes only after cash acknowledgement', async () => {
