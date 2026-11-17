@@ -1,5 +1,7 @@
 # Review SP-PAY-01 — Ví tài xế, hoàn cọc và đối soát phí sàn
 
+> Cập nhật 18/11/2026: xem [review sửa lỗi và kiểm thử sau merge main](SP-PAY-01-RECOVERY-REVIEW.md). Số liệu bên dưới là bằng chứng của đợt trước.
+
 Ngày: 17/11/2026. Phạm vi được duyệt: BE + FE trong kế hoạch ví tài xế. ĐÃ HOÀN TẤT SOURCE LOCAL VÀ KIỂM THỬ. Chưa deploy vào các container/VPS đang chạy. Báo cáo dùng cho cặp PR BE/FE của PAY-01.
 
 ## Bảng review các luồng bị tác động
