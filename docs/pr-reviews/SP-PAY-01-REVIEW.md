@@ -36,9 +36,9 @@ Các số phí/thực nhận trong ví dụ là sau quyết toán. “Hoàn ví�
 
 ## Bằng chứng kiểm thử
 
-- Bộ test BE toàn repo đã chạy thành công bằng Gradle; sau rà soát cuối chạy lại payment/booking, rồi payment sau bổ sung kiểm thử giữ cọc chưa xác minh. Tổng bộ test: 743 bài, 733 đạt, 10 bỏ qua có điều kiện, 0 lỗi. Hai bài ví/MySQL trong số này được chạy riêng và đều đạt. Chi tiết đếm từng module ở [backend-tests-summary.json](pay01-wallet-evidence/backend-tests-summary.json). Một số test MySQL tùy chọn của các task cũ không được kích hoạt trong lượt chạy thường.
+- Bộ test BE toàn repo đã chạy thành công bằng Gradle; sau rà soát cuối chạy lại payment/booking, rồi payment sau bổ sung kiểm thử giữ cọc chưa xác minh. Tổng bộ test: 752 bài, 742 đạt, 10 bỏ qua có điều kiện, 0 lỗi. Hai bài ví/MySQL trong số này được chạy riêng và đều đạt. Chi tiết đếm từng module ở [backend-tests-summary.json](pay01-wallet-evidence/backend-tests-summary.json). Một số test MySQL tùy chọn của các task cũ không được kích hoạt trong lượt chạy thường.
 - Hai test MySQL riêng cho task đã chạy và đạt: nâng cấp Payment V18→V19 bảo toàn BANK_MANUAL và cập nhật đồng thời; nâng cấp Booking V9→V10 bảo toàn booking và receipt duy nhất. Xem [mysql-tests-summary.json](pay01-wallet-evidence/mysql-tests-summary.json).
-- FE: 815/815 bài đạt, 0 lỗi. Build TypeScript/Vite và ESLint đã qua; xem [frontend-tests-summary.json](pay01-wallet-evidence/frontend-tests-summary.json).
+- FE: 834/834 bài đạt, 0 lỗi. Build TypeScript/Vite và ESLint đã qua; xem [frontend-tests-summary.json](pay01-wallet-evidence/frontend-tests-summary.json).
 - Browser: 7/7 bài đạt cho ví mobile/desktop, đồng ý hủy/hoàn ví và hồi quy lịch sử thanh toán (gồm 320px, 390px, 768px, 1440px). Các bài trình duyệt dùng HTTP mock; không thực hiện chuyển khoản PayOS thật.
 - Đã xem ảnh giao diện ví mobile; ảnh nằm tại [mobile](pay01-wallet-assets/wallet-390.png) và [desktop](pay01-wallet-assets/wallet-1440.png). Mobile dùng card để đọc đủ biến động khả dụng/tiền giữ.
 - git diff --check đã qua. Không thêm thư viện, không sửa lockfile, không chạy migration/deploy vào database/container dự án đang chạy. Các lượt test cuối tắt Kafka listener và dùng broker không hoạt động để cô lập. MySQL kiểm thử riêng đã được dọn sau khi hoàn tất.
@@ -59,3 +59,10 @@ Các số phí/thực nhận trong ví dụ là sau quyết toán. “Hoàn ví�
 4. Khi cần rollback: tắt giao dịch ví mới nhưng giữ bản BE hiểu ví để hoàn tất giao dịch đang dở; giữ schema/journal/receipt. Không xóa số dư hoặc quay về binary không đọc được WALLET.
 
 Phạm vi kế hoạch đã được người dùng duyệt trong chat: ví nhận hoàn và trả toàn bộ cọc; chưa nạp/rút/chuyển tiền hoặc thanh toán kết hợp. API và hạch toán chi tiết nằm trong repository BE: docs/api-contracts/driver-wallet.md và docs/adr/0009-driver-refund-wallet.md.
+
+## Kiểm tra khi chuẩn bị PR
+
+- Đã rebase lên main mới nhất trước push; giữ nguyên các thay đổi tiền mặt/camera QR vừa được merge.
+- Đã chạy lại bộ test BE toàn repo; booking được chạy lại sau khi ghim bài kiểm thử lịch sử UnpaidHoldMigrationTest về đúng phạm vi V8→V9. V10 có bài kiểm thử riêng.
+- Đã chạy lại toàn bộ test FE, build, lint và 7 bài kiểm thử trình duyệt sau đồng bộ main.
+- Hai bài MySQL cho ví đã đạt trong giai đoạn triển khai trước; lượt này không chạy lại MySQL vì Docker daemon cục bộ không hoạt động. Kiểm thử MySQL lịch sử có điều kiện sẽ chạy trong CI khi được cấp môi trường.
