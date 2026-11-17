@@ -14,7 +14,7 @@ export interface CheckOutPayload {
 export interface ConfirmCashPayload {
   bookingCode: string
   parkingLotId: number
-  amount?: number
+  amount: number
 }
 
 export async function merchantCheckInApi(payload: CheckInPayload): Promise<void> {
