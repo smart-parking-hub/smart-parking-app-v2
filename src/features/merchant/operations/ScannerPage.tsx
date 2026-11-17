@@ -4,6 +4,7 @@ import { useForm } from 'react-hook-form'
 import { useSearchParams } from 'react-router-dom'
 import { Camera, Loader2, ScanLine, ShieldCheck, SwitchCamera, Zap } from 'lucide-react'
 import { NotificationDialog } from '@/shared/components/NotificationDialog'
+import { scannerErrorFeedback } from './scannerErrorFeedback'
 import type { Lot, Settlement } from '@/entities/operations'
 import {
   getData,
@@ -420,7 +421,7 @@ export function MerchantScannerPage() {
       </div>
 
       {cameraError && <NotificationDialog title="Không thể bật camera" message={cameraError} variant="error" onClose={() => setCameraError('')} actionLabel="Đã hiểu" />}
-      {scan.isError && <NotificationDialog title={mode === 'check-in' ? 'Chưa thể cho xe vào bãi' : 'Chưa thể cho xe ra bãi'} message={errorMessage(scan.error)} variant="warning" onClose={() => scan.reset()} onAfterClose={() => form.setFocus('bookingCode')} actionLabel="Đã hiểu" />}
+      {scan.isError && <NotificationDialog {...scannerErrorFeedback(scan.error, mode)} variant="warning" onClose={() => scan.reset()} onAfterClose={() => form.setFocus('bookingCode')} actionLabel="Đã hiểu" />}
       {success && !completedSettlement && !scan.data && <NotificationDialog title="Đã cập nhật lượt xe" message={success} onClose={() => setSuccess('')} />}
 
       {confirmedCheckIn && (

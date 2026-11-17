@@ -99,6 +99,15 @@ for (const width of [390, 1440]) {
       await expect(page.getByLabel('Mã đặt chỗ / Nội dung QR')).toBeFocused()
       await expect(submit).toBeEnabled()
     }
+    await page.route('**/api/v1/merchant/check-in', route => route.fulfill({ status: 400, json: { message: 'Mã đặt chỗ này thuộc về bãi đỗ xe khác!' } }))
+    await submit.click()
+    const wrongLot = page.getByRole('dialog', { name: 'Mã QR không hợp lệ tại bãi đang chọn' })
+    await expect(wrongLot).toBeVisible()
+    await expect(wrongLot.getByRole('alert')).toContainText('Vui lòng chọn đúng bãi kiểm soát hoặc quét lại mã QR.')
+    await page.screenshot({ path: `.artifacts/playwright/ui-scanner-invalid-lot-${width}.png` })
+    await wrongLot.getByRole('button', { name: 'Đã hiểu', exact: true }).click()
+    await expect(wrongLot).toHaveCount(0)
+    await expect(page.getByLabel('Mã đặt chỗ / Nội dung QR')).toBeFocused()
     expect(errors).toEqual([])
   })
 

@@ -107,6 +107,22 @@ describe('Session and role access', () => {
   })
 })
 describe('Gate settlement contract', () => {
+  it.each(['XE VÀO', 'XE RA'])('shows an invalid-for-this-lot explanation in %s mode', async mode => {
+    send.mockRejectedValue(new Error('Mã đặt chỗ này thuộc về bãi đỗ xe khác!'))
+    show(<MerchantScannerPage />)
+    await screen.findByText('Bãi kiểm thử')
+    fireEvent.click(screen.getByRole('button', { name: mode }))
+    fireEvent.change(screen.getByLabelText('Bãi kiểm soát'), { target: { value: '12' } })
+    fireEvent.change(screen.getByLabelText('Mã đặt chỗ / Nội dung QR'), { target: { value: 'BK-OTHER-LOT' } })
+    fireEvent.click(screen.getByRole('button', { name: mode === 'XE VÀO' ? 'Xác nhận xe vào bãi' : 'Kiểm tra & quyết toán xe ra' }))
+    const modal = await screen.findByRole('dialog', { name: 'Mã QR không hợp lệ tại bãi đang chọn' })
+    expect(modal).toHaveTextContent('Mã vé này thuộc bãi đỗ khác.')
+    expect(modal).toHaveTextContent('Vui lòng chọn đúng bãi kiểm soát hoặc quét lại mã QR.')
+    fireEvent.click(screen.getByRole('button', { name: 'Đã hiểu' }))
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
+    expect(send).toHaveBeenCalledTimes(1)
+  })
+
   it('shows a dismissible modal on an early check-in and allows scanning again', async () => {
     const message = 'Chưa đến giờ check-in (chỉ được vào bãi trước tối đa 30 phút)!'
     send.mockRejectedValue(new Error(message))
