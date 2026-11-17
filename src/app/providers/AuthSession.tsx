@@ -3,7 +3,7 @@ import { useDispatch } from 'react-redux'
 import { useQueryClient } from '@tanstack/react-query'
 import { Toast, ToastContainer } from '@/shared/components/Toast'
 import { authenticated, signedOut } from '@/features/auth/model/authSlice'
-import { readSession, SESSION_EVENT } from '@/features/auth/model/session'
+import { clearSession, getToken, readSession, SESSION_EVENT } from '@/features/auth/model/session'
 
 export function AuthSession() {
   const dispatch = useDispatch()
@@ -13,10 +13,10 @@ export function AuthSession() {
 
   useEffect(() => {
     let timer: ReturnType<typeof setTimeout>
-    let previousToken = localStorage.getItem('access_token')
+    let previousToken = getToken()
     const synchronize = () => {
       clearTimeout(timer)
-      const token = localStorage.getItem('access_token')
+      const token = getToken()
       if (token !== previousToken) cache.clear()
       previousToken = token
       const session = readSession(token)
@@ -26,7 +26,7 @@ export function AuthSession() {
       } else {
         dispatch(signedOut())
         if (token) {
-          localStorage.removeItem('access_token')
+          clearSession()
           cache.clear()
         }
       }
