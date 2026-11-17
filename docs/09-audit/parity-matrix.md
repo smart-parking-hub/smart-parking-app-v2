@@ -1,5 +1,17 @@
 # Capability Parity Matrix — 4 Landing Screens: Trang Chủ, Tài Xế, Chủ Bãi & Bảng Giá
 
+## Full arrival choices — 2026-11-17
+
+User-requested: the arrival dropdown now disables and labels full/buffer/past blocks from the same daily timeline. Preserved: editable date, visible existing intent after a capacity refresh, keyboard/Escape handling, duration controls, exact-window validation, physical-slot filtering, idempotency and payment flow. No extra per-time requests. [Behavior](../05-modules/bookings/schedule.md).
+
+## Duration quick choices — 2026-11-17
+
+User selected quick duration choices plus “Thời lượng khác”. Default raw-minute editing is replaced with 30-minute / 1, 2, 4, 8-hour / 1-day buttons and optional whole-hours + half-hour controls. Preserved: two-hour default, arbitrary longer stays, half-hour minimum/steps, empty-value validation, computed checkout across calendar boundaries, availability refresh, physical-slot reset, pending-submit lock and exact API start/end. Checkout display now separates time/date and labels same/next/later days. [Behavior and tests](../05-modules/bookings/schedule.md).
+
+## Arrival time grid — 2026-11-17
+
+User-requested replacement of the arrival dropdown with a four-column, period-grouped time board. Date selection, future-only half-hour starts, live expiry correction, duration/checkout, exact-window capacity checks and all booking/payment behavior are preserved. Keyboard selection and Escape containment inside quick booking are verified. [Implementation and checks](./booking-time-grid-2026-11-17.md).
+
 ## Quick booking payment layout — 2026-11-18
 
 User-requested presentation change: wider dialog and simpler information hierarchy. Lot, full address, vehicle, exact schedule, deposit, fee, deadline, copy order, PayOS, wallet eligibility/reconciliation, expiry handling, QR eligibility, price details, demo gating, cancellation and booking navigation are preserved. [Detailed parity and verification](./quick-payment-layout-2026-11-18.md).
@@ -402,3 +414,8 @@ User-requested compact reservation payment variant: prominent real deposit/deadl
 ## Unpaid hold protection — 2026-11-15
 
 Server-owned vehicle/account quotas, verified unpaid-release cooldown and technical rate protection are surfaced in the reservation form with typed errors, original retry times and ticket links. Paid/review/refunded/partial/unknown evidence is not labelled as abuse. See [contract mapping](../05-modules/bookings/unpaid-hold-policy.md) and [verification](./unpaid-hold-policy-2026-11-15.md).
+
+
+## Booking time schedule — 2026-11-17
+
+The shared reservation flow in parking detail and quick booking now offers half-hour entry/duration, a server-backed daily/type/slot timeline and an explicit 30-minute turnaround gap. Exact-window availability replaces the current-capacity submit gate. Current full lots still expose future schedules; queue entry remains available separately. Fee/deposit/payment/QR/ownership/hold protection remain, with the approved new-booking no-early-entry policy. [Feature, API and acceptance mapping](../05-modules/bookings/schedule.md).

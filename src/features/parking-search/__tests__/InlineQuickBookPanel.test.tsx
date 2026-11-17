@@ -1,3 +1,4 @@
+import { bookingScheduleRequestFixture } from '@/test/bookingScheduleFixture'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { cleanup, render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
@@ -121,8 +122,9 @@ describe('InlineQuickBookPanel - Real Server Booking Integration', () => {
       apiClient.post(config.url!, config.data),
     )
 
-    vi.mocked(apiClient.get).mockImplementation(async (url) => {
+    vi.mocked(apiClient.get).mockImplementation(async (url, config) => {
       const u = String(url)
+      if (/\/(availability|timeline)(?:\?|$)/.test(u)) return {data:{data:bookingScheduleRequestFixture(config)}}
       if (u.includes('/vehicles')) {
         return { data: { data: { content: [activeVehicle] } } }
       }
@@ -189,6 +191,7 @@ describe('InlineQuickBookPanel - Real Server Booking Integration', () => {
 
     // Submit booking
     const submitBtn = screen.getByRole('button', { name: 'Tạo booking và xem tiền cọc' })
+    await waitFor(()=>expect(submitBtn).toBeEnabled())
     await user.click(submitBtn)
 
     // Real booking created via server mutation
@@ -227,12 +230,14 @@ describe('InlineQuickBookPanel - Real Server Booking Integration', () => {
     mount(<InlineQuickBookPanel open={true} onClose={() => { }} lot={sampleLot} />)
 
     const submitBtn = await screen.findByRole('button', { name: 'Tạo booking và xem tiền cọc' })
-    expect(submitBtn).toBeEnabled()
+    await waitFor(()=>expect(submitBtn).toBeEnabled())
 
     // First click initiates mutation
+    await waitFor(()=>expect(submitBtn).toBeEnabled())
     await user.click(submitBtn)
 
     // Second rapid click while pending
+    expect(submitBtn).toBeDisabled()
     await user.click(submitBtn)
 
     // Exactly 1 POST was initiated
@@ -278,6 +283,7 @@ describe('InlineQuickBookPanel - Real Server Booking Integration', () => {
 
     // Wait for form and submit booking
     const submitBtn = await screen.findByRole('button', { name: 'Tạo booking và xem tiền cọc' })
+    await waitFor(()=>expect(submitBtn).toBeEnabled())
     await user.click(submitBtn)
 
     // Real booking appears in panel
@@ -312,6 +318,7 @@ describe('InlineQuickBookPanel - Real Server Booking Integration', () => {
     mount(<InlineQuickBookPanel open={true} onClose={() => { }} lot={sampleLot} />)
 
     const submitBtn = await screen.findByRole('button', { name: 'Tạo booking và xem tiền cọc' })
+    await waitFor(()=>expect(submitBtn).toBeEnabled())
     await user.click(submitBtn)
 
     // Error alert is displayed
@@ -324,9 +331,10 @@ describe('InlineQuickBookPanel - Real Server Booking Integration', () => {
     expect(localStorage.getItem('smart-truck-parking.active_hold')).toBeNull()
   })
 
-  it('AC4: disables submit button when lot has no available capacity', async () => {
-    vi.mocked(apiClient.get).mockImplementation(async (url) => {
+  it('AC4: disables submit when the requested window has no capacity', async () => {
+    vi.mocked(apiClient.get).mockImplementation(async (url, config) => {
       const u = String(url)
+      if (/\/(availability|timeline)(?:\?|$)/.test(u)) return {data:{data:bookingScheduleRequestFixture(config,0)}}
       if (u.includes('/vehicles')) {
         return { data: { data: { content: [activeVehicle] } } }
       }
@@ -349,7 +357,7 @@ describe('InlineQuickBookPanel - Real Server Booking Integration', () => {
 
     const submitBtn = await screen.findByRole('button', { name: 'Tạo booking và xem tiền cọc' })
     expect(submitBtn).toBeDisabled()
-    expect(screen.getByText(/Bãi chưa nhận đặt chỗ, hết chỗ/)).toBeInTheDocument()
+    expect(await screen.findByText(/Không có chỗ trống suốt khung giờ/)).toBeInTheDocument()
     expect(apiClient.post).not.toHaveBeenCalled()
   })
 
@@ -390,6 +398,7 @@ describe('InlineQuickBookPanel - Real Server Booking Integration', () => {
     mount(<InlineQuickBookPanel open={true} onClose={() => { }} lot={sampleLot} />)
 
     const submitBtn = await screen.findByRole('button', { name: 'Tạo booking và xem tiền cọc' })
+    await waitFor(()=>expect(submitBtn).toBeEnabled())
     await user.click(submitBtn)
 
     expect(await screen.findByRole('alert')).toBeInTheDocument()
@@ -406,6 +415,7 @@ describe('InlineQuickBookPanel - Real Server Booking Integration', () => {
     mount(<InlineQuickBookPanel open={true} onClose={() => { }} lot={sampleLot} />)
 
     const submitBtn = await screen.findByRole('button', { name: 'Tạo booking và xem tiền cọc' })
+    await waitFor(()=>expect(submitBtn).toBeEnabled())
     await user.click(submitBtn)
 
     expect(await screen.findByRole('alert')).toBeInTheDocument()

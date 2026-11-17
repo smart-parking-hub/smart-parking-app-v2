@@ -1,5 +1,9 @@
 # Screen Inventory — Smart Parking CRM Hub v2
 
+> 2026-11-17 / shared arrival picker: full/buffer/past time choices are disabled and labelled from the current daily timeline in parking detail and quick booking. Date selection and full-duration capacity validation remain available. [Behavior](../05-modules/bookings/schedule.md).
+
+> 2026-11-17 / shared booking form on `/parking/:id` and quick booking: one-click duration choices plus custom hours/half-hours, with readable exit time/date and overnight labels. Default two hours, availability, validation and booking/payment behavior are preserved. [Duration selection](../05-modules/bookings/schedule.md).
+
 > 2026-11-18 / quick booking payment: 680px dialog, horizontal lot/schedule on sufficient container width, full address, prominent deposit/deadline, primary PayOS and compact secondary wallet. Other actions and price details remain disclosed. [Parity and verification](./quick-payment-layout-2026-11-18.md).
 
 > 2026-11-18 / SCR-020: fleet table displays current lot/address/slot and parking/overtime status using paginated driver booking reads. Existing fleet actions and usage statuses are preserved. [Contract and parity](../05-modules/driver/vehicle-parking.md).
@@ -128,3 +132,8 @@ User-requested compact reservation payment variant: prominent real deposit/deadl
 ## Unpaid hold protection — 2026-11-15
 
 Server-owned vehicle/account quotas, verified unpaid-release cooldown and technical rate protection are surfaced in the reservation form with typed errors, original retry times and ticket links. Paid/review/refunded/partial/unknown evidence is not labelled as abuse. See [contract mapping](../05-modules/bookings/unpaid-hold-policy.md) and [verification](./unpaid-hold-policy-2026-11-15.md).
+
+
+## Booking time schedule — 2026-11-17
+
+The shared reservation flow in parking detail and quick booking now offers half-hour entry/duration, a server-backed daily/type/slot timeline and an explicit 30-minute turnaround gap. Exact-window availability replaces the current-capacity submit gate. Current full lots still expose future schedules; queue entry remains available separately. Fee/deposit/payment/QR/ownership/hold protection remain, with the approved new-booking no-early-entry policy. [Feature, API and acceptance mapping](../05-modules/bookings/schedule.md).

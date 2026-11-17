@@ -165,11 +165,7 @@ export function YardCardItem({
           type="button"
           onClick={(e) => {
             e.stopPropagation()
-            if (lot.isFull || lot.availableSlots === 0) {
-              onQueue?.(lot)
-            } else {
-              onQuickBook(lot)
-            }
+            onQuickBook(lot)
           }}
           className={`inline-flex h-9 items-center justify-center gap-1 rounded-lg px-2.5 text-xs font-bold transition-all shadow-xs active:scale-[0.99] cursor-pointer ${
             lot.isFull || lot.availableSlots === 0
@@ -178,7 +174,7 @@ export function YardCardItem({
           }`}
         >
           <span>
-            {lot.isFull || lot.availableSlots === 0 ? 'ĐỢI SLOT' : 'ĐẶT GIỮ CHỖ'}
+            {lot.isFull || lot.availableSlots === 0 ? 'XEM LỊCH TRỐNG' : 'ĐẶT GIỮ CHỖ'}
           </span>
           <ArrowUpRight size={14} />
         </button>
@@ -190,6 +186,7 @@ export function YardCardItem({
           Xem chi tiết
         </Link>
       </div>
+      {(lot.isFull || lot.availableSlots === 0) && onQueue && <button type="button" className="mt-2 w-full rounded-lg border border-brand-border p-2 text-xs font-semibold" onClick={event=>{event.stopPropagation();onQueue(lot)}}>Vào hàng đợi chỗ trống hiện tại</button>}
     </article>
   )
 }
