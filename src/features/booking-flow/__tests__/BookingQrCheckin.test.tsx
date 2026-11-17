@@ -5,6 +5,9 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { MemoryRouter } from 'react-router-dom'
 import { BookingStatusPanel } from '../BookingStatusPanel'
 import type { Booking } from '../api'
+import { apiClient } from '@/shared/api/client'
+
+vi.mock('@/shared/api/client', () => ({ apiClient: { get: vi.fn() } }))
 
 const samplePendingCheckinBooking: Booking = {
   id: 101,
@@ -32,7 +35,7 @@ const samplePendingPaymentBooking: Booking = {
   status: 'PENDING_PAYMENT',
 }
 
-function renderPanel(booking: Booking) {
+function renderPanel(booking: Booking, compact = false) {
   const queryClient = new QueryClient({
     defaultOptions: {
       queries: { retry: false },
@@ -43,7 +46,7 @@ function renderPanel(booking: Booking) {
   return render(
     <QueryClientProvider client={queryClient}>
       <MemoryRouter>
-        <BookingStatusPanel bookingId={booking.id} booking={booking} />
+        <BookingStatusPanel bookingId={booking.id} booking={booking} compact={compact} />
       </MemoryRouter>
     </QueryClientProvider>,
   )
@@ -52,6 +55,9 @@ function renderPanel(booking: Booking) {
 describe('BookingStatusPanel - QR Check-in Integration', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    vi.mocked(apiClient.get).mockImplementation(async url => ({ data: { data:
+      String(url).endsWith('/payments/wallet') ? null : { availableAmount: 0, heldAmount: 0, currency: 'VND', enabled: true },
+    } }))
   })
 
   it('renders dynamic QR check-in card and SVG when status is PENDING_CHECKIN', () => {
@@ -59,12 +65,12 @@ describe('BookingStatusPanel - QR Check-in Integration', () => {
     renderPanel(samplePendingCheckinBooking)
 
     // Assert
-    expect(screen.getByText(/Vé QR Check-in Mở Barie Tự Động/i)).toBeInTheDocument()
-    expect(screen.getByText(/ĐÃ XÁC NHẬN CỌC · SẴN SÀNG CHECK-IN/i)).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Vé check-in của bạn' })).toBeInTheDocument()
+    expect(screen.getByText('Đã xác nhận cọc')).toBeInTheDocument()
     expect(screen.getByTestId('checkin-qr-container')).toBeInTheDocument()
     expect(screen.getByLabelText(/Mã QR Check-in BK-CHECKIN-101/i)).toBeInTheDocument()
-    expect(screen.getByText(/MÃ: BK-CHECKIN-101/i)).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /Tải ảnh vé QR \(PNG Offline\)/i })).toBeInTheDocument()
+    expect(screen.getAllByText('BK-CHECKIN-101').length).toBeGreaterThan(0)
+    expect(screen.getByRole('button', { name: 'Tải ảnh vé QR (PNG)' })).toBeInTheDocument()
   })
 
   it('does not render QR check-in card when status is PENDING_PAYMENT', () => {
@@ -72,9 +78,28 @@ describe('BookingStatusPanel - QR Check-in Integration', () => {
     renderPanel(samplePendingPaymentBooking)
 
     // Assert
-    expect(screen.queryByText(/Vé QR Check-in Mở Barie Tự Động/i)).not.toBeInTheDocument()
+    expect(screen.queryByRole('heading', { name: 'Vé check-in của bạn' })).not.toBeInTheDocument()
     expect(screen.queryByTestId('checkin-qr-container')).not.toBeInTheDocument()
     expect(document.body.innerHTML).not.toContain(samplePendingPaymentBooking.bookingCode)
+  })
+
+  it('keeps the compact success ticket complete without repeating booking details or copy actions', () => {
+    renderPanel({ ...samplePendingCheckinBooking, bookingCode: 'BK33DA71C2A0C74D79A6C8FBD486F0F67A' }, true)
+    expect(screen.getAllByText('BK33DA71C2A0C74D79A6C8FBD486F0F67A')).toHaveLength(1)
+    expect(screen.getAllByText('51C-99999')).toHaveLength(1)
+    expect(screen.getAllByRole('button', { name: 'Sao chép mã check-in' })).toHaveLength(1)
+    expect(screen.getByText('Đã thanh toán cọc')).toBeInTheDocument()
+    expect(screen.getByText('Khung giờ check-in hợp lệ')).toBeInTheDocument()
+    expect(screen.getByText('Chi tiết giá & phụ phí')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Hủy booking' })).toBeInTheDocument()
+  })
+
+  it('shows a useful error when clipboard access fails', async () => {
+    const user = userEvent.setup()
+    Object.defineProperty(navigator, 'clipboard', { value: { writeText: vi.fn().mockRejectedValue(new Error('denied')) }, configurable: true })
+    renderPanel(samplePendingCheckinBooking, true)
+    await user.click(screen.getByRole('button', { name: 'Sao chép mã check-in' }))
+    expect(await screen.findByRole('alert')).toHaveTextContent('Không thể sao chép')
   })
 
   it('copies bookingCode to clipboard when copy button is clicked', async () => {

@@ -1,5 +1,14 @@
 # Inline Quick Booking & Server Reservation Integration
 
+## Cập nhật 2026-11-18 — bố cục thanh toán thoáng hơn
+
+Owner: SPH frontend. `last_verified`: 2026-11-18. Evidence: `QuickBookingPaymentSummary`, `BookingStatusPanel`, `WalletDepositPayment`, `e2e/quick-hold-redesign.spec.ts`.
+
+- Hộp thoại rộng tối đa 680px. Khi vùng nội dung đủ rộng, bãi/địa chỉ/xe và khung giờ nằm cạnh nhau; vùng hẹp tự xếp dọc. Địa chỉ hiển thị đầy đủ; giờ và ngày được tách dòng, giữ cả giây và múi giờ Việt Nam.
+- Thứ tự đọc: trạng thái/số đơn → bãi/xe/giờ → cọc/phí dự kiến/hạn trả → PayOS → ví → thông báo QR → các mục mở rộng. Bỏ khung viền lồng nhau; tiền cọc dùng nền cam nhạt. Các mục giá/phụ phí và tác vụ khác mặc định đóng, dùng được bằng bàn phím.
+- `WalletDepositPayment.compact` chỉ đổi cách trình bày. Giữ nguyên kiểm tra số dư, chặn thanh toán đồng thời, đối soát, retry và lỗi. Tiền cọc, hạn trả, quyền nhận QR, API và chính sách hủy vẫn do server quyết định.
+- [Ma trận chức năng, ảnh và kết quả kiểm tra](../../09-audit/quick-payment-layout-2026-11-18.md). Bộ kiểm thử toàn dự án còn một lỗi truy vấn mã vé trùng trên màn hình `/bookings` ở trạng thái `PENDING_CHECKIN`; đây không phải chế độ thanh toán gọn.
+
 ## Cập nhật 2026-11-15 — phiếu giữ chỗ gọn
 
 Owner: SPH frontend. `last_verified`: 2026-11-15. Evidence: `ReservationFlow`, `InlineQuickBookPanel`, `e2e/quick-hold-redesign.spec.ts`.
@@ -67,3 +76,11 @@ Owner: SPH frontend. `last_verified`: 2026-11-15. Evidence: `ReservationFlow`, `
 - Driver coverage now follows `PENDING_PAYMENT` → PayOS checkout → server sync → `PENDING_CHECKIN`. It verifies that no check-in QR exists before deposit confirmation, then checks the server booking code and QR. The lifecycle scenario continues through merchant check-in, check-out, and cash settlement.
 - SDK and checkout fixtures are shared with the embedded-checkout tests. All payment requests are intercepted; these scenarios do not transfer money.
 - The old pre-submit 10-minute timer, client-generated `BK-HOLD` code, and immediate-success screen belong to the superseded local-only implementation and are no longer E2E acceptance criteria.
+
+## 5. Vé sau khi thanh toán ví và lỗi trùng lịch xe (2026-11-18)
+
+- `BookingCheckinTicket` hiển thị khi server xác nhận `PENDING_CHECKIN`: trạng thái đã cọc, bãi/biển số, QR và mã vé nguyên gốc, khung check-in, giờ dự kiến và khoản cọc. Nội dung một cột vừa hộp thoại hẹp trên màn hình desktop; nút thao tác dùng container query theo chiều rộng thẻ.
+- Chế độ `compact` tiếp tục áp dụng sau khi trả bằng ví. Không lặp lại mã vé, thông tin tiền, QR hoặc nút sao chép bên dưới thẻ. Chi tiết giá/phụ phí và tác vụ hủy/xem booking vẫn truy cập được qua phần mở rộng.
+- Sao chép và tải PNG có phản hồi lỗi; QR chỉ xuất hiện từ trạng thái booking server, không suy từ kết quả POST ví. Trạng thái chờ xác nhận và PayOS được giữ nguyên.
+- Khi backend trả `409 CONFLICT` do cùng xe trùng lịch, form vẫn giữ phương tiện/giờ và cho chỉnh lại, không mở thanh toán hay báo thành công. Booking nối tiếp đúng giờ ra/vào vẫn được backend cho phép.
+- Kiểm thử component gồm chuyển từ trả ví sang vé xác nhận, mã dài, một nút sao chép, lỗi clipboard và lỗi trùng lịch. `e2e/wallet-booking-success.spec.ts` kiểm tra cả luồng ví với API fixtures ở 390/650/1440px, không tràn ngang, QR căn giữa, tải PNG và đúng một POST ví. Các giao dịch trong E2E được mô phỏng, không chuyển tiền thật.
