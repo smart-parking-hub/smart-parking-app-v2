@@ -1,4 +1,4 @@
-// Pure map primitives & Google Maps URL helpers (zero SDK dependency)
+// Pure map primitives & Google Maps URL helpers (zero paid API / SDK dependency)
 export {
   formatCoordinate,
   fromLatLng,
@@ -42,27 +42,3 @@ export {
 } from './shareEmbed'
 
 export { LeafletMapView, type LeafletMapViewProps } from './LeafletMapView'
-
-// Temporary Google SDK re-exports kept only until P3 finishes removing Google SDK callers
-export {
-  DEMO_GOOGLE_MAPS_MAP_ID,
-  GOOGLE_MAPS_COUNTRY_CODES,
-  GOOGLE_MAPS_LANGUAGE,
-  GOOGLE_MAPS_REGION,
-  GoogleMapsError,
-  getGoogleMapsConfig,
-  isGoogleMapsConfigured,
-  type GoogleMapsErrorCode,
-  type GoogleMapsRuntimeConfig,
-} from './config'
-
-export {
-  hasGoogleMapsAuthFailed,
-  loadGoogleMapsCore,
-  loadGoogleMapsLibrary,
-  resetGoogleMapsLoaderForTests,
-  subscribeGoogleMapsAuthFailure,
-  type GoogleMapsLibraryName,
-} from './loader'
-
-export { GoogleMapView, type GoogleMapViewProps } from './GoogleMapView'

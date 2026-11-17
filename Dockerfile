@@ -12,17 +12,19 @@ RUN npm ci
 # Copy entire frontend source code
 COPY . .
 
-# Vite injects VITE_* variables at build time
+# Vite injects VITE_* defaults at build time (map endpoints can also be overridden via /map-config.json)
 ARG VITE_API_BASE_URL=/api
 ARG VITE_APP_ENV=production
-ARG VITE_GOOGLE_MAPS_API_KEY=
-ARG VITE_GOOGLE_MAPS_MAP_ID=
+ARG VITE_MAP_TILE_URL=https://tile.openstreetmap.org/{z}/{x}/{y}.png
+ARG VITE_MAP_PHOTON_URL=https://photon.komoot.io/api/
+ARG VITE_MAP_GEOCODER_ENABLED=true
 ARG VITE_APP_KEY=
 
 ENV VITE_API_BASE_URL=$VITE_API_BASE_URL \
     VITE_APP_ENV=$VITE_APP_ENV \
-    VITE_GOOGLE_MAPS_API_KEY=$VITE_GOOGLE_MAPS_API_KEY \
-    VITE_GOOGLE_MAPS_MAP_ID=$VITE_GOOGLE_MAPS_MAP_ID \
+    VITE_MAP_TILE_URL=$VITE_MAP_TILE_URL \
+    VITE_MAP_PHOTON_URL=$VITE_MAP_PHOTON_URL \
+    VITE_MAP_GEOCODER_ENABLED=$VITE_MAP_GEOCODER_ENABLED \
     VITE_APP_KEY=$VITE_APP_KEY
 
 # Run production build via Vite + TypeScript compiler

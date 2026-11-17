@@ -1,24 +1,14 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { render, screen, waitFor } from '@testing-library/react'
-import * as jsApiLoader from '@googlemaps/js-api-loader'
+import { describe, expect, it } from 'vitest'
 import {
   buildGoogleMapsDirectionsUrl,
   buildGoogleMapsSearchUrl,
   formatCoordinate,
   fromLatLng,
-  GoogleMapsError,
-  GoogleMapView,
   isValidCoordinates,
-  loadGoogleMapsLibrary,
-  resetGoogleMapsLoaderForTests,
   roundCoordinate,
   toLatLngLiteral,
+  toLatLngTuple,
 } from '../index'
-
-vi.mock('@googlemaps/js-api-loader', () => ({
-  setOptions: vi.fn(),
-  importLibrary: vi.fn(),
-}))
 
 describe('shared/maps coordinates helpers', () => {
   it('validates coordinate ranges and rejects invalid or null-island values', () => {
@@ -31,7 +21,8 @@ describe('shared/maps coordinates helpers', () => {
     expect(isValidCoordinates(undefined)).toBe(false)
   })
 
-  it('converts between Coordinates and Google LatLng shapes safely', () => {
+  it('converts between Coordinates, tuples, and LatLng shapes safely', () => {
+    expect(toLatLngTuple({ latitude: 10.77, longitude: 106.7 })).toEqual([10.77, 106.7])
     expect(toLatLngLiteral({ latitude: 10.77, longitude: 106.7 })).toEqual({
       lat: 10.77,
       lng: 106.7,
@@ -49,7 +40,7 @@ describe('shared/maps coordinates helpers', () => {
   })
 })
 
-describe('shared/maps URL helpers', () => {
+describe('shared/maps Google Maps URL helpers (no API key required)', () => {
   it('builds official Google Maps Search URLs preferring valid coordinates', () => {
     expect(
       buildGoogleMapsSearchUrl({
@@ -70,13 +61,21 @@ describe('shared/maps URL helpers', () => {
     expect(buildGoogleMapsSearchUrl({})).toBeNull()
   })
 
-  it('builds official Google Maps Directions URLs with driving travelmode', () => {
+  it('builds official Google Maps Directions URLs with driving travelmode and optional origin', () => {
     const withCoords = buildGoogleMapsDirectionsUrl({
       destination: { latitude: 10.7712, longitude: 106.7865 },
       destinationAddress: 'Cảng Cát Lái',
     })
     expect(withCoords).toBe(
       'https://www.google.com/maps/dir/?api=1&destination=10.7712%2C106.7865&travelmode=driving',
+    )
+
+    const withOrigin = buildGoogleMapsDirectionsUrl({
+      destination: { latitude: 10.7712, longitude: 106.7865 },
+      origin: { latitude: 10.77, longitude: 106.66 },
+    })
+    expect(withOrigin).toBe(
+      'https://www.google.com/maps/dir/?api=1&destination=10.7712%2C106.7865&travelmode=driving&origin=10.77%2C106.66',
     )
 
     const withAddressFallback = buildGoogleMapsDirectionsUrl({
@@ -86,114 +85,5 @@ describe('shared/maps URL helpers', () => {
     expect(withAddressFallback).toContain('api=1')
     expect(withAddressFallback).toContain('travelmode=driving')
     expect(withAddressFallback).toContain('destination=789')
-  })
-})
-
-describe('shared/maps loader & GoogleMapView', () => {
-  beforeEach(() => {
-    resetGoogleMapsLoaderForTests()
-    vi.clearAllMocks()
-  })
-
-  afterEach(() => {
-    vi.unstubAllEnvs()
-  })
-
-  it('throws MISSING_API_KEY when VITE_GOOGLE_MAPS_API_KEY is not set', async () => {
-    vi.stubEnv('VITE_GOOGLE_MAPS_API_KEY', '')
-
-    await expect(loadGoogleMapsLibrary('maps')).rejects.toMatchObject({
-      name: 'GoogleMapsError',
-      code: 'MISSING_API_KEY',
-    } satisfies Partial<GoogleMapsError>)
-  })
-
-  it('configures loader once and caches loaded libraries', async () => {
-    vi.stubEnv('VITE_GOOGLE_MAPS_API_KEY', 'test-api-key')
-    vi.stubEnv('VITE_GOOGLE_MAPS_MAP_ID', 'map-id-123')
-    const mapsLib = { Map: vi.fn() }
-    vi.mocked(jsApiLoader.importLibrary).mockResolvedValue(mapsLib as never)
-
-    const first = await loadGoogleMapsLibrary('maps')
-    const second = await loadGoogleMapsLibrary('maps')
-
-    expect(first).toBe(mapsLib)
-    expect(second).toBe(mapsLib)
-    expect(jsApiLoader.setOptions).toHaveBeenCalledTimes(1)
-    expect(jsApiLoader.setOptions).toHaveBeenCalledWith(
-      expect.objectContaining({
-        key: 'test-api-key',
-        language: 'vi',
-        region: 'VN',
-        mapIds: ['map-id-123'],
-      }),
-    )
-    expect(jsApiLoader.importLibrary).toHaveBeenCalledTimes(1)
-  })
-
-  it('evicts rejected library promise so subsequent retries can succeed', async () => {
-    vi.stubEnv('VITE_GOOGLE_MAPS_API_KEY', 'test-api-key')
-    const mapsLib = { Map: vi.fn() }
-    vi.mocked(jsApiLoader.importLibrary)
-      .mockRejectedValueOnce(new Error('network down'))
-      .mockResolvedValueOnce(mapsLib as never)
-
-    await expect(loadGoogleMapsLibrary('maps')).rejects.toMatchObject({
-      code: 'SDK_LOAD_ERROR',
-    })
-    await expect(loadGoogleMapsLibrary('maps')).resolves.toBe(mapsLib)
-  })
-
-  it('renders missing-coordinates state when coordinates are absent or invalid', () => {
-    render(<GoogleMapView coordinates={null} markerTitle="Bãi chưa có tọa độ" />)
-    expect(screen.getByText(/Chưa có tọa độ vị trí hợp lệ/i)).toBeInTheDocument()
-  })
-
-  it('renders error fallback with external Google Maps link when API key is missing', async () => {
-    vi.stubEnv('VITE_GOOGLE_MAPS_API_KEY', '')
-    render(
-      <GoogleMapView
-        coordinates={{ latitude: 10.7712, longitude: 106.7865 }}
-        markerTitle="Bãi Cát Lái"
-      />,
-    )
-
-    expect(await screen.findByRole('alert')).toHaveTextContent(
-      /VITE_GOOGLE_MAPS_API_KEY/i,
-    )
-    const link = screen.getByRole('link', { name: /Mở trên Google Maps/i })
-    expect(link).toHaveAttribute(
-      'href',
-      'https://www.google.com/maps/search/?api=1&query=10.7712%2C106.7865',
-    )
-  })
-
-  it('mounts Google Map and AdvancedMarkerElement cleanly and cleans up on unmount', async () => {
-    vi.stubEnv('VITE_GOOGLE_MAPS_API_KEY', 'test-api-key')
-    const mapInstance = { setCenter: vi.fn() }
-    const MapCtor = vi.fn(() => mapInstance)
-    const markerInstance: { map: unknown } = { map: mapInstance }
-    const AdvancedMarkerCtor = vi.fn(() => markerInstance)
-
-    vi.mocked(jsApiLoader.importLibrary).mockImplementation((async (name: string) => {
-      if (name === 'maps') return { Map: MapCtor }
-      if (name === 'marker') return { AdvancedMarkerElement: AdvancedMarkerCtor }
-      return {}
-    }) as never)
-
-    const { unmount } = render(
-      <GoogleMapView
-        coordinates={{ latitude: 10.7712, longitude: 106.7865 }}
-        markerTitle="Bãi Cát Lái"
-      />,
-    )
-
-    await waitFor(() => {
-      expect(MapCtor).toHaveBeenCalledTimes(1)
-      expect(AdvancedMarkerCtor).toHaveBeenCalledTimes(1)
-    })
-
-    unmount()
-    expect(markerInstance.map).toBeNull()
   })
 })
