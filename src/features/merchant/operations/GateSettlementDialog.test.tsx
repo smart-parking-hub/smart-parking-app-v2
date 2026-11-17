@@ -6,6 +6,31 @@ import { GateSettlementDialog } from './GateSettlementDialog'
 import type { Settlement } from '@/entities/operations'
 
 vi.mock('@/shared/api/resources', async original => ({ ...await original<typeof import('@/shared/api/resources')>(), getData: vi.fn(), sendData: vi.fn() }))
+interface MockPayOsConfig {
+  ELEMENT_ID?: string
+  CHECKOUT_URL?: string
+  onSuccess?: (event?: unknown) => void
+  onCancel?: (event?: unknown) => void
+  onExit?: () => void
+}
+let payosConfig: MockPayOsConfig | undefined
+vi.mock('@/features/booking-flow/payosCheckout', async original => ({
+  ...await original<typeof import('@/features/booking-flow/payosCheckout')>(),
+  loadPayOS: vi.fn(async () => ({
+    usePayOS: (config: MockPayOsConfig) => {
+      payosConfig = config
+      return {
+        open: () => {
+          const frame = document.createElement('iframe')
+          if (config.ELEMENT_ID) {
+            document.getElementById(config.ELEMENT_ID)?.appendChild(frame)
+          }
+        },
+        exit: vi.fn(),
+      }
+    },
+  })),
+}))
 const get = vi.mocked(getData)
 const send = vi.mocked(sendData)
 const settlement: Settlement = { bookingId: 41, bookingCode: 'BK-41', totalAmount: 40000, advanceDeposit: 8000, amountDue: 32000, parkingMinutes: 60, bookingStatus: 'AWAITING_FINAL_PAYMENT' }
@@ -22,14 +47,18 @@ function mount(onComplete = vi.fn()) {
 }
 describe('Gate final payment confirmation', () => {
   it('keeps the bill unpaid until server confirmation and observes PayOS completion', async () => {
+    send.mockResolvedValueOnce('https://pay.payos.vn/web/test-checkout-41')
     const { onComplete } = mount()
     await waitFor(() => expect(get).toHaveBeenCalledTimes(1))
     expect(onComplete).not.toHaveBeenCalled()
     expect(screen.getByText(/32\.000/)).toBeInTheDocument()
+    const qrBtn = await screen.findByRole('button', { name: 'Thanh toán bằng QR' })
+    fireEvent.click(qrBtn)
+    await waitFor(() => expect(send).toHaveBeenCalledWith('post', '/api/v1/payments/gate/final-link', { bookingId: 41 }))
+    await waitFor(() => expect(payosConfig).toBeDefined())
     get.mockResolvedValueOnce({ ...booking, status: 'COMPLETED', finalPaymentMethod: 'PAYOS' })
-    fireEvent.click(await screen.findByRole('button', { name: 'Kiểm tra thanh toán' }))
+    await act(async () => { payosConfig?.onSuccess?.() })
     await waitFor(() => expect(onComplete).toHaveBeenCalledWith(expect.objectContaining({ amountDue: 0, bookingStatus: 'COMPLETED', finalPaymentMethod: 'PAYOS' })))
-    expect(send).not.toHaveBeenCalled()
   })
   it('sends exactly the outstanding amount and completes only after cash acknowledgement', async () => {
     let resolve!: () => void
