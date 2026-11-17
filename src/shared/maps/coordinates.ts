@@ -3,14 +3,17 @@ export interface Coordinates {
   longitude: number
 }
 
-export type LatLngInput =
-  | google.maps.LatLng
-  | google.maps.LatLngLiteral
-  | google.maps.LatLngAltitude
-  | {
-      lat: number | (() => number)
-      lng: number | (() => number)
-    }
+export type LatLngTuple = [number, number]
+
+export interface LatLngLike {
+  lat: number | (() => number)
+  lng: number | (() => number)
+}
+
+export interface LatLngLiteral {
+  lat: number
+  lng: number
+}
 
 /**
  * Validates geographic coordinates.
@@ -28,14 +31,18 @@ export function isValidCoordinates(
   return true
 }
 
-export function toLatLngLiteral(point: Coordinates): google.maps.LatLngLiteral {
+export function toLatLngTuple(point: Coordinates): LatLngTuple {
+  return [point.latitude, point.longitude]
+}
+
+export function toLatLngLiteral(point: Coordinates): LatLngLiteral {
   return {
     lat: point.latitude,
     lng: point.longitude,
   }
 }
 
-export function fromLatLng(point: LatLngInput): Coordinates {
+export function fromLatLng(point: LatLngLike): Coordinates {
   const lat = typeof point.lat === 'function' ? point.lat() : point.lat
   const lng = typeof point.lng === 'function' ? point.lng() : point.lng
   return {

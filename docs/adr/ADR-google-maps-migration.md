@@ -1,7 +1,7 @@
 # ADR: Chuyển đổi bản đồ Frontend v2 sang Google Maps Platform
 
 - **Ngày:** 17/11/2026
-- **Trạng thái:** Đã phê duyệt & Đang triển khai
+- **Trạng thái:** Đã bị thay thế bởi [ADR-hybrid-map-no-billing.md](./ADR-hybrid-map-no-billing.md) (giữ lại làm lịch sử tham chiếu)
 - **Phạm vi:** `smart-parking-app-v2` (Frontend v2). Frontend legacy (`smart-parking-app`) được giữ làm tham chiếu.
 
 ## Bối cảnh
