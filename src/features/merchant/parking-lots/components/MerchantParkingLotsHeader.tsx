@@ -43,8 +43,8 @@ export function MerchantParkingLotsHeader({ onOpenExportModal, exportDisabled }:
             onClick={() => navigate('/merchant/parking-lots/new')}
             className="flex items-center gap-2 px-5 py-2.5 bg-[#d95f00] hover:bg-[#b84e00] text-white transition-all text-xs lg:text-sm font-bold rounded-xl shadow-xs cursor-pointer"
           >
-            <PlusCircle className="w-4 h-4 text-white" />
-            <span>+ ĐĂNG KÝ BÃI ĐỖ MỚI</span>
+            <PlusCircle className="w-4 h-4 text-white" aria-hidden="true" />
+            <span>ĐĂNG KÝ BÃI ĐỖ MỚI</span>
           </button>
         </div>
       </div>
