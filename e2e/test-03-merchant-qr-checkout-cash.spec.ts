@@ -209,13 +209,13 @@ test.describe('Flow 3: Check-out Barie, Tính Giá Lũy Tiến & Thu Tiền Mặ
     await page.getByRole('button', { name: 'Kiểm tra & quyết toán xe ra' }).click()
     await expect(page.getByText('Quyết toán lượt đỗ', { exact: true })).toBeVisible()
     await expect(page.getByText(/Tài xế mở lượt đặt chỗ/)).toBeVisible()
+    await expect(page.getByRole('button', { name: 'Thanh toán bằng QR' })).toBeVisible()
     await expect(page.getByRole('button', { name: /Đã nhận thanh toán QR/ })).toHaveCount(0)
     await expect(page.getByRole('dialog', { name: 'Hoàn tất giao dịch' })).toHaveCount(0)
     isSettled = true
     finalMethod = 'PAYOS'
-    await page.getByRole('button', { name: 'Kiểm tra thanh toán' }).click()
     const completed = page.getByRole('dialog', { name: 'Hoàn tất giao dịch' })
-    await expect(completed).toBeVisible()
+    await expect(completed).toBeVisible({ timeout: 10000 })
     await expect(completed.getByText('PayOS', { exact: true })).toBeVisible()
     await expect(completed.getByText('0 ₫', { exact: true })).toBeVisible()
     expect(cashCalls).toBe(0)

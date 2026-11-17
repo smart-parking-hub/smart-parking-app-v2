@@ -6,16 +6,25 @@ import { GateSettlementDialog } from './GateSettlementDialog'
 import type { Settlement } from '@/entities/operations'
 
 vi.mock('@/shared/api/resources', async original => ({ ...await original<typeof import('@/shared/api/resources')>(), getData: vi.fn(), sendData: vi.fn() }))
-let payosConfig: any
+interface MockPayOsConfig {
+  ELEMENT_ID?: string
+  CHECKOUT_URL?: string
+  onSuccess?: (event: unknown) => void
+  onCancel?: (event: unknown) => void
+  onExit?: () => void
+}
+let payosConfig: MockPayOsConfig | undefined
 vi.mock('@/features/booking-flow/payosCheckout', async original => ({
   ...await original<typeof import('@/features/booking-flow/payosCheckout')>(),
   loadPayOS: vi.fn(async () => ({
-    usePayOS: (config: any) => {
+    usePayOS: (config: MockPayOsConfig) => {
       payosConfig = config
       return {
         open: () => {
           const frame = document.createElement('iframe')
-          document.getElementById(config.ELEMENT_ID)?.appendChild(frame)
+          if (config.ELEMENT_ID) {
+            document.getElementById(config.ELEMENT_ID)?.appendChild(frame)
+          }
         },
         exit: vi.fn(),
       }
