@@ -1,6 +1,6 @@
 import { useRef, useState, useSyncExternalStore } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { SESSION_EVENT } from '@/features/auth'
+import { getToken, SESSION_EVENT } from '@/features/auth'
 import {
   getAdminNotifications,
   getAdminUnreadCount,
@@ -12,7 +12,7 @@ import {
 let previousToken: string | null | undefined
 let sessionRevision = 0
 function getSessionRevision() {
-  const token = localStorage.getItem('access_token')
+  const token = getToken()
   if (token !== previousToken) {
     previousToken = token
     sessionRevision += 1
