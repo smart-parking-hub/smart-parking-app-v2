@@ -11,7 +11,7 @@ export { QrCheckoutModal } from './components/QrCheckoutModal'
 export { DashboardSkeleton } from './components/DashboardSkeleton'
 export { DashboardEmptyState } from './components/DashboardEmptyState'
 
-export { fetchDriverDashboardData, fallbackDashboardData } from './api/driverApi'
+export { fetchDriverDashboardData } from './api/driverApi'
 export { useDriverDashboardStore } from './store/driverDashboardStore'
 export * from './types/driverTypes'
 

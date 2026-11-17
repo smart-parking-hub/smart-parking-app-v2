@@ -22,7 +22,7 @@ it('shows real vehicle and configured tariff, 20% deposit, 15 minute hold and 30
 })
 it('creates a server booking before offering payment and never invents a check-in status',async()=>{
  const user=userEvent.setup();mount();await screen.findByRole('button',{name:'Tạo booking và xem tiền cọc'});await user.click(screen.getByRole('button',{name:'Tạo booking và xem tiền cọc'}));
- expect(await screen.findByText('BK-SERVER-41')).toBeInTheDocument();expect(screen.getByText('Chờ thanh toán cọc')).toBeInTheDocument();expect(apiClient.post).toHaveBeenCalledWith('/api/v1/bookings',expect.objectContaining({vehicleId:3,parkingLotId:7,vehicleType:'HEAVY_TRUCK',requestId:expect.any(String)}));expect(vi.mocked(apiClient.post).mock.calls[0][1]).not.toHaveProperty('amount');expect(vi.mocked(apiClient.post).mock.calls[0][1]).not.toHaveProperty('merchantId');
+ expect(await screen.findByText('#41')).toBeInTheDocument();expect(screen.getByText('Chờ thanh toán cọc')).toBeInTheDocument();expect(apiClient.post).toHaveBeenCalledWith('/api/v1/bookings',expect.objectContaining({vehicleId:3,parkingLotId:7,vehicleType:'HEAVY_TRUCK',requestId:expect.any(String)}));expect(vi.mocked(apiClient.post).mock.calls[0][1]).not.toHaveProperty('amount');expect(vi.mocked(apiClient.post).mock.calls[0][1]).not.toHaveProperty('merchantId');
  await user.click(screen.getByRole('button',{name:'Thanh toán Demo (chỉ local)'}));expect(await screen.findByText('Đã cọc · Chờ check-in')).toBeInTheDocument();expect(screen.queryByText('Đang đỗ tại bãi')).not.toBeInTheDocument()
 })
 it('requires a registered active vehicle',async()=>{
@@ -44,5 +44,5 @@ it('keeps a cooldown submit disabled and preserves the form without opening paym
  expect(screen.getByRole('combobox')).toHaveValue('3');expect(screen.queryByText(/Mở PayOS/)).not.toBeInTheDocument()
 })
 it('does not treat simulated=true or return navigation as payment confirmation',async()=>{
- mount(<PaymentResultPage/>,'/payment/return?bookingId=41&simulated=true');await screen.findByText('BK-SERVER-41');await waitFor(()=>expect(apiClient.post).toHaveBeenCalledWith('/api/v1/payments/sync',{bookingId:41}));expect(vi.mocked(apiClient.post).mock.calls.some(([url])=>String(url).includes('demo-confirm'))).toBe(false);expect(screen.getByText('Chờ thanh toán cọc')).toBeInTheDocument()
+ mount(<PaymentResultPage/>,'/payment/return?bookingId=41&simulated=true');await screen.findByText('#41');await waitFor(()=>expect(apiClient.post).toHaveBeenCalledWith('/api/v1/payments/sync',{bookingId:41}));expect(vi.mocked(apiClient.post).mock.calls.some(([url])=>String(url).includes('demo-confirm'))).toBe(false);expect(screen.getByText('Chờ thanh toán cọc')).toBeInTheDocument()
 })

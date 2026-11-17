@@ -22,6 +22,7 @@ export interface BadgeProps extends React.HTMLAttributes<HTMLSpanElement> {
 const statusDictionary: Record<string, string> = {
   PENDING: 'Chờ xử lý',
   PENDING_APPROVAL: 'Chờ duyệt',
+  CHANGES_REQUESTED: 'Cần bổ sung hồ sơ',
   APPROVED: 'Đã duyệt',
   REJECTED: 'Từ chối',
   SUSPENDED: 'Tạm dừng',
@@ -69,7 +70,7 @@ export function Badge({
         resolvedVariant = 'danger'
       } else if (/IN_REVIEW|REVIEWED|PARKING/.test(text)) {
         resolvedVariant = 'info'
-      } else if (/PENDING|AWAITING|OPEN|HOLD|WAITING/.test(text)) {
+      } else if (/PENDING|AWAITING|OPEN|HOLD|WAITING|CHANGES_REQUESTED/.test(text)) {
         resolvedVariant = 'warning'
       } else {
         resolvedVariant = 'default'

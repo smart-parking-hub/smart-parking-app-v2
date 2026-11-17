@@ -51,7 +51,7 @@ describe('server-driven recovery states', () => {
 it('shows real booking details and a server-approved retry without demo blocks', async () => {
   mount()
   expect(await screen.findByRole('heading', {name: 'Thanh toán chưa hoàn tất'})).toBeInTheDocument()
-  expect(screen.getByText('BK-REAL-239')).toBeInTheDocument()
+  expect(screen.getByText('#239')).toBeInTheDocument()
   expect(screen.getByRole('button', {name: /Thanh toán lại 4.000/})).toBeInTheDocument()
   expect(screen.getByRole('link', {name: 'Về vé của tôi'})).toHaveAttribute('href', '/bookings?bookingId=239')
   expect(screen.queryByText(/C-114|PAYOS-CAN|chưa bị trừ tiền|SANDBOX/)).not.toBeInTheDocument()
@@ -68,7 +68,7 @@ it('renders a sync error with real ticket details and no additional payment acti
   vi.mocked(apiClient.request).mockRejectedValue(new Error('PayOS chưa phản hồi'))
   mount()
   expect(await screen.findByRole('alert')).toHaveTextContent('PayOS chưa phản hồi')
-  expect(screen.getByText('BK-REAL-239')).toBeInTheDocument()
+  expect(screen.getByText('#239')).toBeInTheDocument()
   expect(screen.queryByRole('button', {name: /Thanh toán lại/})).not.toBeInTheDocument()
 })
 it('never invents ticket data on forbidden/not-found response', async () => {

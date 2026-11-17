@@ -52,7 +52,9 @@ describe('SCR-010 user journey', () => {
     expect(request).toHaveBeenCalledWith(expect.objectContaining({ url: '/api/v1/auth/login', data: { phone: '0909128374', password: 'test-only-password' } }))
     expect(localStorage.getItem('access_token')).toBe(jwt)
     expect(localStorage.getItem('remembered_phone')).toBe('0909128374')
-    expect(await screen.findByRole('status')).toHaveTextContent('Đăng nhập thành công.')
+    expect(await screen.findByRole('alert')).toHaveTextContent('Đăng nhập thành công.')
+    expect(screen.queryByRole('dialog', { name: 'Đăng nhập thành công' })).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Đóng thông báo' })).toHaveTextContent('')
     await waitFor(() => {
       expect(screen.getByTestId('location')).toHaveTextContent(role === 'DRIVER' ? '/dashboard' : `/${role.toLowerCase()}/dashboard`)
     })

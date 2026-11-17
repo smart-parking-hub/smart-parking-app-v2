@@ -72,15 +72,16 @@ afterEach(() => {
 })
 
 describe('PayOS embedded checkout', () => {
-  it('keeps the compact deposit summary server-owned and copies the full long code', async () => {
+  it('keeps server amounts and copies the order ID without exposing the check-in code before deposit', async () => {
     const user = userEvent.setup()
     const writeText = vi.spyOn(navigator.clipboard, 'writeText').mockResolvedValue(undefined)
     current = { ...initial, bookingCode: 'BK3A88B84B500F46489E20958D0E7BB609', advanceDeposit: 258240, totalAmount: 1291200 }
     mount(undefined, true)
     expect(await screen.findByText('Tiền cọc cần thanh toán')).toBeInTheDocument()
     expect(within(screen.getByRole('region', { name: 'Thông tin vé chờ thanh toán' })).getByText(/258\.240/)).toBeInTheDocument()
-    await user.click(screen.getByRole('button', { name: 'Sao chép mã đặt chỗ' }))
-    expect(writeText).toHaveBeenCalledWith(current.bookingCode)
+    expect(document.body.innerHTML).not.toContain(current.bookingCode)
+    await user.click(screen.getByRole('button', { name: 'Sao chép số đơn' }))
+    expect(writeText).toHaveBeenCalledWith('#51')
     expect(screen.getByText('Tác vụ khác')).toBeInTheDocument()
     expect(screen.queryByTestId('checkin-qr-container')).not.toBeInTheDocument()
   })
@@ -143,7 +144,7 @@ describe('PayOS embedded checkout', () => {
   })
   it('loads only on demand and uses the server link, with a hosted fallback and cleanup', async () => {
     mount()
-    await screen.findByText('BK-SERVER-51')
+    await screen.findByText('#51')
     expect(loadPayOS).not.toHaveBeenCalled()
     const user = await openCheckout()
     expect(screen.getByTitle('Mã QR thanh toán PayOS')).toHaveAttribute('src', checkoutUrl)

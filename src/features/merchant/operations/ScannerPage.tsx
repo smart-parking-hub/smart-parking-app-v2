@@ -2,7 +2,8 @@ import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useForm } from 'react-hook-form'
 import { useSearchParams } from 'react-router-dom'
-import { Camera, CheckCircle2, Loader2, ScanLine, ShieldCheck, SwitchCamera, Zap } from 'lucide-react'
+import { Camera, Loader2, ScanLine, ShieldCheck, SwitchCamera, Zap } from 'lucide-react'
+import { NotificationDialog } from '@/shared/components/NotificationDialog'
 import type { Lot, Settlement } from '@/entities/operations'
 import {
   getData,
@@ -113,6 +114,7 @@ export function MerchantScannerPage() {
       void cache.invalidateQueries({ queryKey: ['real-bookings'] })
       void cache.invalidateQueries({ queryKey: ['booking'] })
     },
+    onError: () => setCamera(false),
     onSettled: () => { scanPending.current = false },
   })
 
@@ -417,21 +419,18 @@ export function MerchantScannerPage() {
         </Panel>
       </div>
 
-      {cameraError && <Notice error>{cameraError}</Notice>}
-      {scan.isError && <Notice error>{errorMessage(scan.error)}</Notice>}
-      {success && <Notice>{success}</Notice>}
+      {cameraError && <NotificationDialog title="Không thể bật camera" message={cameraError} variant="error" onClose={() => setCameraError('')} actionLabel="Đã hiểu" />}
+      {scan.isError && <NotificationDialog title={mode === 'check-in' ? 'Chưa thể cho xe vào bãi' : 'Chưa thể cho xe ra bãi'} message={errorMessage(scan.error)} variant="warning" onClose={() => scan.reset()} onAfterClose={() => form.setFocus('bookingCode')} actionLabel="Đã hiểu" />}
+      {success && !completedSettlement && !scan.data && <NotificationDialog title="Đã cập nhật lượt xe" message={success} onClose={() => setSuccess('')} />}
 
       {confirmedCheckIn && (
-        <Dialog
+        <NotificationDialog
           title="Xác nhận xe vào thành công"
-          maxWidth="sm"
+          message="Xe đã được ghi nhận vào bãi."
           onClose={() => setConfirmedCheckIn(null)}
+          actionLabel="Đã hiểu"
         >
           <div className="space-y-5 text-center">
-            <CheckCircle2 className="mx-auto h-14 w-14 text-emerald-600" aria-hidden="true" />
-            <p role="status" className="font-semibold text-brand-navy">
-              Xe đã được ghi nhận vào bãi.
-            </p>
             <div className="rounded-xl bg-brand-surface p-4">
               <p className="text-sm text-brand-muted">Mã đặt chỗ</p>
               <p className="mt-2 break-all font-mono font-semibold text-brand-navy">
@@ -439,25 +438,17 @@ export function MerchantScannerPage() {
               </p>
             </div>
             <p className="text-sm text-brand-muted">Chọn XE RA khi cần check-out.</p>
-            <button
-              type="button"
-              className={`${button} w-full`}
-              onClick={() => setConfirmedCheckIn(null)}
-            >
-              Đã hiểu
-            </button>
           </div>
-        </Dialog>
+        </NotificationDialog>
       )}
 
       {completedSettlement && (
-        <Dialog title="Hoàn tất giao dịch" onClose={() => {
+        <NotificationDialog title="Hoàn tất giao dịch" message="Đã hoàn tất checkout và trả chỗ." onClose={() => {
           setCompletedSettlement(null)
+          setSuccess('')
           scan.reset()
         }}>
           <div className="space-y-5 text-center">
-            <CheckCircle2 className="mx-auto h-14 w-14 text-emerald-600" aria-hidden="true" />
-            <p role="status" className="font-semibold text-brand-navy">Đã hoàn tất checkout và trả chỗ.</p>
             <dl className="space-y-3 text-left">
               {[
                 ['Mã đặt chỗ', completedSettlement.bookingCode],
@@ -473,11 +464,12 @@ export function MerchantScannerPage() {
             </dl>
             <button type="button" className={`${button} w-full`} onClick={() => {
               setCompletedSettlement(null)
+              setSuccess('')
               scan.reset()
               form.setValue('bookingCode', '')
             }}>Hoàn tất</button>
           </div>
-        </Dialog>
+        </NotificationDialog>
       )}
 
       {scan.data && mode === 'check-out' && !completedSettlement && (

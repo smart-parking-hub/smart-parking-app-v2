@@ -34,11 +34,11 @@ export function MerchantParkingLotsFilterBar({
 }: MerchantParkingLotsFilterBarProps) {
   const statusOptions: SelectOption[] = [
     { value: 'ALL', label: `Tất cả trạng thái (${totalResults})` },
-    { value: 'APPROVED', label: 'Đã phê duyệt (APPROVED)' },
-    { value: 'PENDING_APPROVAL', label: 'Đang chờ duyệt (PENDING_APPROVAL)' },
-    { value: 'CHANGES_REQUESTED', label: 'Cần bổ sung (CHANGES_REQUESTED)' },
-    { value: 'SUSPENDED', label: 'Tạm dừng (SUSPENDED)' },
-    { value: 'REJECTED', label: 'Bị từ chối (REJECTED)' },
+    { value: 'APPROVED', label: 'Đã phê duyệt' },
+    { value: 'PENDING_APPROVAL', label: 'Đang chờ duyệt' },
+    { value: 'CHANGES_REQUESTED', label: 'Cần bổ sung hồ sơ' },
+    { value: 'SUSPENDED', label: 'Tạm dừng' },
+    { value: 'REJECTED', label: 'Bị từ chối' },
   ]
 
   return (

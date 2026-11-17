@@ -63,6 +63,8 @@
 .slots-footer-actions { display: flex; gap: 12px; }
 .slots-footer button,.slots-error button { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 12px 18px; border-radius: 8px; border: 1px solid var(--color-surface-border); background: var(--color-surface-card); font-size: 15px; font-weight: 600; white-space: nowrap; }
 .slots-footer .slots-save,.slots-error button { background: var(--color-brand-primary-active); color: var(--color-surface-card); border-color: var(--color-brand-primary-active); }
+/* Leave room for the floating assistant below the mobile save controls. */
+@media (max-width: 600px) { .merchant-slots .slots-container { padding-bottom: 80px; } }
 .slots-empty,.slots-error { padding: 40px 24px; text-align: center; border: 1px dashed var(--color-surface-border); border-radius: 12px; }
 .slots-empty p,.slots-error p { color: var(--color-text-muted); margin: 8px 0 20px; }
 @media (max-width: 1100px) { .merchant-slots { padding: 24px; } .slots-title-row { align-items: flex-start; flex-direction: column; gap: 0; } .slots-title-row nav { margin-bottom: 24px; } .slots-overview { grid-template-columns: repeat(3,1fr); } .slots-utilization { grid-column: 1 / -1; } .slots-utilization .slots-meter { margin: 10px 0; } .slots-vehicle { gap: 20px; grid-template-columns: 1fr 170px; } .slots-vehicle-name { grid-column: 1 / -1; } }

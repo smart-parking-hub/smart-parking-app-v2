@@ -54,6 +54,8 @@ describe('BATCH-14B: Driver Core — Search, Detail & Bookings Integration', () 
 
     // Default API mock implementation
     vi.mocked(apiClient.get).mockImplementation((url: string) => {
+      if (url === '/api/v1/users/me') return Promise.resolve({ data: { data: { fullName: 'Trần Quốc Tuấn' } } })
+      if (url === '/api/v1/queues/me') return Promise.resolve({ data: { data: null } })
       if (url.includes('vehicles')) {
         return Promise.resolve({
           data: {
@@ -171,13 +173,13 @@ describe('BATCH-14B: Driver Core — Search, Detail & Bookings Integration', () 
     expect(searchInput).toBeInTheDocument()
 
     // KPI grid: 4 stat cards
-    expect(screen.getByText(/03 Đầu Kéo/i)).toBeInTheDocument()
+    expect(screen.getByText(/03 Phương Tiện/i)).toBeInTheDocument()
     expect(screen.getByText(/48 Lượt Đỗ/i)).toBeInTheDocument()
     expect(screen.getByText(/Chuyến Đang Đỗ/i)).toBeInTheDocument()
     expect(screen.getByText(/Suất Chờ/i)).toBeInTheDocument()
 
     // Active trip card
-    expect(screen.getByText(/CHUYẾN ĐỖ ĐANG HOẠT ĐỘNG THỜI GIAN THỰC/i)).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Chuyến đỗ đang hoạt động' })).toBeInTheDocument()
     expect(screen.getAllByText(/51D-894.12/i).length).toBeGreaterThan(0)
 
     // ALPR fast-checkout modal interaction
@@ -186,14 +188,13 @@ describe('BATCH-14B: Driver Core — Search, Detail & Bookings Integration', () 
     fireEvent.click(qrTrigger)
 
     // QR modal should be displayed
-    expect(screen.getByRole('heading', { name: /Mã QR Barie Xuất Bãi/i })).toBeInTheDocument()
-    expect(screen.getByText(/ALPR FAST-CHECKOUT PASS/i)).toBeInTheDocument()
+    expect(screen.getByRole('dialog', { name: 'Mã QR xuất bãi' })).toBeInTheDocument()
 
     // Close modal
-    const closeBtn = screen.getByRole('button', { name: /HOÀN TẤT & ĐÓNG MÃ QR/i })
+    const closeBtn = screen.getByRole('button', { name: 'Đóng' })
     fireEvent.click(closeBtn)
     await waitFor(() => {
-      expect(screen.queryByText(/ALPR FAST-CHECKOUT PASS/i)).not.toBeInTheDocument()
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
     })
   })
 

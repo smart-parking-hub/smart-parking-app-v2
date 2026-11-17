@@ -4,6 +4,7 @@ import { BookingReview } from './BookingReview'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
 import { Notice, button, secondary } from '@/shared/components/Workspace'
+import { bookingReference } from '@/entities/booking/bookingReference'
 import { errorMessage } from '@/shared/api/resources'
 import { fetchBooking, paymentLink, payDemo, cancelBooking, formatMoney, statusLabels, type Booking } from './api'
 import { QRCodeSVG } from 'qrcode.react'
@@ -219,8 +220,8 @@ function BookingStatusContent({ bookingId, booking, embedded = false, compact = 
       {compactPayment ? <QuickBookingPaymentSummary booking={data} expired={expired}/> : <>
       <dl className="grid gap-4 sm:grid-cols-2">
         <div>
-          <dt className="text-sm text-brand-muted">Mã đặt chỗ</dt>
-          <dd className="break-all font-semibold">{data.bookingCode}</dd>
+          <dt className="text-sm text-brand-muted">{data.status === 'PENDING_PAYMENT' ? 'Số đơn' : 'Mã đặt chỗ'}</dt>
+          <dd className="break-all font-semibold">{bookingReference(data)}</dd>
         </div>
         <div>
           <dt className="text-sm text-brand-muted">Phương tiện</dt>

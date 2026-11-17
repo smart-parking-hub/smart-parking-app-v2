@@ -6,6 +6,8 @@ export type BookingStatus =
   | 'AWAITING_FINAL_PAYMENT'
   | 'COMPLETED'
   | 'CANCELLED'
+  | 'EXPIRED'
+  | 'REVIEWED'
 
 export interface BookingDto {
   id: number
@@ -19,6 +21,9 @@ export interface BookingDto {
   usableLength?: string
   shorePowerAvailable?: boolean
   checkInTime?: string
+  checkOutTime?: string
+  createdAt?: string
+  physicalSlotCode?: string
   expectedCheckInTime: string
   expectedCheckOutTime?: string
   parkingDuration?: string
@@ -44,15 +49,15 @@ export interface PageResponse<T> {
   content: T[]
   totalElements: number
   totalPages: number
-  size: number
-  number: number
+  currentPage: number
 }
 
 export interface DashboardSummaryData {
   vehicleTotal: number
   bookingTotal: number
   activeCount: number
-  queueCount: number
+  queueCount: number | null
+  bookings?: BookingDto[]
   activeBooking?: BookingDto
   recentBookings: BookingDto[]
   driverName: string

@@ -7,6 +7,7 @@ import { Eye, EyeOff } from 'lucide-react'
 import { changeMyPasswordApi } from '@/features/profile'
 import { errorMessage } from '@/shared/api/resources'
 import { Notice } from '@/shared/components/Workspace'
+import { NotificationDialog } from '@/shared/components/NotificationDialog'
 import { ProfileSection, ProfileField, profileInput, profileButton } from './ProfileSection'
 
 const schema = z.object({
@@ -57,7 +58,7 @@ export function MerchantPasswordForm() {
         })}
       </fieldset>
       {save.isError && <Notice error>{errorMessage(save.error)}</Notice>}
-      {save.isSuccess && <p role="status" className="text-sm font-medium text-green-700">Đã đổi mật khẩu thành công.</p>}
+      {save.isSuccess && <NotificationDialog title="Đổi mật khẩu thành công" message="Đã đổi mật khẩu thành công." onClose={() => save.reset()} />}
       <div className="border-t border-brand-border pt-5">
         <button type="submit" className={profileButton} disabled={save.isPending} aria-busy={save.isPending}>
           {save.isPending ? 'Đang đổi mật khẩu…' : 'Cập nhật mật khẩu'}

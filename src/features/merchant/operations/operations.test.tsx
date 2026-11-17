@@ -107,6 +107,24 @@ describe('Session and role access', () => {
   })
 })
 describe('Gate settlement contract', () => {
+  it('shows a dismissible modal on an early check-in and allows scanning again', async () => {
+    const message = 'Chưa đến giờ check-in (chỉ được vào bãi trước tối đa 30 phút)!'
+    send.mockRejectedValue(new Error(message))
+    show(<MerchantScannerPage />)
+    await screen.findByText('Bãi kiểm thử')
+    fireEvent.change(screen.getByLabelText('Bãi kiểm soát'), { target: { value: '12' } })
+    fireEvent.change(screen.getByLabelText('Mã đặt chỗ / Nội dung QR'), { target: { value: 'BK-EARLY' } })
+    const submit = screen.getByRole('button', { name: 'Xác nhận xe vào bãi' })
+    fireEvent.click(submit)
+    expect(await screen.findByRole('dialog', { name: 'Chưa thể cho xe vào bãi' })).toHaveTextContent(message)
+    fireEvent.click(screen.getByRole('button', { name: 'Đã hiểu' }))
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
+    expect(submit).toBeEnabled()
+    fireEvent.click(submit)
+    expect(await screen.findByRole('dialog', { name: 'Chưa thể cho xe vào bãi' })).toHaveTextContent(message)
+    expect(send).toHaveBeenCalledTimes(2)
+  })
+
   it('sends both lot and booking code when checking in', async () => {
     send.mockResolvedValue(null)
     show(<MerchantScannerPage />)
@@ -204,7 +222,7 @@ describe('Gate settlement contract', () => {
     resolveCash(null)
     await waitFor(() =>
       expect(
-        screen.getByText('Đã xác nhận thu tiền mặt và trả chỗ thành công.'),
+        screen.getByText('Đã hoàn tất checkout và trả chỗ.'),
       ).toBeInTheDocument(),
     )
   })

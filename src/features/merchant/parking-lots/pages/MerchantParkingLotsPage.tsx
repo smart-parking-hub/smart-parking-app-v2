@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
+import { Eye, PencilLine } from 'lucide-react'
 import { fetchMerchantLotCounts, fetchMerchantParkingLots, type OwnedMerchantLot } from '../api/merchantParkingLotApi'
 import { MerchantParkingLotsHeader } from '../components/MerchantParkingLotsHeader'
 import { MerchantParkingLotsMetrics } from '../components/MerchantParkingLotsMetrics'
@@ -11,13 +12,14 @@ import { Notice, Badge, secondary, date } from '@/shared/components/Workspace'
 
 function LotActions({ lot }: { lot: OwnedMerchantLot }) {
   const root = `/merchant/parking-lots/${lot.id}`
-  return <div className="flex flex-wrap gap-3 text-xs font-semibold">
-    <Link className="underline" to={root}>Chi tiết</Link>
+  const actionClass = `${secondary} min-h-10 !px-3 !py-2 !text-xs no-underline whitespace-nowrap focus-visible:outline-2 focus-visible:outline-brand-primary`
+  return <div className="flex flex-wrap gap-2">
+    <Link className={actionClass} to={root}><Eye size={14} aria-hidden="true" />Chi tiết</Link>
     {lot.status === 'APPROVED' ? <>
-      <Link className="underline" to={`${root}/slots`}>Cấu hình slot</Link>
-      <Link className="underline" to={`${root}/pricing`}>Bảng giá</Link>
-      <Link className="underline" to={`/merchant/qr-scanner?yardId=${lot.id}`}>Quét QR</Link>
-    </> : <Link className="underline" to={`${root}/edit`}>Chỉnh sửa hồ sơ</Link>}
+      <Link className={actionClass} to={`${root}/slots`}>Cấu hình slot</Link>
+      <Link className={actionClass} to={`${root}/pricing`}>Bảng giá</Link>
+      <Link className={actionClass} to={`/merchant/qr-scanner?lot=${lot.id}`}>Quét QR</Link>
+    </> : <Link className={actionClass} to={`${root}/edit`}><PencilLine size={14} aria-hidden="true" />Chỉnh sửa hồ sơ</Link>}
   </div>
 }
 

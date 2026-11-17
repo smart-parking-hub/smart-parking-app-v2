@@ -73,17 +73,17 @@ export function Toast({
     <div
       role="alert"
       className={cn(
-        'flex items-start gap-3 rounded-2xl border p-4 shadow-xl backdrop-blur-md transition-all w-full max-w-sm sm:max-w-md animate-in fade-in slide-in-from-top-2 slide-in-from-right-4 duration-200 pointer-events-auto',
+        'flex items-center gap-3 rounded-2xl border p-4 shadow-xl backdrop-blur-md transition-all w-full max-w-sm sm:max-w-md animate-in fade-in slide-in-from-top-2 slide-in-from-right-4 duration-200 pointer-events-auto',
         wrapper,
         className
       )}
     >
-      <div className={cn('p-1 rounded-xl shrink-0 mt-0.5', iconBg)}>
-        <IconComponent className={cn('w-4 h-4', iconText)} />
+      <div className={cn('flex size-6 shrink-0 items-center justify-center rounded-full', iconBg)}>
+        <IconComponent className={cn('w-4 h-4', iconText)} aria-hidden="true" />
       </div>
 
       <div className="flex-1 min-w-0 pr-1">
-        <h5 className="text-sm font-semibold leading-tight">{title}</h5>
+        <h5 className="text-sm font-semibold leading-5">{title}</h5>
         {message && <p className="text-xs opacity-90 mt-1 leading-relaxed break-words">{message}</p>}
       </div>
 
@@ -92,9 +92,9 @@ export function Toast({
           type="button"
           onClick={onClose}
           aria-label="Đóng thông báo"
-          className="shrink-0 rounded-lg p-1 text-slate-400 hover:text-slate-700 hover:bg-black/5 transition-colors cursor-pointer"
+          className="flex size-6 shrink-0 items-center justify-center rounded-lg text-slate-400 hover:text-slate-700 hover:bg-black/5 transition-colors cursor-pointer focus-visible:outline-2 focus-visible:outline-brand-primary"
         >
-          <X className="w-4 h-4" />
+          <X className="w-4 h-4" aria-hidden="true" />
         </button>
       )}
     </div>

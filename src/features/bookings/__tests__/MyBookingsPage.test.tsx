@@ -105,7 +105,7 @@ it('keeps many tickets compact, expands one at a time and requests the next serv
   expect(toggles[0]).toHaveAttribute('aria-expanded', 'false')
   expect(toggles[1]).toHaveAttribute('aria-expanded', 'true')
   fireEvent.click(screen.getByRole('button', { name: 'Trang sau' }))
-  expect(await screen.findByText(/#49 · BK-API-49/)).toBeInTheDocument()
+  expect(await screen.findByText('Số đơn #49')).toBeInTheDocument()
   expect(screen.queryByText(/#41 · BK-API-41/)).not.toBeInTheDocument()
   expect(apiClient.get).toHaveBeenCalledWith('/api/v1/bookings', expect.objectContaining({ params: { page: 1, size: 8, sort: 'createdAt,desc' } }))
   expect(screen.getAllByRole('button', { name: 'Xem vé & chi tiết' })).toHaveLength(8)
