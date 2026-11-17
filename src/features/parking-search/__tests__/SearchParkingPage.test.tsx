@@ -3,8 +3,8 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { apiClient } from '@/shared/api/client'
-import * as sharedMaps from '@/shared/maps'
 import { SearchParkingPage } from '../pages/SearchParkingPage'
+import { clearGeocoderCacheForTests } from '../api/mapProvider'
 import { fallbackParkingLots } from '../api/parkingSearchApi'
 import { parkingSearchStore } from '../store/parkingSearchStore'
 
@@ -16,7 +16,7 @@ vi.mock('@/shared/api/client', () => ({
 }))
 vi.mock('../components/InteractiveMapCanvas', () => ({
   InteractiveMapCanvas: ({ selectedLot }: { selectedLot?: { id: number } }) => (
-    <section aria-label="Bản đồ bãi đỗ Google Maps" data-selected-id={selectedLot?.id ?? ''} />
+    <section aria-label="Bản đồ bãi đỗ OpenStreetMap" data-selected-id={selectedLot?.id ?? ''} />
   ),
 }))
 
@@ -43,6 +43,7 @@ describe('SCR-015: Interactive Parking Search & Map (Bản đồ tìm kiếm bã
   beforeEach(() => {
     HTMLDialogElement.prototype.showModal = function () { this.setAttribute('open', '') };
     HTMLDialogElement.prototype.close = function () { this.removeAttribute('open') };
+    clearGeocoderCacheForTests()
     parkingSearchStore.resetFilters()
     vi.clearAllMocks()
     vi.mocked(apiClient.get).mockImplementation(async url => String(url).match(/parking-lots\/\d+$/) ? { data: { data: { id: 1, name: 'Bãi API', address: 'Địa chỉ', status: 'APPROVED', slots: [], pricingRules: [] } } } : String(url).includes('/vehicles') ? { data: { data: { content: [{ id: 3, licensePlate: '51C-TEST', vehicleType: 'CONTAINER', status: 'ACTIVE' }] } } } : {
@@ -65,7 +66,7 @@ describe('SCR-015: Interactive Parking Search & Map (Bản đồ tìm kiếm bã
     parkingSearchStore.setSelectedLotId(fallbackParkingLots[0].id)
     const view = renderWithProviders(<SearchParkingPage />)
     const cards = await screen.findAllByRole('button', { name: /^Chọn bãi xe / }, { timeout: 10000 })
-    const map = screen.getByRole('region', { name: 'Bản đồ bãi đỗ Google Maps' })
+    const map = screen.getByRole('region', { name: 'Bản đồ bãi đỗ OpenStreetMap' })
     expect(map).toHaveAttribute('data-selected-id', '')
     expect(cards.every(card => card.getAttribute('aria-pressed') === 'false')).toBe(true)
     fireEvent.click(cards[1])
@@ -73,7 +74,7 @@ describe('SCR-015: Interactive Parking Search & Map (Bản đồ tìm kiếm bã
     expect(map).toHaveAttribute('data-selected-id', String(parkingSearchStore.getState().selectedLotId))
     view.unmount()
     renderWithProviders(<SearchParkingPage />)
-    expect(screen.getByRole('region', { name: 'Bản đồ bãi đỗ Google Maps' })).toHaveAttribute('data-selected-id', '')
+    expect(screen.getByRole('region', { name: 'Bản đồ bãi đỗ OpenStreetMap' })).toHaveAttribute('data-selected-id', '')
   })
 
   it('renders top filter bar with vehicle selector, 5 classifications and radius slider', async () => {
@@ -136,7 +137,7 @@ describe('SCR-015: Interactive Parking Search & Map (Bản đồ tìm kiếm bã
 
     // Map canvas
     expect(
-      screen.getByRole('region', { name: 'Bản đồ bãi đỗ Google Maps' }),
+      screen.getByRole('region', { name: 'Bản đồ bãi đỗ OpenStreetMap' }),
     ).toBeInTheDocument()
     expect(screen.queryByText(/Lưu lượng xe 85%/i)).not.toBeInTheDocument()
 
@@ -153,28 +154,28 @@ describe('SCR-015: Interactive Parking Search & Map (Bản đồ tìm kiếm bã
     ).toBeTruthy()
   })
 
-  it('shows real-time parking lot and Google Places suggestions below input while typing without clicking submit', async () => {
-    vi.spyOn(sharedMaps, 'loadGoogleMapsLibrary').mockResolvedValue({
-      AutocompleteSessionToken: class {},
-      AutocompleteSuggestion: {
-        fetchAutocompleteSuggestions: vi.fn().mockResolvedValue({
-          suggestions: [
+  it('shows real-time parking lot and Photon suggestions below input while typing without clicking submit', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({
+        ok: true,
+        status: 200,
+        json: async () => ({
+          features: [
             {
-              placePrediction: {
-                placeId: 'place-cat-lai-501',
-                text: { text: 'Cảng Tân Cảng Cát Lái, TP. Thủ Đức' },
-                toPlace: () => ({
-                  fetchFields: vi.fn().mockImplementation(async function (this: Record<string, unknown>) {
-                    this.location = { lat: () => 10.771, lng: () => 106.789 }
-                    this.formattedAddress = 'Cảng Tân Cảng Cát Lái, TP. Thủ Đức'
-                  }),
-                }),
+              geometry: { coordinates: [106.789, 10.771] },
+              properties: {
+                osm_id: 501,
+                osm_type: 'N',
+                name: 'Cảng Tân Cảng Cát Lái',
+                city: 'TP. Thủ Đức',
+                countrycode: 'VN',
               },
             },
           ],
         }),
-      },
-    } as never)
+      }),
+    )
 
     renderWithProviders(<SearchParkingPage />)
 
@@ -191,13 +192,13 @@ describe('SCR-015: Interactive Parking Search & Map (Bản đồ tìm kiếm bã
     })
     expect(depotOption).toBeInTheDocument()
 
-    // Debounced Google Places suggestions arrive automatically without clicking submit
-    const googleOption = await screen.findByRole(
+    // Debounced Photon suggestions arrive automatically without clicking submit
+    const photonOption = await screen.findByRole(
       'option',
       { name: /Cảng Tân Cảng Cát Lái, TP\. Thủ Đức/i },
-      { timeout: 2000 },
+      { timeout: 2500 },
     )
-    expect(googleOption).toBeInTheDocument()
+    expect(photonOption).toBeInTheDocument()
 
     // Selecting the matching yard updates selection & closes dropdown
     fireEvent.click(depotOption)
@@ -210,27 +211,27 @@ describe('SCR-015: Interactive Parking Search & Map (Bản đồ tìm kiếm bã
   })
 
   it('restores initial unfiltered parking lot scope when clearing the selected address', async () => {
-    vi.spyOn(sharedMaps, 'loadGoogleMapsLibrary').mockResolvedValue({
-      AutocompleteSessionToken: class {},
-      AutocompleteSuggestion: {
-        fetchAutocompleteSuggestions: vi.fn().mockResolvedValue({
-          suggestions: [
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({
+        ok: true,
+        status: 200,
+        json: async () => ({
+          features: [
             {
-              placePrediction: {
-                placeId: 'place-hoan-kiem-909',
-                text: { text: 'Hồ Hoàn Kiếm, Hà Nội' },
-                toPlace: () => ({
-                  fetchFields: vi.fn().mockImplementation(async function (this: Record<string, unknown>) {
-                    this.location = { lat: () => 21.0285, lng: () => 105.8542 }
-                    this.formattedAddress = 'Hồ Hoàn Kiếm, Hà Nội'
-                  }),
-                }),
+              geometry: { coordinates: [105.8542, 21.0285] },
+              properties: {
+                osm_id: 909,
+                osm_type: 'N',
+                name: 'Hồ Hoàn Kiếm',
+                city: 'Hà Nội',
+                countrycode: 'VN',
               },
             },
           ],
         }),
-      },
-    } as never)
+      }),
+    )
 
     vi.mocked(apiClient.get).mockImplementation(async (url, config) => {
       if (String(url).includes('/vehicles')) {

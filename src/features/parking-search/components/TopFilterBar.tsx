@@ -100,7 +100,7 @@ export function TopFilterBar({
           </h1>
         </div>
         <span className="shrink-0 rounded-full border border-brand-border bg-brand-surface px-2.5 py-0.5 text-[11px] font-medium text-brand-muted">
-          Bản đồ Google Maps
+          Bản đồ OpenStreetMap
         </span>
       </div>
 

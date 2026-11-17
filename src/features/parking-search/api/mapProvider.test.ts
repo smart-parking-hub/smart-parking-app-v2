@@ -1,169 +1,133 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import {
-  createPlacesAutocompleteSession,
-  getDrivingRoute,
+  autocompleteLocations,
+  clearGeocoderCacheForTests,
 } from './mapProvider'
 import { fetchParkingLots } from './parkingSearchApi'
 import { apiClient } from '@/shared/api/client'
-import * as sharedMaps from '@/shared/maps'
+import {
+  resetMapRuntimeConfigForTests,
+  setMapRuntimeConfigOverrideForTests,
+} from '@/shared/maps'
 
-describe('Google Maps parking-search services (Places New & Routes)', () => {
+describe('Hybrid parking-search geocoder (Photon, no Google Billing, no Nominatim fallback)', () => {
   beforeEach(() => {
-    vi.restoreAllMocks()
+    clearGeocoderCacheForTests()
+    resetMapRuntimeConfigForTests()
   })
 
   afterEach(() => {
     vi.restoreAllMocks()
     vi.unstubAllGlobals()
+    clearGeocoderCacheForTests()
+    resetMapRuntimeConfigForTests()
   })
 
-  it('calls Google Routes Route.computeRoutes with DRIVING mode and minimal field mask', async () => {
-    const computeRoutes = vi.fn().mockResolvedValue({
-      routes: [
-        {
-          distanceMeters: 12500,
-          durationMillis: 900000,
-          path: [
-            { lat: 10.7, lng: 106.7 },
-            { lat: 10.8, lng: 106.8 },
-          ],
-        },
-      ],
-    })
+  it('requires at least 3 characters before querying Photon', async () => {
+    const fetchMock = vi.fn()
+    vi.stubGlobal('fetch', fetchMock)
 
-    vi.spyOn(sharedMaps, 'loadGoogleMapsLibrary').mockResolvedValue({
-      Route: { computeRoutes },
-    } as never)
-
-    const result = await getDrivingRoute(
-      { latitude: 10.7, longitude: 106.7 },
-      { latitude: 10.8, longitude: 106.8 },
-    )
-
-    expect(computeRoutes).toHaveBeenCalledWith(
-      expect.objectContaining({
-        origin: { lat: 10.7, lng: 106.7 },
-        destination: { lat: 10.8, lng: 106.8 },
-        travelMode: 'DRIVING',
-        fields: ['durationMillis', 'distanceMeters', 'path'],
-        language: 'vi',
-        region: 'VN',
-      }),
-    )
-
-    expect(result).toEqual({
-      points: [
-        { latitude: 10.7, longitude: 106.7 },
-        { latitude: 10.8, longitude: 106.8 },
-      ],
-      distanceKm: 12.5,
-      durationMinutes: 15,
-    })
+    expect(await autocompleteLocations('ab')).toEqual([])
+    expect(fetchMock).not.toHaveBeenCalled()
   })
 
-  it('reports a routing failure rather than drawing an invented straight-line route', async () => {
-    const computeRoutes = vi.fn().mockResolvedValue({ routes: [] })
-    vi.spyOn(sharedMaps, 'loadGoogleMapsLibrary').mockResolvedValue({
-      Route: { computeRoutes },
-    } as never)
-
-    await expect(
-      getDrivingRoute(
-        { latitude: 10.7, longitude: 106.7 },
-        { latitude: 10.8, longitude: 106.8 },
-      ),
-    ).rejects.toThrow('Chưa tìm thấy tuyến đường')
-  })
-
-  it('uses Places Autocomplete (New) restricted to VN, manages session tokens, and fetches Details on selection', async () => {
-    let tokenCounter = 0
-    class FakeSessionToken {
-      readonly id = ++tokenCounter
-    }
-
-    const fetchFields = vi.fn().mockImplementation(async function (this: {
-      location?: { lat: () => number; lng: () => number }
-      formattedAddress?: string
-      displayName?: string
-    }) {
-      this.location = { lat: () => 10.7715, lng: () => 106.7865 }
-      this.formattedAddress = 'Cảng Cát Lái, Phường Cát Lái, TP. Thủ Đức'
-      this.displayName = 'Cảng Cát Lái'
-    })
-
-    const fetchAutocompleteSuggestions = vi.fn().mockResolvedValue({
-      suggestions: [
-        {
-          placePrediction: {
-            placeId: 'place-cat-lai',
-            text: { text: 'Cảng Cát Lái, TP. Thủ Đức' },
-            mainText: { text: 'Cảng Cát Lái' },
-            secondaryText: { text: 'TP. Thủ Đức' },
-            toPlace: () => ({ fetchFields }),
+  it('filters Photon results to Vietnam, converts GeoJSON [lng, lat], deduplicates, and caps at 5', async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: async () => ({
+        features: [
+          {
+            geometry: { coordinates: [106.7865, 10.7715] },
+            properties: {
+              osm_id: 10,
+              osm_type: 'N',
+              name: 'Cảng Cát Lái',
+              district: 'Phường Cát Lái',
+              city: 'TP. Thủ Đức',
+              countrycode: 'VN',
+            },
           },
-        },
-      ],
+          {
+            geometry: { coordinates: [100.5, 13.7] },
+            properties: {
+              osm_id: 11,
+              name: 'Outside VN',
+              countrycode: 'TH',
+            },
+          },
+          {
+            geometry: { coordinates: [106.7865, 10.7715] },
+            properties: {
+              osm_id: 12,
+              name: 'Cảng Cát Lái',
+              district: 'Phường Cát Lái',
+              city: 'TP. Thủ Đức',
+              countrycode: 'VN',
+            },
+          },
+        ],
+      }),
     })
+    vi.stubGlobal('fetch', fetchMock)
 
-    vi.spyOn(sharedMaps, 'loadGoogleMapsLibrary').mockResolvedValue({
-      AutocompleteSessionToken: FakeSessionToken,
-      AutocompleteSuggestion: { fetchAutocompleteSuggestions },
-    } as never)
+    const results = await autocompleteLocations('Cát Lái')
+    expect(fetchMock).toHaveBeenCalledTimes(1)
+    expect(String(fetchMock.mock.calls[0][0])).toContain('photon.komoot.io')
+    expect(results).toEqual([
+      {
+        id: 'N-10-10.7715',
+        label: 'Cảng Cát Lái, Phường Cát Lái, TP. Thủ Đức',
+        latitude: 10.7715,
+        longitude: 106.7865,
+      },
+    ])
 
-    const session = createPlacesAutocompleteSession()
-    const firstBatch = await session.suggest('Cát')
-    const secondBatch = await session.suggest('Cát Lái')
-
-    expect(fetchAutocompleteSuggestions).toHaveBeenCalledTimes(2)
-    const firstReq = fetchAutocompleteSuggestions.mock.calls[0][0]
-    const secondReq = fetchAutocompleteSuggestions.mock.calls[1][0]
-
-    expect(firstReq.includedRegionCodes).toEqual(['vn'])
-    expect(firstReq.language).toBe('vi')
-    expect(firstReq.sessionToken).toBe(secondReq.sessionToken)
-
-    expect(firstBatch).toHaveLength(1)
-    expect(secondBatch[0]).toMatchObject({
-      id: 'place-cat-lai',
-      label: 'Cảng Cát Lái, TP. Thủ Đức',
-    })
-
-    const resolved = await session.resolveSuggestion(secondBatch[0])
-    expect(fetchFields).toHaveBeenCalledWith({
-      fields: ['location', 'formattedAddress', 'displayName'],
-    })
-    expect(resolved).toEqual({
-      id: 'place-cat-lai',
-      placeId: 'place-cat-lai',
-      label: 'Cảng Cát Lái, Phường Cát Lái, TP. Thủ Đức',
-      latitude: 10.7715,
-      longitude: 106.7865,
-    })
-
-    // Next query after selection must start a new session token.
-    await session.suggest('Sóng Thần')
-    const thirdReq = fetchAutocompleteSuggestions.mock.calls[2][0]
-    expect(thirdReq.sessionToken).not.toBe(firstReq.sessionToken)
+    // Short in-memory cache serves repeated query without hitting Photon again
+    const cached = await autocompleteLocations('Cát Lái')
+    expect(cached).toEqual(results)
+    expect(fetchMock).toHaveBeenCalledTimes(1)
   })
 
-  it('propagates Google Places errors without silently falling back to Nominatim or Photon', async () => {
-    const fetchSpy = vi.fn()
-    vi.stubGlobal('fetch', fetchSpy)
-
-    vi.spyOn(sharedMaps, 'loadGoogleMapsLibrary').mockResolvedValue({
-      AutocompleteSessionToken: class {},
-      AutocompleteSuggestion: {
-        fetchAutocompleteSuggestions: vi
-          .fn()
-          .mockRejectedValue(new Error('OVER_QUERY_LIMIT')),
-      },
-    } as never)
-
-    const session = createPlacesAutocompleteSession()
-    await expect(session.suggest('Cát Lái')).rejects.toMatchObject({
-      code: 'PLACES_ERROR',
+  it('surfaces HTTP 429 rate-limit error without retry loops or Nominatim fallback', async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: false,
+      status: 429,
     })
-    expect(fetchSpy).not.toHaveBeenCalled()
+    vi.stubGlobal('fetch', fetchMock)
+
+    await expect(autocompleteLocations('Sóng Thần')).rejects.toMatchObject({
+      name: 'GeocoderError',
+      code: 'RATE_LIMITED',
+    })
+    expect(fetchMock).toHaveBeenCalledTimes(1)
+    expect(String(fetchMock.mock.calls[0][0])).not.toContain('nominatim')
+  })
+
+  it('throws UNAVAILABLE on Photon error and never falls back to public Nominatim', async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: false,
+      status: 503,
+    })
+    vi.stubGlobal('fetch', fetchMock)
+
+    await expect(autocompleteLocations('Cát Lái')).rejects.toMatchObject({
+      name: 'GeocoderError',
+      code: 'UNAVAILABLE',
+    })
+    expect(fetchMock).toHaveBeenCalledTimes(1)
+  })
+
+  it('respects runtime geocoderEnabled=false configuration without issuing network requests', async () => {
+    setMapRuntimeConfigOverrideForTests({ geocoderEnabled: false })
+    const fetchMock = vi.fn()
+    vi.stubGlobal('fetch', fetchMock)
+
+    await expect(autocompleteLocations('Cát Lái')).rejects.toMatchObject({
+      name: 'GeocoderError',
+      code: 'DISABLED',
+    })
+    expect(fetchMock).not.toHaveBeenCalled()
   })
 
   it('preserves zero capacity and prices and sends real search coordinates to the backend', async () => {

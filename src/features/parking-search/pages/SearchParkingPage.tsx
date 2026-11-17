@@ -146,6 +146,7 @@ export function SearchParkingPage() {
             onClear={() => parkingSearchStore.clearLocation()}
             onLocateMe={handleLocateMe}
             onSelectPlace={handleSelectPlace}
+            biasCenter={origin}
             parkingLots={lots}
             onSelectLot={(lot) => parkingSearchStore.setSelectedLotId(lot.id)}
           />

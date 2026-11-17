@@ -24,7 +24,7 @@ vi.mock('@/shared/api/client', () => ({
 
 vi.mock('@/features/parking-search/components/InteractiveMapCanvas', () => ({
   InteractiveMapCanvas: () => (
-    <section aria-label="Bản đồ bãi đỗ Google Maps" data-testid="mock-google-map-canvas" />
+    <section aria-label="Bản đồ bãi đỗ OpenStreetMap" data-testid="mock-osm-canvas" />
   ),
 }))
 
@@ -206,11 +206,11 @@ describe('BATCH-14B: Driver Core — Search, Detail & Bookings Integration', () 
 
     // Top Header & Subtitle
     expect(screen.getByText(/Điểm đỗ phù hợp. Hành trình an tâm./i)).toBeInTheDocument()
-    expect(screen.getByText(/Bản đồ Google Maps/i)).toBeInTheDocument()
+    expect(screen.getByText(/Bản đồ OpenStreetMap/i)).toBeInTheDocument()
 
     // Wait for data load and map canvas
     await waitFor(() => {
-      expect(screen.getByTestId('mock-google-map-canvas')).toBeInTheDocument()
+      expect(screen.getByTestId('mock-osm-canvas')).toBeInTheDocument()
     })
 
     // SmartLocationBar with search input and full lots toggle

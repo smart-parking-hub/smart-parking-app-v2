@@ -1,13 +1,7 @@
 import {
   DEFAULT_MAP_CENTER,
-  GOOGLE_MAPS_COUNTRY_CODES,
-  GOOGLE_MAPS_LANGUAGE,
-  GOOGLE_MAPS_REGION,
-  GoogleMapsError,
-  fromLatLng,
+  getMapRuntimeConfig,
   isValidCoordinates,
-  loadGoogleMapsLibrary,
-  toLatLngLiteral,
   type Coordinates,
 } from '@/shared/maps'
 
@@ -17,283 +11,217 @@ export const validCoordinates = isValidCoordinates
 export interface Place extends Coordinates {
   id: string
   label: string
-  placeId?: string
 }
 
-export interface PlaceSuggestion {
-  id: string
-  placeId: string
-  label: string
-  mainText?: string
-  secondaryText?: string
-  resolvePlace: () => Promise<Place>
-}
+export type GeocoderErrorCode = 'RATE_LIMITED' | 'DISABLED' | 'UNAVAILABLE'
 
-export interface DrivingRoute {
-  points: Coordinates[]
-  distanceKm: number
-  durationMinutes: number
-}
+export class GeocoderError extends Error {
+  readonly code: GeocoderErrorCode
 
-export interface PlacesAutocompleteSession {
-  suggest: (query: string) => Promise<PlaceSuggestion[]>
-  resolveSuggestion: (suggestion: PlaceSuggestion) => Promise<Place>
-  reset: () => void
-}
-
-function createAbortError(): Error {
-  if (typeof DOMException !== 'undefined') {
-    return new DOMException('The operation was aborted.', 'AbortError')
+  constructor(code: GeocoderErrorCode, message: string) {
+    super(message)
+    this.name = 'GeocoderError'
+    this.code = code
   }
-  const error = new Error('The operation was aborted.')
-  error.name = 'AbortError'
-  return error
 }
 
-function toGoogleMapsError(
-  error: unknown,
-  code: 'PLACES_ERROR' | 'ROUTES_ERROR',
-  fallbackMessage: string,
-): GoogleMapsError {
-  if (error instanceof GoogleMapsError) {
-    return error
+interface PhotonFeature {
+  geometry?: { coordinates?: [number, number] }
+  properties?: {
+    osm_id?: number
+    osm_type?: string
+    name?: string
+    housenumber?: string
+    street?: string
+    district?: string
+    suburb?: string
+    city?: string
+    county?: string
+    state?: string
+    country?: string
+    countrycode?: string
   }
-  return new GoogleMapsError(code, fallbackMessage, error)
+}
+
+interface CacheEntry {
+  expiresAt: number
+  places: Place[]
+}
+
+const CACHE_TTL_MS = 120_000
+const MAX_CACHE_ENTRIES = 50
+const MIN_PHOTON_QUERY_LENGTH = 3
+const MAX_PHOTON_RESULTS = 5
+
+const photonCache = new Map<string, CacheEntry>()
+
+export function clearGeocoderCacheForTests() {
+  photonCache.clear()
+}
+
+function formatPhotonLabel(
+  p: NonNullable<PhotonFeature['properties']>,
+): string {
+  const streetLine = [p.housenumber, p.street].filter(Boolean).join(' ').trim()
+  const parts = [
+    p.name,
+    streetLine && streetLine !== p.name ? streetLine : '',
+    p.district || p.suburb,
+    p.city || p.county,
+    p.state,
+  ].filter((part): part is string => Boolean(part && part.trim()))
+
+  const seen = new Set<string>()
+  const unique: string[] = []
+  for (const part of parts) {
+    const key = part.trim().toLocaleLowerCase('vi')
+    if (!seen.has(key)) {
+      seen.add(key)
+      unique.push(part.trim())
+    }
+  }
+  return unique.join(', ')
+}
+
+function buildCacheKey(query: string, biasCenter: Coordinates, endpoint: string): string {
+  return `${endpoint}|${biasCenter.latitude.toFixed(2)},${biasCenter.longitude.toFixed(2)}|${query.toLocaleLowerCase('vi')}`
+}
+
+function readFromCache(key: string): Place[] | null {
+  const entry = photonCache.get(key)
+  if (!entry) return null
+  if (Date.now() > entry.expiresAt) {
+    photonCache.delete(key)
+    return null
+  }
+  return entry.places
+}
+
+function writeToCache(key: string, places: Place[]) {
+  if (photonCache.size >= MAX_CACHE_ENTRIES) {
+    const oldestKey = photonCache.keys().next().value
+    if (oldestKey !== undefined) {
+      photonCache.delete(oldestKey)
+    }
+  }
+  photonCache.set(key, {
+    expiresAt: Date.now() + CACHE_TTL_MS,
+    places,
+  })
+}
+
+export interface AutocompleteLocationsOptions {
+  signal?: AbortSignal
+  biasCenter?: Coordinates
 }
 
 /**
- * Creates a session-scoped Google Places Autocomplete (New) controller.
- * Each typing session reuses a single AutocompleteSessionToken and concludes it
- * when the user selects a suggestion (calling toPlace().fetchFields()).
- * Predictions are never cached across sessions.
+ * Queries Photon for Vietnam location suggestions (search-as-you-type).
+ * - Requires at least 3 characters
+ * - Returns at most 5 deduplicated Vietnam results
+ * - Uses short in-memory cache and never retries on HTTP 429
+ * - Does NOT fall back to public Nominatim (policy compliance)
  */
-export function createPlacesAutocompleteSession(): PlacesAutocompleteSession {
-  let activeToken: google.maps.places.AutocompleteSessionToken | null = null
-
-  const ensureToken = (
-    placesLib: google.maps.PlacesLibrary,
-  ): google.maps.places.AutocompleteSessionToken => {
-    if (!activeToken) {
-      activeToken = new placesLib.AutocompleteSessionToken()
-    }
-    return activeToken
-  }
-
-  const reset = () => {
-    activeToken = null
-  }
-
-  const suggest = async (query: string): Promise<PlaceSuggestion[]> => {
-    const trimmed = query.trim()
-    if (trimmed.length < 2) return []
-
-    const placesLib = await loadGoogleMapsLibrary('places')
-    const sessionToken = ensureToken(placesLib)
-
-    try {
-      const response =
-        await placesLib.AutocompleteSuggestion.fetchAutocompleteSuggestions({
-          input: trimmed,
-          includedRegionCodes: [...GOOGLE_MAPS_COUNTRY_CODES],
-          language: GOOGLE_MAPS_LANGUAGE,
-          region: GOOGLE_MAPS_REGION,
-          locationBias: {
-            center: toLatLngLiteral(DEFAULT_MAP_CENTER),
-            radius: 50000,
-          },
-          sessionToken,
-        })
-
-      const rawSuggestions = Array.isArray(response?.suggestions)
-        ? response.suggestions
-        : []
-
-      const results: PlaceSuggestion[] = []
-      const seenPlaceIds = new Set<string>()
-
-      for (const item of rawSuggestions) {
-        const prediction = item.placePrediction
-        if (!prediction) continue
-
-        const placeId = prediction.placeId
-        const label = prediction.text?.text?.trim() ?? ''
-        if (!placeId || !label || seenPlaceIds.has(placeId)) continue
-        seenPlaceIds.add(placeId)
-
-        results.push({
-          id: placeId,
-          placeId,
-          label,
-          mainText: prediction.mainText?.text?.trim() || undefined,
-          secondaryText: prediction.secondaryText?.text?.trim() || undefined,
-          resolvePlace: async () => {
-            try {
-              const place = prediction.toPlace()
-              await place.fetchFields({
-                fields: ['location', 'formattedAddress', 'displayName'],
-              })
-
-              if (!place.location) {
-                throw new GoogleMapsError(
-                  'PLACES_ERROR',
-                  'Địa điểm này chưa có tọa độ trên Google Maps.',
-                )
-              }
-
-              const coords = fromLatLng(place.location)
-              if (!isValidCoordinates(coords)) {
-                throw new GoogleMapsError(
-                  'INVALID_COORDINATES',
-                  'Tọa độ địa điểm trả về từ Google Maps không hợp lệ.',
-                )
-              }
-
-              const resolvedLabel =
-                place.formattedAddress?.trim() ||
-                place.displayName?.trim() ||
-                label
-
-              return {
-                id: placeId,
-                placeId,
-                label: resolvedLabel,
-                latitude: coords.latitude,
-                longitude: coords.longitude,
-              }
-            } catch (error) {
-              throw toGoogleMapsError(
-                error,
-                'PLACES_ERROR',
-                'Không lấy được tọa độ chi tiết của địa điểm đã chọn.',
-              )
-            }
-          },
-        })
-
-        if (results.length >= 5) break
-      }
-
-      return results
-    } catch (error) {
-      throw toGoogleMapsError(
-        error,
-        'PLACES_ERROR',
-        'Chưa tải được gợi ý địa điểm từ Google Places. Vui lòng thử lại.',
-      )
-    }
-  }
-
-  const resolveSuggestion = async (
-    suggestion: PlaceSuggestion,
-  ): Promise<Place> => {
-    try {
-      return await suggestion.resolvePlace()
-    } finally {
-      // Conclude the Places session after Place Details fetchFields().
-      reset()
-    }
-  }
-
-  return {
-    suggest,
-    resolveSuggestion,
-    reset,
-  }
-}
-
 export async function autocompleteLocations(
   query: string,
-  signal?: AbortSignal,
-  session?: PlacesAutocompleteSession,
-): Promise<PlaceSuggestion[]> {
-  if (signal?.aborted) {
-    throw createAbortError()
-  }
-  const activeSession = session ?? createPlacesAutocompleteSession()
-  const suggestions = await activeSession.suggest(query)
-  if (signal?.aborted) {
-    throw createAbortError()
-  }
-  return suggestions
-}
+  options: AutocompleteLocationsOptions = {},
+): Promise<Place[]> {
+  const trimmed = query.trim()
+  if (trimmed.length < MIN_PHOTON_QUERY_LENGTH) return []
 
-export async function getDrivingRoute(
-  origin: Coordinates,
-  destination: Coordinates,
-  signal?: AbortSignal,
-): Promise<DrivingRoute> {
-  if (!isValidCoordinates(origin) || !isValidCoordinates(destination)) {
-    throw new GoogleMapsError(
-      'INVALID_COORDINATES',
-      'Tọa độ tuyến đường chưa hợp lệ.',
+  const config = getMapRuntimeConfig()
+  if (!config.geocoderEnabled) {
+    throw new GeocoderError(
+      'DISABLED',
+      'Gợi ý địa điểm ngoài hệ thống đang tạm tắt. Bạn vẫn có thể chọn bãi trên hệ thống hoặc dùng GPS.',
     )
   }
 
-  if (signal?.aborted) {
-    throw createAbortError()
+  const biasCenter =
+    options.biasCenter && isValidCoordinates(options.biasCenter)
+      ? options.biasCenter
+      : DEFAULT_MAP_CENTER
+
+  const cacheKey = buildCacheKey(trimmed, biasCenter, config.photonUrl)
+  const cached = readFromCache(cacheKey)
+  if (cached) {
+    return cached
   }
 
-  const routesLib = await loadGoogleMapsLibrary('routes')
+  const url = new URL(config.photonUrl)
+  url.searchParams.set('q', trimmed)
+  url.searchParams.set('limit', '8')
+  url.searchParams.set('lat', String(biasCenter.latitude))
+  url.searchParams.set('lon', String(biasCenter.longitude))
 
-  if (signal?.aborted) {
-    throw createAbortError()
-  }
-
-  let response: Awaited<ReturnType<typeof routesLib.Route.computeRoutes>>
+  let response: Response
   try {
-    response = await routesLib.Route.computeRoutes({
-      origin: toLatLngLiteral(origin),
-      destination: toLatLngLiteral(destination),
-      travelMode: 'DRIVING',
-      fields: ['durationMillis', 'distanceMeters', 'path'],
-      language: GOOGLE_MAPS_LANGUAGE,
-      region: GOOGLE_MAPS_REGION,
-    })
+    response = await fetch(url.toString(), { signal: options.signal })
   } catch (error) {
-    throw toGoogleMapsError(
-      error,
-      'ROUTES_ERROR',
-      'Dịch vụ chỉ đường Google Routes tạm thời không khả dụng.',
+    if (
+      options.signal?.aborted ||
+      (error instanceof DOMException && error.name === 'AbortError')
+    ) {
+      throw error
+    }
+    throw new GeocoderError(
+      'UNAVAILABLE',
+      'Không kết nối được dịch vụ gợi ý địa điểm. Bạn vẫn có thể chọn bãi trên hệ thống hoặc dùng GPS.',
     )
   }
 
-  if (signal?.aborted) {
-    throw createAbortError()
-  }
-
-  const primaryRoute = response?.routes?.[0]
-  const rawPath = primaryRoute?.path ?? []
-  const distanceMeters = primaryRoute?.distanceMeters
-  const durationMillis = primaryRoute?.durationMillis
-
-  if (
-    !primaryRoute ||
-    rawPath.length === 0 ||
-    typeof distanceMeters !== 'number' ||
-    !Number.isFinite(distanceMeters)
-  ) {
-    throw new GoogleMapsError(
-      'ROUTES_ERROR',
-      'Chưa tìm thấy tuyến đường tới bãi.',
+  if (response.status === 429) {
+    throw new GeocoderError(
+      'RATE_LIMITED',
+      'Dịch vụ gợi ý địa điểm đang giới hạn lưu lượng tạm thời. Vui lòng thử lại sau ít giây hoặc dùng GPS.',
     )
   }
 
-  const points = rawPath.map(fromLatLng).filter(isValidCoordinates)
-  if (points.length === 0) {
-    throw new GoogleMapsError(
-      'ROUTES_ERROR',
-      'Dữ liệu hình học tuyến đường không hợp lệ.',
+  if (!response.ok) {
+    throw new GeocoderError(
+      'UNAVAILABLE',
+      'Dịch vụ gợi ý địa điểm tạm thời không khả dụng. Bạn vẫn có thể chọn bãi trên hệ thống hoặc dùng GPS.',
     )
   }
 
-  const durationMinutes =
-    typeof durationMillis === 'number' && Number.isFinite(durationMillis)
-      ? Math.max(1, Math.round(durationMillis / 60000))
-      : 1
+  const payload = (await response.json()) as { features?: PhotonFeature[] }
+  const features = Array.isArray(payload.features) ? payload.features : []
+  const vietnamPlaces: Place[] = []
+  const seenLabels = new Set<string>()
 
-  return {
-    points,
-    distanceKm: distanceMeters / 1000,
-    durationMinutes,
+  for (const feature of features) {
+    const props = feature.properties ?? {}
+    const countryCode = props.countrycode?.toUpperCase()
+    const countryName = props.country?.toLocaleLowerCase('vi') ?? ''
+    const isVietnam =
+      countryCode === 'VN' ||
+      countryName === 'vietnam' ||
+      countryName === 'việt nam'
+    if (!isVietnam) continue
+
+    const coords = feature.geometry?.coordinates
+    if (!coords || coords.length < 2) continue
+
+    // GeoJSON order is [longitude, latitude]
+    const longitude = Number(coords[0])
+    const latitude = Number(coords[1])
+    const label = formatPhotonLabel(props)
+    if (!label || !isValidCoordinates({ latitude, longitude })) continue
+
+    const dedupKey = label.toLocaleLowerCase('vi')
+    if (seenLabels.has(dedupKey)) continue
+    seenLabels.add(dedupKey)
+
+    vietnamPlaces.push({
+      id: `${props.osm_type ?? 'p'}-${props.osm_id ?? vietnamPlaces.length}-${latitude.toFixed(4)}`,
+      label,
+      latitude,
+      longitude,
+    })
+
+    if (vietnamPlaces.length >= MAX_PHOTON_RESULTS) break
   }
+
+  writeToCache(cacheKey, vietnamPlaces)
+  return vietnamPlaces
 }
