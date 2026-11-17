@@ -5,6 +5,12 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      args:
+        VITE_API_BASE_URL: /api
+        VITE_APP_ENV: staging
+        VITE_GOOGLE_MAPS_API_KEY: ${VITE_GOOGLE_MAPS_API_KEY:-}
+        VITE_GOOGLE_MAPS_MAP_ID: ${VITE_GOOGLE_MAPS_MAP_ID:-}
+        VITE_APP_KEY: ${VITE_APP_KEY:-}
     image: ghcr.io/smart-parking-hub/smart-parking-app-v2:staging
     container_name: smart-parking-frontend-v2
     restart: unless-stopped

@@ -12,6 +12,19 @@ RUN npm ci
 # Copy entire frontend source code
 COPY . .
 
+# Vite injects VITE_* variables at build time
+ARG VITE_API_BASE_URL=/api
+ARG VITE_APP_ENV=production
+ARG VITE_GOOGLE_MAPS_API_KEY=
+ARG VITE_GOOGLE_MAPS_MAP_ID=
+ARG VITE_APP_KEY=
+
+ENV VITE_API_BASE_URL=$VITE_API_BASE_URL \
+    VITE_APP_ENV=$VITE_APP_ENV \
+    VITE_GOOGLE_MAPS_API_KEY=$VITE_GOOGLE_MAPS_API_KEY \
+    VITE_GOOGLE_MAPS_MAP_ID=$VITE_GOOGLE_MAPS_MAP_ID \
+    VITE_APP_KEY=$VITE_APP_KEY
+
 # Run production build via Vite + TypeScript compiler
 RUN npm run build
 
