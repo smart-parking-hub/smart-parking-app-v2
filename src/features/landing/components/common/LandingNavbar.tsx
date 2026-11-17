@@ -579,18 +579,47 @@ export function LandingNavbar() {
               <span>Tổng đài: 1900 6868 (24/7)</span>
             </a>
 
-            <Link
-              to="/login"
-              onClick={() => setMobileMenuOpen(false)}
-              className={cn(
-                'block text-center py-2.5 rounded-xl border text-sm font-semibold transition-colors',
-                isDarkNav
-                  ? 'border-slate-700 text-slate-200 hover:bg-slate-800'
-                  : 'border-slate-300 text-slate-700 hover:bg-slate-100'
-              )}
-            >
-              Đăng nhập tài khoản
-            </Link>
+            {isAuthenticated ? (
+              <div className="space-y-2">
+                <Link
+                  to={dashboardUrl}
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="flex items-center justify-center gap-2 text-center py-2.5 rounded-xl border border-brand-orange text-[#d95f00] bg-orange-50 font-bold text-sm transition-colors shadow-2xs"
+                >
+                  <span>Vào Dashboard</span>
+                  <ArrowRight className="h-4 w-4" aria-hidden="true" />
+                </Link>
+                <button
+                  type="button"
+                  onClick={() => {
+                    logout()
+                    setMobileMenuOpen(false)
+                  }}
+                  className={cn(
+                    'w-full flex items-center justify-center gap-2 text-center py-2 rounded-xl border text-sm font-medium transition-colors cursor-pointer',
+                    isDarkNav
+                      ? 'border-slate-700 text-slate-300 hover:bg-slate-800 hover:text-rose-400'
+                      : 'border-slate-200 text-slate-600 hover:bg-rose-50 hover:text-rose-600'
+                  )}
+                >
+                  <LogOut className="h-4 w-4" aria-hidden="true" />
+                  <span>Đăng xuất tài khoản</span>
+                </button>
+              </div>
+            ) : (
+              <Link
+                to="/login"
+                onClick={() => setMobileMenuOpen(false)}
+                className={cn(
+                  'block text-center py-2.5 rounded-xl border text-sm font-semibold transition-colors',
+                  isDarkNav
+                    ? 'border-slate-700 text-slate-200 hover:bg-slate-800'
+                    : 'border-slate-300 text-slate-700 hover:bg-slate-100'
+                )}
+              >
+                Đăng nhập tài khoản
+              </Link>
+            )}
           </div>
         </div>
       )}

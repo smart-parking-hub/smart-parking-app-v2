@@ -1,12 +1,12 @@
 import { useSyncExternalStore } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { SESSION_EVENT } from '@/features/auth'
+import { getToken, SESSION_EVENT } from '@/features/auth'
 import { getData } from '@/shared/api/resources'
 
 let previousToken: string | null | undefined
 let revision = 0
 function snapshot() {
-  const token = localStorage.getItem('access_token')
+  const token = getToken()
   if (token !== previousToken) { previousToken = token; revision += 1 }
   return revision
 }
@@ -26,7 +26,7 @@ export function UnreadNotificationDot() {
   const unread = useQuery({
     queryKey: ['notification-indicator', session],
     queryFn: ({ signal }) => getData<unknown>('/api/v1/notifications/unread-count', undefined, { signal }),
-    enabled: Boolean(localStorage.getItem('access_token')),
+    enabled: Boolean(getToken()),
     refetchInterval: 30_000,
     staleTime: 10_000,
     retry: false,
