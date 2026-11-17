@@ -202,7 +202,8 @@ test.describe('Flow 1: Tạo booking & Đặt cọc PayOS (SP-S3-INT-01)', () =>
     await expect(dialog.getByText('15 phút', { exact: true })).toBeVisible()
     await dialog.getByRole('button', { name: 'Tạo booking và xem tiền cọc' }).click()
 
-    await expect(dialog.getByText('BK-2026-0894', { exact: true })).toBeVisible()
+    await expect(dialog.getByText('#501', { exact: true })).toBeVisible()
+    expect(await dialog.innerHTML()).not.toContain('BK-2026-0894')
     await expect(dialog.getByText('Chờ thanh toán cọc', { exact: true })).toBeVisible()
     await expect(dialog.getByTestId('checkin-qr-container')).toHaveCount(0)
     expect(await page.evaluate(() => localStorage.getItem('smart-truck-parking.active_hold'))).toBeNull()

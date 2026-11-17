@@ -284,7 +284,8 @@ test.describe('Core E2E Lifecycle: Booking & cọc PayOS -> Barie Check-in -> Ba
     await expect(dialog).toBeVisible()
     await expect(dialog.getByRole('combobox', { name: 'Phương tiện của bạn' })).toHaveValue('3')
     await dialog.getByRole('button', { name: 'Tạo booking và xem tiền cọc' }).click()
-    await expect(dialog.getByText(bookingCode, { exact: true })).toBeVisible()
+    await expect(dialog.getByText('#9999', { exact: true })).toBeVisible()
+    expect(await dialog.innerHTML()).not.toContain(bookingCode)
     await expect(dialog.getByText('Chờ thanh toán cọc', { exact: true })).toBeVisible()
     await expect(dialog.getByTestId('checkin-qr-container')).toHaveCount(0)
     await dialog.getByRole('button', { name: /Thanh toán cọc.*qua PayOS/ }).click()
@@ -330,7 +331,7 @@ test.describe('Core E2E Lifecycle: Booking & cọc PayOS -> Barie Check-in -> Ba
       .click()
 
     await expect(
-      page.getByText('Đã xác nhận thu tiền mặt và trả chỗ thành công.'),
+      page.getByRole('dialog', { name: 'Hoàn tất giao dịch' }).getByText('Đã hoàn tất checkout và trả chỗ.'),
     ).toBeVisible()
 
     // Kiểm tra trang quản lý đơn hiển thị hoàn tất

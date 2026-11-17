@@ -192,8 +192,9 @@ for (const width of [390, 1440]) {
     await expect(closeBtn).toBeFocused()
     await submitBtn.click()
 
-    // Server booking code and status are displayed
-    await expect(dialog.getByText('BK-SERVER-88', { exact: true })).toBeVisible()
+    // Unpaid orders expose their order ID and status, keeping the check-in code hidden.
+    await expect(dialog.getByText('#88', { exact: true })).toBeVisible()
+    expect(await dialog.innerHTML()).not.toContain('BK-SERVER-88')
     await expect(dialog.getByText('Chờ thanh toán cọc')).toBeVisible()
 
     // Verify POST payload DTO
@@ -219,7 +220,7 @@ for (const width of [390, 1440]) {
     await expect(page).toHaveURL(/\/bookings\?bookingId=88$/)
 
     // Server booking appears in /bookings list
-    await expect(page.getByText('BK-SERVER-88', { exact: true })).toBeVisible()
+    await expect(page.getByText('#88', { exact: true })).toBeVisible()
     await expect(page.getByRole('heading', { level: 2, name: /Vé vừa xem.*Bãi Xe Phía Nam/ })).toBeVisible()
 
     expect(errors).toEqual([])

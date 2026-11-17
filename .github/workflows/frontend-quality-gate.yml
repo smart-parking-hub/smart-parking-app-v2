@@ -59,6 +59,9 @@ jobs:
           e2e/payos-embedded-checkout.spec.ts
           e2e/unpaid-hold-policy.spec.ts
           e2e/quick-hold-redesign.spec.ts
+          e2e/ui-consistency.spec.ts
+          e2e/driver-dashboard-real-data.spec.ts
+          e2e/merchant-slots.spec.ts
 
       - name: Upload Playwright Report & Artifacts on Failure
         if: always()
