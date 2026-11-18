@@ -131,6 +131,8 @@ export function MerchantDashboardPage() {
   const currentTransferRevenue = scopedMetrics?.transferGross ?? 0
   const currentTransferCount = scopedMetrics?.transferCount ?? 0
   const currentTotalRevenue = scopedMetrics?.totalGrossCombined ?? 0
+  const currentUnclassifiedRevenue = scopedMetrics?.unclassifiedGross ?? 0
+  const currentUnclassifiedCount = scopedMetrics?.unclassifiedCount ?? 0
 
   const currentBookings = isLotScoped
     ? (lotRevenueQuery.data?.completedBookings ?? '—')
@@ -298,13 +300,15 @@ export function MerchantDashboardPage() {
           />
         )}
 
-        {/* 2-Channel Revenue Breakdown (Chuyển khoản vs Tiền mặt) — only renders when scope data matches */}
+        {/* Channel Revenue Breakdown */}
         {activeRevenue && !isLotRevenuePending && !isLotRevenueError && (
           <MerchantChannelBreakdownCards
             transferAmount={currentTransferRevenue}
             transferCount={currentTransferCount}
             cashAmount={currentCashRevenue}
             cashBookingCount={currentCashBookings}
+            unclassifiedAmount={currentUnclassifiedRevenue}
+            unclassifiedCount={currentUnclassifiedCount}
             scopeLabel={scopeLabel}
             periodLabel={periodLabel}
           />

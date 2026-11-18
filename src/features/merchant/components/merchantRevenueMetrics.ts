@@ -36,9 +36,12 @@ export interface ScopedRevenueMetrics {
   transferNet: number
   platformFee: number
   transferCount: number
+  unclassifiedGross: number
+  unclassifiedNet: number
+  unclassifiedCount: number
   cash: number
   cashBookings: number
-  /** Unified gross revenue before platform fee: transferGross + cash */
+  /** Unified gross revenue before platform fee: transferGross + unclassifiedGross + cash */
   totalGrossCombined: number
 }
 
@@ -64,65 +67,67 @@ export function resolveScopedRevenueMetrics(
     ? num(data.periodCashBookings)
     : num(data.totalCashBookings)
 
+  // PR #103 F-01: Isolate identified transfer channels from legacy unclassified transactions
   const transferCount = usePeriodValues
-    ? num(data.periodOnlineTransferCount) +
-      num(data.periodCounterQrCount) +
-      num(data.periodUnclassifiedTransferCount)
-    : num(data.onlineTransferCount) +
-      num(data.counterQrCount) +
-      num(data.unclassifiedTransferCount)
+    ? num(data.periodOnlineTransferCount) + num(data.periodCounterQrCount)
+    : num(data.onlineTransferCount) + num(data.counterQrCount)
 
-  const channelNet = usePeriodValues
+  const unclassifiedCount = usePeriodValues
+    ? num(data.periodUnclassifiedTransferCount)
+    : num(data.unclassifiedTransferCount)
+
+  const unclassifiedNet = usePeriodValues
+    ? num(data.periodUnclassifiedTransferNetRevenue)
+    : num(data.unclassifiedTransferNetRevenue)
+
+  const unclassifiedGross = usePeriodValues
+    ? num(data.periodUnclassifiedTransferGrossRevenue)
+    : num(data.unclassifiedTransferGrossRevenue)
+
+  const identifiedChannelNet = usePeriodValues
     ? num(data.periodOnlineTransferNetRevenue) +
-      num(data.periodCounterQrNetRevenue) +
-      num(data.periodUnclassifiedTransferNetRevenue)
+      num(data.periodCounterQrNetRevenue)
     : num(data.onlineTransferNetRevenue) +
-      num(data.counterQrNetRevenue) +
-      num(data.unclassifiedTransferNetRevenue)
+      num(data.counterQrNetRevenue)
 
-  const hasChannelNet = usePeriodValues
+  const hasIdentifiedChannelNet = usePeriodValues
     ? hasAnyDefined(
         data.periodOnlineTransferNetRevenue,
         data.periodCounterQrNetRevenue,
-        data.periodUnclassifiedTransferNetRevenue,
       )
     : hasAnyDefined(
         data.onlineTransferNetRevenue,
         data.counterQrNetRevenue,
-        data.unclassifiedTransferNetRevenue,
       )
 
   const hasExplicitTotalNet = hasAnyDefined(
     usePeriodValues ? data.periodTotalNetRevenue : data.totalNetRevenue,
   )
+  const totalNetField = usePeriodValues
+    ? num(data.periodTotalNetRevenue)
+    : num(data.totalNetRevenue)
 
-  const transferNet = usePeriodValues
-    ? hasExplicitTotalNet
-      ? num(data.periodTotalNetRevenue)
-      : channelNet
-    : hasChannelNet
-      ? channelNet
-      : num(data.totalNetRevenue)
+  const transferNet = hasIdentifiedChannelNet
+    ? identifiedChannelNet
+    : hasExplicitTotalNet
+      ? Math.max(0, totalNetField - unclassifiedNet)
+      : 0
 
-  const hasExplicitChannelGross = usePeriodValues
+  const hasIdentifiedChannelGross = usePeriodValues
     ? hasAnyDefined(
         data.periodOnlineTransferGrossRevenue,
         data.periodCounterQrGrossRevenue,
-        data.periodUnclassifiedTransferGrossRevenue,
       )
     : hasAnyDefined(
         data.onlineTransferGrossRevenue,
         data.counterQrGrossRevenue,
-        data.unclassifiedTransferGrossRevenue,
       )
 
-  const channelGross = usePeriodValues
+  const identifiedChannelGross = usePeriodValues
     ? num(data.periodOnlineTransferGrossRevenue) +
-      num(data.periodCounterQrGrossRevenue) +
-      num(data.periodUnclassifiedTransferGrossRevenue)
+      num(data.periodCounterQrGrossRevenue)
     : num(data.onlineTransferGrossRevenue) +
-      num(data.counterQrGrossRevenue) +
-      num(data.unclassifiedTransferGrossRevenue)
+      num(data.counterQrGrossRevenue)
 
   const hasExplicitTotalGross = hasAnyDefined(
     usePeriodValues ? data.periodTotalGrossRevenue : data.totalGrossRevenue,
@@ -138,12 +143,11 @@ export function resolveScopedRevenueMetrics(
     ? num(data.periodTotalPlatformFee)
     : num(data.totalPlatformFee)
 
-  // Prefer explicit presence (including valid 0) before falling back to net for legacy mocks that omit gross fields.
   let transferGross: number
-  if (hasExplicitChannelGross) {
-    transferGross = channelGross
+  if (hasIdentifiedChannelGross) {
+    transferGross = identifiedChannelGross
   } else if (hasExplicitTotalGross) {
-    transferGross = totalGrossField
+    transferGross = Math.max(0, totalGrossField - unclassifiedGross)
   } else if (hasExplicitFee && transferNet !== 0) {
     transferGross = transferNet + explicitFeeField
   } else {
@@ -152,16 +156,19 @@ export function resolveScopedRevenueMetrics(
 
   const platformFee = hasExplicitFee
     ? explicitFeeField
-    : Math.max(0, transferGross - transferNet)
+    : Math.max(0, transferGross + unclassifiedGross - (transferNet + unclassifiedNet))
 
   return {
     transferGross,
     transferNet,
     platformFee,
     transferCount,
+    unclassifiedGross,
+    unclassifiedNet,
+    unclassifiedCount,
     cash,
     cashBookings,
-    totalGrossCombined: transferGross + cash,
+    totalGrossCombined: transferGross + unclassifiedGross + cash,
   }
 }
 

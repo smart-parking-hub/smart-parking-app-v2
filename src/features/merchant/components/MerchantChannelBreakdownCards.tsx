@@ -1,4 +1,4 @@
-import { Banknote, Building2, CreditCard } from 'lucide-react'
+import { Banknote, Building2, CreditCard, HelpCircle } from 'lucide-react'
 import { Panel, money } from '@/shared/components/Workspace'
 
 export interface MerchantChannelBreakdownCardsProps {
@@ -6,6 +6,8 @@ export interface MerchantChannelBreakdownCardsProps {
   transferCount: number
   cashAmount: number
   cashBookingCount: number
+  unclassifiedAmount?: number
+  unclassifiedCount?: number
   scopeLabel: string
   periodLabel: string
 }
@@ -15,15 +17,19 @@ export function MerchantChannelBreakdownCards({
   transferCount,
   cashAmount,
   cashBookingCount,
+  unclassifiedAmount = 0,
+  unclassifiedCount = 0,
   scopeLabel,
   periodLabel,
 }: MerchantChannelBreakdownCardsProps) {
-  const totalCombined = transferAmount + cashAmount
+  const hasUnclassified = unclassifiedAmount > 0 || unclassifiedCount > 0
+  const totalCombined = transferAmount + cashAmount + unclassifiedAmount
   const pct = (value: number) =>
     totalCombined > 0 ? Math.round((value / totalCombined) * 1000) / 10 : 0
 
   const transferPct = pct(transferAmount)
   const cashPct = pct(cashAmount)
+  const unclassifiedPct = pct(unclassifiedAmount)
 
   const channels = [
     {
@@ -48,6 +54,21 @@ export function MerchantChannelBreakdownCards({
       iconBg: 'bg-orange-50 text-[#d95f00] border-orange-200',
       valueColor: 'text-[#0d1c2e]',
     },
+    ...(hasUnclassified
+      ? [
+          {
+            key: 'unclassified',
+            label: 'Chưa phân loại (trước phí)',
+            amount: unclassifiedAmount,
+            count: unclassifiedCount,
+            countUnit: 'giao dịch',
+            share: unclassifiedPct,
+            icon: HelpCircle,
+            iconBg: 'bg-amber-50 text-amber-700 border-amber-200',
+            valueColor: 'text-amber-900',
+          },
+        ]
+      : []),
   ] as const
 
   return (
@@ -71,9 +92,9 @@ export function MerchantChannelBreakdownCards({
         </div>
       </div>
 
-      {/* Horizontal 2-channel proportion strip */}
+      {/* Horizontal channel proportion strip */}
       {totalCombined > 0 && (
-        <div className="space-y-1.5" aria-label="Tỷ trọng chuyển khoản và tiền mặt">
+        <div className="space-y-1.5" aria-label="Tỷ trọng theo kênh doanh thu">
           <div className="flex h-2.5 w-full overflow-hidden rounded-full bg-slate-100">
             {transferAmount > 0 && (
               <div
@@ -89,6 +110,13 @@ export function MerchantChannelBreakdownCards({
                 title={`Tiền mặt: ${cashPct}%`}
               />
             )}
+            {unclassifiedAmount > 0 && (
+              <div
+                style={{ width: `${(unclassifiedAmount / totalCombined) * 100}%` }}
+                className="bg-amber-400 transition-all duration-300"
+                title={`Chưa phân loại: ${unclassifiedPct}%`}
+              />
+            )}
           </div>
           <div className="flex flex-wrap items-center gap-4 text-[11px] font-medium text-slate-600">
             <span className="inline-flex items-center gap-1.5">
@@ -99,13 +127,21 @@ export function MerchantChannelBreakdownCards({
               <span className="h-2.5 w-2.5 rounded-xs bg-orange-500" />
               Tiền mặt ({cashPct}%)
             </span>
+            {unclassifiedAmount > 0 && (
+              <span className="inline-flex items-center gap-1.5 text-amber-800">
+                <span className="h-2.5 w-2.5 rounded-xs bg-amber-400" />
+                Chưa phân loại ({unclassifiedPct}%)
+              </span>
+            )}
           </div>
         </div>
       )}
 
       <div
         data-testid="merchant-channel-breakdown-cards"
-        className="grid grid-cols-1 gap-3.5 md:grid-cols-2"
+        className={`grid grid-cols-1 gap-3.5 ${
+          hasUnclassified ? 'md:grid-cols-3' : 'md:grid-cols-2'
+        }`}
       >
         {channels.map((ch) => {
           const Icon = ch.icon

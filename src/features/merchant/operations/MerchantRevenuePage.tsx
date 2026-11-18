@@ -333,6 +333,8 @@ export function MerchantRevenuePage() {
                     transferCount={transferCount}
                     cashAmount={scopedCashRevenue}
                     cashBookingCount={scopedCashBookings}
+                    unclassifiedAmount={metrics.unclassifiedGross}
+                    unclassifiedCount={metrics.unclassifiedCount}
                     scopeLabel={scopeLabel}
                     periodLabel={periodLabel}
                   />

@@ -13,6 +13,7 @@ import { GateSettlementDialog } from '../operations/GateSettlementDialog'
 import { MerchantBookingsPage } from '../bookings/pages/MerchantBookingsPage'
 import { getMerchantBookingsStoreSnapshot } from '../bookings/store/merchantBookingsStore'
 import { MerchantRevenueByLotTable } from '../components/MerchantRevenueByLotTable'
+import { MerchantChannelBreakdownCards } from '../components/MerchantChannelBreakdownCards'
 import {
   resolveLotTransferGross,
   resolveScopedRevenueMetrics,
@@ -502,5 +503,90 @@ describe('PR #103 Review Regression Suite (F-02, F-03, F-04)', () => {
     const lotRow = screen.getByTestId('lot-revenue-row-10')
     expect(lotRow).not.toHaveTextContent(/-2\.000/)
     expect(lotRow).not.toHaveTextContent(/18\.000/)
+  })
+
+  it('F-01: separates unclassified transactions into its own group and does not lump them into Chuyển khoản', async () => {
+    // Online transfer: 100k (1 tx), Counter QR: 50k (1 tx), Unclassified (legacy UNKNOWN): 200k (2 tx), Cash: 40k (1 tx)
+    const payloadWithUnclassified = {
+      totalGrossRevenue: 350000,
+      totalPlatformFee: 35000,
+      totalNetRevenue: 315000,
+      periodTotalGrossRevenue: 350000,
+      periodTotalPlatformFee: 35000,
+      periodTotalNetRevenue: 315000,
+      currentWalletBalance: 315000,
+      completedBookings: 5,
+      onlineTransferGrossRevenue: 100000,
+      onlineTransferNetRevenue: 90000,
+      onlineTransferCount: 1,
+      periodOnlineTransferGrossRevenue: 100000,
+      periodOnlineTransferNetRevenue: 90000,
+      periodOnlineTransferCount: 1,
+      counterQrGrossRevenue: 50000,
+      counterQrNetRevenue: 45000,
+      counterQrCount: 1,
+      periodCounterQrGrossRevenue: 50000,
+      periodCounterQrNetRevenue: 45000,
+      periodCounterQrCount: 1,
+      unclassifiedTransferGrossRevenue: 200000,
+      unclassifiedTransferNetRevenue: 180000,
+      unclassifiedTransferCount: 2,
+      periodUnclassifiedTransferGrossRevenue: 200000,
+      periodUnclassifiedTransferNetRevenue: 180000,
+      periodUnclassifiedTransferCount: 2,
+      totalCashRevenue: 40000,
+      totalCashBookings: 1,
+      periodCashRevenue: 40000,
+      periodCashBookings: 1,
+      revenueByParkingLot: [],
+      series: [{ period: '2026-11-18', revenue: 315000, bookingCount: 5 }],
+    }
+
+    const metrics = resolveScopedRevenueMetrics(payloadWithUnclassified, false)
+
+    // Identified transfer channel only has online transfer + counter QR (100k + 50k = 150k, 2 tx)
+    expect(metrics.transferGross).toBe(150000)
+    expect(metrics.transferNet).toBe(135000)
+    expect(metrics.transferCount).toBe(2)
+
+    // Unclassified transactions are isolated
+    expect(metrics.unclassifiedGross).toBe(200000)
+    expect(metrics.unclassifiedNet).toBe(180000)
+    expect(metrics.unclassifiedCount).toBe(2)
+
+    // Combined total includes transfer + unclassified + cash (150k + 200k + 40k = 390k)
+    expect(metrics.totalGrossCombined).toBe(390000)
+
+    // Render component and assert 3 distinct cards
+    render(
+      <MerchantChannelBreakdownCards
+        transferAmount={metrics.transferGross}
+        transferCount={metrics.transferCount}
+        cashAmount={metrics.cash}
+        cashBookingCount={metrics.cashBookings}
+        unclassifiedAmount={metrics.unclassifiedGross}
+        unclassifiedCount={metrics.unclassifiedCount}
+        scopeLabel="Tất cả bãi đỗ"
+        periodLabel="Toàn thời gian"
+      />
+    )
+
+    // Verify Chuyển khoản card only displays 150k and 2 transactions
+    const transferCard = screen.getByTestId('channel-card-transfer')
+    expect(transferCard).toHaveTextContent(/Chuyển khoản \(trước phí\)/)
+    expect(transferCard).toHaveTextContent(/150\.000/)
+    expect(transferCard).toHaveTextContent(/2 giao dịch/)
+
+    // Verify Chưa phân loại card is rendered with 200k and 2 transactions
+    const unclassifiedCard = screen.getByTestId('channel-card-unclassified')
+    expect(unclassifiedCard).toHaveTextContent(/Chưa phân loại \(trước phí\)/)
+    expect(unclassifiedCard).toHaveTextContent(/200\.000/)
+    expect(unclassifiedCard).toHaveTextContent(/2 giao dịch/)
+
+    // Verify Tiền mặt card has 40k
+    const cashCard = screen.getByTestId('channel-card-cash')
+    expect(cashCard).toHaveTextContent(/Tiền mặt/)
+    expect(cashCard).toHaveTextContent(/40\.000/)
+    expect(cashCard).toHaveTextContent(/1 lượt/)
   })
 })
