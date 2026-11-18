@@ -507,3 +507,106 @@ it('filters bookings by search keyword, status, and resets on Xóa lọc (TKT-05
   })
 })
 
+it('opens booking detail modal and displays overtime penalty breakdown from TariffAuditTable (F-01)', async () => {
+  // Arrange
+  const overtimeBooking = {
+    id: 99,
+    bookingCode: 'BK-OVERTIME-99',
+    parkingLotId: 7,
+    merchantId: 9,
+    parkingLotName: 'Bãi Xe Cát Lái Phụ Phí',
+    vehicleId: 3,
+    vehiclePlate: '51C-OVERTIME',
+    status: 'AWAITING_FINAL_PAYMENT',
+    advanceDeposit: 40000,
+    totalAmount: 250000,
+    hourlyRate: 40000,
+    overtimePenaltyMultiplier: 1.5,
+    surgeMultiplier: 1,
+    expectedCheckInTime: '2026-02-14T10:00:00Z',
+    expectedCheckOutTime: '2026-02-14T14:00:00Z',
+    checkInTime: '2026-02-14T10:00:00Z',
+    checkOutTime: '2026-02-14T15:20:00Z', // Vượt 80 phút = 3 blocks 30p
+    expiresAt: '2026-02-14T16:00:00Z',
+  }
+
+  vi.mocked(apiClient.get).mockImplementation(async (url) => ({
+    data: {
+      data: String(url).endsWith('/bookings')
+        ? { content: [overtimeBooking], totalElements: 1, totalPages: 1, currentPage: 0 }
+        : String(url).includes('/disputes/me')
+          ? { content: [], totalElements: 0, totalPages: 1, currentPage: 0 }
+          : overtimeBooking,
+    },
+  }))
+
+  // Act: Mount page
+  mount(<MyBookingsPage />, '/bookings', '/bookings')
+  expect(await screen.findByText('BK-OVERTIME-99')).toBeInTheDocument()
+
+  // Click "Xem vé & chi tiết"
+  const detailBtn = screen.getByRole('button', { name: /Xem vé & chi tiết/i })
+  fireEvent.click(detailBtn)
+
+  // Assert:
+  // Modal chi tiết mở ra
+  const modal = await screen.findByRole('dialog')
+  expect(within(modal).getByRole('heading', { name: /Chi tiết lượt đặt chỗ/i })).toBeInTheDocument()
+
+  // Xác nhận bảng TariffAuditTable và dòng phụ phí đỗ quá giờ quy định xuất hiện
+  const penaltyRow = await within(modal).findByTestId('overtime-penalty-row')
+  expect(penaltyRow).toBeInTheDocument()
+  expect(within(penaltyRow).getByText('Phụ phí đỗ quá giờ quy định')).toBeInTheDocument()
+  expect(within(penaltyRow).getByText(/HỆ SỐ 1.5×/i)).toBeInTheDocument()
+  expect(within(penaltyRow).getAllByText(/\+90\.000 đ/)).toHaveLength(2)
+  expect(within(modal).getByText('160.000 đ')).toBeInTheDocument()
+  expect(within(modal).getByText('BẢNG ĐỐI SOÁT CƯỚC PHÍ CHI TIẾT')).toBeInTheDocument()
+})
+
+it('does not display settlement tariff audit table before checkout when booking is in PARKING status (PR #105 F-01)', async () => {
+  // Arrange: Booking đang đỗ trong bãi (chưa checkout, chưa chốt cước thực tế)
+  const parkingBooking = {
+    id: 66,
+    bookingCode: 'BK-PARK-66',
+    parkingLotId: 7,
+    merchantId: 9,
+    parkingLotName: 'Bãi Xe Cát Lái Đang Đỗ',
+    vehicleId: 3,
+    vehiclePlate: '51C-PARKING',
+    status: 'PARKING',
+    advanceDeposit: 50000,
+    totalAmount: 200000,
+    hourlyRate: 40000,
+    overtimePenaltyMultiplier: 1.0,
+    surgeMultiplier: 1,
+    expectedCheckInTime: '2026-02-14T10:00:00Z',
+    expectedCheckOutTime: '2026-02-14T18:00:00Z',
+    checkInTime: '2026-02-14T10:00:00Z',
+    expiresAt: '2026-02-14T19:00:00Z',
+  }
+
+  vi.mocked(apiClient.get).mockImplementation(async (url) => ({
+    data: {
+      data: String(url).endsWith('/bookings')
+        ? { content: [parkingBooking], totalElements: 1, totalPages: 1, currentPage: 0 }
+        : String(url).includes('/disputes/me')
+          ? { content: [], totalElements: 0, totalPages: 1, currentPage: 0 }
+          : parkingBooking,
+    },
+  }))
+
+  // Act
+  mount(<MyBookingsPage />, '/bookings', '/bookings')
+  expect(await screen.findByText('BK-PARK-66')).toBeInTheDocument()
+
+  const detailBtn = screen.getByRole('button', { name: /Xem vé & chi tiết/i })
+  fireEvent.click(detailBtn)
+
+  // Assert:
+  const modal = await screen.findByRole('dialog')
+  expect(within(modal).getByRole('heading', { name: /Chi tiết lượt đặt chỗ/i })).toBeInTheDocument()
+  // Bảng quyết toán chi tiết không xuất hiện khi chưa checkout
+  expect(within(modal).queryByTestId('booking-status-tariff-audit')).not.toBeInTheDocument()
+  expect(within(modal).queryByText('BẢNG ĐỐI SOÁT CƯỚC PHÍ CHI TIẾT')).not.toBeInTheDocument()
+})
+

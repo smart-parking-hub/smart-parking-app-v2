@@ -1,4 +1,5 @@
 import { apiClient } from '@/shared/api/client'
+import type { Booking } from '@/features/booking-flow'
 import type {
   BookingItemDto,
   CancelBookingRequest,
@@ -90,16 +91,23 @@ export const fallbackBookingsList: BookingItemDto[] = [
     status: 'COMPLETED',
     statusBadgeLabel: 'HOÀN TẤT',
     createdAtText: '14/02/2026',
-    expectedCheckInTime: '14/02/2026 - 15:00',
-    expectedCheckOutTime: '14/02/2026 - 21:10',
-    actualCheckInTime: '14/02/2026 - 15:00',
-    actualCheckOutTime: '14/02/2026 - 21:10',
-    baseRatePerHour: 35000,
-    actualDurationHours: 6,
-    actualDurationText: 'Hoàn thành: 14/02/2026 - 21:10',
-    parkingSubtotal: 220000,
-    depositPaid: 100000,
-    remainingFinalPayment: 0,
+    expectedCheckInTime: '14/02/2026 - 14:00',
+    expectedCheckOutTime: '14/02/2026 - 18:00',
+    actualCheckInTime: '14/02/2026 - 14:00',
+    actualCheckOutTime: '14/02/2026 - 19:20',
+    baseRatePerHour: 40000,
+    actualDurationHours: 5,
+    actualDurationText: 'Hoàn thành: 14/02/2026 - 19:20 (Vượt 1 giờ 20 phút)',
+    isOvertime: true,
+    overtimeMinutes: 80,
+    overtimeBlocks: 3,
+    overtimeHoursText: '1 giờ 20 phút',
+    overtimePenaltyMultiplier: 1.5,
+    penaltyAmount: 90000,
+    standardParkingFee: 160000,
+    parkingSubtotal: 250000,
+    depositPaid: 40000,
+    remainingFinalPayment: 210000,
     gateToken: 'STH-8705',
   },
   {
@@ -124,6 +132,178 @@ export const fallbackBookingsList: BookingItemDto[] = [
   },
 ]
 
+export function parseBookingDateTime(str?: unknown): Date | null {
+  if (!str || typeof str !== 'string') return null
+  const trimmed = str.trim()
+  const match = trimmed.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})\s*-?\s+(\d{1,2}):(\d{2})$/)
+  if (match) {
+    const [, day, month, year, hours, minutes] = match
+    return parseBookingDateTime(`${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}T${hours.padStart(2, '0')}:${minutes}`)
+  }
+  if (!/^\d{4}-\d{2}-\d{2}T/.test(trimmed)) return null
+  // The booking API's LocalDateTime values use Vietnam wall time.
+  const date = new Date(/(?:Z|[+-]\d{2}:\d{2})$/.test(trimmed) ? trimmed : `${trimmed}+07:00`)
+  return Number.isFinite(date.getTime()) ? date : null
+}
+
+export function parseLocalTimeString(str?: unknown): { hour: number; minute: number; second: number } | null {
+  if (!str || typeof str !== 'string') return null
+  const match = str.trim().match(/^(\d{1,2}):(\d{2})(?::(\d{2}))?/)
+  if (!match) return null
+  return {
+    hour: Number(match[1]),
+    minute: Number(match[2]),
+    second: Number(match[3] ?? 0),
+  }
+}
+
+export function isTimeInSurgeWindow(
+  timeDate: Date,
+  surgeStartStr?: unknown,
+  surgeEndStr?: unknown
+): boolean {
+  const start = parseLocalTimeString(surgeStartStr)
+  const end = parseLocalTimeString(surgeEndStr)
+  if (!start || !end) return false
+
+  const startSec = start.hour * 3600 + start.minute * 60 + start.second
+  const endSec = end.hour * 3600 + end.minute * 60 + end.second
+  if (startSec === endSec) return false
+
+  const currentSec =
+    ((timeDate.getUTCHours() + 7) % 24) * 3600 + timeDate.getUTCMinutes() * 60 + timeDate.getUTCSeconds()
+
+  if (startSec < endSec) {
+    return currentSec >= startSec && currentSec < endSec
+  } else {
+    return currentSec >= startSec || currentSec < endSec
+  }
+}
+
+export function computeOvertimeDetails(
+  expectedCheckOut?: unknown,
+  actualCheckOut?: unknown,
+  baseRatePerHour: number = 40000,
+  overtimeMultiplier: number = 1.0,
+  totalAmount?: number,
+  surgeMultiplier?: number,
+  surgeStartTime?: unknown,
+  surgeEndTime?: unknown,
+  actualCheckIn?: unknown
+) {
+  const expectedDate = parseBookingDateTime(expectedCheckOut)
+  const actualDate = parseBookingDateTime(actualCheckOut)
+  const checkInDate = parseBookingDateTime(actualCheckIn)
+
+  if (!expectedDate || !actualDate) {
+    return {
+      isOvertime: false,
+      overtimeMinutes: 0,
+      overtimeBlocks: 0,
+      overtimeHoursText: '',
+      overtimePenaltyMultiplier: overtimeMultiplier,
+      surgeMultiplier,
+      surgeBlocks: 0,
+      hasSurgeApplied: false,
+      penaltyAmount: 0,
+      standardParkingFee: totalAmount ?? 0,
+    }
+  }
+
+  // Khớp Backend CheckInOutServiceImpl.java dòng 158:
+  // LocalDateTime overtimeStart = start.isAfter(booking.getExpectedCheckOutTime()) ? start : booking.getExpectedCheckOutTime();
+  const effectiveStartDate =
+    checkInDate && checkInDate.getTime() > expectedDate.getTime()
+      ? checkInDate
+      : expectedDate
+
+  const diffMs = actualDate.getTime() - effectiveStartDate.getTime()
+
+  if (diffMs <= 0) {
+    return {
+      isOvertime: false,
+      overtimeMinutes: 0,
+      overtimeBlocks: 0,
+      overtimeHoursText: '',
+      overtimePenaltyMultiplier: overtimeMultiplier,
+      surgeMultiplier,
+      surgeBlocks: 0,
+      hasSurgeApplied: false,
+      penaltyAmount: 0,
+      standardParkingFee: totalAmount ?? 0,
+    }
+  }
+
+  const diffMinutes = Math.floor(diffMs / 60000)
+  const hours = Math.floor(diffMinutes / 60)
+  const mins = diffMinutes % 60
+
+  let overtimeHoursText: string
+  if (diffMinutes === 0) {
+    const diffSec = Math.max(1, Math.round(diffMs / 1000))
+    overtimeHoursText = `${diffSec} giây`
+  } else if (hours > 0) {
+    overtimeHoursText = mins > 0 ? `${hours} giờ ${mins} phút` : `${hours} giờ`
+  } else {
+    overtimeHoursText = `${mins} phút`
+  }
+
+  // Khớp chính xác 100% thuật toán ParkingCharge.java của Backend:
+  // Duyệt từng block 30 phút bắt đầu từ effectiveStartDate đến actualDate
+  // Bất kỳ block nào bắt đầu trước actualDate đều được tính (commenced half-hour)
+  const fromMs = effectiveStartDate.getTime()
+  const untilMs = actualDate.getTime()
+  const blockMs = 30 * 60 * 1000
+
+  const effectivePenalty =
+    typeof overtimeMultiplier === 'number' && overtimeMultiplier > 0
+      ? overtimeMultiplier
+      : 1.0
+
+  const penaltyRate = baseRatePerHour * effectivePenalty
+  const blockBaseRate = (penaltyRate * 30) / 60
+
+  let calculatedPenalty = 0
+  let overtimeBlocks = 0
+  let surgeBlocks = 0
+
+  for (let blockTime = fromMs; blockTime < untilMs; blockTime += blockMs) {
+    overtimeBlocks++
+    const blockDate = new Date(blockTime)
+    const inPeak = isTimeInSurgeWindow(blockDate, surgeStartTime, surgeEndTime)
+    const hasSurge =
+      inPeak && typeof surgeMultiplier === 'number' && surgeMultiplier > 1
+    const blockSurge = hasSurge ? surgeMultiplier : 1.0
+    if (hasSurge) {
+      surgeBlocks++
+    }
+    calculatedPenalty += blockBaseRate * blockSurge
+  }
+
+  const roundedPenalty = Math.round(calculatedPenalty)
+  const penaltyAmount =
+    totalAmount != null && totalAmount > 0
+      ? Math.min(totalAmount, roundedPenalty)
+      : roundedPenalty
+  const standardParkingFee =
+    totalAmount != null && totalAmount > 0
+      ? Math.max(0, totalAmount - penaltyAmount)
+      : 0
+
+  return {
+    isOvertime: true,
+    overtimeMinutes: diffMinutes,
+    overtimeBlocks,
+    overtimeHoursText,
+    overtimePenaltyMultiplier: effectivePenalty,
+    surgeMultiplier,
+    surgeBlocks,
+    hasSurgeApplied: surgeBlocks > 0,
+    penaltyAmount,
+    standardParkingFee,
+  }
+}
+
 function mapBackendDtoToBookingItem(raw: Record<string, unknown>, index: number): BookingItemDto {
   const id = Number(raw.id ?? index + 1)
   const bookingCode = String(raw.bookingCode ?? `BK-2026-${9000 + id}`)
@@ -137,6 +317,28 @@ function mapBackendDtoToBookingItem(raw: Record<string, unknown>, index: number)
   const depositPaid = Number(raw.advanceDeposit ?? 100000)
   const totalAmount = Number(raw.totalAmount ?? 160000)
   const remainingFinalPayment = Math.max(0, totalAmount - depositPaid)
+
+  // Khớp Backend CheckInOutServiceImpl.java: mặc định penalty là 1.0 nếu null
+  const overtimeMultiplier =
+    raw.overtimePenaltyMultiplier != null ? Number(raw.overtimePenaltyMultiplier) : 1.0
+  const surgeMultiplier = raw.surgeMultiplier != null ? Number(raw.surgeMultiplier) : undefined
+  const surgeStartTime = raw.surgeStartTime ? String(raw.surgeStartTime) : undefined
+  const surgeEndTime = raw.surgeEndTime ? String(raw.surgeEndTime) : undefined
+
+  const checkInRaw = raw.checkInTime ?? raw.actualCheckInTime
+  const checkOutRaw = raw.checkOutTime ?? raw.actualCheckOutTime
+
+  const overtimeInfo = computeOvertimeDetails(
+    raw.expectedCheckOutTime,
+    checkOutRaw,
+    baseRatePerHour,
+    overtimeMultiplier,
+    totalAmount,
+    surgeMultiplier,
+    surgeStartTime,
+    surgeEndTime,
+    checkInRaw
+  )
 
   return {
     id,
@@ -159,18 +361,98 @@ function mapBackendDtoToBookingItem(raw: Record<string, unknown>, index: number)
     createdAtText: raw.createdAt ? String(raw.createdAt).slice(0, 16) : 'Hôm nay',
     expectedCheckInTime: raw.expectedCheckInTime ? String(raw.expectedCheckInTime).slice(0, 16) : 'Theo lịch hẹn',
     expectedCheckOutTime: raw.expectedCheckOutTime ? String(raw.expectedCheckOutTime).slice(0, 16) : 'Theo lịch hẹn',
-    actualCheckInTime: raw.checkInTime ? String(raw.checkInTime).slice(0, 16) : undefined,
-    actualCheckOutTime: raw.checkOutTime ? String(raw.checkOutTime).slice(0, 16) : undefined,
+    actualCheckInTime: checkInRaw ? String(checkInRaw).slice(0, 16) : undefined,
+    actualCheckOutTime: checkOutRaw ? String(checkOutRaw).slice(0, 16) : undefined,
     gateInName: 'Cổng vào ALPR',
     gateOutName: 'Làn ra Barie',
     alprMatchRate: 'Khớp 100%',
     baseRatePerHour,
     actualDurationHours: 4,
-    actualDurationText: 'Dự kiến đỗ 4 giờ',
+    actualDurationText: overtimeInfo.isOvertime
+      ? `Quá hạn: Vượt ${overtimeInfo.overtimeHoursText}`
+      : 'Dự kiến đỗ 4 giờ',
     parkingSubtotal: totalAmount,
     depositPaid,
+    advanceDeposit: depositPaid,
+    surgeMultiplier,
+    surgeStartTime,
+    surgeEndTime,
+    surgeBlocks: overtimeInfo.surgeBlocks,
+    hasSurgeApplied: overtimeInfo.hasSurgeApplied,
+    isOvertime: overtimeInfo.isOvertime,
+    overtimeMinutes: overtimeInfo.overtimeMinutes,
+    overtimeBlocks: overtimeInfo.overtimeBlocks,
+    overtimeHoursText: overtimeInfo.overtimeHoursText,
+    overtimePenaltyMultiplier: overtimeInfo.overtimePenaltyMultiplier,
+    penaltyAmount: overtimeInfo.penaltyAmount,
+    standardParkingFee: overtimeInfo.standardParkingFee,
     remainingFinalPayment,
     gateToken: `STH-${id}`,
+  }
+}
+
+/** Chuyển đổi dữ liệu Booking từ API backend / booking-flow thành BookingItemDto hiển thị chuẩn */
+export function bookingToItemDto(b: Booking & { hourlyRate: number; totalAmount: number }): BookingItemDto {
+  const { id, bookingCode, status, advanceDeposit: depositPaid, totalAmount, hourlyRate: baseRatePerHour } = b
+  const remainingFinalPayment = Math.max(0, totalAmount - depositPaid)
+
+  const overtimeMultiplier = b.overtimePenaltyMultiplier ?? 1
+  const surgeMultiplier = b.surgeMultiplier ?? undefined
+  const surgeStartTime = b.surgeStartTime ?? undefined
+  const surgeEndTime = b.surgeEndTime ?? undefined
+  const checkIn = parseBookingDateTime(b.checkInTime)
+  const checkOut = parseBookingDateTime(b.checkOutTime)
+  const durationMinutes = checkIn && checkOut
+    ? Math.max(0, Math.floor((checkOut.getTime() - checkIn.getTime()) / 60000))
+    : 0
+  const timeLabel = (date: Date | null) => date?.toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' })
+
+  const overtimeInfo = computeOvertimeDetails(
+    b.expectedCheckOutTime,
+    b.checkOutTime,
+    baseRatePerHour,
+    overtimeMultiplier,
+    totalAmount,
+    surgeMultiplier,
+    surgeStartTime,
+    surgeEndTime,
+    b.checkInTime
+  )
+
+  return {
+    id,
+    bookingCode,
+    parkingLotName: b.parkingLotName ?? 'Chưa có tên bãi',
+    parkingLotAddress: b.parkingLotAddress ?? '',
+    vehiclePlate: b.vehiclePlate ?? '',
+    vehicleType: b.vehicleType ?? '',
+    status,
+    statusBadgeLabel: status,
+    createdAtText: '',
+    expectedCheckInTime: timeLabel(parseBookingDateTime(b.expectedCheckInTime)) ?? 'Theo lịch hẹn',
+    expectedCheckOutTime: timeLabel(parseBookingDateTime(b.expectedCheckOutTime)) ?? 'Theo lịch hẹn',
+    actualCheckInTime: timeLabel(checkIn),
+    actualCheckOutTime: timeLabel(checkOut),
+    baseRatePerHour,
+    actualDurationHours: durationMinutes / 60,
+    actualDurationText: checkIn && checkOut ? `${durationMinutes} phút` : 'Chưa có giờ vào hoặc giờ ra',
+    parkingSubtotal: totalAmount,
+    depositPaid,
+    advanceDeposit: depositPaid,
+    surgeMultiplier,
+    surgeStartTime,
+    surgeEndTime,
+    surgeBlocks: overtimeInfo.surgeBlocks,
+    hasSurgeApplied: overtimeInfo.hasSurgeApplied,
+    isOvertime: overtimeInfo.isOvertime,
+    overtimeMinutes: overtimeInfo.overtimeMinutes,
+    overtimeBlocks: overtimeInfo.overtimeBlocks,
+    overtimeHoursText: overtimeInfo.overtimeHoursText,
+    overtimePenaltyMultiplier: overtimeInfo.overtimePenaltyMultiplier,
+    penaltyAmount: overtimeInfo.penaltyAmount,
+    standardParkingFee: overtimeInfo.standardParkingFee,
+    remainingFinalPayment,
+    gateToken: '',
   }
 }
 
