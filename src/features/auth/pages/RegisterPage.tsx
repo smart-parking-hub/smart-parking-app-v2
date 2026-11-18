@@ -38,6 +38,8 @@ const ROLE_OPTIONS: SelectOption[] = [
   },
 ]
 
+const MAGIC_LINK_PARAMS = ['email', 'otpCode', 'otp', 'autoVerify']
+
 export function RegisterPage({ mode = 'register' }: { mode?: 'login' | 'register' | 'forgot' }) {
   const navigate = useNavigate()
   const location = useLocation()
@@ -48,6 +50,7 @@ export function RegisterPage({ mode = 'register' }: { mode?: 'login' | 'register
     defaultValues: getRegistrationDefaults('DRIVER'),
     mode: mode === 'register' ? 'onTouched' : 'onSubmit',
   })
+  const { reset: resetForm, clearErrors, setValue } = form
   const emailValue = (form.watch('email') ?? '').trim().toLowerCase()
   const currentOtpCode = (form.watch('otpCode') ?? '').trim()
   const selectedRole = form.watch('role')
@@ -72,15 +75,6 @@ export function RegisterPage({ mode = 'register' }: { mode?: 'login' | 'register
   const shouldFocusFullNameAfterCloseRef = useRef(false)
   const pendingFocusRafRef = useRef<number>(0)
   const cancelRoleBtnRef = useRef<HTMLButtonElement>(null)
-
-  useEffect(() => {
-    if (isConfirmRoleDialogOpen) {
-      const timer = setTimeout(() => {
-        cancelRoleBtnRef.current?.focus()
-      }, 50)
-      return () => clearTimeout(timer)
-    }
-  }, [isConfirmRoleDialogOpen])
 
   // Lifecycle generations & request IDs
   const sessionGenerationRef = useRef(1)
@@ -385,6 +379,10 @@ export function RegisterPage({ mode = 'register' }: { mode?: 'login' | 'register
     },
   })
 
+  const { reset: resetOtp } = otp
+  const { mutate: verifyCode, reset: resetVerifyOtp } = verifyOtp
+  const { reset: resetSubmit } = submit
+
   const handleFullReset = useCallback(
     (targetRole: RegistrationRole) => {
       sessionGenerationRef.current += 1
@@ -403,8 +401,8 @@ export function RegisterPage({ mode = 'register' }: { mode?: 'login' | 'register
       }
       shouldFocusFullNameAfterCloseRef.current = false
 
-      form.reset(getRegistrationDefaults(targetRole))
-      form.clearErrors()
+      resetForm(getRegistrationDefaults(targetRole))
+      clearErrors()
 
       setRegisterStepKey('info')
       setSent(false)
@@ -418,11 +416,11 @@ export function RegisterPage({ mode = 'register' }: { mode?: 'login' | 'register
       setPendingRole(null)
       setRoleChangeAnnouncement(null)
 
-      otp.reset()
-      verifyOtp.reset()
-      submit.reset()
+      resetOtp()
+      resetVerifyOtp()
+      resetSubmit()
     },
-    [form, otp, verifyOtp, submit],
+    [resetForm, clearErrors, resetOtp, resetVerifyOtp, resetSubmit],
   )
 
   useEffect(() => {
@@ -505,22 +503,22 @@ export function RegisterPage({ mode = 'register' }: { mode?: 'login' | 'register
       sentOtpProofRef.current = null
       verifiedProofRef.current = null
       setMagicLinkNotice(null)
-      otp.reset()
-      verifyOtp.reset()
-      submit.reset()
+      resetOtp()
+      resetVerifyOtp()
+      resetSubmit()
 
-      form.setValue('password', '')
-      form.setValue('confirmPassword', '')
-      form.clearErrors(['password', 'confirmPassword', 'email', 'otpCode'])
+      setValue('password', '')
+      setValue('confirmPassword', '')
+      clearErrors(['password', 'confirmPassword', 'email', 'otpCode'])
 
       const isValidEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail)
       const isValidOtp = /^\d{6}$/.test(trimmedOtp)
 
       if (isValidEmail) {
-        form.setValue('email', normalizedEmail)
+        setValue('email', normalizedEmail)
       }
       if (isValidOtp) {
-        form.setValue('otpCode', trimmedOtp)
+        setValue('otpCode', trimmedOtp)
       }
 
       if (isValidEmail && isValidOtp) {
@@ -536,7 +534,7 @@ export function RegisterPage({ mode = 'register' }: { mode?: 'login' | 'register
 
       if (isAutoVerify && isValidEmail && isValidOtp) {
         const reqId = ++activeVerifyRequestIdRef.current
-        verifyOtp.mutate({
+        verifyCode({
           generation: sessionGenerationRef.current,
           requestId: reqId,
           intakeId: currentIntakeId,
@@ -548,7 +546,7 @@ export function RegisterPage({ mode = 'register' }: { mode?: 'login' | 'register
         setRegisterStepKey('info')
       }
     },
-    [form, otp, verifyOtp, submit],
+    [clearErrors, setValue, resetOtp, resetVerifyOtp, resetSubmit, verifyCode],
   )
 
   // Support Magic Link URL pre-filling and auto-verification (navigation-based intake)
@@ -559,7 +557,7 @@ export function RegisterPage({ mode = 'register' }: { mode?: 'login' | 'register
     const rawOtp = searchParams.get('otpCode') || searchParams.get('otp')
     const isAutoVerify = searchParams.get('autoVerify') === 'true'
 
-    const hasLinkParams = Boolean(rawEmail || rawOtp || searchParams.has('autoVerify'))
+    const hasLinkParams = MAGIC_LINK_PARAMS.some((param) => searchParams.has(param))
     if (!hasLinkParams) {
       consumedThisUrlRef.current = false
       return
@@ -570,10 +568,7 @@ export function RegisterPage({ mode = 'register' }: { mode?: 'login' | 'register
 
     // Remove email, otpCode, otp, autoVerify from URL search params without reload, preserving non-sensitive query params and hash
     const cleanParams = new URLSearchParams(searchParams)
-    cleanParams.delete('email')
-    cleanParams.delete('otpCode')
-    cleanParams.delete('otp')
-    cleanParams.delete('autoVerify')
+    for (const param of MAGIC_LINK_PARAMS) cleanParams.delete(param)
     const cleanSearch = cleanParams.toString()
     navigate(
       {
@@ -586,6 +581,8 @@ export function RegisterPage({ mode = 'register' }: { mode?: 'login' | 'register
 
     const normalizedEmail = (rawEmail ?? '').trim().toLowerCase()
     const trimmedOtp = (rawOtp ?? '').trim()
+
+    if (!normalizedEmail && !trimmedOtp) return
 
     if (submit.isPending) {
       pendingIntakeRef.current = {
@@ -1435,6 +1432,7 @@ export function RegisterPage({ mode = 'register' }: { mode?: 'login' | 'register
                 isOpen={isConfirmRoleDialogOpen}
                 onClose={handleCancelRoleChange}
                 onAfterClose={handleDialogAfterClose}
+                initialFocusRef={cancelRoleBtnRef}
                 title={`Đổi sang vai trò ${pendingRole ? ROLE_LABELS[pendingRole] : ''}?`}
                 description="Thông tin đã nhập cho vai trò hiện tại sẽ bị xóa, bao gồm thông tin cá nhân, ngân hàng và xác thực email. Bạn cần nhập lại từ đầu."
                 maxWidth="sm"
@@ -1443,7 +1441,6 @@ export function RegisterPage({ mode = 'register' }: { mode?: 'login' | 'register
                   <button
                     ref={cancelRoleBtnRef}
                     type="button"
-                    autoFocus
                     onClick={handleCancelRoleChange}
                     className="min-h-11 px-4 py-2.5 rounded-xl border border-slate-300 bg-white text-sm font-semibold text-slate-700 hover:bg-slate-50 transition-colors cursor-pointer"
                   >

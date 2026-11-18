@@ -33,6 +33,12 @@ function NavigationHelper() {
       >
         Receive link with extra query and hash
       </button>
+      <button
+        data-testid="nav-empty-link"
+        onClick={() => navigate('/register?ref=partner&email=&otpCode=&otp=#faq')}
+      >
+        Receive link with empty parameters
+      </button>
     </div>
   )
 }
@@ -707,6 +713,21 @@ describe('SP-AUTH-REG-RESET-01: Registration Lifecycle & Role Switch', () => {
         expect(locationText).not.toContain('email=')
         expect(locationText).not.toContain('otpCode=')
       })
+    })
+
+    it('strips empty link parameters without changing the current step or attempting verification', async () => {
+      const request = vi.spyOn(apiClient, 'request')
+      renderRegister()
+      await completeInfo()
+      fill('Email nhận mã xác thực', 'current@example.test')
+
+      await userEvent.click(screen.getByTestId('nav-empty-link'))
+
+      await waitFor(() => expect(screen.getByTestId('current-location')).toHaveTextContent('/register?ref=partner#faq'))
+      const emailInput = screen.getByLabelText('Email nhận mã xác thực')
+      expect(emailInput).toBeVisible()
+      expect(emailInput).toHaveValue('current@example.test')
+      expect(request).not.toHaveBeenCalled()
     })
 
     it('clears magic link verified state when user subsequently confirms role change', async () => {

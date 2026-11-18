@@ -73,11 +73,12 @@ responses and do not create real accounts or send email.
 - **Role switching and confirmation dialog:** Switching role represents the start of a completely new registration. It does not carry over name, phone, citizen ID, email, bank details, OTP status, or passwords between roles.
   - If the form is clean (no inputs, no active OTP state), role switches immediately without interruption or validation errors.
   - If data has been entered or OTP is active, an accessible confirmation dialog prompts the user (`Đổi sang vai trò {Tài xế/Chủ bãi}?`).
-  - Default focus on dialog open is placed on "Giữ vai trò hiện tại" to guard against accidental destruction of input.
+  - The dialog focuses "Giữ vai trò hiện tại" as soon as it opens to guard against accidental destruction of input.
   - Canceling (via "Giữ vai trò hiện tại", Escape key, dialog close button, or backdrop click) retains all inputs, errors, steps, and OTP state; focus returns to `#auth-role-trigger`.
   - Confirming ("Đổi vai trò và nhập lại") triggers a comprehensive reset (`handleFullReset`), invalidates pending mutations, resets the step back to step 1 (Cá nhân), announces the role change via a polite `role="status"` live region, and shifts focus to "Họ và tên" (`#auth-fullName`) after the dialog finishes closing. Sequential switches (A → B → A) never resurrect data from prior visits.
 - **Magic link intake, eligibility, and URL sanitization:**
   - Parameters `email`, `otpCode` (or alias `otp`), and `autoVerify` are captured per navigation and stripped from the URL via router replace without full page reload, while preserving any non-sensitive query parameters (e.g., `?ref=partner`) and hash anchors (e.g., `#faq`). Subsequent router navigations with different link parameters initiate a fresh intake without component unmounting.
+  - Empty magic-link parameters are also removed. If both the email and OTP are blank, the form and its current verification state are left intact.
   - Intake strictly separates *code eligibility* from *server verification proof*:
     - *Eligible code*: A code delivered via successful send or a valid incoming magic link in the active session allows verification attempts.
     - *Server verification*: Only a successful HTTP 200 response from `POST /api/v1/auth/otp/verify` establishes verified proof in memory.

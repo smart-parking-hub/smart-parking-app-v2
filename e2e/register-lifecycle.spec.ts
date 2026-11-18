@@ -234,6 +234,16 @@ test.describe('SP-AUTH-REG-RESET-01: Browser Register Lifecycle & Role Switch Ma
     await page.keyboard.press('Tab')
     await page.keyboard.press('Tab')
     await expect(merchantOption).toBeFocused()
+
+    await page.evaluate(() => {
+      const observer = new MutationObserver(() => {
+        const dialog = document.querySelector('dialog[open]')
+        if (!dialog) return
+        dialog.setAttribute('data-initial-focus', document.activeElement?.textContent?.trim() ?? '')
+        observer.disconnect()
+      })
+      observer.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['open'] })
+    })
     await page.keyboard.press('Enter')
 
     // Dialog opens with autofocus on "Giữ vai trò hiện tại"
@@ -242,6 +252,7 @@ test.describe('SP-AUTH-REG-RESET-01: Browser Register Lifecycle & Role Switch Ma
     await expect(dialog).toHaveAccessibleName('Đổi sang vai trò Chủ bãi?')
     await expect(dialog).toHaveAccessibleDescription(/Thông tin đã nhập cho vai trò hiện tại sẽ bị xóa/)
     const keepButton = dialog.getByRole('button', { name: 'Giữ vai trò hiện tại' })
+    await expect(dialog).toHaveAttribute('data-initial-focus', 'Giữ vai trò hiện tại')
     await expect(keepButton).toBeFocused()
 
     // Test Escape cancels and restores focus to trigger
