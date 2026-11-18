@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { queryOptions, useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import type { Lot, Withdrawal } from '@/entities/operations'
 import {
   getData,
@@ -32,7 +32,7 @@ interface User {
   id: number
   phone: string
   email: string
-  fullName?: string
+  fullName?: string | null
   role: string
   status: string
   statusReason?: string
@@ -50,6 +50,14 @@ interface Audit {
   detail: string
   result: string
   createdAt: string
+}
+
+function adminUserDetailOptions(id: string | undefined) {
+  return queryOptions({
+    queryKey: ['admin-detail', 'user', id],
+    queryFn: ({ signal }) => getData<User>(`/api/v1/admin/users/${id}`, undefined, { signal }),
+    retry: false,
+  })
 }
 
 export { AdminDashboardPage } from './dashboard/pages/AdminDashboardPage'
@@ -114,6 +122,15 @@ function AdminList<T extends { id: number }>({
   )
 }
 
+function ParkingLotOwnerName({ merchantId }: { merchantId: number }) {
+  const { data } = useQuery({
+    ...adminUserDetailOptions(String(merchantId)),
+    staleTime: 60_000,
+  })
+
+  return data?.fullName?.trim() || `#${merchantId}`
+}
+
 export function AdminParkingLotsPage() {
   return (
     <AdminList<Lot>
@@ -128,7 +145,7 @@ export function AdminParkingLotsPage() {
           ),
         },
         { label: 'Địa chỉ', render: (r) => r.address },
-        { label: 'Chủ bãi', render: (r) => `#${r.merchantId}` },
+        { label: 'Chủ bãi', render: (r) => <ParkingLotOwnerName merchantId={r.merchantId} /> },
         { label: 'Trạng thái', render: (r) => <Badge value={r.status} /> },
       ]}
       actions={(r) => (
@@ -536,11 +553,7 @@ export function AdminLotDetailPage() {
 export function AdminUserDetailPage() {
   const { id } = useParams()
   const [decision, setDecision] = useState<Decision | null>(null)
-  const query = useQuery({
-    queryKey: ['admin-detail', 'user', id],
-    queryFn: () => getData<User>(`/api/v1/admin/users/${id}`),
-    retry: false,
-  })
+  const query = useQuery(adminUserDetailOptions(id))
 
   return (
     <Workspace
