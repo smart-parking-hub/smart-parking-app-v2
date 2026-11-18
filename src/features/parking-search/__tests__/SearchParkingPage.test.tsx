@@ -16,7 +16,7 @@ vi.mock('@/shared/api/client', () => ({
 }))
 vi.mock('../components/InteractiveMapCanvas', () => ({
   InteractiveMapCanvas: ({ selectedLot }: { selectedLot?: { id: number } }) => (
-    <section aria-label="Bản đồ bãi đỗ OpenStreetMap" data-selected-id={selectedLot?.id ?? ''} />
+    <section aria-label="Bản đồ bãi đỗ OpenFreeMap" data-selected-id={selectedLot?.id ?? ''} />
   ),
 }))
 
@@ -66,7 +66,7 @@ describe('SCR-015: Interactive Parking Search & Map (Bản đồ tìm kiếm bã
     parkingSearchStore.setSelectedLotId(fallbackParkingLots[0].id)
     const view = renderWithProviders(<SearchParkingPage />)
     const cards = await screen.findAllByRole('button', { name: /^Chọn bãi xe / }, { timeout: 10000 })
-    const map = screen.getByRole('region', { name: 'Bản đồ bãi đỗ OpenStreetMap' })
+    const map = screen.getByRole('region', { name: 'Bản đồ bãi đỗ OpenFreeMap' })
     expect(map).toHaveAttribute('data-selected-id', '')
     expect(cards.every(card => card.getAttribute('aria-pressed') === 'false')).toBe(true)
     fireEvent.click(cards[1])
@@ -74,7 +74,7 @@ describe('SCR-015: Interactive Parking Search & Map (Bản đồ tìm kiếm bã
     expect(map).toHaveAttribute('data-selected-id', String(parkingSearchStore.getState().selectedLotId))
     view.unmount()
     renderWithProviders(<SearchParkingPage />)
-    expect(screen.getByRole('region', { name: 'Bản đồ bãi đỗ OpenStreetMap' })).toHaveAttribute('data-selected-id', '')
+    expect(screen.getByRole('region', { name: 'Bản đồ bãi đỗ OpenFreeMap' })).toHaveAttribute('data-selected-id', '')
   })
 
   it('renders top filter bar with vehicle selector, 5 classifications and radius slider', async () => {
@@ -137,7 +137,7 @@ describe('SCR-015: Interactive Parking Search & Map (Bản đồ tìm kiếm bã
 
     // Map canvas
     expect(
-      screen.getByRole('region', { name: 'Bản đồ bãi đỗ OpenStreetMap' }),
+      screen.getByRole('region', { name: 'Bản đồ bãi đỗ OpenFreeMap' }),
     ).toBeInTheDocument()
     expect(screen.queryByText(/Lưu lượng xe 85%/i)).not.toBeInTheDocument()
 

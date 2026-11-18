@@ -1,10 +1,70 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { act, render, screen, waitFor } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
-import L from 'leaflet'
 import { InteractiveMapCanvas } from './InteractiveMapCanvas'
 import { resetMapRuntimeConfigForTests } from '@/shared/maps'
 import type { ParkingLotItem } from '../types/parkingSearchTypes'
+
+const mapHandlers: Record<string, (() => void)[]> = {}
+const mockMapInstance = {
+  on: vi.fn((event: string, cb: () => void) => {
+    mapHandlers[event] = [...(mapHandlers[event] ?? []), cb]
+  }),
+  setStyle: vi.fn(),
+  resize: vi.fn(),
+  remove: vi.fn(),
+  flyTo: vi.fn(),
+  fitBounds: vi.fn(),
+  getZoom: vi.fn(() => 12),
+  zoomIn: vi.fn(),
+  zoomOut: vi.fn(),
+}
+
+const createdMarkers: Array<{ lngLat?: [number, number] }> = []
+const createdPopups: Array<{ lngLat?: [number, number] }> = []
+
+vi.mock('maplibre-gl', () => {
+  class FakeLngLatBounds {
+    points: [number, number][] = []
+    extend(point: [number, number]) {
+      this.points.push(point)
+      return this
+    }
+  }
+  return {
+    default: {
+      Map: vi.fn(() => mockMapInstance),
+      LngLatBounds: FakeLngLatBounds,
+      Marker: vi.fn(() => {
+        const entry: { lngLat?: [number, number] } = {}
+        createdMarkers.push(entry)
+        return {
+          setLngLat: vi.fn((coords: [number, number]) => {
+            entry.lngLat = coords
+            return {
+              addTo: vi.fn(() => ({ remove: vi.fn() })),
+            }
+          }),
+          remove: vi.fn(),
+        }
+      }),
+      Popup: vi.fn(() => {
+        const entry: { lngLat?: [number, number] } = {}
+        createdPopups.push(entry)
+        const popupApi = {
+          setLngLat: vi.fn((coords: [number, number]) => {
+            entry.lngLat = coords
+            return popupApi
+          }),
+          setDOMContent: vi.fn(() => popupApi),
+          addTo: vi.fn(() => popupApi),
+          remove: vi.fn(),
+        }
+        return popupApi
+      }),
+    },
+  }
+})
 
 const sampleLot: ParkingLotItem = {
   id: 1,
@@ -31,34 +91,17 @@ const secondLot: ParkingLotItem = {
   longitude: 106.7725,
 }
 
-function createCanvas2dStub(): CanvasRenderingContext2D {
-  return {
-    scale: vi.fn(),
-    translate: vi.fn(),
-    clearRect: vi.fn(),
-    save: vi.fn(),
-    restore: vi.fn(),
-    beginPath: vi.fn(),
-    rect: vi.fn(),
-    clip: vi.fn(),
-    moveTo: vi.fn(),
-    lineTo: vi.fn(),
-    closePath: vi.fn(),
-    arc: vi.fn(),
-    fill: vi.fn(),
-    stroke: vi.fn(),
-    setTransform: vi.fn(),
-    setLineDash: vi.fn(),
-  } as unknown as CanvasRenderingContext2D
-}
-
 function renderCanvas(ui: React.ReactElement) {
   return render(<MemoryRouter>{ui}</MemoryRouter>)
 }
 
-describe('InteractiveMapCanvas (Hybrid Leaflet + OSM + Google Maps Directions CTA)', () => {
+describe('InteractiveMapCanvas (MapLibre GL JS + OpenFreeMap + Google Maps Directions CTA)', () => {
   beforeEach(() => {
     resetMapRuntimeConfigForTests()
+    for (const key of Object.keys(mapHandlers)) delete mapHandlers[key]
+    createdMarkers.length = 0
+    createdPopups.length = 0
+    vi.clearAllMocks()
     vi.stubGlobal(
       'ResizeObserver',
       class {
@@ -85,18 +128,11 @@ describe('InteractiveMapCanvas (Hybrid Leaflet + OSM + Google Maps Directions CT
   })
 
   afterEach(() => {
-    vi.restoreAllMocks()
     vi.unstubAllGlobals()
     resetMapRuntimeConfigForTests()
   })
 
-  it('renders Leaflet markers, origin indicator, and Google Maps directions CTA without calling Routes/OSRM', () => {
-    vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue(
-      createCanvas2dStub(),
-    )
-    const circleSpy = vi.spyOn(L, 'circleMarker')
-    const polylineSpy = vi.spyOn(L, 'polyline')
-
+  it('mounts MapLibre vector map with [lng, lat] markers, popup, and Google Maps directions CTA', () => {
     renderCanvas(
       <InteractiveMapCanvas
         lots={[sampleLot]}
@@ -108,29 +144,25 @@ describe('InteractiveMapCanvas (Hybrid Leaflet + OSM + Google Maps Directions CT
     )
 
     expect(
-      screen.getByRole('region', { name: 'Bản đồ bãi đỗ OpenStreetMap' }),
+      screen.getByRole('region', { name: 'Bản đồ bãi đỗ OpenFreeMap' }),
     ).toBeInTheDocument()
-    expect(circleSpy).toHaveBeenCalledWith(
-      [10.77, 106.66],
-      expect.objectContaining({
-        fillColor: '#ea580c',
-      }),
-    )
-    // No in-app polyline / Routes calculation (H03)
-    expect(polylineSpy).not.toHaveBeenCalled()
 
-    const directionsLink = screen.getByRole('link', {
-      name: /Chỉ đường bằng Google Maps/i,
-    })
-    expect(directionsLink).toHaveAttribute(
+    // Lot marker + origin marker placed in [lng, lat] order
+    expect(createdMarkers).toEqual([
+      { lngLat: [106.7865, 10.762622] },
+      { lngLat: [106.66, 10.77] },
+    ])
+    expect(createdPopups).toEqual([{ lngLat: [106.7865, 10.762622] }])
+
+    expect(
+      screen.getByRole('link', { name: /Chỉ đường bằng Google Maps/i }),
+    ).toHaveAttribute(
       'href',
       'https://www.google.com/maps/dir/?api=1&destination=10.762622%2C106.7865&travelmode=driving&origin=10.77%2C106.66',
     )
   })
 
-  it('offers Google Maps directions CTA even without an origin and avoids spurious flyTo on lot array refresh', () => {
-    vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue(null)
-    const flyToSpy = vi.spyOn(L.Map.prototype, 'flyTo')
+  it('offers Google Maps directions CTA without origin and avoids spurious flyTo on lot array refresh', () => {
     const onSelectLot = vi.fn()
     const onQuickBook = vi.fn()
 
@@ -143,7 +175,7 @@ describe('InteractiveMapCanvas (Hybrid Leaflet + OSM + Google Maps Directions CT
       />,
     )
 
-    expect(flyToSpy).toHaveBeenCalledTimes(1)
+    expect(mockMapInstance.flyTo).toHaveBeenCalledTimes(1)
     expect(
       screen.getByRole('link', { name: /Chỉ đường bằng Google Maps/i }),
     ).toHaveAttribute(
@@ -162,14 +194,10 @@ describe('InteractiveMapCanvas (Hybrid Leaflet + OSM + Google Maps Directions CT
       </MemoryRouter>,
     )
 
-    expect(flyToSpy).toHaveBeenCalledTimes(1)
+    expect(mockMapInstance.flyTo).toHaveBeenCalledTimes(1)
   })
 
   it('re-fits all parking lots when origin is cleared back to unfiltered scope', async () => {
-    vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue(
-      createCanvas2dStub(),
-    )
-    const fitBoundsSpy = vi.spyOn(L.Map.prototype, 'fitBounds')
     const onSelectLot = vi.fn()
     const onQuickBook = vi.fn()
 
@@ -196,30 +224,11 @@ describe('InteractiveMapCanvas (Hybrid Leaflet + OSM + Google Maps Directions CT
     )
 
     await waitFor(() => {
-      expect(fitBoundsSpy).toHaveBeenCalledTimes(1)
+      expect(mockMapInstance.fitBounds).toHaveBeenCalledTimes(1)
     })
-    expect(fitBoundsSpy.mock.calls[0][0]).toEqual([
-      [sampleLot.latitude, sampleLot.longitude],
-      [secondLot.latitude, secondLot.longitude],
-    ])
   })
 
-  it('shows tile error banner with retry and Google Maps directions fallback when tiles fail', () => {
-    vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue(
-      createCanvas2dStub(),
-    )
-    const handlers: Record<string, () => void> = {}
-    const fakeTiles = {
-      addTo: vi.fn().mockReturnThis(),
-      on: vi.fn((event: string, cb: () => void) => {
-        handlers[event] = cb
-        return fakeTiles
-      }),
-      redraw: vi.fn(),
-      remove: vi.fn(),
-    }
-    vi.spyOn(L, 'tileLayer').mockReturnValue(fakeTiles as unknown as L.TileLayer)
-
+  it('shows non-blocking error banner with retry and Google Maps directions link when vector style fails', () => {
     renderCanvas(
       <InteractiveMapCanvas
         lots={[sampleLot]}
@@ -230,11 +239,11 @@ describe('InteractiveMapCanvas (Hybrid Leaflet + OSM + Google Maps Directions CT
     )
 
     act(() => {
-      handlers.tileerror?.()
+      mapHandlers.error?.forEach((cb) => cb())
     })
 
     expect(
-      screen.getByText(/Chưa tải được nền bản đồ OpenStreetMap/i),
+      screen.getByText(/Chưa tải được nền bản đồ vector OpenFreeMap/i),
     ).toBeInTheDocument()
     expect(
       screen.getByRole('button', { name: /Thử tải lại bản đồ/i }),

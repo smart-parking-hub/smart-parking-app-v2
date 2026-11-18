@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
-import L from 'leaflet'
-import 'leaflet/dist/leaflet.css'
+import maplibregl from 'maplibre-gl'
+import 'maplibre-gl/dist/maplibre-gl.css'
 import {
   Navigation,
   LocateFixed,
@@ -19,10 +19,10 @@ import {
   getMapRuntimeConfig,
   isValidCoordinates,
   loadMapRuntimeConfig,
-  toLatLngTuple,
+  toLngLatTuple,
   type Coordinates,
 } from '@/shared/maps'
-import { createParkingLeafletIcon } from '@/entities/parking-lot/parkingMapMarker'
+import { createParkingMarkerElement } from '@/entities/parking-lot/parkingMapMarker'
 import type { ParkingLotItem } from '../types/parkingSearchTypes'
 
 interface Props {
@@ -33,25 +33,52 @@ interface Props {
   onQuickBook: (lot: ParkingLotItem) => void
 }
 
-function fitAllParkingLots(instance: L.Map, lots: ParkingLotItem[]) {
-  const points = lots.filter(isValidCoordinates).map(toLatLngTuple)
-  if (!points.length) return
-  const isDesktop = instance.getSize().x >= 960
-  instance.fitBounds(points, {
-    paddingTopLeft: isDesktop ? [470, 88] : [48, 48],
-    paddingBottomRight: isDesktop ? [80, 120] : [48, 48],
-    maxZoom: 14,
-  })
+function getContainerWidth(container: HTMLDivElement | null): number {
+  return container?.clientWidth ?? 0
 }
 
-function hasCanvas2dSupport(): boolean {
-  if (typeof document === 'undefined') return false
-  try {
-    const canvas = document.createElement('canvas')
-    return Boolean(canvas.getContext?.('2d'))
-  } catch {
-    return false
+/** Respect the user's reduced-motion preference for map camera animations. */
+function flyDurationMs(): number {
+  if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') {
+    return 500
   }
+  return window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 500
+}
+
+function fitAllParkingLots(
+  instance: maplibregl.Map,
+  lots: ParkingLotItem[],
+  container: HTMLDivElement | null,
+) {
+  const validLots = lots.filter(isValidCoordinates)
+  if (!validLots.length) return
+
+  const isDesktop = getContainerWidth(container) >= 960
+
+  if (validLots.length === 1) {
+    instance.flyTo({
+      center: toLngLatTuple(validLots[0]),
+      zoom: 14,
+      padding: isDesktop
+        ? { top: 88, bottom: 120, left: 470, right: 80 }
+        : { top: 48, bottom: 48, left: 48, right: 48 },
+      duration: flyDurationMs(),
+    })
+    return
+  }
+
+  const bounds = new maplibregl.LngLatBounds()
+  for (const lot of validLots) {
+    bounds.extend(toLngLatTuple(lot))
+  }
+
+  instance.fitBounds(bounds, {
+    padding: isDesktop
+      ? { top: 88, bottom: 120, left: 470, right: 80 }
+      : { top: 48, bottom: 48, left: 48, right: 48 },
+    maxZoom: 14,
+    duration: flyDurationMs(),
+  })
 }
 
 function resolveAccentColor(element: HTMLElement | null): string {
@@ -63,12 +90,18 @@ function resolveAccentColor(element: HTMLElement | null): string {
   return value || '#ea580c'
 }
 
-/** Respect the user's reduced-motion preference for map fly animations. */
-function flyDuration(): number {
-  if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') {
-    return 0.5
-  }
-  return window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 0.5
+function createOriginMarkerElement(color: string): HTMLDivElement {
+  const dot = document.createElement('div')
+  dot.className = 'parking-map-origin-dot'
+  dot.style.width = '18px'
+  dot.style.height = '18px'
+  dot.style.borderRadius = '9999px'
+  dot.style.backgroundColor = color
+  dot.style.border = '3px solid #ffffff'
+  dot.style.boxShadow = '0 2px 8px rgba(13, 28, 46, 0.35)'
+  dot.title = 'Điểm xuất phát của bạn'
+  dot.setAttribute('aria-label', 'Điểm xuất phát của bạn')
+  return dot
 }
 
 function createLotPopupElement(lot: ParkingLotItem): HTMLDivElement {
@@ -96,17 +129,17 @@ export function InteractiveMapCanvas({
   onQuickBook,
 }: Props) {
   const container = useRef<HTMLDivElement>(null)
-  const map = useRef<L.Map | null>(null)
-  const tileLayer = useRef<L.TileLayer | null>(null)
+  const mapRef = useRef<maplibregl.Map | null>(null)
   const lastFocusedKey = useRef<string | null>(null)
   const hadOriginRef = useRef(false)
   const pendingOriginResetFit = useRef(false)
   const select = useRef(onSelectLot)
 
   const [ready, setReady] = useState(false)
-  const [tilesState, setTilesState] = useState<'loading' | 'ready' | 'error'>(
+  const [mapState, setMapState] = useState<'loading' | 'ready' | 'error'>(
     'loading',
   )
+  const [retryToken, setRetryToken] = useState(0)
 
   useEffect(() => {
     select.current = onSelectLot
@@ -117,171 +150,156 @@ export function InteractiveMapCanvas({
 
     let disposed = false
     let loaded = false
-    setTilesState('loading')
-
-    const canvasRenderer = hasCanvas2dSupport()
-      ? L.canvas({ padding: 0.5 })
-      : null
-    if (canvasRenderer) {
-      const rendererProto = Object.getPrototypeOf(canvasRenderer) as {
-        _redraw?: (this: { _ctx?: CanvasRenderingContext2D }) => void
-      }
-      const baseRedraw = rendererProto._redraw
-      if (baseRedraw) {
-        ;(
-          canvasRenderer as unknown as {
-            _redraw: (this: { _ctx?: CanvasRenderingContext2D }) => void
-          }
-        )._redraw = function guardedRedraw() {
-          if (!this._ctx) return
-          baseRedraw.call(this)
-        }
-      }
-    }
-    const vectorRenderer = canvasRenderer ?? L.svg({ padding: 0.5 })
-
-    const instance = L.map(container.current, {
-      zoomControl: false,
-      scrollWheelZoom: true,
-      renderer: vectorRenderer,
-    }).setView(toLatLngTuple(DEFAULT_MAP_CENTER), DEFAULT_MAP_ZOOM)
-    map.current = instance
+    setReady(false)
+    setMapState('loading')
 
     const initialConfig = getMapRuntimeConfig()
-
-    const attachTiles = (tileUrl: string, attribution: string, maxZoom: number) => {
-      if (disposed) return
-      if (tileLayer.current) {
-        tileLayer.current.remove()
-      }
-      const tiles = L.tileLayer(tileUrl, {
-        maxZoom,
-        attribution,
-      }).addTo(instance)
-
-      tiles.on('tileerror', () => {
-        if (!disposed && !loaded) setTilesState('error')
+    let instance: maplibregl.Map
+    try {
+      instance = new maplibregl.Map({
+        container: container.current,
+        style: initialConfig.styleUrl,
+        center: toLngLatTuple(DEFAULT_MAP_CENTER),
+        zoom: DEFAULT_MAP_ZOOM,
+        attributionControl: { compact: false },
       })
-      tiles.on('tileload', () => {
-        if (disposed) return
-        loaded = true
-        setTilesState('ready')
-      })
-
-      tileLayer.current = tiles
+    } catch {
+      setMapState('error')
+      return
     }
 
-    attachTiles(
-      initialConfig.tileUrl,
-      initialConfig.tileAttribution,
-      initialConfig.maxZoom,
-    )
+    mapRef.current = instance
 
-    void loadMapRuntimeConfig().then((runtimeConfig) => {
+    instance.on('load', () => {
       if (disposed) return
-      if (
-        runtimeConfig.tileUrl !== initialConfig.tileUrl ||
-        runtimeConfig.tileAttribution !== initialConfig.tileAttribution ||
-        runtimeConfig.maxZoom !== initialConfig.maxZoom
-      ) {
-        attachTiles(
-          runtimeConfig.tileUrl,
-          runtimeConfig.tileAttribution,
-          runtimeConfig.maxZoom,
-        )
+      loaded = true
+      setMapState('ready')
+    })
+
+    instance.on('error', () => {
+      if (!disposed && !loaded) {
+        setMapState('error')
       }
     })
 
-    const tileTimeout = window.setTimeout(() => {
-      if (!disposed && !loaded) setTilesState('error')
+    void loadMapRuntimeConfig().then((runtimeConfig) => {
+      if (disposed) return
+      if (runtimeConfig.styleUrl !== initialConfig.styleUrl) {
+        instance.setStyle(runtimeConfig.styleUrl)
+      }
+    })
+
+    const loadTimeout = window.setTimeout(() => {
+      if (!disposed && !loaded) {
+        setMapState('error')
+      }
     }, 12000)
 
     const resize =
       typeof ResizeObserver !== 'undefined'
-        ? new ResizeObserver(() => instance.invalidateSize())
+        ? new ResizeObserver(() => instance.resize())
         : null
     resize?.observe(container.current)
     setReady(true)
 
     return () => {
       disposed = true
-      window.clearTimeout(tileTimeout)
+      window.clearTimeout(loadTimeout)
       resize?.disconnect()
       lastFocusedKey.current = null
       hadOriginRef.current = false
       pendingOriginResetFit.current = false
       instance.remove()
-      map.current = null
-      tileLayer.current = null
+      mapRef.current = null
     }
-  }, [])
+  }, [retryToken])
 
   useEffect(() => {
-    const instance = map.current
+    const instance = mapRef.current
     if (!instance || !ready) return
-    const layer = L.layerGroup().addTo(instance)
-    let selectedMarker: L.Marker | null = null
+
+    const createdMarkers: maplibregl.Marker[] = []
+    const cleanups: (() => void)[] = []
+    let activePopup: maplibregl.Popup | null = null
 
     for (const lot of lots.filter(isValidCoordinates)) {
       const isSelected = lot.id === selectedLot?.id
-
-      const marker = L.marker(toLatLngTuple(lot), {
-        icon: createParkingLeafletIcon({
-          hourlyRate: lot.hourlyRate,
-          availableSlots: lot.availableSlots,
-          selected: isSelected,
-          full: lot.isFull || lot.availableSlots === 0,
-          title: lot.name,
-        }),
+      const pinElement = createParkingMarkerElement({
+        hourlyRate: lot.hourlyRate,
+        availableSlots: lot.availableSlots,
+        selected: isSelected,
+        full: lot.isFull || lot.availableSlots === 0,
         title: lot.name,
-        keyboard: true,
-        zIndexOffset: isSelected ? 1000 : 100,
       })
-        .bindPopup(() => createLotPopupElement(lot), {
-          closeButton: true,
-          autoPan: false,
-        })
-        .on('click', () => select.current(lot))
-        .on('keydown', (event: L.LeafletKeyboardEvent) => {
-          if (
-            event.originalEvent.key === 'Enter' ||
-            event.originalEvent.key === ' '
-          ) {
-            event.originalEvent.preventDefault()
-            select.current(lot)
-          }
-        })
-        .addTo(layer)
+
+      const markerWrapper = document.createElement('div')
+      markerWrapper.className = 'parking-map-marker cursor-pointer'
+      markerWrapper.style.zIndex = isSelected ? '20' : '1'
+      markerWrapper.tabIndex = 0
+      markerWrapper.setAttribute('role', 'button')
+      markerWrapper.setAttribute('aria-label', lot.name)
+      markerWrapper.title = lot.name
+      markerWrapper.append(pinElement)
+
+      const handleSelect = () => select.current(lot)
+      const handleKeydown = (event: KeyboardEvent) => {
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault()
+          handleSelect()
+        }
+      }
+      markerWrapper.addEventListener('click', handleSelect)
+      markerWrapper.addEventListener('keydown', handleKeydown)
+      cleanups.push(() => {
+        markerWrapper.removeEventListener('click', handleSelect)
+        markerWrapper.removeEventListener('keydown', handleKeydown)
+      })
+
+      const marker = new maplibregl.Marker({
+        element: markerWrapper,
+        anchor: 'bottom',
+      })
+        .setLngLat(toLngLatTuple(lot))
+        .addTo(instance)
+
+      createdMarkers.push(marker)
 
       if (isSelected) {
-        selectedMarker = marker
+        activePopup = new maplibregl.Popup({
+          offset: [0, -64],
+          closeButton: true,
+          closeOnClick: false,
+        })
+          .setLngLat(toLngLatTuple(lot))
+          .setDOMContent(createLotPopupElement(lot))
+          .addTo(instance)
       }
-    }
-
-    if (selectedMarker) {
-      selectedMarker.openPopup()
     }
 
     if (origin && isValidCoordinates(origin)) {
       const accentColor = resolveAccentColor(container.current)
-      L.circleMarker(toLatLngTuple(origin), {
-        radius: 9,
-        color: 'white',
-        weight: 3,
-        fillColor: accentColor,
-        fillOpacity: 1,
+      const originMarker = new maplibregl.Marker({
+        element: createOriginMarkerElement(accentColor),
+        anchor: 'center',
       })
-        .bindTooltip('Điểm xuất phát của bạn')
-        .addTo(layer)
+        .setLngLat(toLngLatTuple(origin))
+        .addTo(instance)
+      createdMarkers.push(originMarker)
     }
 
     return () => {
-      layer.remove()
+      activePopup?.remove()
+      for (const cleanup of cleanups) {
+        cleanup()
+      }
+      for (const marker of createdMarkers) {
+        marker.remove()
+      }
     }
   }, [lots, selectedLot?.id, origin, ready])
 
   useEffect(() => {
-    const instance = map.current
+    const instance = mapRef.current
     if (!instance || !ready) return
     const validLots = lots.filter(isValidCoordinates)
     const hasOrigin = Boolean(origin && isValidCoordinates(origin))
@@ -305,35 +323,33 @@ export function InteractiveMapCanvas({
       if (!validLots.length) return
       pendingOriginResetFit.current = false
       lastFocusedKey.current = focusKey
-      fitAllParkingLots(instance, validLots)
+      fitAllParkingLots(instance, validLots, container.current)
       return
     }
 
     if (lastFocusedKey.current === focusKey) return
     lastFocusedKey.current = focusKey
 
+    const isDesktop = getContainerWidth(container.current) >= 960
+
     if (selectedLot && isValidCoordinates(selectedLot)) {
       const targetZoom = Math.max(instance.getZoom(), 15)
-      const isDesktop = instance.getSize().x >= 960
-      if (isDesktop) {
-        const projected = instance.project(
-          toLatLngTuple(selectedLot),
-          targetZoom,
-        )
-        const offsetLatLng = instance.unproject(
-          projected.subtract([215, 0]),
-          targetZoom,
-        )
-        instance.flyTo(offsetLatLng, targetZoom, { duration: flyDuration() })
-      } else {
-        instance.flyTo(toLatLngTuple(selectedLot), targetZoom, {
-          duration: flyDuration(),
-        })
-      }
+      instance.flyTo({
+        center: toLngLatTuple(selectedLot),
+        zoom: targetZoom,
+        padding: isDesktop
+          ? { top: 40, bottom: 120, left: 430, right: 40 }
+          : { top: 20, bottom: 20, left: 20, right: 20 },
+        duration: flyDurationMs(),
+      })
     } else if (validLots.length > 0) {
-      fitAllParkingLots(instance, validLots)
+      fitAllParkingLots(instance, validLots, container.current)
     } else if (hasOrigin && origin) {
-      instance.flyTo(toLatLngTuple(origin), 13, { duration: flyDuration() })
+      instance.flyTo({
+        center: toLngLatTuple(origin),
+        zoom: 13,
+        duration: flyDurationMs(),
+      })
     }
   }, [selectedLot, lots, origin, ready])
 
@@ -347,15 +363,15 @@ export function InteractiveMapCanvas({
 
   return (
     <section
-      aria-label="Bản đồ bãi đỗ OpenStreetMap"
-      data-map-state={tilesState}
+      aria-label="Bản đồ bãi đỗ OpenFreeMap"
+      data-map-state={mapState}
       className="parking-map relative w-full lg:h-full isolate"
     >
-      {/* Full-bleed Map Canvas */}
+      {/* Full-bleed MapLibre GL JS Vector Canvas */}
       <div className="relative w-full h-[440px] sm:h-[520px] lg:h-full">
         <div ref={container} className="h-full w-full" />
 
-        {tilesState === 'error' && (
+        {mapState === 'error' && (
           <div
             role="status"
             className="absolute top-20 left-4 right-4 lg:left-[448px] xl:left-[476px] lg:right-4 z-[1000] rounded-2xl border border-brand-border bg-white/95 backdrop-blur-md p-4 text-sm text-brand-muted shadow-lg"
@@ -368,8 +384,8 @@ export function InteractiveMapCanvas({
               />
               <div className="space-y-2">
                 <p className="text-brand-navy font-medium">
-                  Chưa tải được nền bản đồ OpenStreetMap. Kiểm tra kết nối mạng
-                  hoặc thử tải lại.
+                  Chưa tải được nền bản đồ vector OpenFreeMap. Kiểm tra kết nối
+                  mạng hoặc WebGL trên trình duyệt rồi thử lại.
                 </p>
                 <p className="text-xs text-brand-muted">
                   Bạn vẫn có thể xem danh sách bãi đỗ, lọc theo loại xe, đặt giữ
@@ -379,10 +395,7 @@ export function InteractiveMapCanvas({
                   <button
                     type="button"
                     className="inline-flex items-center gap-1.5 font-semibold text-brand-navy underline underline-offset-4 cursor-pointer"
-                    onClick={() => {
-                      setTilesState('loading')
-                      tileLayer.current?.redraw()
-                    }}
+                    onClick={() => setRetryToken((count) => count + 1)}
                   >
                     <RefreshCw size={14} aria-hidden="true" />
                     Thử tải lại bản đồ
@@ -404,7 +417,7 @@ export function InteractiveMapCanvas({
           </div>
         )}
 
-        {/* Bottom-Right Map Controls (positioned cleanly above OSM attribution & AiCopilot) */}
+        {/* Bottom-Right Map Controls (positioned cleanly above attribution & AiCopilot) */}
         <div className="absolute bottom-8 right-3 lg:bottom-24 lg:right-4 z-[1000] flex flex-col items-end gap-2">
           <button
             type="button"
@@ -412,7 +425,9 @@ export function InteractiveMapCanvas({
             title="Toàn khu vực"
             className="flex h-10 items-center gap-1.5 rounded-xl border border-brand-border bg-white/95 backdrop-blur-md px-3 text-xs font-semibold text-brand-navy shadow-lg hover:bg-slate-50 hover:text-brand-orange transition-colors cursor-pointer"
             onClick={() => {
-              if (map.current) fitAllParkingLots(map.current, lots)
+              if (mapRef.current) {
+                fitAllParkingLots(mapRef.current, lots, container.current)
+              }
             }}
           >
             <LocateFixed size={16} className="text-brand-orange shrink-0" />
@@ -424,7 +439,7 @@ export function InteractiveMapCanvas({
               type="button"
               aria-label="Phóng to bản đồ"
               title="Phóng to"
-              onClick={() => map.current?.zoomIn()}
+              onClick={() => mapRef.current?.zoomIn()}
               className="flex h-10 w-10 items-center justify-center text-brand-navy hover:bg-slate-50 hover:text-brand-orange transition-colors cursor-pointer"
             >
               <Plus size={18} />
@@ -433,7 +448,7 @@ export function InteractiveMapCanvas({
               type="button"
               aria-label="Thu nhỏ bản đồ"
               title="Thu nhỏ"
-              onClick={() => map.current?.zoomOut()}
+              onClick={() => mapRef.current?.zoomOut()}
               className="flex h-10 w-10 items-center justify-center text-brand-navy hover:bg-slate-50 hover:text-brand-orange transition-colors cursor-pointer"
             >
               <Minus size={18} />
@@ -442,7 +457,7 @@ export function InteractiveMapCanvas({
         </div>
       </div>
 
-      {/* Bottom Selected Lot & Google Maps Directions CTA HUD */}
+      {/* Bottom Selected Lot & Unlimited-Free Google Maps Directions CTA HUD */}
       {(selectedLot || origin) && (
         <div className="mx-3 mt-3 lg:mx-0 lg:mt-0 lg:absolute lg:bottom-8 lg:left-[432px] xl:left-[464px] lg:right-24 lg:max-w-[580px] lg:z-[1000]">
           <div className="rounded-2xl border border-brand-border/90 bg-white/95 backdrop-blur-md p-3.5 shadow-xl">
