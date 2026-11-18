@@ -7,6 +7,16 @@ import { sendSmsRecoveryOtpApi, verifySmsRecoveryOtpApi } from '@/features/auth/
 import { generateAiParkingLotContent, deleteMerchantParkingLotImage, setCoverMerchantParkingLotImage } from '@/features/merchant/parking-lots/api/merchantParkingLotApi'
 import { fetchUnreadCountApi, markAsReadApi, markAllAsReadApi } from '@/features/notifications/api/notificationApi'
 import { createPayOsDepositLink } from '@/features/parking-detail/api/parkingDetailApi'
+import {
+  fetchMerchantVerification,
+  updateVerificationDetailsApi,
+  submitVerificationApi,
+} from '@/features/merchant/profile'
+import {
+  fetchAdminMerchantVerifications,
+  approveMerchantVerificationApi,
+  requestMerchantVerificationChangesApi,
+} from '@/features/admin/merchant-verifications'
 
 describe('Controlled API Contract Verification & Integration Tests', () => {
   beforeEach(() => {
@@ -258,6 +268,139 @@ describe('Controlled API Contract Verification & Integration Tests', () => {
     it('preserves an explicit Idempotency-Key if supplied', () => {
       const headers = createIdempotencyHeader('CUSTOM-IDEMPOTENCY-UUID-1234')
       expect(headers['Idempotency-Key']).toBe('CUSTOM-IDEMPOTENCY-UUID-1234')
+    })
+  })
+
+  describe('SP-MERCHANT-KYC-01 API Contract Verification', () => {
+    it('fetchMerchantVerification calls GET /api/v1/merchant/profile/verification', async () => {
+      const getSpy = vi.spyOn(apiClient, 'get').mockResolvedValueOnce({
+        data: {
+          code: 200,
+          data: {
+            id: 1,
+            merchantId: 10,
+            status: 'DRAFT',
+            draftRevision: 1,
+            documents: [],
+            editableItems: ['BUSINESS_INFO'],
+            requestedItems: [],
+            assessment: { status: 'NOT_STARTED', checks: [] },
+          },
+        },
+      } as unknown as AxiosResponse)
+
+      const data = await fetchMerchantVerification()
+      expect(getSpy).toHaveBeenCalledWith('/api/v1/merchant/profile/verification', { signal: undefined })
+      expect(data.status).toBe('DRAFT')
+    })
+
+    it('updateVerificationDetailsApi calls PUT /api/v1/merchant/profile/verification/details', async () => {
+      const putSpy = vi.spyOn(apiClient, 'put').mockResolvedValueOnce({
+        data: {
+          code: 200,
+          data: { id: 1, draftRevision: 2 },
+        },
+      } as unknown as AxiosResponse)
+
+      await updateVerificationDetailsApi({
+        draftRevision: 1,
+        businessRegistrationNumber: '0101234567',
+        legalName: 'CÔNG TY TNHH VẬN TẢI SMART',
+      })
+      expect(putSpy).toHaveBeenCalledWith(
+        '/api/v1/merchant/profile/verification/details',
+        {
+          draftRevision: 1,
+          businessRegistrationNumber: '0101234567',
+          legalName: 'CÔNG TY TNHH VẬN TẢI SMART',
+        },
+      )
+    })
+
+    it('submitVerificationApi calls POST /api/v1/merchant/profile/verification/submit', async () => {
+      const postSpy = vi.spyOn(apiClient, 'post').mockResolvedValueOnce({
+        data: {
+          code: 200,
+          data: { id: 1, status: 'PENDING_REVIEW', submissionVersion: 1 },
+        },
+      } as unknown as AxiosResponse)
+
+      await submitVerificationApi({ draftRevision: 2 })
+      expect(postSpy).toHaveBeenCalledWith(
+        '/api/v1/merchant/profile/verification/submit',
+        { draftRevision: 2 },
+      )
+    })
+
+    it('fetchAdminMerchantVerifications calls GET /api/v1/admin/merchant-verifications with pagination & filter', async () => {
+      const getSpy = vi.spyOn(apiClient, 'get').mockResolvedValueOnce({
+        data: {
+          code: 200,
+          data: {
+            content: [],
+            totalPages: 1,
+            totalElements: 0,
+            number: 0,
+            size: 10,
+          },
+        },
+      } as unknown as AxiosResponse)
+
+      await fetchAdminMerchantVerifications({ page: 1, size: 10, status: 'PENDING_REVIEW' })
+      expect(getSpy).toHaveBeenCalledWith(
+        '/api/v1/admin/merchant-verifications',
+        expect.objectContaining({
+          params: expect.objectContaining({
+            page: 0,
+            size: 10,
+            status: 'PENDING_REVIEW',
+          }),
+        }),
+      )
+    })
+
+    it('approveMerchantVerificationApi calls POST /api/v1/admin/merchant-verifications/:id/approve', async () => {
+      const postSpy = vi.spyOn(apiClient, 'post').mockResolvedValueOnce({
+        data: {
+          code: 200,
+          data: { id: 5, status: 'VERIFIED' },
+        },
+      } as unknown as AxiosResponse)
+
+      await approveMerchantVerificationApi(5, {
+        submissionVersion: 1,
+        documentsReviewed: true,
+        note: 'Đã duyệt qua bản gốc.',
+      })
+      expect(postSpy).toHaveBeenCalledWith(
+        '/api/v1/admin/merchant-verifications/5/approve',
+        {
+          submissionVersion: 1,
+          documentsReviewed: true,
+          note: 'Đã duyệt qua bản gốc.',
+        },
+      )
+    })
+
+    it('requestMerchantVerificationChangesApi calls POST /api/v1/admin/merchant-verifications/:id/request-changes', async () => {
+      const postSpy = vi.spyOn(apiClient, 'post').mockResolvedValueOnce({
+        data: {
+          code: 200,
+          data: { id: 5, status: 'CHANGES_REQUESTED' },
+        },
+      } as unknown as AxiosResponse)
+
+      await requestMerchantVerificationChangesApi(5, {
+        submissionVersion: 1,
+        items: [{ key: 'BUSINESS_REGISTRATION', reason: 'Ảnh mờ góc' }],
+      })
+      expect(postSpy).toHaveBeenCalledWith(
+        '/api/v1/admin/merchant-verifications/5/request-changes',
+        {
+          submissionVersion: 1,
+          items: [{ key: 'BUSINESS_REGISTRATION', reason: 'Ảnh mờ góc' }],
+        },
+      )
     })
   })
 })

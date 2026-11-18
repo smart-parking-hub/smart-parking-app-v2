@@ -330,6 +330,7 @@ describe('Layouts and Navigation System Comprehensive Tests', () => {
       expect(screen.getByText('KHÔNG GIAN QUẢN TRỊ')).toBeInTheDocument()
       expect(screen.getByRole('link', { name: /Tổng quan/ })).toBeInTheDocument()
       expect(screen.getByRole('link', { name: /Kiểm duyệt bãi/ })).toBeInTheDocument()
+      expect(screen.getByRole('link', { name: /Xác minh doanh nghiệp/ })).toBeInTheDocument()
       expect(screen.getByRole('link', { name: /Người dùng/ })).toBeInTheDocument()
       expect(screen.getByRole('link', { name: /Giao dịch/ })).toBeInTheDocument()
       expect(screen.getByRole('link', { name: /Duyệt rút tiền/ })).toBeInTheDocument()

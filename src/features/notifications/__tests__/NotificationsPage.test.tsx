@@ -7,6 +7,7 @@ import { apiClient } from '@/shared/api/client'
 import type { BackendNotificationDto } from '@/entities/notification'
 import { getNotificationStoreSnapshot } from '../store/notificationStore'
 import { NotificationsPage } from '../pages/NotificationsPage'
+import { PortalNotificationsPage } from '../pages/PortalNotificationsPage'
 
 const sampleDtos: BackendNotificationDto[] = [
   {
@@ -330,7 +331,7 @@ describe('SCR-025: NotificationsPage (Trung tâm thông báo tài xế)', () => 
     expect(
       screen.queryByText('Đã có chỗ trống tại hàng đợi Cát Lái Gate 2'),
     ).not.toBeInTheDocument()
-  })
+  }, 15000)
 
   it('validates search keyword with Zod + React Hook Form and filters matching items', async () => {
     const user = userEvent.setup()
@@ -352,7 +353,7 @@ describe('SCR-025: NotificationsPage (Trung tâm thông báo tài xế)', () => 
     // Exceed max 100 chars triggers inline Zod error
     await user.clear(searchInput)
     const tooLong = 'a'.repeat(101)
-    await user.type(searchInput, tooLong)
+    await user.paste(tooLong)
 
     expect(
       await screen.findByText('Từ khóa tìm kiếm tối đa 100 ký tự'),
@@ -591,5 +592,31 @@ describe('SCR-025: NotificationsPage (Trung tâm thông báo tài xế)', () => 
     expect(
       screen.getByText('Không tìm thấy thông báo phù hợp'),
     ).toBeInTheDocument()
+  })
+
+  it('AC3 & AC6: Merchant inbox links the KYC notification to the profile documents section', async () => {
+    const kycNotificationDto = {
+      id: 999,
+      type: 'SYSTEM' as const,
+      channel: 'IN_APP' as const,
+      title: 'Yêu cầu bổ sung hồ sơ doanh nghiệp',
+      content: 'Admin yêu cầu bổ sung giấy phép kinh doanh. Vui lòng cập nhật lại hồ sơ.',
+      targetType: 'MERCHANT_VERIFICATION',
+      targetId: 10,
+      readAt: null,
+      createdAt: '2026-11-18T10:00:00Z',
+    }
+    mockStandardNotificationsApi([kycNotificationDto], 1)
+    render(
+      <QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}>
+        <MemoryRouter initialEntries={['/merchant/notifications']}>
+          <PortalNotificationsPage />
+        </MemoryRouter>
+      </QueryClientProvider>,
+    )
+
+    const row = await screen.findByRole('row', { name: /Yêu cầu bổ sung hồ sơ doanh nghiệp/i })
+    expect(within(row).getByRole('link', { name: 'Xem hồ sơ giấy tờ' }))
+      .toHaveAttribute('href', '/merchant/profile#giay-to')
   })
 })

@@ -12,6 +12,7 @@ const navGroups = [
   { label: 'ĐIỀU HÀNH', items: [
     { path: 'dashboard', label: 'Tổng quan', icon: LayoutDashboard },
     { path: 'parking-lots', label: 'Kiểm duyệt bãi', icon: Warehouse },
+    { path: 'merchant-verifications', label: 'Xác minh doanh nghiệp', icon: ShieldCheck },
     { path: 'users', label: 'Người dùng', icon: Users },
   ] },
   { label: 'TÀI CHÍNH & KIỂM SOÁT', items: [

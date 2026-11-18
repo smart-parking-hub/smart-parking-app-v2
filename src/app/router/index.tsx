@@ -67,6 +67,16 @@ const AdminParkingLotsPage = lazy(() =>
 const AdminLotDetailPage = lazy(() =>
   import('@/features/admin').then((module) => ({ default: module.AdminLotDetailPage })),
 )
+const AdminMerchantVerificationsPage = lazy(() =>
+  import('@/features/admin/merchant-verifications').then((module) => ({
+    default: module.AdminMerchantVerificationsPage,
+  })),
+)
+const AdminMerchantVerificationDetailPage = lazy(() =>
+  import('@/features/admin/merchant-verifications').then((module) => ({
+    default: module.AdminMerchantVerificationDetailPage,
+  })),
+)
 const AdminUsersPage = lazy(() =>
   import('@/features/admin').then((module) => ({ default: module.AdminUsersPage })),
 )
@@ -254,6 +264,8 @@ export const router = createBrowserRouter([
       { path: 'dashboard', element: <AdminDashboardPage /> },
       { path: 'parking-lots', element: <AdminParkingLotsPage /> },
       { path: 'parking-lots/:id', element: <AdminLotDetailPage /> },
+      { path: 'merchant-verifications', element: <AdminMerchantVerificationsPage /> },
+      { path: 'merchant-verifications/:id', element: <AdminMerchantVerificationDetailPage /> },
       { path: 'users', element: <AdminUsersPage /> },
       { path: 'users/:id', element: <AdminUserDetailPage /> },
       { path: 'transactions', element: <AdminTransactionsPage /> },

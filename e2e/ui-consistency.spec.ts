@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test'
+import type { MerchantVerificationDetail } from '../src/features/merchant/profile/types/merchantVerificationTypes'
 import { mockEmptyDriverWallet, mockShellReads } from './fixtures/payment-reads'
 
 const profile = { merchantId: 7, userId: 12, fullName: 'Chủ bãi kiểm thử', phone: '0901234567' }
@@ -40,17 +41,60 @@ for (const width of [390, 1440]) {
   test(`merchant notifications and actions stay consistent at ${width}px`, async ({ page }) => {
     await page.setViewportSize({ width, height: 900 })
     const errors = await initialize(page, 'MERCHANT')
-    await page.goto('/merchant/profile')
-    await page.getByLabel('Số giấy phép kinh doanh').fill('GP-12345')
-    await page.getByRole('button', { name: 'Gửi giấy tờ', exact: true }).click()
-    const uploaded = page.getByRole('dialog', { name: 'Gửi giấy tờ thành công' })
-    await expect(uploaded).toBeVisible()
-    await expect(uploaded.getByRole('status')).toHaveText('Đã gửi giấy tờ thành công.')
-    await expect(uploaded.getByRole('button', { name: 'Đóng', exact: true })).toBeFocused()
+    let dossier: MerchantVerificationDetail = {
+      id: 1,
+      merchantId: profile.merchantId,
+      status: 'DRAFT',
+      draftRevision: 1,
+      submissionVersion: null,
+      businessRegistrationNumber: '0101234567',
+      legalName: 'Công ty Bãi Tân Cảng',
+      resubmissionNote: null,
+      documents: [{
+        id: '5ab4e7b7-0a35-4bae-a9c5-94a63819e1f2',
+        type: 'BUSINESS_REGISTRATION',
+        originalName: 'giay-dang-ky.pdf',
+        contentType: 'application/pdf',
+        sizeBytes: 1024,
+        uploadedAt: '2026-11-18T10:00:00Z',
+      }],
+      assessment: { status: 'NOT_STARTED', checkedAt: null, checks: [] },
+      requestedItems: [],
+      requirements: [{ type: 'BUSINESS_REGISTRATION', required: true, maxFiles: 3 }],
+      editableItems: ['BUSINESS_INFO', 'BUSINESS_REGISTRATION'],
+      history: [],
+      updatedAt: '2026-11-18T10:00:00Z',
+    }
+    await page.route('**/api/v1/merchant/profile/verification', route =>
+      route.fulfill({ json: { data: dossier } }),
+    )
+    await page.route('**/api/v1/merchant/profile/verification/submit', route => {
+      expect(route.request().method()).toBe('POST')
+      expect(route.request().postDataJSON()).toEqual({ draftRevision: dossier.draftRevision })
+      dossier = { ...dossier, status: 'PENDING_REVIEW', submissionVersion: 1, editableItems: [] }
+      return route.fulfill({ json: { data: dossier } })
+    })
+
+    await page.goto('/merchant/profile#giay-to')
+    const submitDossier = page.getByRole('button', { name: 'Gửi duyệt hồ sơ', exact: true })
+    const confirmation = page.getByRole('dialog', { name: 'Xác nhận gửi phiên bản #1' })
+    await submitDossier.click()
+    await expect(confirmation.getByRole('button', { name: 'Kiểm tra lại' })).toBeFocused()
+    await page.keyboard.press('Escape')
+    await expect(confirmation).toHaveCount(0)
+    await expect(submitDossier).toBeFocused()
+
+    await submitDossier.click()
+    await confirmation.getByRole('button', { name: 'Xác nhận gửi' }).click()
+    const submitted = page.getByRole('dialog', { name: 'Gửi hồ sơ thành công' })
+    await expect(submitted).toBeVisible()
+    await expect(submitted.getByRole('status')).toHaveText('Phiên bản nộp #1 đang chờ Quản trị viên xét duyệt.')
+    await expect(submitted.getByRole('button', { name: 'Đóng', exact: true })).toBeFocused()
     await page.screenshot({ path: `.artifacts/playwright/ui-documents-${width}.png` })
     await page.keyboard.press('Escape')
-    await expect(uploaded).toHaveCount(0)
-    await expect(page.getByLabel('Tệp đính kèm')).toBeFocused()
+    await expect(submitted).toHaveCount(0)
+    await expect(page.getByRole('heading', { name: 'Gửi nhầm giấy tờ?' })).toBeVisible()
+    await expect(submitDossier).toHaveCount(0)
 
     await page.evaluate(() => window.dispatchEvent(new Event('smartparking:login-success')))
     const loggedIn = page.getByRole('alert').filter({ hasText: 'Đăng nhập thành công.' })

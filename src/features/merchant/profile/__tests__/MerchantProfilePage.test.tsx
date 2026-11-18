@@ -12,7 +12,19 @@ function mount(initialEntries = ['/merchant/profile']) {
   return render(<QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } })}><MemoryRouter initialEntries={initialEntries}><MerchantProfilePage /></MemoryRouter></QueryClientProvider>)
 }
 afterEach(cleanup)
-beforeEach(() => { vi.resetAllMocks(); localStorage.clear(); vi.mocked(apiClient.get).mockResolvedValue({ data: { data: profile } }) })
+const draft = {
+  id: null, merchantId: 7, status: 'DRAFT', draftRevision: 1, submissionVersion: null,
+  businessRegistrationNumber: profile.businessLicense, legalName: profile.fullName,
+  resubmissionNote: null, documents: [], assessment: { status: 'NOT_STARTED', checks: [] },
+  requestedItems: [], requirements: [], editableItems: ['BUSINESS_INFO', 'BUSINESS_REGISTRATION'], history: [],
+}
+beforeEach(() => {
+  vi.resetAllMocks()
+  localStorage.clear()
+  vi.mocked(apiClient.get).mockImplementation(async (url) => ({
+    data: { data: url.endsWith('/verification') ? draft : profile },
+  }))
+})
 describe('Merchant profile backed by the real API contract', () => {
   it('opens the security anchor after a delayed profile response', async () => {
     const original = window.HTMLElement.prototype.scrollIntoView
@@ -137,19 +149,25 @@ describe('Merchant profile backed by the real API contract', () => {
     expect(screen.queryByText('1234567890')).not.toBeInTheDocument()
   })
   it('rejects oversized files and uploads a valid document to the supported endpoint', async () => {
-    const user = userEvent.setup(); vi.mocked(apiClient.post).mockResolvedValue({ data: { data: profile } })
-    mount(); const input = await screen.findByLabelText('Tệp đính kèm')
-    const large = new File(['x'], 'large.pdf', { type: 'application/pdf' }); Object.defineProperty(large, 'size', { value: 6 * 1024 * 1024 })
+    const user = userEvent.setup()
+    vi.mocked(apiClient.put).mockResolvedValue({ data: { data: { ...draft, draftRevision: 2 } } })
+    mount()
+    const input = await screen.findByLabelText(/Tải tệp: Giấy chứng nhận/)
+    const large = new File(['x'], 'large.pdf', { type: 'application/pdf' })
+    Object.defineProperty(large, 'size', { value: 6 * 1024 * 1024 })
     await user.upload(input, large)
     expect(screen.getByRole('alert')).toHaveTextContent('5 MB')
-    expect(apiClient.post).not.toHaveBeenCalled()
+    expect(apiClient.put).not.toHaveBeenCalled()
+
     await user.upload(input, new File(['document'], 'license.pdf', { type: 'application/pdf' }))
-    await user.click(screen.getByRole('button', { name: 'Gửi giấy tờ' }))
-    expect(await screen.findByText('Đã gửi giấy tờ thành công.')).toBeInTheDocument()
-    expect(screen.getByRole('dialog', { name: 'Gửi giấy tờ thành công' })).toBeInTheDocument()
-    expect(apiClient.post).toHaveBeenCalledWith('/api/v1/merchant/profile/documents', expect.any(FormData), { headers: { 'Content-Type': 'multipart/form-data' } })
-    await waitFor(() => expect(screen.getByRole('button', { name: 'Gửi giấy tờ' })).toBeDisabled())
+    expect(await screen.findByRole('dialog', { name: 'Đã tải lên tài liệu' })).toBeInTheDocument()
+    expect(apiClient.put).toHaveBeenCalledWith(
+      '/api/v1/merchant/profile/verification/documents/BUSINESS_REGISTRATION',
+      expect.any(FormData),
+      { headers: { 'Content-Type': 'multipart/form-data' } },
+    )
+    expect(apiClient.post).not.toHaveBeenCalled()
     await user.click(screen.getByRole('button', { name: 'Đóng' }))
-    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
   })
 })
