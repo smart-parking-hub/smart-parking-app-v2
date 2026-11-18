@@ -29,7 +29,7 @@ export function BookingTimeSelector({ start, minutes, onStartChange, onDurationC
   const unavailableTimes:Record<string,string>={}
   for(const block of arrivalBlocks??[]){
     if(block.start.slice(0,10)!==day)continue
-    if(block.status==='BUFFER')unavailableTimes[block.start.slice(11,16)]='Đệm 30p'
+    if(block.status==='BUFFER')unavailableTimes[block.start.slice(11,16)]='Khoảng đệm'
     else if(block.status==='PAST')unavailableTimes[block.start.slice(11,16)]='Đã qua'
     else if(block.status==='FULL'||block.remainingCapacity===0)unavailableTimes[block.start.slice(11,16)]='Hết chỗ'
   }

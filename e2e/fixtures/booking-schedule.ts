@@ -3,7 +3,7 @@ import type { Page } from '@playwright/test'
 export async function mockBookingSchedule(page: Page, physical=false, busyAfternoon=false) {
   await page.route(/\/api\/v1\/parking-lots\/\d+\/(availability|timeline)(?:\?|$)/, async route=>{
     const url=new URL(route.request().url())
-    const policy={timezone:'Asia/Ho_Chi_Minh',blockMinutes:30,bufferMinutes:30,allocationMode:physical?'PHYSICAL':'GROUP',updatedAt:'2026-11-17T07:00:00'}
+    const policy={timezone:'Asia/Ho_Chi_Minh',blockMinutes:30,bufferMinutes:30,checkInEarlyMinutes:15,turnaroundMinutes:15,allocationMode:physical?'PHYSICAL':'GROUP',updatedAt:'2026-11-17T07:00:00'}
     const remaining=(start:string,end:string)=>{
       const from=Date.parse(`${start}+07:00`),until=Date.parse(`${end}+07:00`)+1800000
       const date=start.slice(0,10)
