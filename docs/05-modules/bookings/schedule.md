@@ -24,6 +24,8 @@ The server supplies a daily 48-block timeline after the vehicle/type and date ar
 
 Green means bookable; red means no eligible place; amber means the required gap; gray means past. Text and accessible labels accompany colors. Timeline scrolls within its own region and supports keyboard use. It does not reset the user's scroll on every background refresh. Pending creation locks the form and timeline.
 
+Timeline display update (2026-11-18): **Lưới** is the default and wraps blocks to fit the available width. **Hàng ngang** displays the same blocks in a single scrollable row. Both views show the selected stay with an orange outline. Switching views keeps the booking selection and brings the selected arrival block into view within the timeline. The booking-schedule Playwright spec covers both views at mobile and desktop widths.
+
 The quick-book action stays available for a currently full lot, labelled **XEM LỊCH TRỐNG**. Its existing queue capability remains as a separate button for current availability. The current-count/full filter remains a current-state filter; this release does not add global date/time filters to the map search.
 
 Availability errors/unknown data disable creation and provide retry; a successful full-window read is required. Changing date/type/time/duration resets the selected slot. Query keys include all relevant inputs, and requests use cancellation signals. Server data stays in TanStack Query; form data stays in React Hook Form and Zod. On conflict, keep the editable intent, reload the schedule and show the server reason. Idempotency includes the selected physical slot and times.
