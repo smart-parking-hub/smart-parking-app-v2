@@ -27,6 +27,12 @@ export interface Pricing {
   surgeEndTime: string | null
   overtimePenaltyMultiplier: number
 }
+export interface ParkingLotImage {
+  id: number
+  contentUrl: string
+  originalFileName?: string
+  cover?: boolean
+}
 export interface Lot {
   id: number
   merchantId: number
@@ -40,7 +46,7 @@ export interface Lot {
   merchantPhone?: string
   slots: Slot[]
   pricingRules: Pricing[]
-  images: { id: number; contentUrl: string }[]
+  images: ParkingLotImage[]
 }
 export type ApiDateTimeValue = string | number[] | null | undefined
 
