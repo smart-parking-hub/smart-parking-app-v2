@@ -1,5 +1,7 @@
 # Withdrawal notifications and ordering
 
+Update 2026-11-17; owner: SPH. The Merchant inbox now refreshes every 15 seconds while visible and on focus under Query's stale policy. Notification/read state remains persisted by Notification service; no records are synthesized by the browser. Local MySQL/Kafka/API verification confirmed booking delivery to Merchant 59, persisted read state after reload and duplicate-event suppression. See [persistence audit](../../09-audit/notifications-persistence-2026-11-17.md).
+
 - Owner: frontend maintainers; last_verified: 2026-11-13.
 - Routes: `/admin/withdrawals`, `/admin/notifications`, `/merchant/notifications`.
 

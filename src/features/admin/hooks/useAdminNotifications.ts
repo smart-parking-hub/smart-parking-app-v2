@@ -65,7 +65,10 @@ export function useAdminNotifications(session: number) {
     onMutate: () => cache.cancelQueries({ queryKey: scope }),
     // Await refetch so controls stay pending until the displayed page and count
     // settle. Inactive pages become stale and refresh when visited again.
-    onSuccess: () => cache.invalidateQueries({ queryKey: scope }),
+    onSuccess: () => Promise.all([
+      cache.invalidateQueries({ queryKey: scope }),
+      cache.invalidateQueries({ queryKey: ['notification-indicator'] }),
+    ]),
   })
 
   function markRead(id?: number) {

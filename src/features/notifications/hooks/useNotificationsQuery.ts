@@ -33,7 +33,8 @@ export function useNotificationsListQuery(
     staleTime: 30_000,
     placeholderData: keepPreviousData,
     retry: false,
-    refetchOnWindowFocus: false,
+    refetchOnWindowFocus: true,
+    refetchInterval: 15_000,
   })
 }
 
@@ -46,7 +47,7 @@ export function useUnreadCountQuery(options?: {
     queryFn: fetchUnreadCountApi,
     staleTime: 30_000,
     retry: false,
-    refetchOnWindowFocus: false,
+    refetchOnWindowFocus: true,
     enabled: options?.enabled ?? true,
     refetchInterval: options?.refetchInterval ?? 30_000,
   })
