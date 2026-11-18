@@ -43,4 +43,5 @@ export {
   type GoogleShareEmbedValidationResult,
 } from './shareEmbed'
 
+export { ensureMapLibreWorkerConfigured } from './maplibreWorker'
 export { MapLibreMapView, type MapLibreMapViewProps } from './MapLibreMapView'

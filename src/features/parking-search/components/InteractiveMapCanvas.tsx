@@ -16,6 +16,7 @@ import {
   buildGoogleMapsDirectionsUrl,
   DEFAULT_MAP_CENTER,
   DEFAULT_MAP_ZOOM,
+  ensureMapLibreWorkerConfigured,
   getMapRuntimeConfig,
   isValidCoordinates,
   loadMapRuntimeConfig,
@@ -156,6 +157,7 @@ export function InteractiveMapCanvas({
     const initialConfig = getMapRuntimeConfig()
     let instance: maplibregl.Map
     try {
+      ensureMapLibreWorkerConfigured()
       instance = new maplibregl.Map({
         container: container.current,
         style: initialConfig.styleUrl,

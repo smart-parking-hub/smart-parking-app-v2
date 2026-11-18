@@ -4,6 +4,7 @@ import 'maplibre-gl/dist/maplibre-gl.css'
 import { AlertTriangle, RefreshCw } from 'lucide-react'
 import {
   createAccuracyCircleGeoJson,
+  ensureMapLibreWorkerConfigured,
   formatCoordinate,
   getMapRuntimeConfig,
   isValidCoordinates,
@@ -60,6 +61,7 @@ export function CreateParkingLotMapPicker({
     const initialConfig = getMapRuntimeConfig()
     let instance: maplibregl.Map
     try {
+      ensureMapLibreWorkerConfigured()
       instance = new maplibregl.Map({
         container: container.current,
         style: initialConfig.styleUrl,

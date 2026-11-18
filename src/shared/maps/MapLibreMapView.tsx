@@ -13,6 +13,7 @@ import {
 } from './runtimeConfig'
 import { extractAndValidateGoogleShareEmbedUrl } from './shareEmbed'
 import { buildGoogleMapsSearchUrl } from './urls'
+import { ensureMapLibreWorkerConfigured } from './maplibreWorker'
 import { createParkingMarkerElement } from '@/entities/parking-lot/parkingMapMarker'
 
 export interface MapLibreMapViewProps {
@@ -102,6 +103,7 @@ export function MapLibreMapView({
 
     let mapInstance: maplibregl.Map
     try {
+      ensureMapLibreWorkerConfigured()
       mapInstance = new maplibregl.Map({
         container,
         style: initialConfig.styleUrl,
