@@ -16,6 +16,15 @@ export function ParkingDetailPage(){
         <ParkingLotGallery images={images} lotName={query.data.name}/>
         <ParkingCapacityPricing lot={query.data} compact={images.length>0}/>
       </div>
+      {query.data.description && (
+        <Panel title="Thông tin vận hành & Hướng dẫn lưu thông">
+          <div className="rounded-2xl border border-brand-border bg-brand-surface/40 p-5">
+            <div className="whitespace-pre-line text-sm leading-relaxed text-brand-dark/90 font-normal">
+              {query.data.description}
+            </div>
+          </div>
+        </Panel>
+      )}
       <Panel><ReservationFlow lotId={lotId}/></Panel>
     </>}
   </Workspace>

@@ -7,6 +7,7 @@ import type {
   MerchantParkingLotDetailData,
   MerchantParkingLotListParams,
   ParkingLotImageItem,
+  ParkingLotArchetype,
   YardGalleryImage,
 } from '../types/merchantParkingLotTypes'
 
@@ -225,10 +226,55 @@ export async function generateAiParkingLotContent(params: {
   name?: string
   address?: string
   customHighlights?: string
+  archetype?: ParkingLotArchetype
 }): Promise<AiContentSegments> {
-  const lotName = params.name || 'Bãi Đỗ Xe & Depot Logistics'
-  const lotAddress = params.address || 'Khu Công Nghiệp Cảng Biển Logistics'
+  const archetype = params.archetype || 'URBAN'
+  const lotName =
+    params.name?.trim() ||
+    (archetype === 'LOGISTICS'
+      ? 'Bãi Đỗ Xe & Depot Logistics'
+      : archetype === 'MALL'
+        ? 'Bãi Đỗ Xe Trung Tâm Thương Mại'
+        : 'Bãi Đỗ Xe Đô Thị Thông Minh')
+  const lotAddress =
+    params.address?.trim() ||
+    (archetype === 'LOGISTICS'
+      ? 'Khu Công Nghiệp & Cảng Biển Logistics'
+      : 'Khu vực trung tâm đô thị')
   const customHighlights = params.customHighlights?.trim()
+
+  const payloadByArchetype = {
+    URBAN: {
+      totalCapacity: 120,
+      supportedVehicleTypes: ['SEDAN_SUV', 'MOTORBIKE'],
+      amenities: [
+        'Cổng barie nhận diện biển số tự động ALPR',
+        'Camera giám sát an ninh 24/7',
+        'Trạm sạc nhanh xe điện',
+        'Hệ thống mái che mát toàn bãi',
+      ],
+    },
+    MALL: {
+      totalCapacity: 250,
+      supportedVehicleTypes: ['SEDAN_SUV', 'MOTORBIKE'],
+      amenities: [
+        'Thanh toán tự động không tiền mặt qua app',
+        'Cổng barie nhận diện biển số tự động ALPR',
+        'Thang máy kết nối sảnh mua sắm',
+        'Hầm xe rộng rãi có chỉ dẫn ô đỗ trống',
+      ],
+    },
+    LOGISTICS: {
+      totalCapacity: 80,
+      supportedVehicleTypes: ['CONTAINER_40FT', 'HEAVY_TRUCK'],
+      amenities: [
+        'Cổng barie nhận diện biển số tự động ALPR',
+        'Hạ tầng ổ cắm điện lạnh Reefer 380V',
+        'Bảo vệ trực ban và cẩu giàn 24/7',
+        'Mặt bằng chịu tải trọng trục 60T',
+      ],
+    },
+  }[archetype]
 
   try {
     const res = await apiClient.post<{
@@ -240,9 +286,9 @@ export async function generateAiParkingLotContent(params: {
     }>('/api/v1/ai/generate-description', {
       lotName,
       address: lotAddress,
-      totalCapacity: 80,
-      supportedVehicleTypes: ['CONTAINER_40FT', 'HEAVY_TRUCK'],
-      amenities: ['ALPR_GATE', 'REEFER_380V', 'SECURITY_24_7', 'EV_CHARGER'],
+      totalCapacity: payloadByArchetype.totalCapacity,
+      supportedVehicleTypes: payloadByArchetype.supportedVehicleTypes,
+      amenities: payloadByArchetype.amenities,
       customHighlights: customHighlights || undefined,
     })
 
@@ -254,18 +300,38 @@ export async function generateAiParkingLotContent(params: {
       }
     }
   } catch {
-    // Graceful fallback to smart template
+    // Graceful fallback to smart contextual template
   }
 
-  // Simulating Fretrix-Dispatch-V3 high-precision logistics AI synthesis
   const highlightSuffix = customHighlights ? ` Điểm nhấn nổi bật: ${customHighlights}.` : ''
 
+  if (archetype === 'LOGISTICS') {
+    return {
+      logisticsCapacity: `Depot chuyên dụng "${lotName}" tại ${lotAddress}.${highlightSuffix} Mặt bằng gia cố chịu lực xe đầu kéo container và xe tải nặng 3-4 chân (tải trọng trục 60T). Trang bị sẵn hệ thống ổ cắm điện lạnh Reefer 380V hoạt động liên tục 24/7 phục vụ hàng đông lạnh.`,
+      safetyRegulations:
+        '1. Nghiêm cấm sang chiết nhiên liệu và đốt lửa trong khuôn viên bãi.\n2. Bãi đạt quy chuẩn PCCC cấp 1 với 08 họng trụ cứu hỏa D65 áp lực cao và xe cơ động túc trực.\n3. Phương tiện tuân thủ tải trọng cầu đường và xuất trình lệnh điều xe tại cổng.',
+      circulationGuide:
+        'Tài xế tiếp cận từ trục giao thông chính theo biển báo chỉ dẫn bến bãi, duy trì tốc độ < 10km/h khi qua cổng để camera ALPR quét biển số tự động và nâng hạ thanh barie nhanh chóng.',
+    }
+  }
+
+  if (archetype === 'MALL') {
+    return {
+      logisticsCapacity: `Bãi đỗ xe dịch vụ "${lotName}" tại ${lotAddress}.${highlightSuffix} Không gian hầm và mặt bằng thông thoáng với sức chứa lớn, phân luồng riêng cho ô tô và xe máy. Tích hợp thanh toán quét mã QR tự động không dùng tiền mặt và thang máy kết nối trực tiếp sảnh mua sắm.`,
+      safetyRegulations:
+        '1. Quý khách vui lòng giảm tốc độ dưới 5km/h trong khuôn viên hầm và bãi đỗ.\n2. Tuân thủ vạch kẻ ô và sự hướng dẫn của nhân viên điều phối giờ cao điểm.\n3. Tuyệt đối không để vật dụng dễ cháy nổ hoặc tài sản giá trị lớn trong xe.',
+      circulationGuide:
+        'Tài xế di chuyển theo làn đường tiếp cận sảnh chính, quan sát bảng LED điện tử báo số chỗ trống từng tầng và hệ thống barie thông minh tự động mở khi nhận diện biển số.',
+    }
+  }
+
+  // Mặc định: URBAN
   return {
-    logisticsCapacity: `Depot chuyên dụng "${lotName}" tại ${lotAddress}.${highlightSuffix} Mặt bằng chịu lực xe đầu kéo container và xe tải nặng 3-4 chân (tải trọng trục 60T). Trang bị hệ thống điện lạnh Reefer 380V hoạt động liên tục 24/7.`,
+    logisticsCapacity: `Bãi đỗ xe văn phòng & đô thị "${lotName}" tại ${lotAddress}.${highlightSuffix} Cung cấp chỗ đỗ ô tô và xe máy an toàn, mái che mát toàn diện, trang bị trụ sạc nhanh xe điện và camera giám sát bảo vệ 24/7, phù hợp cho cả nhu cầu gửi theo giờ và theo tháng.`,
     safetyRegulations:
-      'Nghiêm cấm sang chiết dầu trong khuôn viên bãi. Đạt quy chuẩn PCCC cấp 1 với 08 họng trụ cứu hỏa D65 đấu nối nguồn nước áp lực cao cùng xe chữa cháy cơ động túc trực bảo vệ hàng hóa.',
+      '1. Khách gửi xe xuất trình vé điện tử hoặc biển số xe đã đăng ký trên ứng dụng khi ra/vào.\n2. Nghiêm cấm hút thuốc và tắt máy xe khi dừng đỗ trong khu vực mái che.\n3. Giữ gìn vệ sinh chung và khóa xe cẩn thận trước khi rời khỏi vị trí đỗ.',
     circulationGuide:
-      'Tài xế tiếp cận từ trục giao thông chính theo biển báo chỉ dẫn bến bãi, duy trì tốc độ < 10km/h khi qua cổng để camera ALPR quét biển số tự động và nâng hạ thanh barie nhanh chóng.',
+      'Từ mặt đường chính, tài xế rẽ vào lối tiếp cận cổng kiểm soát, dừng trước vạch nhận diện để camera ALPR quét biển số tự động và theo bảng chỉ dẫn vào ô đỗ còn trống.',
   }
 }
 

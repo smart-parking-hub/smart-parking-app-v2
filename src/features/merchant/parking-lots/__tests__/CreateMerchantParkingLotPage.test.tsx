@@ -2,10 +2,18 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
-import { createMerchantParkingLot, uploadMerchantParkingLotImages } from '../api/merchantParkingLotApi'
+import { createMerchantParkingLot, uploadMerchantParkingLotImages, generateAiParkingLotContent } from '../api/merchantParkingLotApi'
 import { CreateMerchantParkingLotPage } from '../pages/CreateMerchantParkingLotPage'
 
-vi.mock('../api/merchantParkingLotApi', () => ({ createMerchantParkingLot: vi.fn(), uploadMerchantParkingLotImages: vi.fn() }))
+vi.mock('../api/merchantParkingLotApi', () => ({
+  createMerchantParkingLot: vi.fn(),
+  uploadMerchantParkingLotImages: vi.fn(),
+  generateAiParkingLotContent: vi.fn().mockResolvedValue({
+    logisticsCapacity: 'Mocked Logistics: Tiếp nhận container 40ft tải trọng 60T.',
+    safetyRegulations: 'Mocked Safety: Tiêu chuẩn PCCC D65 áp lực cao.',
+    circulationGuide: 'Mocked Flow: Luồng xe qua barie ALPR tự động < 10km/h.',
+  }),
+}))
 vi.mock('../components/CreateParkingLotMapPicker', () => ({ CreateParkingLotMapPicker: () => <div aria-label="Bản đồ chọn vị trí bãi đỗ" /> }))
 
 const draftKey = 'merchant_lot_registration_draft'
@@ -156,5 +164,56 @@ describe('SCR-029: đăng ký bãi đỗ', () => {
     await waitFor(() => expect(uploadMerchantParkingLotImages).toHaveBeenCalledTimes(2))
     expect(createMerchantParkingLot).toHaveBeenCalledTimes(1)
     expect(uploadMerchantParkingLotImages).toHaveBeenLastCalledWith(101, [image])
+  })
+
+  it('renders AI assistant widget in Step 1 and supports generating and applying AI content', async () => {
+    const user = userEvent.setup()
+    renderPage()
+
+    // 1. Verify AI widget is rendered in Step 1
+    expect(screen.getByText('Trợ Lý AI Hỗ Trợ Khai Báo')).toBeInTheDocument()
+    expect(screen.getByText('ENGINE: FRETRIX-DISPATCH-V3')).toBeInTheDocument()
+
+    // 2. Click a preset tag and generate AI content
+    await user.click(screen.getByRole('button', { name: /\+ Bảo vệ 24\/7/i }))
+    await user.click(screen.getByRole('button', { name: /Sinh Lại Nội Dung Bằng AI/i }))
+
+    expect(generateAiParkingLotContent).toHaveBeenCalledWith(
+      expect.objectContaining({
+        customHighlights: expect.stringContaining('Bảo vệ 24/7'),
+      }),
+    )
+
+    // 3. Apply AI content to form
+    await user.click(screen.getByRole('button', { name: /Áp Dụng Nội Dung AI Vào Hồ Sơ/i }))
+
+    // 4. Verify AI preview ribbon appears in BasicInfoCard and is rendered in AI widget
+    expect(screen.getByText(/Nội dung AI Fretrix-Dispatch đã đồng bộ vào hồ sơ/i)).toBeInTheDocument()
+    expect(screen.getAllByText(/Mocked Logistics: Tiếp nhận container 40ft/i).length).toBeGreaterThanOrEqual(2)
+
+    // 5. Fill required info, navigate to Step 3, and verify AI summary in confirmation
+    await user.type(screen.getByLabelText(/^Tên bãi đỗ/), draft.name)
+    await user.type(screen.getByLabelText(/^Địa chỉ bãi đỗ/), draft.address)
+    await user.click(screen.getByRole('button', { name: 'Tiếp tục: Vị trí bãi đỗ' }))
+
+    await user.type(await screen.findByLabelText(/^Vĩ độ/), '10.762622')
+    await user.type(screen.getByLabelText(/^Kinh độ/), '106.660172')
+    await user.click(screen.getByRole('button', { name: 'Tiếp tục: Kiểm tra hồ sơ' }))
+
+    expect(await screen.findByRole('heading', { name: 'Kiểm tra thông tin đăng ký' })).toBeInTheDocument()
+    expect(screen.getByText('Nội dung AI đã lưu')).toBeInTheDocument()
+    expect(screen.getByText(/Mocked Logistics: Tiếp nhận container 40ft tải trọng 60T/i)).toBeInTheDocument()
+
+    // 6. Submit and verify description is included in payload sent to backend
+    await user.click(screen.getByRole('button', { name: 'Gửi hồ sơ đăng ký' }))
+    await waitFor(() =>
+      expect(createMerchantParkingLot).toHaveBeenCalledWith(
+        expect.objectContaining({
+          name: draft.name,
+          address: draft.address,
+          description: expect.stringContaining('Mocked Logistics: Tiếp nhận container 40ft tải trọng 60T.'),
+        }),
+      ),
+    )
   })
 })

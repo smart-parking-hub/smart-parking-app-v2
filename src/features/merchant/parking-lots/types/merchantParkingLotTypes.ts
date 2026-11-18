@@ -80,6 +80,7 @@ export type CreateMerchantParkingLotRequest = {
   address: string
   latitude: number
   longitude: number
+  description?: string
 }
 
 export type ParkingLotImageItem = {
@@ -96,6 +97,8 @@ export type ParkingLotImageItem = {
   sizeBytes: number
 }
 
+export type ParkingLotArchetype = 'URBAN' | 'MALL' | 'LOGISTICS'
+
 export type AiContentSegments = {
   logisticsCapacity: string
   safetyRegulations: string
@@ -109,6 +112,7 @@ export type CreateParkingLotDraft = {
   longitude?: number
   aiContent?: AiContentSegments
   customHighlights?: string
+  lotArchetype?: ParkingLotArchetype
   updatedAt?: string
 }
 
