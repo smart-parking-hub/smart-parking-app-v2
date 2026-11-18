@@ -1,13 +1,13 @@
 import { beforeEach, afterEach, it, expect, vi } from 'vitest'
-import { cleanup, render, screen, fireEvent, waitFor, within } from '@testing-library/react'
+import { act, cleanup, render, screen, fireEvent, waitFor, within } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { MemoryRouter, Routes, Route } from 'react-router-dom'
 import { apiClient } from '@/shared/api/client'
 vi.mock('@/shared/api/client', () => ({ apiClient: { get: vi.fn(), request: vi.fn() } }))
 afterEach(cleanup)
-function mount(ui: React.ReactNode, path: string, route: string) {
+function mount(ui: React.ReactNode, path: string, route: string, client = new QueryClient({ defaultOptions: { queries: { retry: false } } })) {
   return render(
-    <QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}>
+    <QueryClientProvider client={client}>
       <MemoryRouter initialEntries={[path]}>
         <Routes>
           <Route path={route} element={ui} />
@@ -397,7 +397,7 @@ it('filters bookings by search keyword, status, and resets on Xóa lọc (TKT-05
   })
 })
 
-it('displays parking status notice banner and disables final payment when opening PARKING booking (PR #106 / SP-UI-03)', async () => {
+it.each(['PARKING', 'OVERTIME'])('only offers final payment after the server settles a %s booking', async (status) => {
   // Arrange
   const parkingBooking = {
     id: 88,
@@ -407,7 +407,7 @@ it('displays parking status notice banner and disables final payment when openin
     parkingLotName: 'Bãi Xe Cát Lái Đang Đỗ',
     vehicleId: 3,
     vehiclePlate: '51C-PARKED',
-    status: 'PARKING',
+    status,
     advanceDeposit: 50000,
     totalAmount: 200000,
     hourlyRate: 40000,
@@ -418,18 +418,20 @@ it('displays parking status notice banner and disables final payment when openin
     expiresAt: '2026-02-14T19:00:00Z',
   }
 
+  let latestBooking = parkingBooking
   vi.mocked(apiClient.get).mockImplementation(async (url) => ({
     data: {
       data: String(url).endsWith('/bookings')
         ? { content: [parkingBooking], totalElements: 1, totalPages: 1, currentPage: 0 }
         : String(url).includes('/disputes/me')
           ? { content: [], totalElements: 0, totalPages: 1, currentPage: 0 }
-          : parkingBooking,
+          : latestBooking,
     },
   }))
 
   // Act
-  mount(<MyBookingsPage />, '/bookings', '/bookings')
+  const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+  mount(<MyBookingsPage />, '/bookings', '/bookings', client)
   expect(await screen.findByText('BK-PARKING-88')).toBeInTheDocument()
 
   // Mở modal chi tiết
@@ -447,6 +449,14 @@ it('displays parking status notice banner and disables final payment when openin
 
   // Xác nhận không có nút thanh toán quyết toán khi xe đang đỗ
   expect(within(modal).queryByRole('button', { name: /Thanh toán phần còn lại qua PayOS/i })).not.toBeInTheDocument()
+
+  await waitFor(() => expect(client.getQueryData(['booking', parkingBooking.id])).toMatchObject({ status }))
+  latestBooking = { ...parkingBooking, status: 'AWAITING_FINAL_PAYMENT', totalAmount: 250000 }
+  await act(async () => {
+    await client.invalidateQueries({ queryKey: ['booking', parkingBooking.id] })
+  })
+  expect(await within(modal).findByRole('button', { name: /Thanh toán phần còn lại qua PayOS/i })).toBeEnabled()
+  expect(within(modal).queryByTestId('parking-status-notice')).not.toBeInTheDocument()
 })
 
 it('displays dynamic deposit amount on payment CTA when booking is in PENDING_PAYMENT status', async () => {

@@ -40,14 +40,14 @@ function BookingStatusContent({
   const [checkoutIntent, setCheckoutIntent] = useState<string | null>(null)
   const [toastMessage, setToastMessage] = useState<string | null>(null)
 
+  const watchCheckout = booking?.status === 'PARKING' || booking?.status === 'OVERTIME'
   const query = useQuery({
     queryKey: ['booking', bookingId],
     queryFn: () => fetchBooking(bookingId),
-    enabled: !booking,
+    enabled: !booking || watchCheckout,
     refetchInterval: (query) =>
-      !booking &&
       ['PENDING_PAYMENT', 'PENDING_CHECKIN', 'PARKING', 'OVERTIME', 'AWAITING_FINAL_PAYMENT'].includes(
-        query.state.data?.status ?? '',
+        query.state.data?.status ?? booking?.status ?? '',
       )
         ? 3000
         : false,
@@ -79,7 +79,7 @@ function BookingStatusContent({
   const demo = useMutation({ mutationFn: () => payDemo(bookingId), onSuccess: refresh })
   const cancel = useMutation({ mutationFn: () => cancelBooking(bookingId), onSuccess: async () => { setCancelOpen(false); setAcceptWallet(false); setToastMessage(`Đã hủy lượt đặt chỗ #${booking?.bookingCode ?? query.data?.bookingCode ?? bookingId} thành công.`); await refresh() } })
 
-  const data = booking ?? query.data
+  const data = watchCheckout ? query.data ?? booking : booking ?? query.data
   const deadline = data?.status === 'PENDING_PAYMENT' ? bookingTimestamp(data.expiresAt) : NaN
   const [, tickDeadline] = useState(0)
   useEffect(() => {
