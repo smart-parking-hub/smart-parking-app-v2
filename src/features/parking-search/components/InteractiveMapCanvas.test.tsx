@@ -32,37 +32,35 @@ vi.mock('maplibre-gl', () => {
     }
   }
   return {
-    default: {
-      Map: vi.fn(() => mockMapInstance),
-      LngLatBounds: FakeLngLatBounds,
-      Marker: vi.fn(() => {
-        const entry: { lngLat?: [number, number] } = {}
-        createdMarkers.push(entry)
-        return {
-          setLngLat: vi.fn((coords: [number, number]) => {
-            entry.lngLat = coords
-            return {
-              addTo: vi.fn(() => ({ remove: vi.fn() })),
-            }
-          }),
-          remove: vi.fn(),
-        }
-      }),
-      Popup: vi.fn(() => {
-        const entry: { lngLat?: [number, number] } = {}
-        createdPopups.push(entry)
-        const popupApi = {
-          setLngLat: vi.fn((coords: [number, number]) => {
-            entry.lngLat = coords
-            return popupApi
-          }),
-          setDOMContent: vi.fn(() => popupApi),
-          addTo: vi.fn(() => popupApi),
-          remove: vi.fn(),
-        }
-        return popupApi
-      }),
-    },
+    Map: vi.fn(() => mockMapInstance),
+    LngLatBounds: FakeLngLatBounds,
+    Marker: vi.fn(() => {
+      const entry: { lngLat?: [number, number] } = {}
+      createdMarkers.push(entry)
+      return {
+        setLngLat: vi.fn((coords: [number, number]) => {
+          entry.lngLat = coords
+          return {
+            addTo: vi.fn(() => ({ remove: vi.fn() })),
+          }
+        }),
+        remove: vi.fn(),
+      }
+    }),
+    Popup: vi.fn(() => {
+      const entry: { lngLat?: [number, number] } = {}
+      createdPopups.push(entry)
+      const popupApi = {
+        setLngLat: vi.fn((coords: [number, number]) => {
+          entry.lngLat = coords
+          return popupApi
+        }),
+        setDOMContent: vi.fn(() => popupApi),
+        addTo: vi.fn(() => popupApi),
+        remove: vi.fn(),
+      }
+      return popupApi
+    }),
   }
 })
 

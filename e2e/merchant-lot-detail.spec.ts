@@ -2,11 +2,11 @@ import { test, expect } from '@playwright/test'
 
 test.use({ baseURL: process.env.DETAIL_BASE_URL ?? 'http://127.0.0.1:5174' })
 
-// 1x1 transparent PNG fixture so deterministic UI tests never hammer public OSM tile servers.
-const TILE_PNG_FIXTURE = Buffer.from(
-  'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=',
-  'base64',
-)
+const EMPTY_STYLE_FIXTURE = {
+  version: 8,
+  sources: {},
+  layers: [],
+}
 
 const lot = {
   id: 35,
@@ -52,8 +52,8 @@ for (const width of [1440, 390]) {
     page.on('pageerror', (error) => errors.push(error.message))
 
     await setupMerchantDetailRoutes(page)
-    await page.route('**/*tile.openstreetmap.org/**', (route) =>
-      route.fulfill({ status: 200, contentType: 'image/png', body: TILE_PNG_FIXTURE }),
+    await page.route('**/*tiles.openfreemap.org/**', (route) =>
+      route.fulfill({ status: 200, json: EMPTY_STYLE_FIXTURE }),
     )
 
     await page.goto('/merchant/parking-lots/35')
@@ -95,11 +95,11 @@ test('degrades cleanly with error alert and external Google Maps link when map t
 }) => {
   await page.setViewportSize({ width: 1440, height: 1000 })
   await setupMerchantDetailRoutes(page)
-  await page.route('**/*tile.openstreetmap.org/**', (route) => route.abort())
+  await page.route('**/*tiles.openfreemap.org/**', (route) => route.abort())
 
   await page.goto('/merchant/parking-lots/35')
   const mapRegion = page.getByRole('region', { name: 'Bản đồ vị trí bãi đỗ' })
   await expect(mapRegion).toHaveAttribute('data-map-state', 'error', { timeout: 15000 })
-  await expect(mapRegion.getByRole('alert')).toContainText('OpenStreetMap')
+  await expect(mapRegion.getByRole('alert')).toContainText('OpenFreeMap')
   await expect(mapRegion.getByRole('button', { name: 'Thử tải lại' })).toBeVisible()
 })

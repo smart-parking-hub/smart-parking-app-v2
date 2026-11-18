@@ -27,11 +27,9 @@ const mockMarkerInstance = {
 }
 
 vi.mock('maplibre-gl', () => ({
-  default: {
-    Map: vi.fn(() => mockMapInstance),
-    Marker: vi.fn(() => mockMarkerInstance),
-    NavigationControl: vi.fn(() => ({})),
-  },
+  Map: vi.fn(() => mockMapInstance),
+  Marker: vi.fn(() => mockMarkerInstance),
+  NavigationControl: vi.fn(() => ({})),
 }))
 
 const VALID_SHARE_URL =

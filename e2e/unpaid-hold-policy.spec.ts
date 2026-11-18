@@ -34,7 +34,7 @@ for (const width of [390, 1440]) {
         else if (path.endsWith('/unread-count')) data = 0
         return route.fulfill({ json: { data } })
       })
-      await page.route('**/*tile.openstreetmap.org/**', route => route.abort())
+      await page.route('**/*tiles.openfreemap.org/**', route => route.abort())
       await page.goto('/parking')
       await page.getByRole('button', { name: 'ĐẶT GIỮ CHỖ', exact: true }).click()
       const dialog = page.getByRole('dialog', { name: 'Đặt giữ chỗ nhanh' })

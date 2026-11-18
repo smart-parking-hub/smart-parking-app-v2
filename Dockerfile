@@ -15,14 +15,14 @@ COPY . .
 # Vite injects VITE_* defaults at build time (map endpoints can also be overridden via /map-config.json)
 ARG VITE_API_BASE_URL=/api
 ARG VITE_APP_ENV=production
-ARG VITE_MAP_TILE_URL=https://tile.openstreetmap.org/{z}/{x}/{y}.png
+ARG VITE_MAP_STYLE_URL=https://tiles.openfreemap.org/styles/liberty
 ARG VITE_MAP_PHOTON_URL=https://photon.komoot.io/api/
 ARG VITE_MAP_GEOCODER_ENABLED=true
 ARG VITE_APP_KEY=
 
 ENV VITE_API_BASE_URL=$VITE_API_BASE_URL \
     VITE_APP_ENV=$VITE_APP_ENV \
-    VITE_MAP_TILE_URL=$VITE_MAP_TILE_URL \
+    VITE_MAP_STYLE_URL=$VITE_MAP_STYLE_URL \
     VITE_MAP_PHOTON_URL=$VITE_MAP_PHOTON_URL \
     VITE_MAP_GEOCODER_ENABLED=$VITE_MAP_GEOCODER_ENABLED \
     VITE_APP_KEY=$VITE_APP_KEY

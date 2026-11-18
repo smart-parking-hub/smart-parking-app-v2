@@ -35,11 +35,9 @@ const mockMarkerInstance = {
 }
 
 vi.mock('maplibre-gl', () => ({
-  default: {
-    Map: vi.fn(() => mockMapInstance),
-    Marker: vi.fn(() => mockMarkerInstance),
-    NavigationControl: vi.fn(() => ({})),
-  },
+  Map: vi.fn(() => mockMapInstance),
+  Marker: vi.fn(() => mockMarkerInstance),
+  NavigationControl: vi.fn(() => ({})),
 }))
 
 describe('CreateParkingLotMapPicker (MapLibre GL JS: click + drag + GPS accuracy)', () => {

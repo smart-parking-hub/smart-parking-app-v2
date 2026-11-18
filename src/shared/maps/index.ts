@@ -25,12 +25,10 @@ export {
 
 export {
   DEFAULT_MAP_CENTER,
+  DEFAULT_MAP_MAX_ZOOM,
   DEFAULT_MAP_STYLE_URL,
   DEFAULT_MAP_ZOOM,
   DEFAULT_PHOTON_URL,
-  DEFAULT_TILE_ATTRIBUTION,
-  DEFAULT_TILE_MAX_ZOOM,
-  DEFAULT_TILE_URL,
   getMapRuntimeConfig,
   loadMapRuntimeConfig,
   resetMapRuntimeConfigForTests,
@@ -46,4 +44,3 @@ export {
 } from './shareEmbed'
 
 export { MapLibreMapView, type MapLibreMapViewProps } from './MapLibreMapView'
-export { LeafletMapView, type LeafletMapViewProps } from './LeafletMapView'

@@ -7,16 +7,11 @@ export const DEFAULT_MAP_CENTER: Coordinates = {
 
 export const DEFAULT_MAP_ZOOM = 12
 export const DEFAULT_MAP_STYLE_URL = 'https://tiles.openfreemap.org/styles/liberty'
-export const DEFAULT_TILE_URL = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png'
-export const DEFAULT_TILE_ATTRIBUTION =
-  '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-export const DEFAULT_TILE_MAX_ZOOM = 19
+export const DEFAULT_MAP_MAX_ZOOM = 19
 export const DEFAULT_PHOTON_URL = 'https://photon.komoot.io/api/'
 
 export interface MapRuntimeConfig {
   styleUrl: string
-  tileUrl: string
-  tileAttribution: string
   maxZoom: number
   photonUrl: string
   geocoderEnabled: boolean
@@ -47,28 +42,9 @@ function isAllowedEndpointUrl(value: string): boolean {
   }
 }
 
-function isValidTileUrlTemplate(value: string): boolean {
-  const trimmed = value.trim()
-  if (!trimmed) return false
-  const probe = trimmed
-    .replace(/\{s\}/g, 'a')
-    .replace(/\{[xyz]\}/g, '0')
-    .replace(/\{r\}/g, '')
-  return isAllowedEndpointUrl(probe)
-}
-
-function sanitizeAttribution(value: unknown): string {
-  if (typeof value !== 'string') return DEFAULT_TILE_ATTRIBUTION
-  const trimmed = value.trim()
-  if (!trimmed || /<script|on\w+\s*=/i.test(trimmed)) {
-    return DEFAULT_TILE_ATTRIBUTION
-  }
-  return trimmed
-}
-
 function sanitizeMaxZoom(value: unknown): number {
   const num = typeof value === 'number' ? value : Number(value)
-  if (!Number.isFinite(num)) return DEFAULT_TILE_MAX_ZOOM
+  if (!Number.isFinite(num)) return DEFAULT_MAP_MAX_ZOOM
   return Math.min(22, Math.max(10, Math.round(num)))
 }
 
@@ -97,20 +73,10 @@ export function validateMapRuntimeConfig(
       ? raw.styleUrl.trim()
       : base.styleUrl
 
-  const tileUrl =
-    typeof raw.tileUrl === 'string' && isValidTileUrlTemplate(raw.tileUrl)
-      ? raw.tileUrl.trim()
-      : base.tileUrl
-
   const photonUrl =
     typeof raw.photonUrl === 'string' && isAllowedEndpointUrl(raw.photonUrl.trim())
       ? raw.photonUrl.trim()
       : base.photonUrl
-
-  const tileAttribution =
-    raw.tileAttribution !== undefined
-      ? sanitizeAttribution(raw.tileAttribution)
-      : base.tileAttribution
 
   const maxZoom =
     raw.maxZoom !== undefined ? sanitizeMaxZoom(raw.maxZoom) : base.maxZoom
@@ -122,8 +88,6 @@ export function validateMapRuntimeConfig(
 
   return {
     styleUrl,
-    tileUrl,
-    tileAttribution,
     maxZoom,
     photonUrl,
     geocoderEnabled,
@@ -134,9 +98,7 @@ function getBuildTimeDefaults(): MapRuntimeConfig {
   const env = import.meta.env as Record<string, string | undefined>
   const base: MapRuntimeConfig = {
     styleUrl: DEFAULT_MAP_STYLE_URL,
-    tileUrl: DEFAULT_TILE_URL,
-    tileAttribution: DEFAULT_TILE_ATTRIBUTION,
-    maxZoom: DEFAULT_TILE_MAX_ZOOM,
+    maxZoom: DEFAULT_MAP_MAX_ZOOM,
     photonUrl: DEFAULT_PHOTON_URL,
     geocoderEnabled: true,
   }
@@ -144,10 +106,8 @@ function getBuildTimeDefaults(): MapRuntimeConfig {
   return validateMapRuntimeConfig(
     {
       styleUrl: env.VITE_MAP_STYLE_URL,
-      tileUrl: env.VITE_MAP_TILE_URL || env.VITE_OSM_TILE_URL,
-      tileAttribution: env.VITE_MAP_TILE_ATTRIBUTION,
-      maxZoom: env.VITE_MAP_TILE_MAX_ZOOM
-        ? Number(env.VITE_MAP_TILE_MAX_ZOOM)
+      maxZoom: env.VITE_MAP_MAX_ZOOM
+        ? Number(env.VITE_MAP_MAX_ZOOM)
         : undefined,
       photonUrl: env.VITE_MAP_PHOTON_URL,
       geocoderEnabled: parseBooleanFlag(env.VITE_MAP_GEOCODER_ENABLED, true),

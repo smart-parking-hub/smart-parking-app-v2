@@ -49,7 +49,7 @@ for (const viewport of [{ width: 1440, height: 1000 }, { width: 390, height: 844
     await expect(page.getByLabel(/^Tên bãi đỗ/)).toHaveValue('Bãi đỗ Tân Cảng')
     await expect(page.getByText('1/5 ảnh')).toBeVisible()
     expect(errors).toEqual([])
-    expect(consoleErrors.filter((error) => !error.includes('tile.openstreetmap.org'))).toEqual([])
+    expect(consoleErrors.filter((error) => !error.includes('tiles.openfreemap.org'))).toEqual([])
   })
 }
 

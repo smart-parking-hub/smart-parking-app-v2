@@ -1,4 +1,3 @@
-import L from 'leaflet'
 import './parking-map-icon.css'
 
 export interface ParkingMapMarkerOptions {
@@ -10,7 +9,7 @@ export interface ParkingMapMarkerOptions {
 }
 
 /**
- * Builds a pure DOM element for a parking lot marker.
+ * Builds a pure DOM element for a parking lot marker (used with MapLibre GL JS Marker).
  * Uses textContent only so lot data is never parsed as HTML.
  */
 export function createParkingMarkerElement(
@@ -71,22 +70,4 @@ export function createParkingMarkerElement(
 
   pin.append(badge)
   return pin
-}
-
-/**
- * Wraps the safe DOM marker element in a Leaflet DivIcon anchored at the pin tip.
- */
-export function createParkingLeafletIcon(
-  options: ParkingMapMarkerOptions = {},
-): L.DivIcon {
-  const detailed = options.hourlyRate !== undefined
-  const pin = createParkingMarkerElement(options)
-  return L.divIcon({
-    html: pin,
-    className: 'parking-map-marker',
-    iconSize: detailed ? [156, 64] : [44, 52],
-    iconAnchor: detailed ? [22, 64] : [22, 52],
-    popupAnchor: detailed ? [56, -58] : [0, -46],
-    tooltipAnchor: [0, -48],
-  })
 }
