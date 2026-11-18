@@ -90,16 +90,22 @@ export const fallbackBookingsList: BookingItemDto[] = [
     status: 'COMPLETED',
     statusBadgeLabel: 'HOÀN TẤT',
     createdAtText: '14/02/2026',
-    expectedCheckInTime: '14/02/2026 - 15:00',
-    expectedCheckOutTime: '14/02/2026 - 21:10',
-    actualCheckInTime: '14/02/2026 - 15:00',
-    actualCheckOutTime: '14/02/2026 - 21:10',
-    baseRatePerHour: 35000,
-    actualDurationHours: 6,
-    actualDurationText: 'Hoàn thành: 14/02/2026 - 21:10',
-    parkingSubtotal: 220000,
-    depositPaid: 100000,
-    remainingFinalPayment: 0,
+    expectedCheckInTime: '14/02/2026 - 14:00',
+    expectedCheckOutTime: '14/02/2026 - 18:00',
+    actualCheckInTime: '14/02/2026 - 14:00',
+    actualCheckOutTime: '14/02/2026 - 19:20',
+    baseRatePerHour: 40000,
+    actualDurationHours: 5,
+    actualDurationText: 'Hoàn thành: 14/02/2026 - 19:20 (Vượt 1 giờ 20 phút)',
+    isOvertime: true,
+    overtimeMinutes: 80,
+    overtimeHoursText: '1 giờ 20 phút',
+    overtimePenaltyMultiplier: 1.5,
+    penaltyAmount: 80000,
+    standardParkingFee: 160000,
+    parkingSubtotal: 240000,
+    depositPaid: 40000,
+    remainingFinalPayment: 200000,
     gateToken: 'STH-8705',
   },
   {
@@ -124,6 +130,80 @@ export const fallbackBookingsList: BookingItemDto[] = [
   },
 ]
 
+export function parseBookingDateTime(str?: unknown): Date | null {
+  if (!str || typeof str !== 'string') return null
+  const trimmed = str.trim()
+  const d = new Date(trimmed)
+  if (!isNaN(d.getTime())) return d
+
+  const match = trimmed.match(/(\d{1,2})\/(\d{1,2})\/(\d{4})[^\d]*(\d{1,2}):(\d{2})/)
+  if (match) {
+    const [, day, month, year, hours, minutes] = match
+    return new Date(Number(year), Number(month) - 1, Number(day), Number(hours), Number(minutes))
+  }
+  return null
+}
+
+export function computeOvertimeDetails(
+  expectedCheckOut?: unknown,
+  actualCheckOut?: unknown,
+  baseRatePerHour: number = 40000,
+  overtimeMultiplier: number = 1.5,
+  totalAmount?: number
+) {
+  const expectedDate = parseBookingDateTime(expectedCheckOut)
+  const actualDate = parseBookingDateTime(actualCheckOut)
+
+  if (!expectedDate || !actualDate) {
+    return {
+      isOvertime: false,
+      overtimeMinutes: 0,
+      overtimeHoursText: '',
+      overtimePenaltyMultiplier: overtimeMultiplier,
+      penaltyAmount: 0,
+      standardParkingFee: totalAmount ?? 0,
+    }
+  }
+
+  const diffMs = actualDate.getTime() - expectedDate.getTime()
+  const diffMinutes = Math.floor(diffMs / 60000)
+
+  if (diffMinutes <= 0) {
+    return {
+      isOvertime: false,
+      overtimeMinutes: 0,
+      overtimeHoursText: '',
+      overtimePenaltyMultiplier: overtimeMultiplier,
+      penaltyAmount: 0,
+      standardParkingFee: totalAmount ?? 0,
+    }
+  }
+
+  const hours = Math.floor(diffMinutes / 60)
+  const mins = diffMinutes % 60
+  const overtimeHoursText =
+    hours > 0 ? (mins > 0 ? `${hours} giờ ${mins} phút` : `${hours} giờ`) : `${mins} phút`
+
+  // Backend charges commenced half-hours (blocks of 30 mins) at (rate * multiplier)
+  const halfHourBlocks = Math.ceil(diffMinutes / 30)
+  const penaltyUnitRate = baseRatePerHour * overtimeMultiplier
+  const calculatedPenalty = Math.round(halfHourBlocks * (penaltyUnitRate * 0.5))
+
+  const penaltyAmount =
+    totalAmount != null && totalAmount > 0 ? Math.min(totalAmount, calculatedPenalty) : calculatedPenalty
+  const standardParkingFee =
+    totalAmount != null && totalAmount > 0 ? Math.max(0, totalAmount - penaltyAmount) : 0
+
+  return {
+    isOvertime: true,
+    overtimeMinutes: diffMinutes,
+    overtimeHoursText,
+    overtimePenaltyMultiplier: overtimeMultiplier,
+    penaltyAmount,
+    standardParkingFee,
+  }
+}
+
 function mapBackendDtoToBookingItem(raw: Record<string, unknown>, index: number): BookingItemDto {
   const id = Number(raw.id ?? index + 1)
   const bookingCode = String(raw.bookingCode ?? `BK-2026-${9000 + id}`)
@@ -137,6 +217,15 @@ function mapBackendDtoToBookingItem(raw: Record<string, unknown>, index: number)
   const depositPaid = Number(raw.advanceDeposit ?? 100000)
   const totalAmount = Number(raw.totalAmount ?? 160000)
   const remainingFinalPayment = Math.max(0, totalAmount - depositPaid)
+
+  const overtimeMultiplier = Number(raw.overtimePenaltyMultiplier ?? 1.5)
+  const overtimeInfo = computeOvertimeDetails(
+    raw.expectedCheckOutTime,
+    raw.checkOutTime ?? raw.actualCheckOutTime,
+    baseRatePerHour,
+    overtimeMultiplier,
+    totalAmount
+  )
 
   return {
     id,
@@ -166,9 +255,17 @@ function mapBackendDtoToBookingItem(raw: Record<string, unknown>, index: number)
     alprMatchRate: 'Khớp 100%',
     baseRatePerHour,
     actualDurationHours: 4,
-    actualDurationText: 'Dự kiến đỗ 4 giờ',
+    actualDurationText: overtimeInfo.isOvertime
+      ? `Quá hạn: Vượt ${overtimeInfo.overtimeHoursText}`
+      : 'Dự kiến đỗ 4 giờ',
     parkingSubtotal: totalAmount,
     depositPaid,
+    isOvertime: overtimeInfo.isOvertime,
+    overtimeMinutes: overtimeInfo.overtimeMinutes,
+    overtimeHoursText: overtimeInfo.overtimeHoursText,
+    overtimePenaltyMultiplier: overtimeInfo.overtimePenaltyMultiplier,
+    penaltyAmount: overtimeInfo.penaltyAmount,
+    standardParkingFee: overtimeInfo.standardParkingFee,
     remainingFinalPayment,
     gateToken: `STH-${id}`,
   }

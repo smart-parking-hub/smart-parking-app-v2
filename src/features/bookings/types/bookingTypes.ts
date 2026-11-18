@@ -44,7 +44,12 @@ export interface BookingItemDto {
   reeferHours?: number
   reeferSubtotal?: number
   depositPaid: number
+  isOvertime?: boolean
+  overtimeMinutes?: number
+  overtimeHoursText?: string
+  overtimePenaltyMultiplier?: number
   penaltyAmount?: number
+  standardParkingFee?: number
   remainingFinalPayment: number
   holdExpiresAt?: string
   holdSecondsRemaining?: number
