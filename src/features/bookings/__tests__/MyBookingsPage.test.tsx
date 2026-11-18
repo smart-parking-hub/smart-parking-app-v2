@@ -349,54 +349,6 @@ it('opens QR modal with check-in QR code when clicking Xem QR vé on PENDING_CHE
   })
 })
 
-it('filters bookings by search keyword, status, and resets on Xóa lọc (TKT-05)', async () => {
-  vi.mocked(apiClient.get).mockImplementation(async (url, config) => {
-    const urlStr = String(url)
-    if (urlStr.endsWith('/bookings')) {
-      const params = (config?.params as Record<string, unknown>) ?? {}
-      if (params.status === 'PENDING_PAYMENT') {
-        return { data: { data: { content: [], totalElements: 0, totalPages: 0, currentPage: 0 } } }
-      }
-      if (params.search === 'Cát Lái') {
-        return { data: { data: { content: [booking], totalElements: 1, totalPages: 1, currentPage: 0 } } }
-      }
-      return { data: { data: { content: [booking], totalElements: 1, totalPages: 1, currentPage: 0 } } }
-    }
-    return { data: { data: { content: [] } } }
-  })
-
-  mount(<MyBookingsPage />, '/bookings', '/bookings')
-  expect(await screen.findByText('BK-API-41')).toBeInTheDocument()
-
-  // Type search keyword and click Lọc
-  const searchInput = screen.getByPlaceholderText('Mã vé, biển số, tên bãi…')
-  fireEvent.change(searchInput, { target: { value: 'Cát Lái' } })
-  const filterBtn = screen.getByRole('button', { name: /^Lọc$/i })
-  fireEvent.click(filterBtn)
-
-  await waitFor(() => {
-    expect(apiClient.get).toHaveBeenCalledWith('/api/v1/bookings', expect.objectContaining({
-      params: expect.objectContaining({ search: 'Cát Lái' }),
-    }))
-  })
-
-  // Select status and click Lọc to get no results
-  const statusSelect = screen.getByLabelText('Trạng thái vé')
-  fireEvent.change(statusSelect, { target: { value: 'PENDING_PAYMENT' } })
-  fireEvent.click(filterBtn)
-
-  expect(await screen.findByText('Không tìm thấy lượt đặt chỗ nào phù hợp với bộ lọc hiện tại.')).toBeInTheDocument()
-
-  // Click clear filters button
-  const clearButton = screen.getAllByRole('button', { name: /Xóa bộ lọc/i })[0]
-  fireEvent.click(clearButton)
-
-  await waitFor(() => {
-    expect(screen.getByPlaceholderText('Mã vé, biển số, tên bãi…')).toHaveValue('')
-    expect(screen.getByLabelText('Trạng thái vé')).toHaveValue('')
-  })
-})
-
 it.each(['PARKING', 'OVERTIME'])('only offers final payment after the server settles a %s booking', async (status) => {
   // Arrange
   const parkingBooking = {
@@ -505,5 +457,53 @@ it('displays dynamic deposit amount on payment CTA when booking is in PENDING_PA
   // Nút thanh toán tiền cọc hiển thị đúng số tiền cọc dynamic
   const depositButton = within(modal).getByRole('button', { name: /Thanh toán cọc 150\.000\s?₫ qua PayOS/i })
   expect(depositButton).toBeInTheDocument()
+})
+
+it('filters bookings by search keyword, status, and resets on Xóa lọc (TKT-05)', async () => {
+  vi.mocked(apiClient.get).mockImplementation(async (url, config) => {
+    const urlStr = String(url)
+    if (urlStr.endsWith('/bookings')) {
+      const params = (config?.params as Record<string, unknown>) ?? {}
+      if (params.status === 'PENDING_PAYMENT') {
+        return { data: { data: { content: [], totalElements: 0, totalPages: 0, currentPage: 0 } } }
+      }
+      if (params.search === 'Cát Lái') {
+        return { data: { data: { content: [booking], totalElements: 1, totalPages: 1, currentPage: 0 } } }
+      }
+      return { data: { data: { content: [booking], totalElements: 1, totalPages: 1, currentPage: 0 } } }
+    }
+    return { data: { data: { content: [] } } }
+  })
+
+  mount(<MyBookingsPage />, '/bookings', '/bookings')
+  expect(await screen.findByText('BK-API-41')).toBeInTheDocument()
+
+  // Type search keyword and click Lọc
+  const searchInput = screen.getByPlaceholderText('Mã vé, biển số, tên bãi…')
+  fireEvent.change(searchInput, { target: { value: 'Cát Lái' } })
+  const filterBtn = screen.getByRole('button', { name: /^Lọc$/i })
+  fireEvent.click(filterBtn)
+
+  await waitFor(() => {
+    expect(apiClient.get).toHaveBeenCalledWith('/api/v1/bookings', expect.objectContaining({
+      params: expect.objectContaining({ search: 'Cát Lái' }),
+    }))
+  })
+
+  // Select status and click Lọc to get no results
+  const statusSelect = screen.getByLabelText('Trạng thái vé')
+  fireEvent.change(statusSelect, { target: { value: 'PENDING_PAYMENT' } })
+  fireEvent.click(filterBtn)
+
+  expect(await screen.findByText('Không tìm thấy lượt đặt chỗ nào phù hợp với bộ lọc hiện tại.')).toBeInTheDocument()
+
+  // Click clear filters button
+  const clearButton = screen.getAllByRole('button', { name: /Xóa bộ lọc/i })[0]
+  fireEvent.click(clearButton)
+
+  await waitFor(() => {
+    expect(screen.getByPlaceholderText('Mã vé, biển số, tên bãi…')).toHaveValue('')
+    expect(screen.getByLabelText('Trạng thái vé')).toHaveValue('')
+  })
 })
 
