@@ -256,4 +256,93 @@ describe('TariffAuditTable - [SP-CHECKOUT-04] Overtime Penalty Audit', () => {
       expect(isTimeInSurgeWindow(morning, '22:00', '06:00')).toBe(false)
     })
   })
+
+  describe('Reviewer Feedback Verification (Second Pass): F-02 & F-03 Fixes', () => {
+    it('F-02: calculates exact penalty and standard parking fee for legacy booking checking in after expected checkout', () => {
+      // Arrange:
+      // Vé legacy đặt 13:30 - 14:00, thực tế vào 14:15, ra 14:45
+      // Giá cơ bản: 40.000 đ/h, hệ số phạt: 1.5, tổng tiền backend chốt: 70.000 đ
+      const expectedCheckOut = '2026-02-14T14:00:00'
+      const actualCheckOut = '2026-02-14T14:45:00'
+      const actualCheckIn = '2026-02-14T14:15:00'
+      const baseRate = 40000
+      const overtimeMultiplier = 1.5
+      const totalAmount = 70000
+
+      // Act:
+      const result = computeOvertimeDetails(
+        expectedCheckOut,
+        actualCheckOut,
+        baseRate,
+        overtimeMultiplier,
+        totalAmount,
+        undefined,
+        undefined,
+        undefined,
+        actualCheckIn
+      )
+
+      // Assert:
+      // Quá hạn tính từ 14:15 đến 14:45 = 30 phút = đúng 1 block 30p
+      expect(result.isOvertime).toBe(true)
+      expect(result.overtimeBlocks).toBe(1)
+      expect(result.overtimeHoursText).toBe('30 phút')
+      // Phụ phí phạt: 1 block * (40000 * 1.5 * 0.5) = 30000 đ
+      expect(result.penaltyAmount).toBe(30000)
+      // Tiền đỗ tiêu chuẩn: 70000 - 30000 = 40000 đ (khớp 100% Backend ParkingCharge)
+      expect(result.standardParkingFee).toBe(40000)
+    })
+
+    it('F-03 Case A: does not display peak multiplier in formula when overtime is completely outside peak hours', () => {
+      // Arrange:
+      // Bãi cấu hình cao điểm 16:00 - 18:00 (surgeMultiplier: 1.5)
+      // Quá giờ 14:00 - 14:30 (hoàn toàn ngoài khung cao điểm)
+      const bookingOutsidePeak: BookingItemDto = {
+        ...baseBooking,
+        expectedCheckOutTime: '2026-02-14T14:00:00',
+        actualCheckOutTime: '2026-02-14T14:30:00',
+        baseRatePerHour: 40000,
+        overtimePenaltyMultiplier: 1.5,
+        parkingSubtotal: 70000,
+        surgeMultiplier: 1.5,
+        surgeStartTime: '16:00',
+        surgeEndTime: '18:00',
+      }
+
+      // Act:
+      render(<TariffAuditTable booking={bookingOutsidePeak} />)
+
+      // Assert:
+      const penaltyRow = screen.getByTestId('overtime-penalty-row')
+      expect(penaltyRow).toBeInTheDocument()
+      // Không được hiển thị "Cao điểm" trong chuỗi công thức vì không có block nào áp dụng
+      expect(penaltyRow.textContent).not.toContain('Cao điểm ×1.5')
+    })
+
+    it('F-03 Case B: accurately reflects applied peak surge blocks in formula when crossing peak window boundary', () => {
+      // Arrange:
+      // Bãi cấu hình cao điểm 16:00 - 18:00 (surgeMultiplier: 1.5)
+      // Quá giờ 15:30 - 16:45 (3 blocks: 1 block thường + 2 block cao điểm)
+      const bookingCrossingPeak: BookingItemDto = {
+        ...baseBooking,
+        expectedCheckOutTime: '2026-02-14T15:30:00',
+        actualCheckOutTime: '2026-02-14T16:45:00',
+        baseRatePerHour: 40000,
+        overtimePenaltyMultiplier: 1.0,
+        parkingSubtotal: 250000,
+        surgeMultiplier: 1.5,
+        surgeStartTime: '16:00',
+        surgeEndTime: '18:00',
+      }
+
+      // Act:
+      render(<TariffAuditTable booking={bookingCrossingPeak} />)
+
+      // Assert:
+      const penaltyRow = screen.getByTestId('overtime-penalty-row')
+      expect(penaltyRow).toBeInTheDocument()
+      // Hiển thị rõ số block áp dụng cao điểm
+      expect(penaltyRow.textContent).toContain('2/3 block cao điểm ×1.5')
+    })
+  })
 })

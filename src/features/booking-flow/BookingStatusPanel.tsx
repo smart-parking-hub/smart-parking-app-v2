@@ -13,6 +13,8 @@ import { BookingCheckinTicket } from './BookingCheckinTicket'
 import { PayOsPaymentPanel } from './PayOsPaymentPanel'
 import { QuickBookingPaymentSummary } from './QuickBookingPaymentSummary'
 import { Toast, ToastContainer } from '@/shared/components/Toast'
+import { TariffAuditTable } from '@/features/bookings/components/TariffAuditTable'
+import { bookingToItemDto } from '@/features/bookings/api/bookingApi'
 
 type StatusPanelProps = {
   bookingId: number
@@ -193,6 +195,13 @@ function BookingStatusContent({
 
       </>}
       {!compactView && priceDetails}
+      {!compactView &&
+        (['AWAITING_FINAL_PAYMENT', 'COMPLETED', 'PARKING', 'OVERTIME', 'REVIEWED'].includes(data.status) ||
+          (data.totalAmount != null && data.status !== 'PENDING_CHECKIN' && data.status !== 'PENDING_PAYMENT')) && (
+          <div className="pt-2" data-testid="booking-status-tariff-audit">
+            <TariffAuditTable booking={bookingToItemDto(data as unknown as Record<string, unknown>)} />
+          </div>
+        )}
 
       {(!compactView || payable) && <div className={compactPayment ? 'space-y-3' : 'flex flex-wrap gap-3'}>
         {compactPayment && !checkoutOpen && <h3 className="text-sm font-semibold">Thanh toán {finalPayment ? 'phần còn lại' : 'tiền cọc'}</h3>}

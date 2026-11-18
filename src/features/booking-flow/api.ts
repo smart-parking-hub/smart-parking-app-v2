@@ -11,6 +11,7 @@ export const bookingSchema = z.object({
   advanceDeposit: money, totalAmount: money.nullable(), hourlyRate: money.nullable(),
   surgeMultiplier: money.nullish(), surgeStartTime: z.string().nullish(), surgeEndTime: z.string().nullish(), overtimePenaltyMultiplier: money.nullish(),
   expectedCheckInTime: z.string(), expectedCheckOutTime: z.string(), expiresAt: z.string(),
+  checkInTime: z.string().nullish(), checkOutTime: z.string().nullish(),
   physicalSlotId: z.string().nullish(), physicalSlotCode: z.string().nullish(),
   schedulePolicyVersion: z.number().nullish(), checkInEarlyMinutes: z.number().nullish(),
   bookingBlockMinutes: z.number().nullish(), turnaroundMinutes: z.number().nullish(),

@@ -186,10 +186,12 @@ export function computeOvertimeDetails(
   totalAmount?: number,
   surgeMultiplier?: number,
   surgeStartTime?: unknown,
-  surgeEndTime?: unknown
+  surgeEndTime?: unknown,
+  actualCheckIn?: unknown
 ) {
   const expectedDate = parseBookingDateTime(expectedCheckOut)
   const actualDate = parseBookingDateTime(actualCheckOut)
+  const checkInDate = parseBookingDateTime(actualCheckIn)
 
   if (!expectedDate || !actualDate) {
     return {
@@ -199,12 +201,21 @@ export function computeOvertimeDetails(
       overtimeHoursText: '',
       overtimePenaltyMultiplier: overtimeMultiplier,
       surgeMultiplier,
+      surgeBlocks: 0,
+      hasSurgeApplied: false,
       penaltyAmount: 0,
       standardParkingFee: totalAmount ?? 0,
     }
   }
 
-  const diffMs = actualDate.getTime() - expectedDate.getTime()
+  // Khớp Backend CheckInOutServiceImpl.java dòng 158:
+  // LocalDateTime overtimeStart = start.isAfter(booking.getExpectedCheckOutTime()) ? start : booking.getExpectedCheckOutTime();
+  const effectiveStartDate =
+    checkInDate && checkInDate.getTime() > expectedDate.getTime()
+      ? checkInDate
+      : expectedDate
+
+  const diffMs = actualDate.getTime() - effectiveStartDate.getTime()
 
   if (diffMs <= 0) {
     return {
@@ -214,6 +225,8 @@ export function computeOvertimeDetails(
       overtimeHoursText: '',
       overtimePenaltyMultiplier: overtimeMultiplier,
       surgeMultiplier,
+      surgeBlocks: 0,
+      hasSurgeApplied: false,
       penaltyAmount: 0,
       standardParkingFee: totalAmount ?? 0,
     }
@@ -234,9 +247,9 @@ export function computeOvertimeDetails(
   }
 
   // Khớp chính xác 100% thuật toán ParkingCharge.java của Backend:
-  // Duyệt từng block 30 phút bắt đầu từ expectedDate đến actualDate
+  // Duyệt từng block 30 phút bắt đầu từ effectiveStartDate đến actualDate
   // Bất kỳ block nào bắt đầu trước actualDate đều được tính (commenced half-hour)
-  const fromMs = expectedDate.getTime()
+  const fromMs = effectiveStartDate.getTime()
   const untilMs = actualDate.getTime()
   const blockMs = 30 * 60 * 1000
 
@@ -250,15 +263,18 @@ export function computeOvertimeDetails(
 
   let calculatedPenalty = 0
   let overtimeBlocks = 0
+  let surgeBlocks = 0
 
   for (let blockTime = fromMs; blockTime < untilMs; blockTime += blockMs) {
     overtimeBlocks++
     const blockDate = new Date(blockTime)
     const inPeak = isTimeInSurgeWindow(blockDate, surgeStartTime, surgeEndTime)
-    const blockSurge =
-      inPeak && typeof surgeMultiplier === 'number' && surgeMultiplier > 0
-        ? surgeMultiplier
-        : 1.0
+    const hasSurge =
+      inPeak && typeof surgeMultiplier === 'number' && surgeMultiplier > 1
+    const blockSurge = hasSurge ? surgeMultiplier : 1.0
+    if (hasSurge) {
+      surgeBlocks++
+    }
     calculatedPenalty += blockBaseRate * blockSurge
   }
 
@@ -279,6 +295,8 @@ export function computeOvertimeDetails(
     overtimeHoursText,
     overtimePenaltyMultiplier: effectivePenalty,
     surgeMultiplier,
+    surgeBlocks,
+    hasSurgeApplied: surgeBlocks > 0,
     penaltyAmount,
     standardParkingFee,
   }
@@ -305,15 +323,19 @@ function mapBackendDtoToBookingItem(raw: Record<string, unknown>, index: number)
   const surgeStartTime = raw.surgeStartTime ? String(raw.surgeStartTime) : undefined
   const surgeEndTime = raw.surgeEndTime ? String(raw.surgeEndTime) : undefined
 
+  const checkInRaw = raw.checkInTime ?? raw.actualCheckInTime
+  const checkOutRaw = raw.checkOutTime ?? raw.actualCheckOutTime
+
   const overtimeInfo = computeOvertimeDetails(
     raw.expectedCheckOutTime,
-    raw.checkOutTime ?? raw.actualCheckOutTime,
+    checkOutRaw,
     baseRatePerHour,
     overtimeMultiplier,
     totalAmount,
     surgeMultiplier,
     surgeStartTime,
-    surgeEndTime
+    surgeEndTime,
+    checkInRaw
   )
 
   return {
@@ -337,8 +359,8 @@ function mapBackendDtoToBookingItem(raw: Record<string, unknown>, index: number)
     createdAtText: raw.createdAt ? String(raw.createdAt).slice(0, 16) : 'Hôm nay',
     expectedCheckInTime: raw.expectedCheckInTime ? String(raw.expectedCheckInTime).slice(0, 16) : 'Theo lịch hẹn',
     expectedCheckOutTime: raw.expectedCheckOutTime ? String(raw.expectedCheckOutTime).slice(0, 16) : 'Theo lịch hẹn',
-    actualCheckInTime: raw.checkInTime ? String(raw.checkInTime).slice(0, 16) : undefined,
-    actualCheckOutTime: raw.checkOutTime ? String(raw.checkOutTime).slice(0, 16) : undefined,
+    actualCheckInTime: checkInRaw ? String(checkInRaw).slice(0, 16) : undefined,
+    actualCheckOutTime: checkOutRaw ? String(checkOutRaw).slice(0, 16) : undefined,
     gateInName: 'Cổng vào ALPR',
     gateOutName: 'Làn ra Barie',
     alprMatchRate: 'Khớp 100%',
@@ -353,6 +375,83 @@ function mapBackendDtoToBookingItem(raw: Record<string, unknown>, index: number)
     surgeMultiplier,
     surgeStartTime,
     surgeEndTime,
+    surgeBlocks: overtimeInfo.surgeBlocks,
+    hasSurgeApplied: overtimeInfo.hasSurgeApplied,
+    isOvertime: overtimeInfo.isOvertime,
+    overtimeMinutes: overtimeInfo.overtimeMinutes,
+    overtimeBlocks: overtimeInfo.overtimeBlocks,
+    overtimeHoursText: overtimeInfo.overtimeHoursText,
+    overtimePenaltyMultiplier: overtimeInfo.overtimePenaltyMultiplier,
+    penaltyAmount: overtimeInfo.penaltyAmount,
+    standardParkingFee: overtimeInfo.standardParkingFee,
+    remainingFinalPayment,
+    gateToken: `STH-${id}`,
+  }
+}
+
+/** Chuyển đổi dữ liệu Booking từ API backend / booking-flow thành BookingItemDto hiển thị chuẩn */
+export function bookingToItemDto(b: Record<string, unknown>): BookingItemDto {
+  const id = Number(b.id ?? 1)
+  const bookingCode = String(b.bookingCode ?? `BK-${id}`)
+  const parkingLotName = String(b.parkingLotName ?? 'Bãi đỗ xe đối tác ALPR')
+  const parkingLotAddress = String(b.parkingLotAddress ?? 'Hệ thống bãi đỗ SmartParking')
+  const vehiclePlate = String(b.vehiclePlate ?? b.vehicleLicensePlate ?? 'Phương tiện')
+  const vehicleType = String(b.vehicleType ?? 'Container 40FT')
+  const status = String(b.status ?? 'AWAITING_FINAL_PAYMENT') as BookingItemDto['status']
+
+  const baseRatePerHour = Number(b.hourlyRate ?? 40000)
+  const depositPaid = Number(b.advanceDeposit ?? 0)
+  const totalAmount = b.totalAmount != null ? Number(b.totalAmount) : depositPaid
+  const remainingFinalPayment = Math.max(0, totalAmount - depositPaid)
+
+  const overtimeMultiplier =
+    b.overtimePenaltyMultiplier != null ? Number(b.overtimePenaltyMultiplier) : 1.0
+  const surgeMultiplier = b.surgeMultiplier != null ? Number(b.surgeMultiplier) : undefined
+  const surgeStartTime = b.surgeStartTime ? String(b.surgeStartTime) : undefined
+  const surgeEndTime = b.surgeEndTime ? String(b.surgeEndTime) : undefined
+
+  const checkInRaw = b.checkInTime ?? b.actualCheckInTime
+  const checkOutRaw = b.checkOutTime ?? b.actualCheckOutTime
+
+  const overtimeInfo = computeOvertimeDetails(
+    b.expectedCheckOutTime,
+    checkOutRaw,
+    baseRatePerHour,
+    overtimeMultiplier,
+    totalAmount,
+    surgeMultiplier,
+    surgeStartTime,
+    surgeEndTime,
+    checkInRaw
+  )
+
+  return {
+    id,
+    bookingCode,
+    parkingLotName,
+    parkingLotAddress,
+    vehiclePlate,
+    vehicleType,
+    status,
+    statusBadgeLabel: status,
+    createdAtText: b.createdAt ? String(b.createdAt).slice(0, 16) : 'Hôm nay',
+    expectedCheckInTime: b.expectedCheckInTime ? String(b.expectedCheckInTime).slice(0, 16) : 'Theo lịch hẹn',
+    expectedCheckOutTime: b.expectedCheckOutTime ? String(b.expectedCheckOutTime).slice(0, 16) : 'Theo lịch hẹn',
+    actualCheckInTime: checkInRaw ? String(checkInRaw).slice(0, 16) : undefined,
+    actualCheckOutTime: checkOutRaw ? String(checkOutRaw).slice(0, 16) : undefined,
+    baseRatePerHour,
+    actualDurationHours: 4,
+    actualDurationText: overtimeInfo.isOvertime
+      ? `Quá hạn: Vượt ${overtimeInfo.overtimeHoursText}`
+      : 'Theo lịch hẹn',
+    parkingSubtotal: totalAmount,
+    depositPaid,
+    advanceDeposit: depositPaid,
+    surgeMultiplier,
+    surgeStartTime,
+    surgeEndTime,
+    surgeBlocks: overtimeInfo.surgeBlocks,
+    hasSurgeApplied: overtimeInfo.hasSurgeApplied,
     isOvertime: overtimeInfo.isOvertime,
     overtimeMinutes: overtimeInfo.overtimeMinutes,
     overtimeBlocks: overtimeInfo.overtimeBlocks,

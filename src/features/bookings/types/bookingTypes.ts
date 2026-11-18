@@ -53,6 +53,8 @@ export interface BookingItemDto {
   surgeMultiplier?: number
   surgeStartTime?: string
   surgeEndTime?: string
+  surgeBlocks?: number
+  hasSurgeApplied?: boolean
   penaltyAmount?: number
   standardParkingFee?: number
   remainingFinalPayment: number
