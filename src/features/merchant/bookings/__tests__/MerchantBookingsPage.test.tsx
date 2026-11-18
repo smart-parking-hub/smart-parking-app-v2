@@ -142,16 +142,31 @@ describe('SCR-034: MerchantBookingsPage (Table + Direct SCR-035 Link + Filters +
     vi.clearAllMocks()
     localStorage.clear()
     getMerchantBookingsStoreSnapshot().resetStore()
-    apiClientGetSpy = vi.spyOn(apiClient, 'get').mockResolvedValue({
-      data: {
+    apiClientGetSpy = vi.spyOn(apiClient, 'get').mockImplementation((async (url: string) => {
+      if (url === '/api/v1/merchant/bookings/summary') {
+        return {
+          data: {
+            data: {
+              total: 3,
+              pendingCheckIn: 1,
+              parking: 0,
+              completed: 0,
+              statusCounts: { PENDING_CHECKIN: 1, OVERTIME: 1, CANCELLED: 1 },
+            },
+          },
+        }
+      }
+      return {
         data: {
-          content: [
-            { id: 12, name: 'Bãi Cát Lái Gate 2' },
-            { id: 15, name: 'Depot Bình Dương 1' },
-          ],
+          data: {
+            content: [
+              { id: 12, name: 'Bãi Cát Lái Gate 2' },
+              { id: 15, name: 'Depot Bình Dương 1' },
+            ],
+          },
         },
-      },
-    } as never)
+      }
+    }) as never)
   })
 
   afterEach(() => {
@@ -328,6 +343,18 @@ describe('SCR-034: MerchantBookingsPage (Table + Direct SCR-035 Link + Filters +
       vehicleLicensePlate: `51D-900.0${idx}`,
     }))
 
+    apiClientGetSpy?.mockRestore()
+    apiClientGetSpy = vi.spyOn(apiClient, 'get').mockImplementation((async (url: string) => {
+      if (url === '/api/v1/merchant/bookings/summary') {
+        return {
+          data: {
+            data: { total: 7, pendingCheckIn: 7, parking: 0, completed: 0 },
+          },
+        }
+      }
+      return { data: { data: { content: [] } } }
+    }) as never)
+
     mockGetData.mockResolvedValue({
       content: sevenBookings,
       currentPage: 0,
@@ -359,9 +386,10 @@ describe('SCR-034: MerchantBookingsPage (Table + Direct SCR-035 Link + Filters +
     expect(metricsStrip.children).toHaveLength(4)
     expect(metricsStrip.querySelector('.bg-brand-navy')).toBeNull()
     expect(within(metricsStrip).getByText('Tổng lượt đặt chỗ')).toHaveClass('font-mono', 'uppercase')
-    expect(within(metricsStrip).getByText('Chờ vào · trang này')).toHaveClass('font-mono', 'uppercase')
-    expect(within(metricsStrip).getByText('Đang đỗ · trang này')).toHaveClass('font-mono', 'uppercase')
-    expect(within(metricsStrip).getByText('Hoàn tất · trang này')).toHaveClass('font-mono', 'uppercase')
+    expect(within(metricsStrip).getByText('Chờ vào')).toHaveClass('font-mono', 'uppercase')
+    expect(within(metricsStrip).getByText('Đang đỗ')).toHaveClass('font-mono', 'uppercase')
+    expect(within(metricsStrip).getByText('Hoàn tất')).toHaveClass('font-mono', 'uppercase')
+    expect(screen.queryByText(/trang này/i)).not.toBeInTheDocument()
 
     // All-status tab displays full totalElements (7), not truncated to page-size 5
     expect(screen.getByRole('tab', { name: /Tất cả trạng thái/i })).toHaveTextContent('7')
@@ -392,6 +420,22 @@ describe('SCR-034: MerchantBookingsPage (Table + Direct SCR-035 Link + Filters +
                 { id: 12, name: 'Bãi Cát Lái Gate 2' },
                 { id: 15, name: 'Depot Bình Dương 1' },
               ],
+            },
+          },
+        }
+      }
+      if (url === '/api/v1/merchant/bookings/summary') {
+        const lotId = config?.params?.parkingLotId
+        const matching = lotId
+          ? allTwelveBookings.filter((b) => b.parkingLotId === lotId)
+          : allTwelveBookings
+        return {
+          data: {
+            data: {
+              total: matching.length,
+              pendingCheckIn: matching.filter((b) => b.status === 'PENDING_CHECKIN').length,
+              parking: matching.filter((b) => b.status === 'PARKING').length,
+              completed: matching.filter((b) => b.status === 'COMPLETED').length,
             },
           },
         }
@@ -471,6 +515,24 @@ describe('SCR-034: MerchantBookingsPage (Table + Direct SCR-035 Link + Filters +
   })
 
   it('handles loading skeleton, initial/filtered empty states, initial error retry, background refresh alert, and refresh success toast', async () => {
+    let summaryTotal = 0
+    apiClientGetSpy?.mockRestore()
+    apiClientGetSpy = vi.spyOn(apiClient, 'get').mockImplementation((async (url: string) => {
+      if (url === '/api/v1/merchant/bookings/summary') {
+        return {
+          data: {
+            data: {
+              total: summaryTotal,
+              pendingCheckIn: summaryTotal > 0 ? 1 : 0,
+              parking: 0,
+              completed: 0,
+            },
+          },
+        }
+      }
+      return { data: { data: { content: [] } } }
+    }) as never)
+
     let resolvePending!: (val: unknown) => void
     mockGetData.mockReturnValueOnce(
       new Promise((resolve) => {
@@ -493,6 +555,7 @@ describe('SCR-034: MerchantBookingsPage (Table + Direct SCR-035 Link + Filters +
     // Error on refresh -> Warning/Error handling
     cleanup()
     getMerchantBookingsStoreSnapshot().resetStore()
+    summaryTotal = 3
     mockGetData
       .mockRejectedValueOnce(new Error('Không thể kết nối máy chủ bãi đỗ'))
       .mockResolvedValueOnce({
@@ -558,5 +621,87 @@ describe('SCR-034: MerchantBookingsPage (Table + Direct SCR-035 Link + Filters +
 
     expect(await screen.findByText('Không có quyền truy cập')).toBeInTheDocument()
     expect(screen.queryByRole('heading', { name: 'Điều phối đặt chỗ' })).not.toBeInTheDocument()
+  })
+
+  it('truncates long booking codes with ellipsis in the bookings table while keeping link to detail page', async () => {
+    const longCode = 'BK0B45E18A4FC8430094B943425C1A94DE'
+    mockGetData.mockResolvedValue({
+      content: [
+        {
+          ...sampleBookings[0],
+          id: 950,
+          bookingCode: longCode,
+        },
+      ],
+      currentPage: 0,
+      totalPages: 1,
+      totalElements: 1,
+    })
+
+    renderBookingsApp(<MerchantBookingsPage />)
+
+    const truncatedLink = await screen.findByRole('link', { name: 'BK0B45E18A4FC843...' })
+    expect(truncatedLink).toHaveAttribute('href', '/merchant/bookings/950')
+    expect(screen.queryByText(longCode)).not.toBeInTheDocument()
+  })
+
+  it('uses server-aggregated /bookings/summary counts beyond 500 records and separates summary error state from zero', async () => {
+    let failSummary = true
+    apiClientGetSpy?.mockRestore()
+    apiClientGetSpy = vi.spyOn(apiClient, 'get').mockImplementation((async (url: string) => {
+      if (url === '/api/v1/merchant/bookings/summary') {
+        if (failSummary) {
+          throw new Error('Summary endpoint unavailable')
+        }
+        return {
+          data: {
+            data: {
+              total: 740,
+              pendingCheckIn: 18,
+              parking: 12,
+              completed: 690,
+            },
+          },
+        }
+      }
+      if (url === '/api/v1/merchant/bookings') {
+        return {
+          data: {
+            data: {
+              content: sampleBookings,
+              totalElements: 740,
+            },
+          },
+        }
+      }
+      return { data: { data: { content: [] } } }
+    }) as never)
+
+    mockGetData.mockResolvedValue({
+      content: sampleBookings,
+      currentPage: 0,
+      totalPages: 148,
+      totalElements: 740,
+    })
+
+    renderBookingsApp(<MerchantBookingsPage />)
+    expect(await screen.findByText('BK-2026-801')).toBeInTheDocument()
+
+    // When /summary fails: status KPI cards display "—" + error alert instead of fake 0 or current-page-only counts
+    expect(await screen.findByTestId('merchant-bookings-metrics-error')).toBeInTheDocument()
+    expect(screen.getByTestId('booking-metric-pending')).toHaveTextContent('—')
+    expect(screen.getByTestId('booking-metric-parking')).toHaveTextContent('—')
+    expect(screen.getByTestId('booking-metric-completed')).toHaveTextContent('—')
+
+    // Retry loads full server counts (> 500)
+    failSummary = false
+    fireEvent.click(screen.getByRole('button', { name: 'Thử lại thống kê' }))
+    await waitFor(() => {
+      expect(screen.getByTestId('booking-metric-total')).toHaveTextContent('740')
+    })
+    expect(screen.getByTestId('booking-metric-pending')).toHaveTextContent('18')
+    expect(screen.getByTestId('booking-metric-parking')).toHaveTextContent('12')
+    expect(screen.getByTestId('booking-metric-completed')).toHaveTextContent('690')
+    expect(screen.queryByTestId('merchant-bookings-metrics-error')).not.toBeInTheDocument()
   })
 })

@@ -19,6 +19,7 @@ import { MerchantBookingsTable } from '../components/MerchantBookingsTable'
 import {
   useMerchantBookingLotsFilterQuery,
   useMerchantBookingsListQuery,
+  useMerchantBookingsStatusSummaryQuery,
   useMerchantBookingsSummaryQuery,
 } from '../hooks/useMerchantBookingsQuery'
 import {
@@ -81,10 +82,12 @@ export function MerchantBookingsPage() {
   const effectiveLotId = isUrlSynced ? parkingLotId : urlInitialLotId
 
   const listQuery = useMerchantBookingsListQuery(page, pageSize, effectiveLotId)
+  const statusSummaryQuery = useMerchantBookingsStatusSummaryQuery(effectiveLotId)
   const summaryQuery = useMerchantBookingsSummaryQuery(effectiveLotId)
   const lotsQuery = useMerchantBookingLotsFilterQuery()
 
   const pageData = listQuery.data
+  const statusSummaryData = statusSummaryQuery.data
   const summaryData = summaryQuery.data
   const pageRows = useMemo(
     () => (pageData?.content ?? []).slice(0, pageSize),
@@ -132,17 +135,54 @@ export function MerchantBookingsPage() {
     return pool.filter((row) => matchesBookingKeyword(row, normalizedKeyword))
   }, [summaryData?.items, pageRows, normalizedKeyword])
 
-  const serverTotalCount = summaryData?.totalElements ?? pageData?.totalElements ?? pageRows.length
+  const serverTotalCount =
+    statusSummaryData?.total ??
+    summaryData?.totalElements ??
+    pageData?.totalElements ??
+    pageRows.length
 
-  const statusCounts = useMemo<MerchantBookingStatusCounts>(
-    () => ({
-      ALL: normalizedKeyword ? keywordMatchedPool.length : serverTotalCount,
+  const isKeywordSummaryCapped = Boolean(
+    normalizedKeyword &&
+      summaryData &&
+      summaryData.totalElements > summaryData.items.length,
+  )
+  const isKeywordPageOnlyFallback = Boolean(normalizedKeyword && !summaryData)
+
+  const metricsScopeNote = isKeywordSummaryCapped && summaryData
+    ? `trong ${summaryData.items.length} đơn gần nhất`
+    : isKeywordPageOnlyFallback
+      ? 'trang này'
+      : null
+
+  const metricsStatusCounts = useMemo<MerchantBookingStatusCounts | null>(() => {
+    if (normalizedKeyword) {
+      return {
+        ALL: keywordMatchedPool.length,
+        PENDING_CHECKIN: keywordMatchedPool.filter((row) => row.status === 'PENDING_CHECKIN').length,
+        PARKING: keywordMatchedPool.filter((row) => row.status === 'PARKING').length,
+        COMPLETED: keywordMatchedPool.filter((row) => row.status === 'COMPLETED').length,
+      }
+    }
+    if (statusSummaryData) {
+      return {
+        ALL: statusSummaryData.total,
+        PENDING_CHECKIN: statusSummaryData.pendingCheckIn,
+        PARKING: statusSummaryData.parking,
+        COMPLETED: statusSummaryData.completed,
+      }
+    }
+    return null
+  }, [normalizedKeyword, keywordMatchedPool, statusSummaryData])
+
+  const filterBarStatusCounts = useMemo<MerchantBookingStatusCounts>(() => {
+    if (metricsStatusCounts) return metricsStatusCounts
+    return {
+      ALL: serverTotalCount,
       PENDING_CHECKIN: keywordMatchedPool.filter((row) => row.status === 'PENDING_CHECKIN').length,
       PARKING: keywordMatchedPool.filter((row) => row.status === 'PARKING').length,
       COMPLETED: keywordMatchedPool.filter((row) => row.status === 'COMPLETED').length,
-    }),
-    [normalizedKeyword, keywordMatchedPool, serverTotalCount],
-  )
+    }
+  }, [metricsStatusCounts, serverTotalCount, keywordMatchedPool])
 
   const filteredFullList = useMemo(() => {
     if (!hasClientFilter) return pageRows
@@ -182,6 +222,7 @@ export function MerchantBookingsPage() {
     const [bookingsRes] = await Promise.all([
       listQuery.refetch(),
       lotsQuery.refetch(),
+      statusSummaryQuery.refetch(),
       summaryQuery.refetch(),
     ])
     if (!bookingsRes.isError) {
@@ -266,9 +307,17 @@ export function MerchantBookingsPage() {
           )}
 
           <MerchantBookingsMetrics
-            totalElements={serverTotalCount}
-            pageRows={pageRows}
+            totalElements={
+              normalizedKeyword
+                ? keywordMatchedPool.length
+                : (statusSummaryData?.total ?? pageData?.totalElements ?? null)
+            }
+            statusCounts={metricsStatusCounts}
             selectedLotName={selectedLotName}
+            isLoading={!normalizedKeyword && statusSummaryQuery.isPending}
+            isError={!normalizedKeyword && statusSummaryQuery.isError && !statusSummaryData}
+            onRetry={() => void statusSummaryQuery.refetch()}
+            scopeNote={metricsScopeNote}
           />
 
           <div
@@ -285,7 +334,7 @@ export function MerchantBookingsPage() {
               onSearchKeywordChange={setSearchKeyword}
               onResetFilters={resetFilters}
               lotOptions={lotOptions}
-              statusCounts={statusCounts}
+              statusCounts={filterBarStatusCounts}
               displayedCount={displayedRows.length}
               totalMatchedCount={hasClientFilter ? paginationTotalItems : serverTotalCount}
             />

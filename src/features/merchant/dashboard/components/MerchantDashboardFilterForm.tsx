@@ -1,4 +1,6 @@
-import { RotateCw, Calendar } from 'lucide-react'
+import { useMemo } from 'react'
+import { Building2, RotateCw, Calendar } from 'lucide-react'
+import { Select, type SelectOption } from '@/shared/components/Select'
 import { merchantDashboardFilterSchema } from '../types/merchantDashboardSchemas'
 import type { TimeRangeFilter } from '../store/merchantDashboardStore'
 
@@ -39,8 +41,16 @@ export function MerchantDashboardFilterForm({
   onManualRefresh,
   isRefetching = false,
 }: MerchantDashboardFilterFormProps) {
-  const handleLotSelectChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const rawVal = e.target.value ? Number(e.target.value) : null
+  const lotSelectOptions = useMemo<SelectOption[]>(
+    () => [
+      { value: '', label: `Tất cả bãi đỗ (${totalLots})` },
+      ...lots.map((lot) => ({ value: String(lot.id), label: lot.name })),
+    ],
+    [lots, totalLots],
+  )
+
+  const handleLotSelectChange = (nextVal: string) => {
+    const rawVal = nextVal ? Number(nextVal) : null
     const result = merchantDashboardFilterSchema.shape.parkingLotId.safeParse(rawVal)
     if (result.success) {
       onLotChange(result.data ?? null)
@@ -63,25 +73,27 @@ export function MerchantDashboardFilterForm({
       className="flex flex-col gap-4 bg-white px-5 py-4 rounded-2xl border border-slate-200/90 shadow-2xs"
     >
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
-        {/* Lot Selector */}
-        <div className="flex flex-wrap items-center gap-2 text-sm text-[#0d1c2e] font-semibold">
+        {/* Lot Selector using shared default Select component */}
+        <div className="flex flex-wrap items-center gap-3 text-sm text-[#0d1c2e] font-semibold">
           <label htmlFor="lot-filter-select" className="shrink-0">
             Lọc theo cơ sở bãi đỗ:
           </label>
-          <select
-            id="lot-filter-select"
-            aria-label="Lọc theo cơ sở bãi đỗ"
-            value={selectedLotId ?? ''}
-            onChange={handleLotSelectChange}
-            className="bg-[#eff4ff] border border-blue-100 text-[#0d1c2e] text-xs font-semibold rounded-xl px-3 py-2 outline-hidden focus:ring-2 focus:ring-[#d95f00] cursor-pointer"
-          >
-            <option value="">Tất cả bãi đỗ ({totalLots})</option>
-            {lots.map((lot) => (
-              <option key={lot.id} value={lot.id}>
-                {lot.name}
-              </option>
-            ))}
-          </select>
+          <div className="min-w-0 max-w-full w-full sm:w-auto sm:min-w-[240px] sm:max-w-[440px]">
+            <Select
+              id="lot-filter-select"
+              value={selectedLotId !== null ? String(selectedLotId) : ''}
+              onChange={handleLotSelectChange}
+              options={lotSelectOptions}
+              placeholder=""
+              prefixIcon={
+                <Building2 className="w-4 h-4 text-slate-400 shrink-0" aria-hidden="true" />
+              }
+              ariaLabel="Mở bộ lọc cơ sở bãi đỗ"
+              variant="default"
+              size="md"
+              dropdownClassName="w-full min-w-[260px]"
+            />
+          </div>
         </div>
 
         {/* Selected Lot Active Indicator */}

@@ -39,6 +39,50 @@ export async function fetchMerchantBookingDetailApi(id: string | number): Promis
   return getData<Booking>(`/api/v1/merchant/bookings/${id}`)
 }
 
+export interface MerchantBookingsStatusSummary {
+  total: number
+  pendingCheckIn: number
+  parking: number
+  completed: number
+  statusCounts?: Record<string, number>
+}
+
+export async function fetchMerchantBookingsStatusSummaryApi(
+  parkingLotId: number | null,
+  signal?: AbortSignal,
+): Promise<MerchantBookingsStatusSummary> {
+  const params: { parkingLotId?: number } = {}
+  if (typeof parkingLotId === 'number' && Number.isFinite(parkingLotId) && parkingLotId > 0) {
+    params.parkingLotId = parkingLotId
+  }
+
+  const res = await apiClient.get<{ data?: unknown }>(
+    '/api/v1/merchant/bookings/summary',
+    { params, signal },
+  )
+  const payload = res.data?.data as Partial<MerchantBookingsStatusSummary> | undefined
+  if (
+    !payload ||
+    typeof payload.total !== 'number' ||
+    typeof payload.pendingCheckIn !== 'number' ||
+    typeof payload.parking !== 'number' ||
+    typeof payload.completed !== 'number'
+  ) {
+    throw new Error('Không thể đọc tổng hợp trạng thái đặt chỗ từ máy chủ.')
+  }
+
+  return {
+    total: payload.total,
+    pendingCheckIn: payload.pendingCheckIn,
+    parking: payload.parking,
+    completed: payload.completed,
+    statusCounts:
+      payload.statusCounts && typeof payload.statusCounts === 'object'
+        ? payload.statusCounts
+        : undefined,
+  }
+}
+
 export interface MerchantBookingsSummaryData {
   items: Booking[]
   totalElements: number
@@ -243,6 +287,12 @@ export function computeRemainingBookingAmount(
     return Math.max(0, booking.totalAmount - booking.advanceDeposit)
   }
   return null
+}
+
+export function formatShortBookingCode(code: string, maxLength = 16): string {
+  const trimmed = code.trim()
+  if (trimmed.length <= maxLength) return trimmed
+  return `${trimmed.slice(0, maxLength)}...`
 }
 
 export function formatDurationMinutes(totalMinutes: number): string {

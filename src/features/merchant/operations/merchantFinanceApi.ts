@@ -1,37 +1,96 @@
 import { z } from 'zod'
 import { getData, type Page } from '@/shared/api/resources'
-import type { Revenue } from '@/entities/operations'
+import type { Revenue, RevenueSeriesPoint } from '@/entities/operations'
+import { resolveSeriesRevenueChannels } from '../components/merchantRevenueMetrics'
 
-export const revenueFiltersSchema = z.object({
-  startDate: z.string(),
-  endDate: z.string(),
-  granularity: z.enum(['DAY', 'MONTH', 'YEAR']),
-}).refine(({ startDate, endDate }) => !startDate || !endDate || endDate >= startDate, {
-  path: ['endDate'],
-  message: 'Ngày kết thúc phải từ ngày bắt đầu.',
-})
+export const revenueFiltersSchema = z
+  .object({
+    startDate: z.string(),
+    endDate: z.string(),
+    granularity: z.enum(['DAY', 'MONTH', 'YEAR']),
+    parkingLotId: z.string().optional().default(''),
+  })
+  .refine(
+    ({ startDate, endDate }) => !startDate || !endDate || endDate >= startDate,
+    {
+      path: ['endDate'],
+      message: 'Ngày kết thúc phải từ ngày bắt đầu.',
+    },
+  )
 
 export type RevenueFilters = z.infer<typeof revenueFiltersSchema>
-export type RevenuePoint = Revenue['series'][number]
+export type RevenuePoint = RevenueSeriesPoint
 
-export function groupRevenueSeries(points: RevenuePoint[], granularity: RevenueFilters['granularity']) {
+export interface MerchantLotOption {
+  id: number
+  name: string
+  address?: string | null
+  status: string
+}
+
+export function groupRevenueSeries(
+  points: RevenuePoint[],
+  granularity: RevenueFilters['granularity'],
+): RevenuePoint[] {
   const groups = new Map<string, RevenuePoint>()
   for (const point of points) {
-    const period = point.period.slice(0, granularity === 'YEAR' ? 4 : granularity === 'MONTH' ? 7 : 10)
-    const group = groups.get(period) ?? { period, revenue: 0, bookingCount: 0 }
+    const period = point.period.slice(
+      0,
+      granularity === 'YEAR' ? 4 : granularity === 'MONTH' ? 7 : 10,
+    )
+    const group = groups.get(period) ?? {
+      period,
+      revenue: 0,
+      bookingCount: 0,
+      onlineTransferRevenue: 0,
+      counterQrRevenue: 0,
+      unclassifiedTransferRevenue: 0,
+      cashRevenue: 0,
+      onlineTransferCount: 0,
+      counterQrCount: 0,
+      unclassifiedTransferCount: 0,
+      cashBookingCount: 0,
+    }
+    const online = point.onlineTransferRevenue ?? 0
+    const counterQr = point.counterQrRevenue ?? 0
+    const { unclassified, cash } = resolveSeriesRevenueChannels(point)
+
     group.revenue += point.revenue
     group.bookingCount += point.bookingCount
+    group.onlineTransferRevenue = (group.onlineTransferRevenue ?? 0) + online
+    group.counterQrRevenue = (group.counterQrRevenue ?? 0) + counterQr
+    group.unclassifiedTransferRevenue = (group.unclassifiedTransferRevenue ?? 0) + unclassified
+    group.cashRevenue = (group.cashRevenue ?? 0) + cash
+    group.onlineTransferCount = (group.onlineTransferCount ?? 0) + (point.onlineTransferCount ?? 0)
+    group.counterQrCount = (group.counterQrCount ?? 0) + (point.counterQrCount ?? 0)
+    group.unclassifiedTransferCount = (group.unclassifiedTransferCount ?? 0) + (point.unclassifiedTransferCount ?? 0)
+    group.cashBookingCount = (group.cashBookingCount ?? 0) + (point.cashBookingCount ?? 0)
     groups.set(period, group)
   }
   return [...groups.values()].sort((a, b) => a.period.localeCompare(b.period))
 }
 
-export function getMerchantRevenue({ startDate, endDate }: Pick<RevenueFilters, 'startDate' | 'endDate'>) {
+export function getMerchantRevenue({
+  startDate,
+  endDate,
+  parkingLotId,
+}: Pick<RevenueFilters, 'startDate' | 'endDate' | 'parkingLotId'>) {
   // The current service returns daily points even for MONTH/YEAR; group those points locally.
-  return getData<Revenue>('/api/v1/merchant/revenue', {
+  const params: Record<string, string | number | undefined> = {
     startDate: startDate || undefined,
     endDate: endDate || undefined,
     granularity: 'DAY',
+  }
+  if (parkingLotId && Number(parkingLotId) > 0) {
+    params.parkingLotId = Number(parkingLotId)
+  }
+  return getData<Revenue>('/api/v1/merchant/revenue', params)
+}
+
+export function getMerchantLotsForRevenue() {
+  return getData<Page<MerchantLotOption>>('/api/v1/merchant/parking-lots', {
+    page: 0,
+    size: 100,
   })
 }
 
@@ -55,5 +114,8 @@ export const ledgerEntryLabels: Record<string, string> = {
 }
 
 export function getMerchantLedger(page: number) {
-  return getData<Page<MerchantLedgerEntry>>('/api/v1/merchant/revenue/ledger', { page, size: 20 })
+  return getData<Page<MerchantLedgerEntry>>(
+    '/api/v1/merchant/revenue/ledger',
+    { page, size: 5 },
+  )
 }

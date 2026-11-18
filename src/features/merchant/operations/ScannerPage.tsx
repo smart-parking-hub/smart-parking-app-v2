@@ -85,6 +85,9 @@ export function MerchantScannerPage() {
       void cache.invalidateQueries({ queryKey: ['merchant-booking'] })
       void cache.invalidateQueries({ queryKey: ['real-bookings'] })
       void cache.invalidateQueries({ queryKey: ['booking'] })
+      void cache.invalidateQueries({ queryKey: ['merchant-revenue'] })
+      void cache.invalidateQueries({ queryKey: ['merchant-dashboard-summary'] })
+      void cache.invalidateQueries({ queryKey: ['merchant-revenue-stats'] })
     },
     onError: () => setCamera(false),
     onSettled: () => { scanPending.current = false },
@@ -362,7 +365,15 @@ export function MerchantScannerPage() {
           onClose={() => { setSuccess(''); scan.reset() }}
           onComplete={result => {
             setCompletedSettlement(result)
-            for (const queryKey of [['merchant-bookings'], ['merchant-booking'], ['real-bookings'], ['booking'], ['merchant-revenue']])
+            for (const queryKey of [
+              ['merchant-bookings'],
+              ['merchant-booking'],
+              ['real-bookings'],
+              ['booking'],
+              ['merchant-revenue'],
+              ['merchant-dashboard-summary'],
+              ['merchant-revenue-stats'],
+            ])
               void cache.invalidateQueries({ queryKey })
           }}
         />

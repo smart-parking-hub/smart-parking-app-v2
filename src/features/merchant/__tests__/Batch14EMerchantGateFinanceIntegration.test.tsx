@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, screen, fireEvent, waitFor } from '@testing-library/react'
+import { render, screen, fireEvent, waitFor, within } from '@testing-library/react'
 import { MemoryRouter, Routes, Route } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { Provider } from 'react-redux'
@@ -238,10 +238,11 @@ describe('BATCH-14E: Merchant Gate, Bookings & Financial Settlement Integration 
     expect(screen.getByRole('link', { name: /Mở trạm quét QR →/i })).toBeInTheDocument()
 
     // Wait for data load
-    expect(await screen.findByText('Tổng lượt đặt chỗ')).toBeInTheDocument()
-    expect(screen.getByText('Chờ vào · trang này')).toBeInTheDocument()
-    expect(screen.getByText('Đang đỗ · trang này')).toBeInTheDocument()
-    expect(screen.getByText('Hoàn tất · trang này')).toBeInTheDocument()
+    const metricsStrip = await screen.findByTestId('merchant-bookings-metrics')
+    expect(within(metricsStrip).getByText('Tổng lượt đặt chỗ')).toBeInTheDocument()
+    expect(within(metricsStrip).getByText('Chờ vào')).toBeInTheDocument()
+    expect(within(metricsStrip).getByText('Đang đỗ')).toBeInTheDocument()
+    expect(within(metricsStrip).getByText('Hoàn tất')).toBeInTheDocument()
 
     // Status filter tabs with counts
     expect(screen.getByRole('tab', { name: /Tất cả trạng thái/i })).toBeInTheDocument()
@@ -365,8 +366,12 @@ describe('BATCH-14E: Merchant Gate, Bookings & Financial Settlement Integration 
   // -------------------------------------------------------------
   // SCR-037: Merchant Revenue Reports & Analytics
   // -------------------------------------------------------------
-  it('SCR-037: MerchantRevenuePage displays revenue KPIs, time grouping and series visualization', async () => {
-    mockGetData.mockImplementation(async (url) => url.endsWith('/ledger') ? { content: [], totalPages: 0, totalElements: 0, currentPage: 0 } : mockRevenueData)
+  it('SCR-037: MerchantRevenuePage displays revenue KPIs, per-lot table on All Lots, and channel/series view when a specific lot is selected', async () => {
+    mockGetData.mockImplementation(async (url) => {
+      if (url.endsWith('/ledger')) return { content: [], totalPages: 0, totalElements: 0, currentPage: 0 }
+      if (url.endsWith('/parking-lots')) return { content: [{ id: 10, name: 'Bãi ICD Tân Cảng', address: 'Quận 9', status: 'APPROVED' }], totalElements: 1 }
+      return mockRevenueData
+    })
 
     renderWithProviders(<MerchantRevenuePage />, ['/merchant/revenue'])
 
@@ -376,18 +381,28 @@ describe('BATCH-14E: Merchant Gate, Bookings & Financial Settlement Integration 
     expect(screen.getByRole('link', { name: /Ví & Rút tiền →/i })).toBeInTheDocument()
 
     // Filter controls
-    expect(screen.getByLabelText(/Từ ngày/i)).toBeInTheDocument()
-    expect(screen.getByLabelText(/Đến ngày/i)).toBeInTheDocument()
-    expect(screen.getByLabelText(/Nhóm thời gian/i)).toBeInTheDocument()
+    expect(screen.getByLabelText('Từ ngày')).toBeInTheDocument()
+    expect(screen.getByLabelText('Đến ngày')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Chọn từ ngày' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Chọn đến ngày' })).toBeInTheDocument()
+    expect(screen.getByRole('combobox', { name: 'Mở bộ lọc cơ sở bãi đỗ' })).toBeInTheDocument()
+    expect(screen.getByRole('combobox', { name: 'Mở bộ lọc nhóm thời gian' })).toBeInTheDocument()
 
-    // 4 Metrics
-    expect(await screen.findByText('Doanh thu gộp')).toBeInTheDocument()
-    expect(screen.getByText('Biến động ví tích lũy')).toBeInTheDocument()
+    // 5 Metrics (including Tổng Doanh thu and Tiền mặt thu tại bãi)
+    expect(await screen.findByText('Tổng Doanh thu (trước phí)')).toBeInTheDocument()
+    expect(screen.getByText('Tiền mặt thu tại bãi')).toBeInTheDocument()
+    expect(screen.getByText('Thực nhận chuyển khoản (sau phí)')).toBeInTheDocument()
     expect(screen.getByText('Phí nền tảng')).toBeInTheDocument()
-    expect(screen.getByText('Số dư khả dụng')).toBeInTheDocument()
+    expect(screen.getByText('Số dư ví khả dụng (Toàn tài khoản)')).toBeInTheDocument()
 
-    // Series Panel
-    expect(screen.getByText('Nhịp doanh thu')).toBeInTheDocument()
+    // All lots view -> shows per-lot table, hides Nhịp doanh thu
+    expect(await screen.findByTestId('merchant-revenue-by-lot-table')).toBeInTheDocument()
+    expect(screen.queryByText('Nhịp doanh thu')).not.toBeInTheDocument()
+
+    // Select a specific lot -> shows Nhịp doanh thu & channel breakdown
+    fireEvent.change(screen.getByLabelText('Cơ sở bãi đỗ'), { target: { value: '10' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Áp dụng' }))
+    expect(await screen.findByText('Nhịp doanh thu')).toBeInTheDocument()
     expect(screen.getAllByText('2026-11-01')).toHaveLength(2)
     expect(screen.getByText('42 lượt')).toBeInTheDocument()
   })

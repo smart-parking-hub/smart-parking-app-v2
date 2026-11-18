@@ -36,7 +36,7 @@ export function MerchantHeader({ onToggleMobileMenu, sidebarCollapsed = false, o
     <button
       type="button"
       onClick={onToggleSidebar}
-      className="hidden lg:inline-flex shrink-0 rounded-xl p-2 text-slate-600 hover:text-slate-900 hover:bg-slate-100 focus-visible:outline-2 focus-visible:outline-brand-orange"
+      className="hidden lg:inline-flex shrink-0 cursor-pointer rounded-xl p-2 text-slate-600 transition-all hover:bg-slate-100 hover:text-[#0d1c2e] active:bg-slate-200/80 focus-visible:outline-2 focus-visible:outline-brand-orange"
       aria-label={sidebarCollapsed ? 'Mở rộng menu' : 'Thu gọn menu'}
       title={sidebarCollapsed ? 'Mở rộng menu' : 'Thu gọn menu'}
       aria-expanded={!sidebarCollapsed}
@@ -49,10 +49,10 @@ export function MerchantHeader({ onToggleMobileMenu, sidebarCollapsed = false, o
     <header className={cn('fixed inset-x-0 top-0 z-40 flex h-16 items-center justify-between gap-4 border-b border-brand-border bg-white px-4 font-inter text-base lg:px-8 transition-[left] duration-300 motion-reduce:transition-none', sidebarOffset)}>
       <div className="flex min-w-0 items-center gap-3">
         {sidebarToggle}
-        <button type="button" onClick={onToggleMobileMenu} aria-label="Mở menu" className="rounded-lg p-2 lg:hidden focus-visible:outline-2 focus-visible:outline-brand-orange"><Menu size={22} /></button>
+        <button type="button" onClick={onToggleMobileMenu} aria-label="Mở menu" className="cursor-pointer rounded-lg p-2 text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900 lg:hidden focus-visible:outline-2 focus-visible:outline-brand-orange"><Menu size={22} /></button>
         <nav aria-label="Đường dẫn" className="flex flex-wrap items-center gap-2 text-brand-muted"><Link to="/merchant/dashboard" className="hover:text-brand-navy">Tổng quan</Link><span aria-hidden="true">/</span><span aria-current="page" className="font-semibold text-brand-navy">Hồ sơ chủ bãi</span></nav>
       </div>
-      <button type="button" className="inline-flex min-h-10 shrink-0 items-center justify-center gap-2 rounded-xl border border-red-200 bg-white px-3.5 py-2 text-sm font-semibold text-red-700 transition-colors hover:border-red-300 hover:bg-red-50 active:bg-red-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-500" onClick={() => { clearSession(); navigate('/login', { replace: true }) }}><LogOut size={16} aria-hidden="true" />Đăng xuất</button>
+      <button type="button" className="inline-flex min-h-10 shrink-0 cursor-pointer items-center justify-center gap-2 rounded-xl border border-red-200 bg-white px-3.5 py-2 text-sm font-semibold text-red-700 transition-all hover:border-red-300 hover:bg-red-50 hover:text-red-800 hover:shadow-xs active:bg-red-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-500" onClick={() => { clearSession(); navigate('/login', { replace: true }) }}><LogOut size={16} aria-hidden="true" />Đăng xuất</button>
     </header>
   )
 
@@ -119,7 +119,7 @@ export function MerchantHeader({ onToggleMobileMenu, sidebarCollapsed = false, o
 
         <div className="h-6 w-px bg-slate-200 hidden sm:block" />
 
-        <button type="button" className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border border-red-200 bg-white px-3.5 py-2 text-sm font-semibold text-red-700 transition-colors hover:border-red-300 hover:bg-red-50 active:bg-red-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-500" onClick={() => { clearSession(); navigate('/login', { replace: true }) }}><LogOut size={16} aria-hidden="true" />Đăng xuất</button>
+        <button type="button" className="inline-flex min-h-10 cursor-pointer items-center justify-center gap-2 rounded-xl border border-red-200 bg-white px-3.5 py-2 text-sm font-semibold text-red-700 transition-all hover:border-red-300 hover:bg-red-50 hover:text-red-800 hover:shadow-xs active:bg-red-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-500" onClick={() => { clearSession(); navigate('/login', { replace: true }) }}><LogOut size={16} aria-hidden="true" />Đăng xuất</button>
         {/* Merchant Profile */}
         <Link
           to="/merchant/profile"

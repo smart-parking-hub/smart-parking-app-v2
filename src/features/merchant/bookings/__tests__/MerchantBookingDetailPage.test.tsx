@@ -401,5 +401,40 @@ describe('SCR-035: MerchantBookingDetailPage & Barrier Timeline Utilities', () =
     expect(await screen.findByText('Không có quyền truy cập')).toBeInTheDocument()
     expect(mockGetData).not.toHaveBeenCalled()
   })
+
+  it('truncates long ticket codes on detail page without hover tooltip and opens ticket detail modal on eye click', async () => {
+    const longCode = 'BK0B45E18A4FC8430094B943425C1A94DE'
+    mockGetData.mockResolvedValueOnce({
+      ...completedBooking,
+      id: 955,
+      bookingCode: longCode,
+    })
+
+    renderDetailApp(
+      <Routes>
+        <Route path="/merchant/bookings/:id" element={<MerchantBookingDetailPage />} />
+      </Routes>,
+      ['/merchant/bookings/955'],
+    )
+
+    // Shortened with ... in card
+    const shortCodeEl = await screen.findByTestId('ticket-code-short-value')
+    expect(shortCodeEl).toHaveTextContent('BK0B45E18A4FC8...')
+
+    // Hover eye button -> does NOT render hover tooltip
+    const eyeBtn = screen.getByTestId('ticket-code-eye-button')
+    fireEvent.mouseEnter(eyeBtn)
+    expect(screen.queryByTestId('ticket-code-hover-tooltip')).not.toBeInTheDocument()
+
+    // Click eye button -> opens "Chi tiết mã vé" modal with full code
+    fireEvent.click(eyeBtn)
+    const modal = await screen.findByTestId('ticket-code-detail-modal')
+    expect(within(modal).getByTestId('ticket-code-modal-full-value')).toHaveTextContent(longCode)
+    expect(screen.getByRole('heading', { name: 'Chi tiết mã vé' })).toBeInTheDocument()
+
+    // Close modal
+    fireEvent.click(within(modal).getByRole('button', { name: 'Đóng' }))
+    expect(screen.queryByTestId('ticket-code-detail-modal')).not.toBeInTheDocument()
+  })
 })
 

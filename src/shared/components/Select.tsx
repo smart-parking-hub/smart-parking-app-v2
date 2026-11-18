@@ -115,7 +115,7 @@ export function Select({
   return (
     <div
       ref={containerRef}
-      className={cn('relative w-full select-none', className)}
+      className={cn('relative w-full min-w-0 max-w-full select-none', className)}
       onKeyDown={handleKeyDown}
     >
       {/* Hidden Native Select for Screen Readers, Testing Library and Form Compatibility */}
@@ -164,20 +164,21 @@ export function Select({
         aria-haspopup="listbox"
         aria-label={triggerAriaHidden ? undefined : ariaLabel}
         aria-labelledby={triggerAriaHidden ? undefined : ariaLabelledBy}
+        title={selectedOption?.label}
         disabled={disabled}
         onClick={() => !disabled && setIsOpen((prev) => !prev)}
         className={cn(
-          'w-full flex items-center justify-between font-semibold transition-all cursor-pointer outline-none shadow-xs',
+          'w-full min-w-0 max-w-full overflow-hidden flex items-center justify-between font-semibold transition-all cursor-pointer outline-none shadow-xs',
           variantStyles,
           sizeStyles,
           disabled && 'opacity-50 cursor-not-allowed',
           triggerClassName,
         )}
       >
-        <div className="flex items-center gap-2 truncate">
+        <div className="flex min-w-0 flex-1 items-center gap-2 overflow-hidden">
           {prefixIcon}
           {selectedOption?.icon}
-          <span className="truncate">
+          <span className="min-w-0 flex-1 truncate text-left">
             {selectedOption ? selectedOption.label : placeholder}
           </span>
         </div>

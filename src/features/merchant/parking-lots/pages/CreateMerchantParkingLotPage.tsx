@@ -117,6 +117,12 @@ export function CreateMerchantParkingLotPage() {
   const formValues = watch()
   const imageUrls = useRef<ParkingLotImageItem[]>([])
   useEffect(() => { imageUrls.current = images }, [images])
+  const toastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  useEffect(() => {
+    return () => {
+      if (toastTimeoutRef.current) clearTimeout(toastTimeoutRef.current)
+    }
+  }, [])
   useEffect(() => () => {
     imageUrls.current.forEach((image) => URL.revokeObjectURL(image.previewUrl))
   }, [])
@@ -160,7 +166,8 @@ export function CreateMerchantParkingLotPage() {
     }
     setDraftSaved(true)
     setToastMessage('Đã lưu bản nháp hồ sơ đăng ký vào trình duyệt.')
-    setTimeout(() => {
+    if (toastTimeoutRef.current) clearTimeout(toastTimeoutRef.current)
+    toastTimeoutRef.current = setTimeout(() => {
       setDraftSaved(false)
       setToastMessage(null)
     }, 3000)

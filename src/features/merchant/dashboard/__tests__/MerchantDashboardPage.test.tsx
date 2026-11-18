@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, screen, fireEvent, waitFor } from '@testing-library/react'
+import { render, screen, fireEvent, waitFor, within } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { apiClient } from '@/shared/api/client'
@@ -38,17 +38,21 @@ describe('Merchant dashboard real data', () => {
     expect(screen.queryByText(/88219/)).not.toBeInTheDocument()
   })
   it('reads the API envelope and displays net revenue, owned yards and real booking status', async () => {
-    vi.mocked(apiClient.get).mockImplementation(async url => ({ data: { data: {
-      ...responses,
-      '/api/v1/merchant/revenue': { totalNetRevenue: 123456, currentWalletBalance: 4000, series: [{ period: '2026-11-07', revenue: 123456, bookingCount: 1 }] },
-      '/api/v1/merchant/parking-lots': { content: [{ id: 15, name: 'Bãi của tôi', address: 'Địa chỉ bãi', status: 'REJECTED' }], totalElements: 1 },
-      '/api/v1/merchant/bookings': { content: [{ id: 8, bookingCode: 'BK-8', vehicleLicensePlate: '51C-12345', parkingLotName: 'Bãi của tôi', status: 'CANCELLED' }], totalElements: 1 },
-    }[url] } }))
+    vi.mocked(apiClient.get).mockImplementation(async url => ({
+      data: {
+        data: {
+          ...responses,
+          '/api/v1/merchant/revenue': { totalNetRevenue: 123456, currentWalletBalance: 4000, series: [{ period: '2026-11-07', revenue: 123456, bookingCount: 1 }] },
+          '/api/v1/merchant/parking-lots': { content: [{ id: 15, name: 'Bãi của tôi', address: 'Địa chỉ bãi', status: 'REJECTED' }], totalElements: 1 },
+          '/api/v1/merchant/bookings': { content: [{ id: 8, bookingCode: 'BK-8', vehicleLicensePlate: '51C-12345', parkingLotName: 'Bãi của tôi', status: 'CANCELLED' }], totalElements: 1 },
+        }[url]
+      }
+    }))
     renderPage()
-    expect(await screen.findByText(/123.456/, { selector: 'p' })).toBeInTheDocument()
+    expect(await screen.findByTestId('merchant-kpi-total-value')).toHaveTextContent(/123\.456/)
     expect(screen.getByRole('link', { name: 'BK-8' })).toHaveAttribute('href', '/merchant/bookings/8')
     expect(screen.getByText('Đã hủy')).toBeInTheDocument()
-    expect(screen.getByText('Từ chối')).toBeInTheDocument()
+    expect(screen.getAllByText('Từ chối').length).toBeGreaterThan(0)
     expect(screen.getByText(/2026-11-07/)).toBeInTheDocument()
   })
   it.each([401, 403, 500])('shows an error on HTTP %s and retries without substituting sample data', async status => {
@@ -67,42 +71,146 @@ describe('Merchant dashboard real data', () => {
     expect(screen.queryByText(/Bạn chưa có bãi đỗ nào/)).not.toBeInTheDocument()
   })
 
-  it('GAP-22: filters revenue chart by selected parking lot from dropdown', async () => {
-    vi.mocked(apiClient.get).mockImplementation(async url => ({
-      data: {
+  it('GAP-22: filters revenue chart and cash/channel stats by selected parking lot from dropdown', async () => {
+    vi.mocked(apiClient.get).mockImplementation(async (url, config) => {
+      const params = config?.params as Record<string, unknown> | undefined
+      if (url === '/api/v1/merchant/revenue' && params?.parkingLotId === 10) {
+        return {
+          data: {
+            data: {
+              totalNetRevenue: 300000,
+              currentWalletBalance: 100000,
+              completedBookings: 3,
+              onlineTransferNetRevenue: 200000,
+              onlineTransferCount: 2,
+              counterQrNetRevenue: 100000,
+              counterQrCount: 1,
+              totalCashRevenue: 75000,
+              totalCashBookings: 2,
+              periodCashRevenue: 75000,
+              periodCashBookings: 2,
+              revenueByParkingLot: [
+                {
+                  parkingLotId: 10,
+                  onlineTransferRevenue: 200000,
+                  onlineTransferCount: 2,
+                  counterQrRevenue: 100000,
+                  counterQrCount: 1,
+                  cashRevenue: 75000,
+                  cashBookingCount: 2,
+                  periodOnlineTransferRevenue: 200000,
+                  periodOnlineTransferCount: 2,
+                  periodCounterQrRevenue: 100000,
+                  periodCounterQrCount: 1,
+                  periodCashRevenue: 75000,
+                  periodCashBookingCount: 2,
+                },
+              ],
+              series: [
+                {
+                  period: '2026-11-01',
+                  revenue: 300000,
+                  onlineTransferRevenue: 200000,
+                  counterQrRevenue: 100000,
+                  cashRevenue: 75000,
+                  cashBookingCount: 2,
+                  bookingCount: 3,
+                },
+              ],
+            },
+          },
+        }
+      }
+      return {
         data: {
-          ...responses,
-          '/api/v1/merchant/revenue': {
-            totalNetRevenue: 500000,
-            currentWalletBalance: 100000,
-            series: [{ period: '2026-11-01', revenue: 500000, bookingCount: 5 }],
-          },
-          '/api/v1/merchant/parking-lots': {
-            content: [
-              { id: 10, name: 'Bãi ICD Tân Cảng', address: 'Quận 9', status: 'APPROVED' },
-              { id: 20, name: 'Bãi Cát Lái B', address: 'Thủ Đức', status: 'APPROVED' },
-            ],
-            totalElements: 2,
-          },
-          '/api/v1/merchant/parking-lots/10/revenue': {
-            totalRevenue: 300000,
-            completedBookings: 3,
-            series: [{ period: '2026-11-01', revenue: 300000, bookingCount: 3 }],
-          },
-        }[url],
-      },
-    }))
+          data: {
+            ...responses,
+            '/api/v1/merchant/revenue': {
+              totalNetRevenue: 500000,
+              currentWalletBalance: 100000,
+              onlineTransferNetRevenue: 350000,
+              onlineTransferCount: 4,
+              counterQrNetRevenue: 150000,
+              counterQrCount: 2,
+              totalCashRevenue: 120000,
+              totalCashBookings: 3,
+              periodCashRevenue: 120000,
+              periodCashBookings: 3,
+              revenueByParkingLot: [
+                {
+                  parkingLotId: 10,
+                  onlineTransferRevenue: 200000,
+                  onlineTransferCount: 2,
+                  counterQrRevenue: 100000,
+                  counterQrCount: 1,
+                  cashRevenue: 75000,
+                  cashBookingCount: 2,
+                  periodOnlineTransferRevenue: 200000,
+                  periodOnlineTransferCount: 2,
+                  periodCounterQrRevenue: 100000,
+                  periodCounterQrCount: 1,
+                  periodCashRevenue: 75000,
+                  periodCashBookingCount: 2,
+                },
+              ],
+              series: [
+                {
+                  period: '2026-11-01',
+                  revenue: 500000,
+                  onlineTransferRevenue: 350000,
+                  counterQrRevenue: 150000,
+                  cashRevenue: 120000,
+                  cashBookingCount: 3,
+                  bookingCount: 5,
+                },
+              ],
+            },
+            '/api/v1/merchant/parking-lots': {
+              content: [
+                { id: 10, name: 'Bãi ICD Tân Cảng', address: 'Quận 9', status: 'APPROVED' },
+                { id: 20, name: 'Bãi Cát Lái B', address: 'Thủ Đức', status: 'APPROVED' },
+              ],
+              totalElements: 2,
+            },
+          }[url],
+        },
+      }
+    })
 
     renderPage()
     expect((await screen.findAllByText('Bãi ICD Tân Cảng')).length).toBeGreaterThan(0)
 
-    const select = screen.getByLabelText('Lọc theo cơ sở bãi đỗ')
-    expect(select).toBeInTheDocument()
+    // Verify all-lots cash KPI, 2-channel cards (Chuyển khoản + Tiền mặt), grouped chart bars, and per-lot table (including lot 20 with 0 cash)
+    expect(screen.getByText('TỔNG DOANH THU (TRƯỚC PHÍ)')).toBeInTheDocument()
+    expect(screen.getByTestId('merchant-kpi-cash-value')).toHaveTextContent(/120\.000/)
+    expect(screen.getByTestId('channel-card-transfer')).toHaveTextContent(/500\.000/)
+    expect(screen.getByTestId('channel-card-cash')).toHaveTextContent(/120\.000/)
+    expect(screen.queryByTestId('channel-card-counter-qr')).not.toBeInTheDocument()
+    expect(screen.getByTestId('bar-transfer-2026-11-01')).toBeInTheDocument()
+    expect(screen.getByTestId('bar-cash-2026-11-01')).toBeInTheDocument()
+    expect(screen.getByTestId('lot-revenue-row-10')).toHaveTextContent(/75\.000/)
+    expect(screen.getByTestId('lot-revenue-row-20')).toHaveTextContent(/0\s*₫/)
+    expect(screen.getByTestId('lot-revenue-total-row')).toHaveTextContent('Tổng cộng (2 bãi đỗ)')
 
-    fireEvent.change(select, { target: { value: '10' } })
+    const lotCombobox = screen.getByRole('combobox', { name: 'Mở bộ lọc cơ sở bãi đỗ' })
+    expect(lotCombobox.tagName).toBe('BUTTON')
+
+    fireEvent.click(lotCombobox)
+    const lotListbox = await screen.findByRole('listbox', { name: 'Mở bộ lọc cơ sở bãi đỗ' })
+    fireEvent.click(within(lotListbox).getByRole('option', { name: 'Bãi ICD Tân Cảng' }))
 
     expect(await screen.findByText('Đang xem bãi: Bãi ICD Tân Cảng')).toBeInTheDocument()
-    expect(apiClient.get).toHaveBeenCalledWith('/api/v1/merchant/parking-lots/10/revenue', expect.anything())
+    await waitFor(() => {
+      expect(apiClient.get).toHaveBeenCalledWith(
+        '/api/v1/merchant/revenue',
+        expect.objectContaining({
+          params: expect.objectContaining({ parkingLotId: 10, granularity: 'DAY' }),
+        }),
+      )
+    })
+    await waitFor(() => {
+      expect(screen.getByTestId('merchant-kpi-cash-value')).toHaveTextContent(/75\.000/)
+    })
   })
 
   it('SP-S3-UI-01: selects time range pills and synchronizes with merchantDashboardStore and API (F-01, F-05)', async () => {
@@ -209,5 +317,112 @@ describe('Merchant dashboard real data', () => {
     expect(
       await screen.findByText('Không thể làm mới dữ liệu. Vui lòng kiểm tra kết nối.'),
     ).toBeInTheDocument()
+  })
+
+  it('shows scoped skeleton while switching lots and shows retryable KPI error instead of leaking prior lot or all-lots figures', async () => {
+    let rejectLotB!: (err: Error) => void
+    let lotBAttempt = 0
+
+    vi.mocked(apiClient.get).mockImplementation(async (url, config) => {
+      const params = config?.params as Record<string, unknown> | undefined
+      if (url === '/api/v1/merchant/revenue' && params?.parkingLotId === 10) {
+        return {
+          data: {
+            data: {
+              totalNetRevenue: 300000,
+              currentWalletBalance: 100000,
+              completedBookings: 3,
+              onlineTransferNetRevenue: 300000,
+              onlineTransferCount: 3,
+              totalCashRevenue: 75000,
+              totalCashBookings: 2,
+              periodCashRevenue: 75000,
+              periodCashBookings: 2,
+              series: [{ period: '2026-11-01', revenue: 300000, cashRevenue: 75000, bookingCount: 3 }],
+            },
+          },
+        }
+      }
+      if (url === '/api/v1/merchant/revenue' && params?.parkingLotId === 20) {
+        lotBAttempt++
+        if (lotBAttempt === 1) {
+          return new Promise((_resolve, reject) => {
+            rejectLotB = reject
+          })
+        }
+        return {
+          data: {
+            data: {
+              totalNetRevenue: 90000,
+              currentWalletBalance: 100000,
+              completedBookings: 1,
+              onlineTransferNetRevenue: 90000,
+              onlineTransferCount: 1,
+              totalCashRevenue: 20000,
+              totalCashBookings: 1,
+              periodCashRevenue: 20000,
+              periodCashBookings: 1,
+              series: [{ period: '2026-11-01', revenue: 90000, cashRevenue: 20000, bookingCount: 1 }],
+            },
+          },
+        }
+      }
+      return {
+        data: {
+          data: {
+            ...responses,
+            '/api/v1/merchant/revenue': {
+              totalNetRevenue: 500000,
+              currentWalletBalance: 100000,
+              onlineTransferNetRevenue: 500000,
+              onlineTransferCount: 5,
+              totalCashRevenue: 120000,
+              totalCashBookings: 3,
+              periodCashRevenue: 120000,
+              periodCashBookings: 3,
+              series: [{ period: '2026-11-01', revenue: 500000, cashRevenue: 120000, bookingCount: 5 }],
+            },
+            '/api/v1/merchant/parking-lots': {
+              content: [
+                { id: 10, name: 'Bãi A Nhanh', address: 'Quận 9', status: 'APPROVED' },
+                { id: 20, name: 'Bãi B Chậm', address: 'Thủ Đức', status: 'APPROVED' },
+              ],
+              totalElements: 2,
+            },
+          }[url],
+        },
+      }
+    })
+
+    renderPage()
+    expect((await screen.findAllByText('Bãi A Nhanh')).length).toBeGreaterThan(0)
+
+    // Switch to Lot A -> resolves immediately
+    const lotCombobox = screen.getByRole('combobox', { name: 'Mở bộ lọc cơ sở bãi đỗ' })
+    fireEvent.click(lotCombobox)
+    fireEvent.click(within(await screen.findByRole('listbox', { name: 'Mở bộ lọc cơ sở bãi đỗ' })).getByRole('option', { name: 'Bãi A Nhanh' }))
+    await waitFor(() => {
+      expect(screen.getByTestId('merchant-kpi-cash-value')).toHaveTextContent(/75\.000/)
+    })
+
+    // Switch to Lot B (pending) -> must show skeleton and MUST NOT show Lot A's 75.000 or All-Lots 120.000 under Lot B
+    fireEvent.click(lotCombobox)
+    fireEvent.click(within(await screen.findByRole('listbox', { name: 'Mở bộ lọc cơ sở bãi đỗ' })).getByRole('option', { name: 'Bãi B Chậm' }))
+
+    expect(await screen.findByTestId('merchant-lot-revenue-skeleton')).toBeInTheDocument()
+    expect(screen.queryByTestId('merchant-kpi-cash-value')).not.toBeInTheDocument()
+    expect(screen.queryByTestId('merchant-channel-breakdown-cards')).not.toBeInTheDocument()
+
+    // Lot B fails -> must display scoped error alert with Retry button
+    rejectLotB(new Error('Lot B timeout'))
+    const errorBox = await screen.findByTestId('merchant-lot-revenue-error')
+    expect(errorBox).toHaveTextContent(/Bãi B Chậm/)
+    expect(screen.queryByTestId('merchant-kpi-cash-value')).not.toBeInTheDocument()
+
+    // Retry recovers Lot B with its true numbers
+    fireEvent.click(within(errorBox).getByRole('button', { name: 'Thử lại' }))
+    await waitFor(() => {
+      expect(screen.getByTestId('merchant-kpi-cash-value')).toHaveTextContent(/20\.000/)
+    })
   })
 })

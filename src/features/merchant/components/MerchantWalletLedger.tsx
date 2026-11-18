@@ -18,7 +18,7 @@ export function MerchantWalletLedger() {
         <button type="button" className={secondary} disabled={query.isFetching} onClick={() => void query.refetch()}>Làm mới sổ cái</button>
       </div>
       <QueryState query={query}>{data => (
-        <DataTable rows={data.content} page={page} totalPages={data.totalPages} totalItems={data.totalElements} onPage={setPage}
+        <DataTable rows={data.content.slice(0, 5)} page={page} totalPages={data.totalPages} totalItems={data.totalElements} onPage={setPage}
           emptyText="Chưa có biến động ví."
           columns={[
             { label: 'Bút toán', render: entry => `#${entry.id}` },

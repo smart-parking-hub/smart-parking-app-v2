@@ -2,9 +2,20 @@
 
 - Task: SP-S3-PAY-03
 - Owner: SPH
-- last_verified: 2026-11-14
+- last_verified: 2026-11-19
 - Route: `/merchant/revenue` (existing MERCHANT route guard).
 - Status: VERIFIED locally with component tests and mocked-network browser tests; pending human acceptance and deployed API verification.
+
+## Current channel contract — PR #66 / #103 review fixes
+
+The rules in this section supersede the original PAY-03 cumulative KPI and channel descriptions below.
+
+- `totalGrossRevenue` and `periodTotalGrossRevenue` from payment-service include collected payments pending settlement and exclude cash receipts. The combined gross KPI adds the matching cash field exactly once. Explicit zero totals remain zero.
+- Identified transfers contain only `ONLINE_TRANSFER` and `COUNTER_QR`. Legacy `UNKNOWN` and other unclassified channels remain separate in cards, per-lot rows, daily charts and MONTH/YEAR grouping. A legacy daily total without channel fields is not evidence of an online transfer.
+- Pending settlement gross is included in combined totals and shown separately; it is not added to settled transfer revenue or available wallet balance. Per-lot totals use the corresponding lot's pending amount.
+- Date filters select `period*` KPI fields. With no date filter, cumulative fields are used; the API's default chart can still cover only its default seven-day window.
+- Chart net amounts can include estimated net for payments awaiting settlement. They do not represent settled wallet credits. The available wallet balance remains account-wide even when a lot is selected.
+- Regression coverage includes pending-only totals, a mixed cash/UNKNOWN/pending payload on both pages, per-lot reconciliation, UNKNOWN-only charts and aggregation across periods. Browser coverage in `e2e/merchant-revenue.spec.ts` exercises the actual filter controls at 390px and 1440px using mocked API responses.
 
 ## Scope fitted to the repository
 

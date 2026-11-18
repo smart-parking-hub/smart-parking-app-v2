@@ -2,17 +2,114 @@ import { z } from 'zod'
 import { getData } from '@/shared/api/resources'
 
 const amount = z.number().finite()
-const page = <T extends z.ZodTypeAny>(item: T) => z.object({
-  content: z.array(item), totalElements: z.number().int().nonnegative(),
+const nonNegInt = z.number().int().nonnegative()
+const optAmount = amount.nullish().transform((v) => v ?? 0)
+const optPresentAmount = amount
+  .nullish()
+  .transform((v) => (v === null || v === undefined ? undefined : v))
+const optCount = nonNegInt.nullish().transform((v) => v ?? 0)
+
+const page = <T extends z.ZodTypeAny>(item: T) =>
+  z.object({
+    content: z.array(item),
+    totalElements: z.number().int().nonnegative(),
+  })
+
+const seriesPointSchema = z.object({
+  period: z.string(),
+  revenue: amount,
+  bookingCount: amount,
+  onlineTransferRevenue: optPresentAmount,
+  counterQrRevenue: optPresentAmount,
+  unclassifiedTransferRevenue: optPresentAmount,
+  cashRevenue: optAmount,
+  onlineTransferCount: optCount,
+  counterQrCount: optCount,
+  unclassifiedTransferCount: optCount,
+  cashBookingCount: optCount,
 })
+
+const lotBreakdownSchema = z.object({
+  parkingLotId: z.number().int(),
+  onlineTransferGrossRevenue: optPresentAmount,
+  onlineTransferRevenue: optAmount,
+  onlineTransferCount: optCount,
+  counterQrGrossRevenue: optPresentAmount,
+  counterQrRevenue: optAmount,
+  counterQrCount: optCount,
+  unclassifiedTransferGrossRevenue: optPresentAmount,
+  unclassifiedTransferRevenue: optAmount,
+  unclassifiedTransferCount: optCount,
+  pendingSettlementGrossRevenue: optAmount,
+  periodPendingSettlementGrossRevenue: optAmount,
+  cashRevenue: optAmount,
+  cashBookingCount: optCount,
+  periodOnlineTransferGrossRevenue: optPresentAmount,
+  periodOnlineTransferRevenue: optAmount,
+  periodOnlineTransferCount: optCount,
+  periodCounterQrGrossRevenue: optPresentAmount,
+  periodCounterQrRevenue: optAmount,
+  periodCounterQrCount: optCount,
+  periodUnclassifiedTransferGrossRevenue: optPresentAmount,
+  periodUnclassifiedTransferRevenue: optAmount,
+  periodUnclassifiedTransferCount: optCount,
+  periodCashRevenue: optAmount,
+  periodCashBookingCount: optCount,
+})
+
 const revenueSchema = z.object({
-  totalNetRevenue: amount, currentWalletBalance: amount, completedBookings: z.number().int().nullish(),
-  series: z.array(z.object({ period: z.string(), revenue: amount, bookingCount: amount })),
+  totalNetRevenue: amount,
+  totalGrossRevenue: optPresentAmount,
+  totalPlatformFee: optPresentAmount,
+  periodTotalGrossRevenue: optPresentAmount,
+  periodTotalPlatformFee: optPresentAmount,
+  periodTotalNetRevenue: optPresentAmount,
+  pendingSettlementGrossRevenue: optAmount,
+  periodPendingSettlementGrossRevenue: optAmount,
+  currentWalletBalance: amount,
+  completedBookings: z.number().int().nullish(),
+  onlineTransferGrossRevenue: optPresentAmount,
+  onlineTransferNetRevenue: optPresentAmount,
+  onlineTransferCount: optCount,
+  periodOnlineTransferGrossRevenue: optPresentAmount,
+  periodOnlineTransferNetRevenue: optPresentAmount,
+  periodOnlineTransferCount: optCount,
+  counterQrGrossRevenue: optPresentAmount,
+  counterQrNetRevenue: optPresentAmount,
+  counterQrCount: optCount,
+  periodCounterQrGrossRevenue: optPresentAmount,
+  periodCounterQrNetRevenue: optPresentAmount,
+  periodCounterQrCount: optCount,
+  unclassifiedTransferGrossRevenue: optPresentAmount,
+  unclassifiedTransferNetRevenue: optPresentAmount,
+  unclassifiedTransferCount: optCount,
+  periodUnclassifiedTransferGrossRevenue: optPresentAmount,
+  periodUnclassifiedTransferNetRevenue: optPresentAmount,
+  periodUnclassifiedTransferCount: optCount,
+  totalCashRevenue: optAmount,
+  totalCashBookings: optCount,
+  periodCashRevenue: optAmount,
+  periodCashBookings: optCount,
+  revenueByParkingLot: z
+    .array(lotBreakdownSchema)
+    .nullish()
+    .transform((v) => v ?? []),
+  series: z.array(seriesPointSchema),
 })
-const lotSchema = z.object({ id: z.number(), name: z.string(), address: z.string().nullish(), status: z.string() })
+
+const lotSchema = z.object({
+  id: z.number(),
+  name: z.string(),
+  address: z.string().nullish(),
+  status: z.string(),
+})
+
 const bookingSchema = z.object({
-  id: z.number(), bookingCode: z.string(), vehicleLicensePlate: z.string().nullish(),
-  parkingLotName: z.string().nullish(), status: z.string(),
+  id: z.number(),
+  bookingCode: z.string(),
+  vehicleLicensePlate: z.string().nullish(),
+  parkingLotName: z.string().nullish(),
+  status: z.string(),
 })
 
 export async function fetchRevenueStats(
@@ -20,67 +117,8 @@ export async function fetchRevenueStats(
   startDate?: string,
   endDate?: string,
 ) {
-  if (parkingLotId) {
-    const raw = await getData<unknown>(`/api/v1/merchant/parking-lots/${parkingLotId}/revenue`, {
-      startDate,
-      endDate,
-    })
-    const lotRevenueSchema = z.object({
-      totalRevenue: amount.nullish(),
-      completedBookings: z.number().int().nullish(),
-      series: z.array(z.object({ period: z.string(), revenue: amount, bookingCount: amount })).nullish(),
-    })
-    const parsed = lotRevenueSchema.parse(raw)
-
-    if (parsed.series && parsed.series.length > 0) {
-      return {
-        totalNetRevenue: parsed.totalRevenue ?? 0,
-        totalGrossRevenue: parsed.totalRevenue ?? 0,
-        completedBookings: parsed.completedBookings ?? 0,
-        currentWalletBalance: 0,
-        series: parsed.series,
-      }
-    }
-
-    // Connect to payment-service to get the real financial series and revenue for this lot
-    try {
-      const paymentRaw = await getData<unknown>('/api/v1/merchant/revenue', {
-        parkingLotId,
-        startDate,
-        endDate,
-        granularity: 'DAY',
-      })
-      const paymentParsed = revenueSchema.parse(paymentRaw)
-      if (paymentParsed.series && paymentParsed.series.length > 0) {
-        return paymentParsed
-      }
-      if (paymentParsed.totalNetRevenue > 0) {
-        // If series is empty (waiting for backend container reload), compute lot proportion
-        const lotRatio = [0.35, 0.22, 0.18, 0.10, 0.06, 0.04, 0.03, 0.02][(parkingLotId - 1) % 8] || 0.12
-        const lotRevenue = Math.round(paymentParsed.totalNetRevenue * lotRatio)
-        const lotBookings = Math.max(1, Math.round(29 * lotRatio))
-        return {
-          ...paymentParsed,
-          totalNetRevenue: lotRevenue,
-          totalGrossRevenue: lotRevenue,
-          completedBookings: lotBookings,
-          series: [],
-        }
-      }
-    } catch {
-      // ignore fallback error
-    }
-
-    return {
-      totalNetRevenue: parsed.totalRevenue ?? 0,
-      totalGrossRevenue: parsed.totalRevenue ?? 0,
-      completedBookings: parsed.completedBookings ?? 0,
-      currentWalletBalance: 0,
-      series: parsed.series ?? [],
-    }
-  }
-
   const raw = await getData<unknown>('/api/v1/merchant/revenue', {
+    parkingLotId: parkingLotId ?? undefined,
     startDate,
     endDate,
     granularity: 'DAY',
@@ -100,7 +138,11 @@ export async function fetchMerchantDashboardData(
   const [revenue, lots, bookings] = await Promise.all([
     getData<unknown>('/api/v1/merchant/revenue', revenueParams),
     getData<unknown>('/api/v1/merchant/parking-lots', { page: 0, size: 50 }),
-    getData<unknown>('/api/v1/merchant/bookings', { page: 0, size: 5, sort: 'createdAt,desc' }),
+    getData<unknown>('/api/v1/merchant/bookings', {
+      page: 0,
+      size: 5,
+      sort: 'createdAt,desc',
+    }),
   ])
   return {
     revenue: revenueSchema.parse(revenue),
