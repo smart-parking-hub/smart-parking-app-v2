@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { ChevronDown, CreditCard, QrCode } from 'lucide-react'
+import { ChevronDown, CreditCard, QrCode, Info } from 'lucide-react'
 import { bookingTimestamp, bookingTimeLabel } from './time'
 import { BookingReview } from './BookingReview'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
@@ -40,14 +40,14 @@ function BookingStatusContent({
   const [checkoutIntent, setCheckoutIntent] = useState<string | null>(null)
   const [toastMessage, setToastMessage] = useState<string | null>(null)
 
+  const watchCheckout = booking?.status === 'PARKING' || booking?.status === 'OVERTIME'
   const query = useQuery({
     queryKey: ['booking', bookingId],
     queryFn: () => fetchBooking(bookingId),
-    enabled: !booking,
+    enabled: !booking || watchCheckout,
     refetchInterval: (query) =>
-      !booking &&
       ['PENDING_PAYMENT', 'PENDING_CHECKIN', 'PARKING', 'OVERTIME', 'AWAITING_FINAL_PAYMENT'].includes(
-        query.state.data?.status ?? '',
+        query.state.data?.status ?? booking?.status ?? '',
       )
         ? 3000
         : false,
@@ -79,7 +79,7 @@ function BookingStatusContent({
   const demo = useMutation({ mutationFn: () => payDemo(bookingId), onSuccess: refresh })
   const cancel = useMutation({ mutationFn: () => cancelBooking(bookingId), onSuccess: async () => { setCancelOpen(false); setAcceptWallet(false); setToastMessage(`Đã hủy lượt đặt chỗ #${booking?.bookingCode ?? query.data?.bookingCode ?? bookingId} thành công.`); await refresh() } })
 
-  const data = booking ?? query.data
+  const data = watchCheckout ? query.data ?? booking : booking ?? query.data
   const deadline = data?.status === 'PENDING_PAYMENT' ? bookingTimestamp(data.expiresAt) : NaN
   const [, tickDeadline] = useState(0)
   useEffect(() => {
@@ -156,6 +156,17 @@ function BookingStatusContent({
       </p>}
 
       {data.status === 'PENDING_CHECKIN' && <BookingCheckinTicket booking={data}/>}
+
+      {(data.status === 'PARKING' || data.status === 'OVERTIME') && (
+        <div
+          data-testid="parking-status-notice"
+          role="status"
+          className="w-full p-3.5 bg-blue-50/80 border border-blue-200/90 rounded-xl flex items-center gap-2.5 text-blue-900 text-xs sm:text-sm font-medium shadow-2xs"
+        >
+          <Info className="w-5 h-5 text-blue-600 shrink-0" aria-hidden="true" />
+          <span>Xe đang đỗ tại bãi. Cước phí sẽ được chốt khi Barie quét xe tại cổng ra.</span>
+        </div>
+      )}
 
       {compactPayment ? <QuickBookingPaymentSummary booking={data} expired={expired}/> : data.status !== 'PENDING_CHECKIN' && <>
       <dl className="grid gap-4 sm:grid-cols-2">
