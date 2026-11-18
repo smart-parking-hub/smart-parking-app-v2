@@ -23,7 +23,6 @@ import {
   fetchDrivingRoute,
   formatRouteDistance,
   formatRouteDuration,
-  getBasemapDisplayName,
   getMapRuntimeConfig,
   isValidCoordinates,
   loadMapRuntimeConfig,
@@ -287,9 +286,6 @@ export function InteractiveMapCanvas({
   const [mapState, setMapState] = useState<'loading' | 'ready' | 'error'>(
     'loading',
   )
-  const [basemapOverride, setBasemapOverride] = useState<MapBasemapId | null>(
-    null,
-  )
   const [activeBasemap, setActiveBasemap] = useState<MapBasemapId>(
     () => getMapRuntimeConfig().defaultBasemap,
   )
@@ -318,7 +314,7 @@ export function InteractiveMapCanvas({
     setMapState('loading')
 
     const initialConfig = getMapRuntimeConfig()
-    const initialBasemap = basemapOverride ?? initialConfig.defaultBasemap
+    const initialBasemap = initialConfig.defaultBasemap
     setActiveBasemap(initialBasemap)
 
     let instance: maplibregl.Map
@@ -371,7 +367,7 @@ export function InteractiveMapCanvas({
     })
 
     void loadMapRuntimeConfig().then((runtimeConfig) => {
-      if (disposed || basemapOverride !== null) return
+      if (disposed) return
       const nextBasemap = runtimeConfig.defaultBasemap
       const styleChanged =
         nextBasemap !== initialBasemap ||
@@ -406,7 +402,7 @@ export function InteractiveMapCanvas({
       instance.remove()
       mapRef.current = null
     }
-  }, [retryToken, basemapOverride])
+  }, [retryToken])
 
   // Fetch real driving route via OSRM whenever both origin and selectedLot are valid
   useEffect(() => {
@@ -542,6 +538,7 @@ export function InteractiveMapCanvas({
           offset: [0, -64],
           closeButton: true,
           closeOnClick: false,
+          focusAfterOpen: false,
         })
           .setLngLat(toLngLatTuple(lot))
           .setDOMContent(createLotPopupElement(lot))
@@ -634,20 +631,15 @@ export function InteractiveMapCanvas({
       })
     : null
 
-  const activeBasemapLabel = getBasemapDisplayName(activeBasemap)
-  const fallbackBasemap: MapBasemapId =
-    activeBasemap === 'google-roadmap' ? 'openfreemap' : 'google-roadmap'
-  const fallbackBasemapLabel = getBasemapDisplayName(fallbackBasemap)
-
   return (
     <section
       aria-label="Bản đồ bãi đỗ Google Maps và OSRM"
       data-map-state={mapState}
       data-map-basemap={activeBasemap}
-      className="parking-map relative w-full lg:h-full isolate"
+      className="parking-map relative w-full overflow-x-hidden lg:h-full isolate"
     >
       {/* Full-bleed MapLibre GL JS Canvas (Google Maps Street Tiles + OSRM Route Overlay) */}
-      <div className="relative w-full h-[440px] sm:h-[520px] lg:h-full">
+      <div className="relative w-full h-[440px] sm:h-[520px] lg:h-full overflow-hidden">
         <div ref={container} className="h-full w-full" />
 
         {mapState === 'error' && (
@@ -663,8 +655,8 @@ export function InteractiveMapCanvas({
               />
               <div className="space-y-2">
                 <p className="text-brand-navy font-medium">
-                  Chưa tải được nền bản đồ {activeBasemapLabel}. Kiểm tra kết
-                  nối mạng hoặc WebGL trên trình duyệt rồi thử lại.
+                  Chưa tải được nền bản đồ Google Maps. Kiểm tra kết nối mạng
+                  hoặc WebGL trên trình duyệt rồi thử lại.
                 </p>
                 <p className="text-xs text-brand-muted">
                   Bạn vẫn có thể xem danh sách bãi đỗ, lọc theo loại xe, đặt giữ
@@ -678,13 +670,6 @@ export function InteractiveMapCanvas({
                   >
                     <RefreshCw size={14} aria-hidden="true" />
                     Thử tải lại bản đồ
-                  </button>
-                  <button
-                    type="button"
-                    className="inline-flex items-center gap-1.5 font-semibold text-slate-700 underline underline-offset-4 cursor-pointer"
-                    onClick={() => setBasemapOverride(fallbackBasemap)}
-                  >
-                    Chuyển sang {fallbackBasemapLabel}
                   </button>
                   {selectedDirectionsUrl && (
                     <a

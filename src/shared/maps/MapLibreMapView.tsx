@@ -8,7 +8,6 @@ import {
   type Coordinates,
 } from './coordinates'
 import {
-  getBasemapDisplayName,
   resolveMapStyle,
   type MapBasemapId,
 } from './basemaps'
@@ -84,9 +83,6 @@ export function MapLibreMapView({
   const [mapState, setMapState] = useState<'loading' | 'ready' | 'error'>(
     'loading',
   )
-  const [basemapOverride, setBasemapOverride] = useState<MapBasemapId | null>(
-    null,
-  )
   const [activeBasemap, setActiveBasemap] = useState<MapBasemapId>(
     () => getMapRuntimeConfig().defaultBasemap,
   )
@@ -110,7 +106,7 @@ export function MapLibreMapView({
     setMapState('loading')
 
     const initialConfig = getMapRuntimeConfig()
-    const initialBasemap = basemapOverride ?? initialConfig.defaultBasemap
+    const initialBasemap = initialConfig.defaultBasemap
     setActiveBasemap(initialBasemap)
     const center = toLngLatTuple({ latitude: lat, longitude: lng })
 
@@ -162,7 +158,7 @@ export function MapLibreMapView({
     })
 
     void loadMapRuntimeConfig().then((runtimeConfig) => {
-      if (disposed || basemapOverride !== null) return
+      if (disposed) return
       const nextBasemap = runtimeConfig.defaultBasemap
       const styleChanged =
         nextBasemap !== initialBasemap ||
@@ -194,7 +190,7 @@ export function MapLibreMapView({
       marker.remove()
       mapInstance.remove()
     }
-  }, [showingEmbed, validCoords, lat, lng, zoom, markerTitle, retryCount, basemapOverride])
+  }, [showingEmbed, validCoords, lat, lng, zoom, markerTitle, retryCount])
 
   if (!validCoords && !validEmbedUrl) {
     return (
@@ -257,11 +253,6 @@ export function MapLibreMapView({
     )
   }
 
-  const activeBasemapLabel = getBasemapDisplayName(activeBasemap)
-  const fallbackBasemap: MapBasemapId =
-    activeBasemap === 'google-roadmap' ? 'openfreemap' : 'google-roadmap'
-  const fallbackBasemapLabel = getBasemapDisplayName(fallbackBasemap)
-
   return (
     <div
       role="region"
@@ -295,7 +286,7 @@ export function MapLibreMapView({
               className="h-4 w-4 shrink-0 text-amber-600"
               aria-hidden="true"
             />
-            <span>Chưa tải được nền bản đồ {activeBasemapLabel}.</span>
+            <span>Chưa tải được nền bản đồ Google Maps.</span>
           </div>
           <div className="flex flex-wrap items-center justify-center gap-2">
             <button
@@ -305,13 +296,6 @@ export function MapLibreMapView({
             >
               <RefreshCw className="h-3.5 w-3.5" aria-hidden="true" />
               Thử tải lại
-            </button>
-            <button
-              type="button"
-              onClick={() => setBasemapOverride(fallbackBasemap)}
-              className="inline-flex items-center gap-1.5 rounded-lg border border-slate-300 bg-white px-2.5 py-1 font-semibold text-slate-700 hover:bg-slate-100 cursor-pointer"
-            >
-              Chuyển sang {fallbackBasemapLabel}
             </button>
             {showExternalLinkOnError && externalUrl && (
               <a

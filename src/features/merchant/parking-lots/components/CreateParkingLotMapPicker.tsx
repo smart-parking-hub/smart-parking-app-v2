@@ -6,7 +6,6 @@ import {
   createAccuracyCircleGeoJson,
   ensureMapLibreWorkerConfigured,
   formatCoordinate,
-  getBasemapDisplayName,
   getMapRuntimeConfig,
   isValidCoordinates,
   loadMapRuntimeConfig,
@@ -46,9 +45,6 @@ export function CreateParkingLotMapPicker({
   const [mapState, setMapState] = useState<'loading' | 'ready' | 'error'>(
     'loading',
   )
-  const [basemapOverride, setBasemapOverride] = useState<MapBasemapId | null>(
-    null,
-  )
   const [activeBasemap, setActiveBasemap] = useState<MapBasemapId>(
     () => getMapRuntimeConfig().defaultBasemap,
   )
@@ -68,7 +64,7 @@ export function CreateParkingLotMapPicker({
     setMapState('loading')
 
     const initialConfig = getMapRuntimeConfig()
-    const initialBasemap = basemapOverride ?? initialConfig.defaultBasemap
+    const initialBasemap = initialConfig.defaultBasemap
     setActiveBasemap(initialBasemap)
 
     let instance: maplibregl.Map
@@ -118,7 +114,7 @@ export function CreateParkingLotMapPicker({
     })
 
     void loadMapRuntimeConfig().then((runtimeConfig) => {
-      if (disposed || basemapOverride !== null) return
+      if (disposed) return
       const nextBasemap = runtimeConfig.defaultBasemap
       const styleChanged =
         nextBasemap !== initialBasemap ||
@@ -146,7 +142,7 @@ export function CreateParkingLotMapPicker({
       instance.remove()
       mapRef.current = null
     }
-  }, [retryToken, basemapOverride])
+  }, [retryToken])
 
   useEffect(() => {
     const instance = mapRef.current
@@ -266,15 +262,10 @@ export function CreateParkingLotMapPicker({
     Math.abs(latitude) <= 90 &&
     Math.abs(longitude) <= 180
 
-  const activeBasemapLabel = getBasemapDisplayName(activeBasemap)
-  const fallbackBasemap: MapBasemapId =
-    activeBasemap === 'google-roadmap' ? 'openfreemap' : 'google-roadmap'
-  const fallbackBasemapLabel = getBasemapDisplayName(fallbackBasemap)
-
   return (
     <div className="space-y-3">
       <p className="text-sm font-semibold">
-        Chọn vị trí bãi đỗ trên bản đồ {activeBasemapLabel}
+        Chọn vị trí bãi đỗ trên bản đồ Google Maps
       </p>
       <div className="parking-map relative h-[360px] w-full overflow-hidden rounded-xl border border-slate-200">
         <div
@@ -297,27 +288,18 @@ export function CreateParkingLotMapPicker({
                 aria-hidden="true"
               />
               <span>
-                Chưa tải được nền bản đồ {activeBasemapLabel}. Bạn vẫn có thể
-                nhập tọa độ hoặc dùng GPS ở trên.
+                Chưa tải được nền bản đồ Google Maps. Bạn vẫn có thể nhập tọa
+                độ hoặc dùng GPS ở trên.
               </span>
             </div>
-            <div className="flex flex-wrap items-center gap-2">
-              <button
-                type="button"
-                onClick={() => setRetryToken((c) => c + 1)}
-                className="inline-flex items-center gap-1 rounded-lg border border-slate-300 bg-white px-2.5 py-1 font-semibold text-slate-800 hover:bg-slate-100 cursor-pointer"
-              >
-                <RefreshCw className="h-3.5 w-3.5" aria-hidden="true" />
-                Thử tải lại bản đồ
-              </button>
-              <button
-                type="button"
-                onClick={() => setBasemapOverride(fallbackBasemap)}
-                className="inline-flex items-center gap-1 rounded-lg border border-slate-300 bg-white px-2.5 py-1 font-semibold text-slate-700 hover:bg-slate-100 cursor-pointer"
-              >
-                Chuyển sang {fallbackBasemapLabel}
-              </button>
-            </div>
+            <button
+              type="button"
+              onClick={() => setRetryToken((c) => c + 1)}
+              className="inline-flex items-center gap-1 rounded-lg border border-slate-300 bg-white px-2.5 py-1 font-semibold text-slate-800 hover:bg-slate-100 cursor-pointer"
+            >
+              <RefreshCw className="h-3.5 w-3.5" aria-hidden="true" />
+              Thử tải lại bản đồ
+            </button>
           </div>
         )}
       </div>

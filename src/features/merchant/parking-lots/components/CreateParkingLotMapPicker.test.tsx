@@ -128,9 +128,6 @@ describe('CreateParkingLotMapPicker (MapLibre GL JS: click + drag + GPS accuracy
     expect(
       screen.getByRole('button', { name: /Thử tải lại bản đồ/i }),
     ).toBeInTheDocument()
-    expect(
-      screen.getByRole('button', { name: /Chuyển sang OpenFreeMap/i }),
-    ).toBeInTheDocument()
     expect(screen.getByText(/10\.7626220, 106\.7865000/)).toBeInTheDocument()
   })
 })

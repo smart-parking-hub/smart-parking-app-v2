@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { act, render, screen, waitFor } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { InteractiveMapCanvas } from './InteractiveMapCanvas'
 import {
@@ -297,7 +297,7 @@ describe('InteractiveMapCanvas (MapLibre GL JS + Google Maps Street + OSRM Routi
     })
   })
 
-  it('shows non-blocking error banner with retry and OpenFreeMap fallback when Google Maps tiles fail', () => {
+  it('shows non-blocking error banner with retry when Google Maps tiles fail', () => {
     renderCanvas(
       <InteractiveMapCanvas
         lots={[sampleLot]}
@@ -317,14 +317,5 @@ describe('InteractiveMapCanvas (MapLibre GL JS + Google Maps Street + OSRM Routi
     expect(
       screen.getByRole('button', { name: /Thử tải lại bản đồ/i }),
     ).toBeInTheDocument()
-
-    fireEvent.click(
-      screen.getByRole('button', { name: /Chuyển sang OpenFreeMap/i }),
-    )
-    expect(
-      screen.getByRole('region', {
-        name: 'Bản đồ bãi đỗ Google Maps và OSRM',
-      }),
-    ).toHaveAttribute('data-map-basemap', 'openfreemap')
   })
 })

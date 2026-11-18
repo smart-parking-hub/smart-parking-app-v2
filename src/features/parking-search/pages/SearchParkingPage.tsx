@@ -197,9 +197,9 @@ export function SearchParkingPage() {
   }
 
   return (
-    <div className="relative w-full bg-brand-surface font-inter">
+    <div className="relative w-full overflow-x-hidden bg-brand-surface font-inter">
       {/* Full-bleed Map Stage (occupies remaining screen height below DriverHeader while preserving DriverFooter below) */}
-      <div className="relative isolate z-0 w-full lg:h-[calc(100dvh-var(--driver-header-height))] lg:min-h-[600px] flex flex-col lg:block lg:overflow-hidden">
+      <div className="relative isolate z-0 w-full overflow-x-hidden lg:h-[calc(100dvh-var(--driver-header-height))] lg:min-h-[600px] flex flex-col lg:block lg:overflow-hidden">
         {/* Background Full-Bleed Map Canvas */}
         <div className="order-2 lg:order-none lg:absolute lg:inset-0 z-0 mt-2 lg:mt-0">
           <InteractiveMapCanvas

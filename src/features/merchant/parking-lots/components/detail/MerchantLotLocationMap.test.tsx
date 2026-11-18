@@ -90,9 +90,6 @@ describe('MerchantLotLocationMap (MapLibre GL JS + OpenFreeMap viewer)', () => {
 
     expect(screen.getByRole('alert')).toHaveTextContent(/Google Maps/i)
     expect(
-      screen.getByRole('button', { name: /Chuyển sang OpenFreeMap/i }),
-    ).toBeInTheDocument()
-    expect(
       screen.getByRole('link', { name: /Mở trên Google Maps/i }),
     ).toHaveAttribute(
       'href',
