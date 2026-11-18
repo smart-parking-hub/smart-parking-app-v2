@@ -56,18 +56,18 @@ export function MerchantChannelBreakdownCards({
     },
     ...(hasUnclassified
       ? [
-          {
-            key: 'unclassified',
-            label: 'Chưa phân loại (trước phí)',
-            amount: unclassifiedAmount,
-            count: unclassifiedCount,
-            countUnit: 'giao dịch',
-            share: unclassifiedPct,
-            icon: HelpCircle,
-            iconBg: 'bg-amber-50 text-amber-700 border-amber-200',
-            valueColor: 'text-amber-900',
-          },
-        ]
+        {
+          key: 'unclassified',
+          label: 'Chưa phân loại (trước phí)',
+          amount: unclassifiedAmount,
+          count: unclassifiedCount,
+          countUnit: 'giao dịch',
+          share: unclassifiedPct,
+          icon: HelpCircle,
+          iconBg: 'bg-amber-50 text-amber-700 border-amber-200',
+          valueColor: 'text-amber-900',
+        },
+      ]
       : []),
   ] as const
 
@@ -139,9 +139,8 @@ export function MerchantChannelBreakdownCards({
 
       <div
         data-testid="merchant-channel-breakdown-cards"
-        className={`grid grid-cols-1 gap-3.5 ${
-          hasUnclassified ? 'md:grid-cols-3' : 'md:grid-cols-2'
-        }`}
+        className={`grid grid-cols-1 gap-3.5 ${hasUnclassified ? 'md:grid-cols-3' : 'md:grid-cols-2'
+          }`}
       >
         {channels.map((ch) => {
           const Icon = ch.icon
