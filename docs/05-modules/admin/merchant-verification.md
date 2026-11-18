@@ -47,7 +47,7 @@ Cung cấp không gian làm việc cho Quản trị viên (Admin) xét duyệt h
 | :--- | :--- | :--- |
 | Danh sách hồ sơ | `GET /api/v1/admin/merchant-verifications` | Query: `page`, `size`, `status?` |
 | Chi tiết hồ sơ | `GET /api/v1/admin/merchant-verifications/{id}` | N/A (Bearer JWT) |
-| Tra cứu MST | `POST /api/v1/admin/merchant-verifications/{id}/submissions/{ver}/tax-lookup` | `{ confirmedBusinessTaxCode: true }` hoặc `{ confirmedHouseholdTaxCode: true }` |
+| Tra cứu MST | `POST /api/v1/admin/merchant-verifications/{id}/submissions/{ver}/tax-lookup` | `{ confirmedBusinessTaxCode: true }` |
 | Duyệt hồ sơ | `POST /api/v1/admin/merchant-verifications/{id}/approve` | `{ submissionVersion, documentsReviewed: true, note? }` |
 | Yêu cầu bổ sung | `POST /api/v1/admin/merchant-verifications/{id}/request-changes` | `{ submissionVersion, items: [{ key, reason }] }` |
 | Tải/xem tệp phiên bản | `GET /api/v1/admin/merchant-verifications/{id}/submissions/{ver}/documents/{docId}/content` | Raw bytes kèm header bảo mật |
@@ -59,7 +59,7 @@ Xác nhận duyệt và yêu cầu bổ sung gắn với phiên bản lúc mở 
 
 ## Tra cứu mã số thuế
 
-Trong hồ sơ đang chờ duyệt, **Tra cứu mã số thuế** có ngay từ bản nộp đầu, kể cả khi OCR đang xử lý. Admin xác nhận giá trị đã khai là MST ghi trên giấy tờ. Casso hỗ trợ doanh nghiệp 10 số, chi nhánh dạng 10 số-3 số và hộ kinh doanh 12 số. Với giá trị khác, Admin kiểm tra trên giấy tờ.
+Trong hồ sơ đang chờ duyệt, **Tra cứu mã số thuế** có ngay từ bản nộp đầu, kể cả khi OCR đang xử lý. Admin xác nhận mã ghi trên giấy tờ là MST doanh nghiệp 10 số hoặc chi nhánh dạng 10 số-3 số trước khi tra Casso. Với mã 12 số và các định dạng khác, màn hình hướng dẫn đối chiếu trực tiếp trên giấy tờ. Admin tiếp tục dùng thao tác duyệt hoặc yêu cầu bổ sung theo trạng thái hồ sơ.
 
 Kết quả hiện cạnh thông tin khai và OCR, gồm tên đăng ký, trạng thái hoạt động, nguồn và thời điểm tra cứu. Khi kết quả **Không tìm thấy MST** hoặc tên đăng ký khác tên đã khai, Admin xem giấy tờ và có thể yêu cầu bổ sung. Khi **Chưa tra cứu được**, Admin có thể thử lại theo thời điểm hiển thị hoặc kiểm tra thủ công. Kết quả chỉ hiện cho bản nộp đang xem. Các bước kiểm tra giấy tờ, quyền đại diện và quyết định hồ sơ do Admin thực hiện.
 

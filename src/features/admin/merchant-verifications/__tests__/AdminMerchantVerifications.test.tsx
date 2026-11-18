@@ -191,18 +191,24 @@ describe('Admin Merchant Verifications Feature (AC2, AC3, AC4, AC5)', () => {
     expect(await screen.findByText(/Không tìm thấy MST/)).toBeVisible()
   })
 
-  it('looks up a household in its first review while OCR is pending', async () => {
+  it('offers manual review for a 12-digit registration while OCR is pending', async () => {
     const taxCode = '012345678901'
-    const trialLookup = { ...foundTaxLookup, business: { ...foundTaxLookup.business, taxCode, trial: true } }
-    const post = vi.spyOn(apiClient, 'post').mockResolvedValue({ data: { data: trialLookup } })
+    const post = vi.spyOn(apiClient, 'post')
     renderDetail({ ...mockDetail, businessRegistrationNumber: taxCode, assessment: { ...mockDetail.assessment, status: 'PENDING' } })
 
-    const user = userEvent.setup()
-    await user.click(await screen.findByRole('button', { name: 'Tra cứu mã số thuế' }))
-    expect(screen.getByText(/là MST hộ kinh doanh trên giấy tờ/)).toBeVisible()
-    await user.click(screen.getByRole('button', { name: 'Xác nhận và tra cứu' }))
+    expect(await screen.findByText('Đối chiếu mã 12 số trực tiếp trên giấy tờ.')).toBeVisible()
+    expect(screen.getByText(taxCode)).toBeVisible()
+    expect(screen.queryByRole('button', { name: 'Tra cứu mã số thuế' })).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Duyệt hồ sơ' })).toBeDisabled()
+    expect(post).not.toHaveBeenCalled()
+  })
 
-    expect(post).toHaveBeenCalledWith(taxLookupPath, { confirmedHouseholdTaxCode: true }, { signal: expect.any(AbortSignal) })
+  it('labels trial results without suggesting a name mismatch', async () => {
+    const trialLookup = { ...foundTaxLookup, business: { ...foundTaxLookup.business, trial: true } }
+    vi.spyOn(apiClient, 'post').mockResolvedValue({ data: { data: trialLookup } })
+    renderDetail()
+    await confirmTaxLookup()
+
     expect(await screen.findByText(/Dữ liệu Casso dùng thử/)).toBeVisible()
     expect(screen.queryByText(/Tên đăng ký khác tên đã khai/)).not.toBeInTheDocument()
   })

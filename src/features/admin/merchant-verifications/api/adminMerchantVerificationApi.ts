@@ -61,12 +61,11 @@ export async function approveMerchantVerificationApi(
 export async function lookupMerchantTaxCode(
   dossierId: number,
   submissionVersion: number,
-  household: boolean,
   signal: AbortSignal,
 ) {
   const response = await apiClient.post<{ data: AdminTaxLookupResult }>(
     `${BASE_URL}/${dossierId}/submissions/${submissionVersion}/tax-lookup`,
-    household ? { confirmedHouseholdTaxCode: true } : { confirmedBusinessTaxCode: true },
+    { confirmedBusinessTaxCode: true },
     { signal },
   )
   return response.data.data

@@ -6,7 +6,7 @@ import { lookupMerchantTaxCode } from '../api/adminMerchantVerificationApi'
 import type { AdminMerchantVerificationDetail } from '../types/adminMerchantVerificationTypes'
 
 const businessTaxCode = /^[0-9]{10}(?:-[0-9]{3})?$/
-const householdTaxCode = /^[0-9]{12}$/
+const twelveDigitRegistrationNumber = /^[0-9]{12}$/
 
 function normalizeName(name: string) {
   return name.normalize('NFC').trim().replace(/\s+/g, ' ').toLocaleLowerCase('vi-VN')
@@ -22,12 +22,11 @@ export function BusinessTaxLookup({ dossier, disabled, onConflict }: {
   const request = useRef<AbortController | null>(null)
   const { id, submissionVersion, legalName } = dossier
   const code = dossier.businessRegistrationNumber?.trim() ?? ''
-  const household = householdTaxCode.test(code)
 
   const lookup = useMutation({
     mutationFn: async (controller: AbortController) => {
       try {
-        return await lookupMerchantTaxCode(id, submissionVersion, household, controller.signal)
+        return await lookupMerchantTaxCode(id, submissionVersion, controller.signal)
       } finally {
         if (request.current === controller) request.current = null
       }
@@ -59,8 +58,11 @@ export function BusinessTaxLookup({ dossier, disabled, onConflict }: {
     return () => window.clearTimeout(timer)
   }, [waiting, retryAt, retryTimestamp])
 
-  if (!household && !businessTaxCode.test(code)) {
-    return <p className="text-xs text-slate-600">Đối chiếu mã này trực tiếp trên giấy tờ.</p>
+  if (!businessTaxCode.test(code)) {
+    const instruction = twelveDigitRegistrationNumber.test(code)
+      ? 'Đối chiếu mã 12 số trực tiếp trên giấy tờ.'
+      : 'Đối chiếu mã này trực tiếp trên giấy tờ.'
+    return <p className="text-xs text-slate-600">{instruction}</p>
   }
 
   const submit = () => {
@@ -88,7 +90,7 @@ export function BusinessTaxLookup({ dossier, disabled, onConflict }: {
       {confirming ? (
         <div className="space-y-2">
           <p>
-            Xác nhận <strong>{code}</strong> là {household ? 'MST hộ kinh doanh' : 'MST doanh nghiệp hoặc chi nhánh'} trên giấy tờ.
+            Xác nhận <strong>{code}</strong> là MST doanh nghiệp hoặc chi nhánh trên giấy tờ.
           </p>
           <div className="flex flex-wrap gap-2">
             <Button size="sm" onClick={submit} disabled={disabled}>Xác nhận và tra cứu</Button>

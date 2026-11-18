@@ -234,7 +234,7 @@ test.describe('SP-MERCHANT-KYC-01-FE End-to-End Verification Flow', () => {
     expect(errors).toHaveLength(0)
   })
 
-  test('AC2 & AC4: Admin looks up a household tax code in v1 and approves with a review note', async ({
+  test('AC2 & AC4: Admin manually reviews a 12-digit registration and approves with a note', async ({
     page,
   }) => {
     const token = createToken('ROLE_ADMIN', 1)
@@ -325,16 +325,10 @@ test.describe('SP-MERCHANT-KYC-01-FE End-to-End Verification Flow', () => {
       route.fulfill({ json: { data: detailDossier } }),
     )
 
+    let taxLookupRequests = 0
     await page.route('**/api/v1/admin/merchant-verifications/101/submissions/1/tax-lookup', (route) => {
-      expect(route.request().method()).toBe('POST')
-      expect(route.request().postDataJSON()).toEqual({ confirmedHouseholdTaxCode: true })
-      return route.fulfill({ json: { data: {
-        dossierId: 101, submissionVersion: 1, checkedAt: '2026-11-18T10:06:00Z', retryAt: null,
-        outcome: 'FOUND', business: {
-          taxCode: householdTaxCode, name: 'HỘ KINH DOANH MẪU', status: 'NNT đang hoạt động',
-          source: 'https://www.gdt.gov.vn', trial: true,
-        },
-      } } })
+      taxLookupRequests += 1
+      return route.abort()
     })
 
     await page.route('**/api/v1/admin/merchant-verifications/101/approve', (route) => {
@@ -364,13 +358,8 @@ test.describe('SP-MERCHANT-KYC-01-FE End-to-End Verification Flow', () => {
     await expect(page.getByText(/Hồ sơ #101 · CÔNG TY TNHH VẬN TẢI SMART/i)).toBeVisible()
     await expect(page.getByText('Cần kiểm tra (WARN)')).toBeVisible()
 
-    await page.getByRole('button', { name: 'Tra cứu mã số thuế' }).click()
-    await expect(page.getByText(/là MST hộ kinh doanh trên giấy tờ/)).toBeVisible()
-    await page.getByRole('button', { name: 'Xác nhận và tra cứu' }).click()
-    const lookup = page.getByRole('region', { name: 'Tra cứu mã số thuế' })
-    await expect(lookup.getByText(/Dữ liệu Casso dùng thử/)).toBeVisible()
-    await expect(lookup.getByText('NNT đang hoạt động')).toBeVisible()
-    await expect(lookup.getByText('https://www.gdt.gov.vn')).toBeVisible()
+    await expect(page.getByText('Đối chiếu mã 12 số trực tiếp trên giấy tờ.')).toBeVisible()
+    await expect(page.getByRole('button', { name: 'Tra cứu mã số thuế' })).toHaveCount(0)
 
     // Click "Duyệt hồ sơ"
     await page.getByRole('button', { name: /Duyệt hồ sơ/i }).click()
@@ -387,6 +376,7 @@ test.describe('SP-MERCHANT-KYC-01-FE End-to-End Verification Flow', () => {
     await expect(
       page.getByText('Đã phê duyệt hồ sơ doanh nghiệp chủ bãi thành công!'),
     ).toBeVisible()
+    expect(taxLookupRequests).toBe(0)
   })
 
   test('Admin opens the selected PNG and confirms a legal-name correction', async ({ page }) => {
