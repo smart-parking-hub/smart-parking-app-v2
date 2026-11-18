@@ -1,4 +1,4 @@
-import type { LotRevenueBreakdown } from '@/entities/operations'
+import type { LotRevenueBreakdown, RevenueSeriesPoint } from '@/entities/operations'
 
 export interface ScopedRevenueInput {
   totalGrossRevenue?: number | null
@@ -7,6 +7,8 @@ export interface ScopedRevenueInput {
   periodTotalGrossRevenue?: number | null
   periodTotalPlatformFee?: number | null
   periodTotalNetRevenue?: number | null
+  pendingSettlementGrossRevenue?: number | null
+  periodPendingSettlementGrossRevenue?: number | null
   onlineTransferGrossRevenue?: number | null
   onlineTransferNetRevenue?: number | null
   onlineTransferCount?: number | null
@@ -41,7 +43,8 @@ export interface ScopedRevenueMetrics {
   unclassifiedCount: number
   cash: number
   cashBookings: number
-  /** Unified gross revenue before platform fee: transferGross + unclassifiedGross + cash */
+  pendingGross: number
+  /** Collected gross, including pending settlement, plus cash receipts. */
   totalGrossCombined: number
 }
 
@@ -66,6 +69,9 @@ export function resolveScopedRevenueMetrics(
   const cashBookings = usePeriodValues
     ? num(data.periodCashBookings)
     : num(data.totalCashBookings)
+  const pendingGross = usePeriodValues
+    ? num(data.periodPendingSettlementGrossRevenue)
+    : num(data.pendingSettlementGrossRevenue)
 
   // PR #103 F-01: Isolate identified transfer channels from legacy unclassified transactions
   const transferCount = usePeriodValues
@@ -147,7 +153,7 @@ export function resolveScopedRevenueMetrics(
   if (hasIdentifiedChannelGross) {
     transferGross = identifiedChannelGross
   } else if (hasExplicitTotalGross) {
-    transferGross = Math.max(0, totalGrossField - unclassifiedGross)
+    transferGross = totalGrossField - unclassifiedGross - pendingGross
   } else if (hasExplicitFee && transferNet !== 0) {
     transferGross = transferNet + explicitFeeField
   } else {
@@ -168,7 +174,10 @@ export function resolveScopedRevenueMetrics(
     unclassifiedCount,
     cash,
     cashBookings,
-    totalGrossCombined: transferGross + unclassifiedGross + cash,
+    pendingGross,
+    totalGrossCombined: (hasExplicitTotalGross
+      ? totalGrossField
+      : transferGross + unclassifiedGross + pendingGross) + cash,
   }
 }
 
@@ -182,37 +191,38 @@ export function resolveLotTransferGross(
       hasAnyDefined(
         stats.periodOnlineTransferGrossRevenue,
         stats.periodCounterQrGrossRevenue,
-        stats.periodUnclassifiedTransferGrossRevenue,
       )
     ) {
       return (
         num(stats.periodOnlineTransferGrossRevenue) +
-        num(stats.periodCounterQrGrossRevenue) +
-        num(stats.periodUnclassifiedTransferGrossRevenue)
+        num(stats.periodCounterQrGrossRevenue)
       )
     }
     return (
       num(stats.periodOnlineTransferRevenue) +
-      num(stats.periodCounterQrRevenue) +
-      num(stats.periodUnclassifiedTransferRevenue)
+      num(stats.periodCounterQrRevenue)
     )
   }
   if (
     hasAnyDefined(
       stats.onlineTransferGrossRevenue,
       stats.counterQrGrossRevenue,
-      stats.unclassifiedTransferGrossRevenue,
     )
   ) {
     return (
       num(stats.onlineTransferGrossRevenue) +
-      num(stats.counterQrGrossRevenue) +
-      num(stats.unclassifiedTransferGrossRevenue)
+      num(stats.counterQrGrossRevenue)
     )
   }
   return (
     num(stats.onlineTransferRevenue) +
-    num(stats.counterQrRevenue) +
-    num(stats.unclassifiedTransferRevenue)
+    num(stats.counterQrRevenue)
   )
+}
+
+export function resolveSeriesRevenueChannels(point: RevenueSeriesPoint) {
+  const transfer = num(point.onlineTransferRevenue) + num(point.counterQrRevenue)
+  // Older payloads with only a total do not establish a payment channel.
+  const unclassified = point.unclassifiedTransferRevenue ?? (point.revenue - transfer)
+  return { transfer, unclassified, cash: num(point.cashRevenue) }
 }

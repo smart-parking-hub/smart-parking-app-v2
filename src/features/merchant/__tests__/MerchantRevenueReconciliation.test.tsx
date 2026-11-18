@@ -14,6 +14,9 @@ import { MerchantBookingsPage } from '../bookings/pages/MerchantBookingsPage'
 import { getMerchantBookingsStoreSnapshot } from '../bookings/store/merchantBookingsStore'
 import { MerchantRevenueByLotTable } from '../components/MerchantRevenueByLotTable'
 import { MerchantChannelBreakdownCards } from '../components/MerchantChannelBreakdownCards'
+import { MerchantRevenueChart } from '../components/MerchantRevenueChart'
+import { RevenueVolumeComboChart } from '../dashboard/components/RevenueVolumeComboChart'
+import { groupRevenueSeries } from '../operations/merchantFinanceApi'
 import {
   resolveLotTransferGross,
   resolveScopedRevenueMetrics,
@@ -35,6 +38,96 @@ describe('PR #103 Review Regression Suite (F-02, F-03, F-04)', () => {
   afterEach(() => {
     cleanup()
     vi.restoreAllMocks()
+  })
+
+  it.each([false, true])('includes pending receipts in the total without classifying them as settled transfers (period=%s)', (usePeriod) => {
+    const metrics = resolveScopedRevenueMetrics({
+      totalGrossRevenue: 120000,
+      periodTotalGrossRevenue: 50000,
+      onlineTransferGrossRevenue: 0,
+      periodOnlineTransferGrossRevenue: 0,
+      counterQrGrossRevenue: 0,
+      periodCounterQrGrossRevenue: 0,
+      totalCashRevenue: 20000,
+      periodCashRevenue: 10000,
+      pendingSettlementGrossRevenue: 120000,
+      periodPendingSettlementGrossRevenue: 50000,
+    }, usePeriod)
+    expect(metrics.totalGrossCombined).toBe(usePeriod ? 60000 : 140000)
+    expect(metrics.transferGross).toBe(0)
+    expect(metrics.pendingGross).toBe(usePeriod ? 50000 : 120000)
+  })
+
+  it('reconciles pending, UNKNOWN and cash on both pages and the per-lot table', async () => {
+    const payload = {
+      totalGrossRevenue: 150000, totalNetRevenue: 27000, totalPlatformFee: 3000,
+      currentWalletBalance: 27000, completedBookings: 2,
+      onlineTransferGrossRevenue: 0, onlineTransferNetRevenue: 0,
+      counterQrGrossRevenue: 0, counterQrNetRevenue: 0,
+      unclassifiedTransferGrossRevenue: 30000, unclassifiedTransferNetRevenue: 27000,
+      unclassifiedTransferCount: 1, pendingSettlementGrossRevenue: 120000,
+      totalCashRevenue: 20000, totalCashBookings: 1,
+      revenueByParkingLot: [{
+        parkingLotId: 10, onlineTransferGrossRevenue: 0, onlineTransferRevenue: 0,
+        counterQrGrossRevenue: 0, counterQrRevenue: 0,
+        unclassifiedTransferGrossRevenue: 30000, unclassifiedTransferRevenue: 27000,
+        pendingSettlementGrossRevenue: 120000, cashRevenue: 20000, cashBookingCount: 1,
+      }],
+      series: [],
+    }
+    vi.spyOn(apiClient, 'get').mockImplementation((async (url: string) => {
+      if (url === '/api/v1/merchant/revenue') return { data: { data: payload } }
+      if (url === '/api/v1/merchant/parking-lots') return { data: { data: {
+        content: [{ id: 10, name: 'Lot A', status: 'APPROVED' }], totalElements: 1,
+      } } }
+      return { data: { data: { content: [], totalElements: 0, totalPages: 0, currentPage: 0 } } }
+    }) as never)
+    const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+    const view = render(<QueryClientProvider client={client}><MemoryRouter>
+      <MerchantDashboardPage />
+    </MemoryRouter></QueryClientProvider>)
+    expect(await screen.findByTestId('merchant-kpi-total-value')).toHaveTextContent(/170\.000/)
+    const row = screen.getByTestId('lot-revenue-row-10')
+    const cells = within(row).getAllByRole('cell')
+    expect(cells[1]).toHaveTextContent(/^0\s*₫/)
+    expect(cells[3]).toHaveTextContent(/30\.000/)
+    expect(cells[4]).toHaveTextContent(/170\.000/)
+    expect(cells[4]).toHaveTextContent(/Chờ quyết toán: 120\.000/)
+    view.unmount()
+    render(<QueryClientProvider client={client}><MemoryRouter>
+      <MerchantRevenuePage />
+    </MemoryRouter></QueryClientProvider>)
+    expect(await screen.findByTestId('revenue-kpi-total-value')).toHaveTextContent(/170\.000/)
+    fireEvent.click(screen.getByRole('button', { name: /Lot A/ }))
+    expect(await screen.findByTestId('channel-card-transfer')).toHaveTextContent(/^Chuyển khoản \(trước phí\)0%0\s*₫/)
+    expect(screen.getByTestId('channel-card-unclassified')).toHaveTextContent(/30\.000/)
+    expect(screen.getByText(/Đã tính vào tổng doanh thu trước phí/)).toHaveTextContent(/120\.000/)
+  })
+
+  it('preserves UNKNOWN amounts and counts when grouping daily points', () => {
+    const [point] = groupRevenueSeries([{
+      period: '2026-11-18', revenue: 90000, bookingCount: 1,
+      onlineTransferRevenue: 0, counterQrRevenue: 0,
+      unclassifiedTransferRevenue: 90000, unclassifiedTransferCount: 1,
+    }], 'MONTH')
+    expect(point.unclassifiedTransferRevenue).toBe(90000)
+    expect(point.unclassifiedTransferCount).toBe(1)
+    expect(point.onlineTransferRevenue).toBe(0)
+  })
+
+  it('keeps UNKNOWN revenue separate in both charts', () => {
+    const points = [{
+      period: '2026-11-18', revenue: 90000, bookingCount: 1,
+      onlineTransferRevenue: 0, counterQrRevenue: 0,
+      unclassifiedTransferRevenue: 90000, cashRevenue: 0,
+    }]
+    const view = render(<MerchantRevenueChart points={points} />)
+    expect(screen.getByTitle(/Chuyển khoản:/)).toHaveAttribute('style', 'height: 0px;')
+    expect(screen.getByTitle(/Chưa phân loại:/)).toHaveAttribute('style', 'height: 168px;')
+    view.unmount()
+    render(<RevenueVolumeComboChart data={points} />)
+    expect(screen.queryByTestId('bar-transfer-2026-11-18')).not.toBeInTheDocument()
+    expect(screen.getByTestId('bar-unclassified-2026-11-18')).toHaveAttribute('height', '185')
   })
 
   it('F-02: displays identical Tổng Doanh thu and Chuyển khoản (trước phí) on Dashboard and Revenue Page for the exact same payload', async () => {

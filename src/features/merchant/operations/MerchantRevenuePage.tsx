@@ -218,8 +218,11 @@ export function MerchantRevenuePage() {
         {(data) => {
           const points = groupRevenueSeries(data.series ?? [], range.granularity)
           const periodTransferChartRevenue = points.reduce(
-            (sum, point) => sum + point.revenue,
+            (sum, point) => sum + (point.onlineTransferRevenue ?? 0) + (point.counterQrRevenue ?? 0),
             0,
+          )
+          const periodUnclassifiedChartRevenue = points.reduce(
+            (sum, point) => sum + (point.unclassifiedTransferRevenue ?? 0), 0,
           )
           const periodCashChartRevenue = points.reduce(
             (sum, point) => sum + (point.cashRevenue ?? 0),
@@ -258,6 +261,9 @@ export function MerchantRevenuePage() {
                   >
                     {money(scopedCombinedRevenue)}
                   </p>
+                  {metrics.pendingGross > 0 && <p className="mt-1 text-xs text-brand-muted">
+                    Chờ quyết toán: {money(metrics.pendingGross)}
+                  </p>}
                 </Panel>
 
                 <Panel>
@@ -335,6 +341,7 @@ export function MerchantRevenuePage() {
                     cashBookingCount={scopedCashBookings}
                     unclassifiedAmount={metrics.unclassifiedGross}
                     unclassifiedCount={metrics.unclassifiedCount}
+                    pendingAmount={metrics.pendingGross}
                     scopeLabel={scopeLabel}
                     periodLabel={periodLabel}
                   />
@@ -350,11 +357,16 @@ export function MerchantRevenuePage() {
                           Tiền mặt trong kỳ:{' '}
                           <strong>{money(periodCashChartRevenue)}</strong>
                         </p>
+                        {periodUnclassifiedChartRevenue !== 0 && <p>
+                          Chưa phân loại (sau phí) trong kỳ:{' '}
+                          <strong>{money(periodUnclassifiedChartRevenue)}</strong>
+                        </p>}
                         <p>
                           Tổng thực thu trong kỳ:{' '}
                           <strong>
                             {money(
                               periodTransferChartRevenue +
+                                periodUnclassifiedChartRevenue +
                                 periodCashChartRevenue,
                             )}
                           </strong>

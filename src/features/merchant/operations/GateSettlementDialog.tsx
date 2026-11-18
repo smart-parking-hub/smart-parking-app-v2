@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import type { Booking, Settlement } from '@/entities/operations'
 import { getData, sendData, errorMessage } from '@/shared/api/resources'
@@ -45,7 +45,7 @@ export function GateSettlementDialog({ settlement, parkingLotId, onClose, onComp
     retry: false,
   })
 
-  const invalidate = () => {
+  const invalidate = useCallback(() => {
     for (const queryKey of [
       ['merchant-bookings'],
       ['merchant-booking'],
@@ -56,14 +56,14 @@ export function GateSettlementDialog({ settlement, parkingLotId, onClose, onComp
       ['merchant-revenue-stats'],
     ])
       void cache.invalidateQueries({ queryKey })
-  }
+  }, [cache])
 
   useEffect(() => {
     if (status.data?.status === 'COMPLETED') {
       invalidate()
       onComplete({ ...settlement, amountDue: 0, bookingStatus: 'COMPLETED', finalPaymentMethod: status.data.finalPaymentMethod ?? undefined })
     }
-  }, [status.data, settlement, onComplete])
+  }, [status.data, settlement, onComplete, invalidate])
 
   const payosAccepted = (status.data?.finalPaymentMethod ?? settlement.finalPaymentMethod) === 'PAYOS'
 

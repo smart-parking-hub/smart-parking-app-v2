@@ -64,11 +64,13 @@ describe('merchant revenue and wallet ledger', () => {
       {
         period: '2025-12', revenue: 90000, bookingCount: 1,
         onlineTransferRevenue: 90000, counterQrRevenue: 0, cashRevenue: 50000,
+        unclassifiedTransferRevenue: 0, unclassifiedTransferCount: 0,
         onlineTransferCount: 0, counterQrCount: 0, cashBookingCount: 0,
       },
       {
         period: '2026-01', revenue: 180000, bookingCount: 2,
         onlineTransferRevenue: 120000, counterQrRevenue: 60000, cashRevenue: 100000,
+        unclassifiedTransferRevenue: 0, unclassifiedTransferCount: 0,
         onlineTransferCount: 0, counterQrCount: 0, cashBookingCount: 0,
       },
     ])

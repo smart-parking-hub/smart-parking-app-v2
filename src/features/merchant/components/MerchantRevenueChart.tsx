@@ -1,24 +1,26 @@
 import { money } from '@/shared/components/Workspace'
 import type { RevenuePoint } from '../operations/merchantFinanceApi'
+import { resolveSeriesRevenueChannels } from './merchantRevenueMetrics'
 
 export function MerchantRevenueChart({ points }: { points: RevenuePoint[] }) {
   const normalized = points.map((point) => {
-    const transfer = point.revenue ?? 0
-    const cash = point.cashRevenue ?? 0
+    const { transfer, unclassified, cash } = resolveSeriesRevenueChannels(point)
     return {
       ...point,
       transfer,
       cash,
-      combined: transfer + cash,
+      unclassified,
+      combined: transfer + unclassified + cash,
     }
   })
 
   const maxBar = Math.max(
     1,
     ...normalized.map((point) =>
-      Math.max(Math.abs(point.transfer), Math.abs(point.cash)),
+      Math.max(Math.abs(point.transfer), Math.abs(point.cash), Math.abs(point.unclassified)),
     ),
   )
+  const hasUnclassified = normalized.some((point) => point.unclassified !== 0)
 
   if (
     !normalized.length ||
@@ -34,7 +36,7 @@ export function MerchantRevenueChart({ points }: { points: RevenuePoint[] }) {
   return (
     <figure aria-label="Biểu đồ doanh thu theo kỳ">
       <figcaption className="mb-4 flex flex-wrap items-center justify-between gap-2 text-sm text-brand-muted">
-        <span>So sánh 2 cột đứng cạnh nhau: Chuyển khoản (sau phí) và Tiền mặt.</span>
+        <span>So sánh doanh thu theo kênh; khoản chưa phân loại được hiển thị riêng.</span>
         <span className="flex flex-wrap items-center gap-3 text-xs font-medium text-slate-600">
           <span className="inline-flex items-center gap-1.5">
             <span className="h-2.5 w-2.5 rounded-xs bg-[#0d1c2e]" />
@@ -44,6 +46,10 @@ export function MerchantRevenueChart({ points }: { points: RevenuePoint[] }) {
             <span className="h-2.5 w-2.5 rounded-xs bg-[#d95f00]" />
             Tiền mặt
           </span>
+          {hasUnclassified && <span className="inline-flex items-center gap-1.5">
+            <span className="h-2.5 w-2.5 rounded-xs bg-amber-500" />
+            Chưa phân loại (sau phí)
+          </span>}
         </span>
       </figcaption>
 
@@ -61,6 +67,9 @@ export function MerchantRevenueChart({ points }: { points: RevenuePoint[] }) {
             point.cash > 0
               ? Math.max(6, (Math.abs(point.cash) / maxBar) * 168)
               : 0
+          const unclassifiedPx = point.unclassified !== 0
+            ? Math.max(6, (Math.abs(point.unclassified) / maxBar) * 168)
+            : 0
 
           return (
             <div
@@ -71,7 +80,7 @@ export function MerchantRevenueChart({ points }: { points: RevenuePoint[] }) {
                 {money(point.combined)}
               </span>
 
-              {/* 2 grouped bars side by side */}
+              {/* Each known or unclassified channel keeps its own bar. */}
               <div className="flex h-[176px] items-end justify-center gap-1.5">
                 <div
                   aria-hidden="true"
@@ -85,6 +94,12 @@ export function MerchantRevenueChart({ points }: { points: RevenuePoint[] }) {
                   className="w-5 rounded-t-md bg-[#d95f00]"
                   style={{ height: `${cashPx}px` }}
                 />
+                {hasUnclassified && <div
+                  aria-hidden="true"
+                  title={`Chưa phân loại: ${money(point.unclassified)}`}
+                  className="w-5 rounded-t-md bg-amber-500"
+                  style={{ height: `${unclassifiedPx}px` }}
+                />}
               </div>
 
               <span className="text-xs font-medium text-brand-muted">
@@ -118,6 +133,7 @@ export function MerchantRevenueChart({ points }: { points: RevenuePoint[] }) {
                 <th scope="col" className="p-2 text-right">
                   Tiền mặt
                 </th>
+                {hasUnclassified && <th scope="col" className="p-2 text-right">Chưa phân loại (sau phí)</th>}
                 <th scope="col" className="p-2 text-right">
                   Tổng thực thu
                 </th>
@@ -136,6 +152,7 @@ export function MerchantRevenueChart({ points }: { points: RevenuePoint[] }) {
                   <td className="p-2 text-right font-semibold text-[#d95f00]">
                     {money(point.cash)}
                   </td>
+                  {hasUnclassified && <td className="p-2 text-right">{money(point.unclassified)}</td>}
                   <td className="p-2 text-right font-semibold">
                     {money(point.combined)}
                   </td>

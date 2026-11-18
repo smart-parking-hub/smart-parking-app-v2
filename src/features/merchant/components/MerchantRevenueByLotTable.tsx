@@ -42,27 +42,31 @@ export function MerchantRevenueByLotTable({
     if (usePeriodValues) {
       return (
         (stats.periodOnlineTransferRevenue ?? 0) +
-        (stats.periodCounterQrRevenue ?? 0) +
-        (stats.periodUnclassifiedTransferRevenue ?? 0)
+        (stats.periodCounterQrRevenue ?? 0)
       )
     }
     return (
       (stats.onlineTransferRevenue ?? 0) +
-      (stats.counterQrRevenue ?? 0) +
-      (stats.unclassifiedTransferRevenue ?? 0)
+      (stats.counterQrRevenue ?? 0)
     )
+  }
+
+  const resolveExtra = (stats?: LotRevenueBreakdown) => {
+    const net = usePeriodValues ? stats?.periodUnclassifiedTransferRevenue : stats?.unclassifiedTransferRevenue
+    const gross = usePeriodValues ? stats?.periodUnclassifiedTransferGrossRevenue : stats?.unclassifiedTransferGrossRevenue
+    const pending = usePeriodValues ? stats?.periodPendingSettlementGrossRevenue : stats?.pendingSettlementGrossRevenue
+    return {
+      unclassified: (useGrossTransfer ? gross ?? net : net) ?? 0,
+      pending: useGrossTransfer ? pending ?? 0 : 0,
+    }
   }
 
   const rows = lots.map((lot) => {
     const stats = breakdownByLotId.get(lot.id)
     const transfer = resolveTransfer(stats)
     const transferCount = usePeriodValues
-      ? (stats?.periodOnlineTransferCount ?? 0) +
-        (stats?.periodCounterQrCount ?? 0) +
-        (stats?.periodUnclassifiedTransferCount ?? 0)
-      : (stats?.onlineTransferCount ?? 0) +
-        (stats?.counterQrCount ?? 0) +
-        (stats?.unclassifiedTransferCount ?? 0)
+      ? (stats?.periodOnlineTransferCount ?? 0) + (stats?.periodCounterQrCount ?? 0)
+      : (stats?.onlineTransferCount ?? 0) + (stats?.counterQrCount ?? 0)
     const cash = usePeriodValues
       ? (stats?.periodCashRevenue ?? 0)
       : (stats?.cashRevenue ?? 0)
@@ -71,7 +75,8 @@ export function MerchantRevenueByLotTable({
       : (stats?.cashBookingCount ?? 0)
 
     const cumulativeCash = stats?.cashRevenue ?? 0
-    const total = transfer + cash
+    const extra = resolveExtra(stats)
+    const total = transfer + cash + extra.unclassified + extra.pending
 
     return {
       lot,
@@ -81,6 +86,7 @@ export function MerchantRevenueByLotTable({
       cashCount,
       cumulativeCash,
       total,
+      ...extra,
     }
   })
 
@@ -89,16 +95,13 @@ export function MerchantRevenueByLotTable({
     if (knownIds.has(b.parkingLotId)) continue
     const transfer = resolveTransfer(b)
     const transferCount = usePeriodValues
-      ? (b.periodOnlineTransferCount ?? 0) +
-        (b.periodCounterQrCount ?? 0) +
-        (b.periodUnclassifiedTransferCount ?? 0)
-      : (b.onlineTransferCount ?? 0) +
-        (b.counterQrCount ?? 0) +
-        (b.unclassifiedTransferCount ?? 0)
-    const cash = usePeriodValues ? b.periodCashRevenue : b.cashRevenue
+      ? (b.periodOnlineTransferCount ?? 0) + (b.periodCounterQrCount ?? 0)
+      : (b.onlineTransferCount ?? 0) + (b.counterQrCount ?? 0)
+    const cash = (usePeriodValues ? b.periodCashRevenue : b.cashRevenue) ?? 0
     const cashCount = usePeriodValues
       ? b.periodCashBookingCount
       : b.cashBookingCount
+    const extra = resolveExtra(b)
     rows.push({
       lot: {
         id: b.parkingLotId,
@@ -111,7 +114,8 @@ export function MerchantRevenueByLotTable({
       cash,
       cashCount,
       cumulativeCash: b.cashRevenue,
-      total: transfer + cash,
+      total: transfer + cash + extra.unclassified + extra.pending,
+      ...extra,
     })
   }
 
@@ -120,7 +124,10 @@ export function MerchantRevenueByLotTable({
   const grandCash = rows.reduce((sum, r) => sum + r.cash, 0)
   const grandCashCount = rows.reduce((sum, r) => sum + r.cashCount, 0)
   const grandCumulativeCash = rows.reduce((sum, r) => sum + r.cumulativeCash, 0)
-  const grandTotal = grandTransfer + grandCash
+  const grandUnclassified = rows.reduce((sum, r) => sum + r.unclassified, 0)
+  const grandPending = rows.reduce((sum, r) => sum + r.pending, 0)
+  const hasUnclassified = rows.some((r) => r.unclassified !== 0)
+  const grandTotal = grandTransfer + grandCash + grandUnclassified + grandPending
 
   if (rows.length === 0) {
     return null
@@ -174,6 +181,7 @@ export function MerchantRevenueByLotTable({
               <th scope="col" className="px-3 py-3 text-right">
                 Tiền mặt
               </th>
+              {hasUnclassified && <th scope="col" className="px-3 py-3 text-right">Chưa phân loại</th>}
               <th scope="col" className="px-3 py-3 text-right">
                 {useGrossTransfer ? 'Tổng doanh thu (trước phí)' : 'Tổng thực thu'}
               </th>
@@ -254,11 +262,13 @@ export function MerchantRevenueByLotTable({
                       </p>
                     )}
                   </td>
+                  {hasUnclassified && <td className="px-3 py-3.5 text-right align-top font-mono">{money(row.unclassified)}</td>}
 
                   <td className="px-3 py-3.5 text-right align-top">
                     <p className="font-mono font-bold text-[#0d1c2e]">
                       {money(row.total)}
                     </p>
+                    {row.pending > 0 && <p className="mt-0.5 text-xs text-slate-500">Chờ quyết toán: {money(row.pending)}</p>}
                     <p className="mt-0.5 text-[11px] text-slate-500">
                       {cashShareOfTotal}% tiền mặt
                     </p>
@@ -311,12 +321,14 @@ export function MerchantRevenueByLotTable({
                   </p>
                 )}
               </td>
+              {hasUnclassified && <td className="px-3 py-3.5 text-right font-mono font-bold">{money(grandUnclassified)}</td>}
               <td className="px-3 py-3.5 text-right">
                 <p className="font-mono font-bold text-[#0d1c2e]">
                   {money(grandTotal)}
                 </p>
+                {grandPending > 0 && <p className="text-xs text-slate-500">Chờ quyết toán: {money(grandPending)}</p>}
                 <p className="text-[11px] text-slate-500">
-                  Chuyển khoản + Tiền mặt
+                  Chuyển khoản + Tiền mặt{hasUnclassified ? ' + Chưa phân loại' : ''}{grandPending > 0 ? ' + Chờ quyết toán' : ''}
                 </p>
               </td>
               <td className="py-3.5 pl-3 pr-5 text-right font-mono text-xs font-bold text-[#d95f00] md:pr-6">

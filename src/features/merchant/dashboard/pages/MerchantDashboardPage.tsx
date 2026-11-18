@@ -236,6 +236,9 @@ export function MerchantDashboardPage() {
               >
                 {money(currentTotalRevenue)}
               </p>
+              {scopedMetrics && scopedMetrics.pendingGross > 0 && <p className="mt-1 text-xs text-brand-muted">
+                Chờ quyết toán: {money(scopedMetrics.pendingGross)}
+              </p>}
             </Panel>
 
             <Panel>
@@ -309,6 +312,7 @@ export function MerchantDashboardPage() {
             cashBookingCount={currentCashBookings}
             unclassifiedAmount={currentUnclassifiedRevenue}
             unclassifiedCount={currentUnclassifiedCount}
+            pendingAmount={scopedMetrics?.pendingGross}
             scopeLabel={scopeLabel}
             periodLabel={periodLabel}
           />

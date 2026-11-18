@@ -1,6 +1,7 @@
 import { z } from 'zod'
 import { getData, type Page } from '@/shared/api/resources'
 import type { Revenue, RevenueSeriesPoint } from '@/entities/operations'
+import { resolveSeriesRevenueChannels } from '../components/merchantRevenueMetrics'
 
 export const revenueFiltersSchema = z
   .object({
@@ -43,22 +44,26 @@ export function groupRevenueSeries(
       bookingCount: 0,
       onlineTransferRevenue: 0,
       counterQrRevenue: 0,
+      unclassifiedTransferRevenue: 0,
       cashRevenue: 0,
       onlineTransferCount: 0,
       counterQrCount: 0,
+      unclassifiedTransferCount: 0,
       cashBookingCount: 0,
     }
-    const online = point.onlineTransferRevenue ?? Math.max(0, point.revenue - (point.counterQrRevenue ?? 0))
+    const online = point.onlineTransferRevenue ?? 0
     const counterQr = point.counterQrRevenue ?? 0
-    const cash = point.cashRevenue ?? 0
+    const { unclassified, cash } = resolveSeriesRevenueChannels(point)
 
     group.revenue += point.revenue
     group.bookingCount += point.bookingCount
     group.onlineTransferRevenue = (group.onlineTransferRevenue ?? 0) + online
     group.counterQrRevenue = (group.counterQrRevenue ?? 0) + counterQr
+    group.unclassifiedTransferRevenue = (group.unclassifiedTransferRevenue ?? 0) + unclassified
     group.cashRevenue = (group.cashRevenue ?? 0) + cash
     group.onlineTransferCount = (group.onlineTransferCount ?? 0) + (point.onlineTransferCount ?? 0)
     group.counterQrCount = (group.counterQrCount ?? 0) + (point.counterQrCount ?? 0)
+    group.unclassifiedTransferCount = (group.unclassifiedTransferCount ?? 0) + (point.unclassifiedTransferCount ?? 0)
     group.cashBookingCount = (group.cashBookingCount ?? 0) + (point.cashBookingCount ?? 0)
     groups.set(period, group)
   }

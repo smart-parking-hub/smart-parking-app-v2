@@ -8,6 +8,7 @@ export interface MerchantChannelBreakdownCardsProps {
   cashBookingCount: number
   unclassifiedAmount?: number
   unclassifiedCount?: number
+  pendingAmount?: number
   scopeLabel: string
   periodLabel: string
 }
@@ -19,11 +20,12 @@ export function MerchantChannelBreakdownCards({
   cashBookingCount,
   unclassifiedAmount = 0,
   unclassifiedCount = 0,
+  pendingAmount = 0,
   scopeLabel,
   periodLabel,
 }: MerchantChannelBreakdownCardsProps) {
   const hasUnclassified = unclassifiedAmount > 0 || unclassifiedCount > 0
-  const totalCombined = transferAmount + cashAmount + unclassifiedAmount
+  const totalCombined = transferAmount + cashAmount + unclassifiedAmount + pendingAmount
   const pct = (value: number) =>
     totalCombined > 0 ? Math.round((value / totalCombined) * 1000) / 10 : 0
 
@@ -92,6 +94,10 @@ export function MerchantChannelBreakdownCards({
         </div>
       </div>
 
+      {pendingAmount > 0 && <p className="text-xs text-slate-600">
+        Chờ quyết toán: <strong>{money(pendingAmount)}</strong>. Đã tính vào tổng doanh thu trước phí, chưa cộng vào ví.
+      </p>}
+
       {/* Horizontal channel proportion strip */}
       {totalCombined > 0 && (
         <div className="space-y-1.5" aria-label="Tỷ trọng theo kênh doanh thu">
@@ -117,6 +123,11 @@ export function MerchantChannelBreakdownCards({
                 title={`Chưa phân loại: ${unclassifiedPct}%`}
               />
             )}
+            {pendingAmount > 0 && <div
+              style={{ width: `${(pendingAmount / totalCombined) * 100}%` }}
+              className="bg-slate-200"
+              title={`Chờ quyết toán: ${pct(pendingAmount)}%`}
+            />}
           </div>
           <div className="flex flex-wrap items-center gap-4 text-[11px] font-medium text-slate-600">
             <span className="inline-flex items-center gap-1.5">
@@ -133,6 +144,7 @@ export function MerchantChannelBreakdownCards({
                 Chưa phân loại ({unclassifiedPct}%)
               </span>
             )}
+            {pendingAmount > 0 && <span>Chờ quyết toán ({pct(pendingAmount)}%)</span>}
           </div>
         </div>
       )}

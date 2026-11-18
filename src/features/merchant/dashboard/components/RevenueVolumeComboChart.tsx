@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react'
 import { ShieldCheck, TrendingUp } from 'lucide-react'
 import type { RevenueSeriesPointDto } from '../types/merchantDashboardTypes'
+import { resolveSeriesRevenueChannels } from '../../components/merchantRevenueMetrics'
 
 interface RevenueVolumeComboChartProps {
   data?: RevenueSeriesPointDto[]
@@ -19,14 +20,14 @@ export function RevenueVolumeComboChart({
   const effectiveData = useMemo(() => {
     if (!data || data.length === 0) return []
     return data.map((d) => {
-      const transfer = d.revenue ?? 0
-      const cash = d.cashRevenue ?? 0
+      const { transfer, unclassified, cash } = resolveSeriesRevenueChannels(d)
       return {
         ...d,
         transferRevenue: transfer,
+        unclassifiedRevenue: unclassified,
         cashRevenue: cash,
         cashBookingCount: d.cashBookingCount ?? 0,
-        totalDayRevenue: transfer + cash,
+        totalDayRevenue: transfer + unclassified + cash,
       }
     })
   }, [data])
@@ -112,8 +113,9 @@ export function RevenueVolumeComboChart({
 
   const maxBarValue = Math.max(
     1,
-    ...effectiveData.map((d) => Math.max(d.transferRevenue, d.cashRevenue)),
+    ...effectiveData.map((d) => Math.max(d.transferRevenue, d.cashRevenue, d.unclassifiedRevenue)),
   )
+  const hasUnclassified = effectiveData.some((d) => d.unclassifiedRevenue !== 0)
   const maxVolume = Math.max(1, ...effectiveData.map((d) => d.bookingCount))
   const peakItem = effectiveData.reduce(
     (max, cur) => (cur.totalDayRevenue > max.totalDayRevenue ? cur : max),
@@ -132,7 +134,8 @@ export function RevenueVolumeComboChart({
 
   const groupWidth = plotW / n
   const gapBetweenBars = Math.max(2, Math.min(6, groupWidth * 0.08))
-  const singleBarWidth = Math.min(22, Math.max(7, (groupWidth * 0.62 - gapBetweenBars) / 2))
+  const barCount = hasUnclassified ? 3 : 2
+  const singleBarWidth = Math.min(22, Math.max(4, (groupWidth * 0.72 - gapBetweenBars * (barCount - 1)) / barCount))
 
   const points = effectiveData.map((d, i) => {
     const cx = padLeft + (i + 0.5) * groupWidth
@@ -142,9 +145,13 @@ export function RevenueVolumeComboChart({
         : 0
     const cashH =
       d.cashRevenue > 0 ? Math.max(4, (d.cashRevenue / maxBarValue) * plotH) : 0
+    const unclassifiedH = d.unclassifiedRevenue > 0
+      ? Math.max(4, (d.unclassifiedRevenue / maxBarValue) * plotH)
+      : 0
 
-    const transferX = cx - gapBetweenBars / 2 - singleBarWidth
-    const cashX = cx + gapBetweenBars / 2
+    const transferX = cx - (singleBarWidth * barCount + gapBetweenBars * (barCount - 1)) / 2
+    const cashX = transferX + singleBarWidth + gapBetweenBars
+    const unclassifiedX = cashX + singleBarWidth + gapBetweenBars
 
     const transferTopY = baseY - transferH
     const cashTopY = baseY - cashH
@@ -163,6 +170,8 @@ export function RevenueVolumeComboChart({
       transferTopY,
       cashH,
       cashTopY,
+      unclassifiedH,
+      unclassifiedX,
       highestBarY,
       lineY,
     }
@@ -185,7 +194,7 @@ export function RevenueVolumeComboChart({
           </h2>
         </div>
         <span className="font-mono text-[11px] font-semibold text-slate-500">
-          2 cột đứng cạnh nhau · {n} ngày
+          {barCount} cột đứng cạnh nhau · {n} ngày
         </span>
       </div>
 
@@ -208,6 +217,10 @@ export function RevenueVolumeComboChart({
             <span className="w-3 h-3 bg-[#d95f00] rounded-xs" />
             <span className="text-[#45464d]">Tiền mặt</span>
           </div>
+          {hasUnclassified && <div className="flex items-center gap-1.5">
+            <span className="w-3 h-3 bg-amber-500 rounded-xs" />
+            <span className="text-[#45464d]">Chưa phân loại (sau phí)</span>
+          </div>}
           <div className="flex items-center gap-1.5">
             <span className="w-3.5 h-1 bg-[#455f87] rounded-full" />
             <span className="text-[#45464d]">Số lượt đặt chỗ</span>
@@ -224,7 +237,7 @@ export function RevenueVolumeComboChart({
           viewBox={`0 0 ${chartWidth} ${chartHeight}`}
           xmlns="http://www.w3.org/2000/svg"
           role="img"
-          aria-label="Biểu đồ 2 cột so sánh doanh thu chuyển khoản và tiền mặt"
+          aria-label="Biểu đồ doanh thu theo kênh thanh toán"
         >
           {/* Horizontal Grid lines and Axis Ticks */}
           {yTicks.map((ratio) => {
@@ -326,6 +339,15 @@ export function RevenueVolumeComboChart({
                     className="transition-colors duration-150"
                   />
                 )}
+                {p.unclassifiedH > 0 && <rect
+                  data-testid={`bar-unclassified-${p.period}`}
+                  fill="#f59e0b"
+                  height={p.unclassifiedH}
+                  width={singleBarWidth}
+                  x={p.unclassifiedX}
+                  y={baseY - p.unclassifiedH}
+                  rx="3"
+                />}
 
                 {/* Date Label on X Axis */}
                 {showXLabel && (
@@ -437,6 +459,10 @@ export function RevenueVolumeComboChart({
                     {formatVND(hovered.cashRevenue)}
                   </span>
                 </p>
+                {hasUnclassified && <p className="flex justify-between gap-3 text-amber-200">
+                  <span>Chưa phân loại (sau phí):</span>
+                  <span className="font-bold">{formatVND(hovered.unclassifiedRevenue)}</span>
+                </p>}
                 <p className="flex justify-between gap-3 border-t border-slate-700 mt-1.5 pt-1 text-amber-200">
                   <span>Tổng ngày ({hovered.bookingCount} lượt):</span>
                   <span className="font-bold text-amber-300">
