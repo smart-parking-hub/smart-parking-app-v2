@@ -143,9 +143,6 @@ export function TariffAuditTable({ booking }: TariffAuditTableProps) {
             <span className="font-semibold text-slate-800">
               Tiền cọc giữ slot đã thanh toán
             </span>
-            <span className="text-[11px] text-slate-400">
-              Giao dịch PayOS VietQR • Ref: PO-89012
-            </span>
           </div>
           <span className="font-mono font-semibold text-emerald-700">
             -{formatCurrency(deposit)}

@@ -195,13 +195,11 @@ function BookingStatusContent({
 
       </>}
       {!compactView && priceDetails}
-      {!compactView &&
-        (['AWAITING_FINAL_PAYMENT', 'COMPLETED', 'PARKING', 'OVERTIME', 'REVIEWED'].includes(data.status) ||
-          (data.totalAmount != null && data.status !== 'PENDING_CHECKIN' && data.status !== 'PENDING_PAYMENT')) && (
-          <div className="pt-2" data-testid="booking-status-tariff-audit">
-            <TariffAuditTable booking={bookingToItemDto(data as unknown as Record<string, unknown>)} />
-          </div>
-        )}
+      {!compactView && ['AWAITING_FINAL_PAYMENT', 'COMPLETED', 'REVIEWED'].includes(data.status) && (
+        <div className="pt-2" data-testid="booking-status-tariff-audit">
+          <TariffAuditTable booking={bookingToItemDto(data as unknown as Record<string, unknown>)} />
+        </div>
+      )}
 
       {(!compactView || payable) && <div className={compactPayment ? 'space-y-3' : 'flex flex-wrap gap-3'}>
         {compactPayment && !checkoutOpen && <h3 className="text-sm font-semibold">Thanh toán {finalPayment ? 'phần còn lại' : 'tiền cọc'}</h3>}

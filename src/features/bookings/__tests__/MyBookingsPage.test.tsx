@@ -451,3 +451,50 @@ it('opens booking detail modal and displays overtime penalty breakdown from Tari
   expect(within(modal).getByText('BẢNG ĐỐI SOÁT CƯỚC PHÍ CHI TIẾT')).toBeInTheDocument()
 })
 
+it('does not display settlement tariff audit table before checkout when booking is in PARKING status (PR #105 F-01)', async () => {
+  // Arrange: Booking đang đỗ trong bãi (chưa checkout, chưa chốt cước thực tế)
+  const parkingBooking = {
+    id: 66,
+    bookingCode: 'BK-PARK-66',
+    parkingLotId: 7,
+    merchantId: 9,
+    parkingLotName: 'Bãi Xe Cát Lái Đang Đỗ',
+    vehicleId: 3,
+    vehiclePlate: '51C-PARKING',
+    status: 'PARKING',
+    advanceDeposit: 50000,
+    totalAmount: 200000,
+    hourlyRate: 40000,
+    overtimePenaltyMultiplier: 1.0,
+    surgeMultiplier: 1,
+    expectedCheckInTime: '2026-02-14T10:00:00Z',
+    expectedCheckOutTime: '2026-02-14T18:00:00Z',
+    checkInTime: '2026-02-14T10:00:00Z',
+    expiresAt: '2026-02-14T19:00:00Z',
+  }
+
+  vi.mocked(apiClient.get).mockImplementation(async (url) => ({
+    data: {
+      data: String(url).endsWith('/bookings')
+        ? { content: [parkingBooking], totalElements: 1, totalPages: 1, currentPage: 0 }
+        : String(url).includes('/disputes/me')
+          ? { content: [], totalElements: 0, totalPages: 1, currentPage: 0 }
+          : parkingBooking,
+    },
+  }))
+
+  // Act
+  mount(<MyBookingsPage />, '/bookings', '/bookings')
+  expect(await screen.findByText('BK-PARK-66')).toBeInTheDocument()
+
+  const detailBtn = screen.getByRole('button', { name: /Xem vé & chi tiết/i })
+  fireEvent.click(detailBtn)
+
+  // Assert:
+  const modal = await screen.findByRole('dialog')
+  expect(within(modal).getByRole('heading', { name: /Chi tiết lượt đặt chỗ/i })).toBeInTheDocument()
+  // Bảng quyết toán chi tiết không xuất hiện khi chưa checkout
+  expect(within(modal).queryByTestId('booking-status-tariff-audit')).not.toBeInTheDocument()
+  expect(within(modal).queryByText('BẢNG ĐỐI SOÁT CƯỚC PHÍ CHI TIẾT')).not.toBeInTheDocument()
+})
+
