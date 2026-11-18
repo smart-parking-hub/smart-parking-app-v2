@@ -8,6 +8,11 @@ const EMPTY_STYLE_FIXTURE = {
   layers: [],
 }
 
+const TRANSPARENT_TILE_PNG = Buffer.from(
+  'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=',
+  'base64',
+)
+
 const lot = {
   id: 35,
   name: 'Bến Cảng Quận 1',
@@ -52,6 +57,13 @@ for (const width of [1440, 390]) {
     page.on('pageerror', (error) => errors.push(error.message))
 
     await setupMerchantDetailRoutes(page)
+    await page.route('**/*mt*.google.com/**', (route) =>
+      route.fulfill({
+        status: 200,
+        contentType: 'image/png',
+        body: TRANSPARENT_TILE_PNG,
+      }),
+    )
     await page.route('**/*tiles.openfreemap.org/**', (route) =>
       route.fulfill({ status: 200, json: EMPTY_STYLE_FIXTURE }),
     )
@@ -95,11 +107,12 @@ test('degrades cleanly with error alert and external Google Maps link when map t
 }) => {
   await page.setViewportSize({ width: 1440, height: 1000 })
   await setupMerchantDetailRoutes(page)
+  await page.route('**/*mt*.google.com/**', (route) => route.abort())
   await page.route('**/*tiles.openfreemap.org/**', (route) => route.abort())
 
   await page.goto('/merchant/parking-lots/35')
   const mapRegion = page.getByRole('region', { name: 'Bản đồ vị trí bãi đỗ' })
   await expect(mapRegion).toHaveAttribute('data-map-state', 'error', { timeout: 15000 })
-  await expect(mapRegion.getByRole('alert')).toContainText('OpenFreeMap')
+  await expect(mapRegion.getByRole('alert')).toContainText('Google Maps')
   await expect(mapRegion.getByRole('button', { name: 'Thử tải lại' })).toBeVisible()
 })

@@ -6,11 +6,14 @@ import {
   createAccuracyCircleGeoJson,
   ensureMapLibreWorkerConfigured,
   formatCoordinate,
+  getBasemapDisplayName,
   getMapRuntimeConfig,
   isValidCoordinates,
   loadMapRuntimeConfig,
+  resolveMapStyle,
   roundCoordinate,
   toLngLatTuple,
+  type MapBasemapId,
 } from '@/shared/maps'
 import { createParkingMarkerElement } from '@/entities/parking-lot/parkingMapMarker'
 
@@ -39,9 +42,15 @@ export function CreateParkingLotMapPicker({
   const onChange = useRef(onCoordinatesChange)
 
   const [ready, setReady] = useState(false)
-  const [styleLoaded, setStyleLoaded] = useState(false)
+  const [styleVersion, setStyleVersion] = useState(0)
   const [mapState, setMapState] = useState<'loading' | 'ready' | 'error'>(
     'loading',
+  )
+  const [basemapOverride, setBasemapOverride] = useState<MapBasemapId | null>(
+    null,
+  )
+  const [activeBasemap, setActiveBasemap] = useState<MapBasemapId>(
+    () => getMapRuntimeConfig().defaultBasemap,
   )
   const [retryToken, setRetryToken] = useState(0)
 
@@ -55,16 +64,19 @@ export function CreateParkingLotMapPicker({
     let disposed = false
     let loaded = false
     setReady(false)
-    setStyleLoaded(false)
+    setStyleVersion(0)
     setMapState('loading')
 
     const initialConfig = getMapRuntimeConfig()
+    const initialBasemap = basemapOverride ?? initialConfig.defaultBasemap
+    setActiveBasemap(initialBasemap)
+
     let instance: maplibregl.Map
     try {
       ensureMapLibreWorkerConfigured()
       instance = new maplibregl.Map({
         container: container.current,
-        style: initialConfig.styleUrl,
+        style: resolveMapStyle(initialConfig, initialBasemap),
         center: VIETNAM_OVERVIEW_CENTER,
         zoom: VIETNAM_OVERVIEW_ZOOM,
         attributionControl: { compact: true },
@@ -83,8 +95,13 @@ export function CreateParkingLotMapPicker({
     instance.on('load', () => {
       if (disposed) return
       loaded = true
-      setStyleLoaded(true)
+      setStyleVersion((v) => v + 1)
       setMapState('ready')
+    })
+
+    instance.on('style.load', () => {
+      if (disposed) return
+      setStyleVersion((v) => v + 1)
     })
 
     instance.on('error', () => {
@@ -101,9 +118,15 @@ export function CreateParkingLotMapPicker({
     })
 
     void loadMapRuntimeConfig().then((runtimeConfig) => {
-      if (disposed) return
-      if (runtimeConfig.styleUrl !== initialConfig.styleUrl) {
-        instance.setStyle(runtimeConfig.styleUrl)
+      if (disposed || basemapOverride !== null) return
+      const nextBasemap = runtimeConfig.defaultBasemap
+      const styleChanged =
+        nextBasemap !== initialBasemap ||
+        (nextBasemap === 'openfreemap' &&
+          runtimeConfig.styleUrl !== initialConfig.styleUrl)
+      if (styleChanged) {
+        setActiveBasemap(nextBasemap)
+        instance.setStyle(resolveMapStyle(runtimeConfig, nextBasemap))
       }
     })
 
@@ -123,7 +146,7 @@ export function CreateParkingLotMapPicker({
       instance.remove()
       mapRef.current = null
     }
-  }, [retryToken])
+  }, [retryToken, basemapOverride])
 
   useEffect(() => {
     const instance = mapRef.current
@@ -174,7 +197,7 @@ export function CreateParkingLotMapPicker({
 
   useEffect(() => {
     const instance = mapRef.current
-    if (!instance || !styleLoaded) return
+    if (!instance || styleVersion === 0) return
 
     const removeAccuracyLayer = () => {
       if (instance.getLayer?.(ACCURACY_LINE_LAYER_ID)) {
@@ -235,7 +258,7 @@ export function CreateParkingLotMapPicker({
         },
       })
     }
-  }, [latitude, longitude, accuracy, styleLoaded])
+  }, [latitude, longitude, accuracy, styleVersion])
 
   const hasFinitePair =
     Number.isFinite(latitude) &&
@@ -243,10 +266,15 @@ export function CreateParkingLotMapPicker({
     Math.abs(latitude) <= 90 &&
     Math.abs(longitude) <= 180
 
+  const activeBasemapLabel = getBasemapDisplayName(activeBasemap)
+  const fallbackBasemap: MapBasemapId =
+    activeBasemap === 'google-roadmap' ? 'openfreemap' : 'google-roadmap'
+  const fallbackBasemapLabel = getBasemapDisplayName(fallbackBasemap)
+
   return (
     <div className="space-y-3">
       <p className="text-sm font-semibold">
-        Chọn vị trí bãi đỗ trên bản đồ OpenFreeMap
+        Chọn vị trí bãi đỗ trên bản đồ {activeBasemapLabel}
       </p>
       <div className="parking-map relative h-[360px] w-full overflow-hidden rounded-xl border border-slate-200">
         <div
@@ -254,6 +282,7 @@ export function CreateParkingLotMapPicker({
           role="region"
           aria-label="Bản đồ chọn vị trí bãi đỗ"
           data-map-state={mapState}
+          data-map-basemap={activeBasemap}
           className="relative z-0 h-full w-full"
         />
 
@@ -268,18 +297,27 @@ export function CreateParkingLotMapPicker({
                 aria-hidden="true"
               />
               <span>
-                Chưa tải được nền bản đồ OpenFreeMap. Bạn vẫn có thể nhập tọa
-                độ hoặc dùng GPS ở trên.
+                Chưa tải được nền bản đồ {activeBasemapLabel}. Bạn vẫn có thể
+                nhập tọa độ hoặc dùng GPS ở trên.
               </span>
             </div>
-            <button
-              type="button"
-              onClick={() => setRetryToken((c) => c + 1)}
-              className="inline-flex items-center gap-1 rounded-lg border border-slate-300 bg-white px-2.5 py-1 font-semibold text-slate-800 hover:bg-slate-100 cursor-pointer"
-            >
-              <RefreshCw className="h-3.5 w-3.5" aria-hidden="true" />
-              Thử tải lại bản đồ
-            </button>
+            <div className="flex flex-wrap items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setRetryToken((c) => c + 1)}
+                className="inline-flex items-center gap-1 rounded-lg border border-slate-300 bg-white px-2.5 py-1 font-semibold text-slate-800 hover:bg-slate-100 cursor-pointer"
+              >
+                <RefreshCw className="h-3.5 w-3.5" aria-hidden="true" />
+                Thử tải lại bản đồ
+              </button>
+              <button
+                type="button"
+                onClick={() => setBasemapOverride(fallbackBasemap)}
+                className="inline-flex items-center gap-1 rounded-lg border border-slate-300 bg-white px-2.5 py-1 font-semibold text-slate-700 hover:bg-slate-100 cursor-pointer"
+              >
+                Chuyển sang {fallbackBasemapLabel}
+              </button>
+            </div>
           </div>
         )}
       </div>

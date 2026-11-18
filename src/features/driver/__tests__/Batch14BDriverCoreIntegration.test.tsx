@@ -206,7 +206,7 @@ describe('BATCH-14B: Driver Core — Search, Detail & Bookings Integration', () 
 
     // Top Header & Subtitle
     expect(screen.getByText(/Điểm đỗ phù hợp. Hành trình an tâm./i)).toBeInTheDocument()
-    expect(screen.getByText(/Bản đồ OpenFreeMap/i)).toBeInTheDocument()
+    expect(screen.getByText(/Google Maps · OSRM/i)).toBeInTheDocument()
 
     // Wait for data load and map canvas
     await waitFor(() => {

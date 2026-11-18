@@ -34,7 +34,7 @@ export function EditMerchantMapViewerCard({
           </h3>
         </div>
         <span className="font-mono text-xs px-2 py-0.5 rounded-md bg-[#e6eeff] text-[#131b2e] font-semibold border border-slate-200">
-          {isCalibrated ? 'OpenFreeMap' : 'Chưa hiệu chỉnh'}
+          {isCalibrated ? 'Google Maps' : 'Chưa hiệu chỉnh'}
         </span>
       </div>
 

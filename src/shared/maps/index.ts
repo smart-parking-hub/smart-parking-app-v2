@@ -24,10 +24,21 @@ export {
 } from './urls'
 
 export {
+  DEFAULT_MAP_BASEMAP,
+  GOOGLE_ROADMAP_TILES,
+  createGoogleRoadmapStyle,
+  getBasemapDisplayName,
+  isValidBasemapId,
+  resolveMapStyle,
+  type MapBasemapId,
+} from './basemaps'
+
+export {
   DEFAULT_MAP_CENTER,
   DEFAULT_MAP_MAX_ZOOM,
   DEFAULT_MAP_STYLE_URL,
   DEFAULT_MAP_ZOOM,
+  DEFAULT_OSRM_URL,
   DEFAULT_PHOTON_URL,
   getMapRuntimeConfig,
   loadMapRuntimeConfig,
@@ -37,6 +48,17 @@ export {
   type MapRuntimeConfig,
   type PartialMapRuntimeConfig,
 } from './runtimeConfig'
+
+export {
+  RoutingError,
+  clearDrivingRouteCacheForTests,
+  fetchDrivingRoute,
+  formatRouteDistance,
+  formatRouteDuration,
+  type DrivingRouteResult,
+  type FetchDrivingRouteOptions,
+  type RoutingErrorCode,
+} from './osrmRouting'
 
 export {
   extractAndValidateGoogleShareEmbedUrl,

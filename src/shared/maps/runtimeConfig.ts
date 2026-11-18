@@ -1,4 +1,9 @@
 import type { Coordinates } from './coordinates'
+import {
+  DEFAULT_MAP_BASEMAP,
+  isValidBasemapId,
+  type MapBasemapId,
+} from './basemaps'
 
 export const DEFAULT_MAP_CENTER: Coordinates = {
   latitude: 10.7769,
@@ -9,12 +14,16 @@ export const DEFAULT_MAP_ZOOM = 12
 export const DEFAULT_MAP_STYLE_URL = 'https://tiles.openfreemap.org/styles/liberty'
 export const DEFAULT_MAP_MAX_ZOOM = 19
 export const DEFAULT_PHOTON_URL = 'https://photon.komoot.io/api/'
+export const DEFAULT_OSRM_URL = 'https://router.project-osrm.org'
 
 export interface MapRuntimeConfig {
+  defaultBasemap: MapBasemapId
   styleUrl: string
   maxZoom: number
   photonUrl: string
   geocoderEnabled: boolean
+  osrmUrl: string
+  routingEnabled: boolean
 }
 
 export type PartialMapRuntimeConfig = Partial<MapRuntimeConfig>
@@ -68,6 +77,10 @@ export function validateMapRuntimeConfig(
 ): MapRuntimeConfig {
   if (!raw || typeof raw !== 'object') return base
 
+  const defaultBasemap = isValidBasemapId(raw.defaultBasemap)
+    ? raw.defaultBasemap
+    : base.defaultBasemap
+
   const styleUrl =
     typeof raw.styleUrl === 'string' && isAllowedEndpointUrl(raw.styleUrl.trim())
       ? raw.styleUrl.trim()
@@ -78,6 +91,11 @@ export function validateMapRuntimeConfig(
       ? raw.photonUrl.trim()
       : base.photonUrl
 
+  const osrmUrl =
+    typeof raw.osrmUrl === 'string' && isAllowedEndpointUrl(raw.osrmUrl.trim())
+      ? raw.osrmUrl.trim().replace(/\/+$/, '')
+      : base.osrmUrl
+
   const maxZoom =
     raw.maxZoom !== undefined ? sanitizeMaxZoom(raw.maxZoom) : base.maxZoom
 
@@ -86,31 +104,47 @@ export function validateMapRuntimeConfig(
     base.geocoderEnabled,
   )
 
+  const routingEnabled = parseBooleanFlag(
+    raw.routingEnabled,
+    base.routingEnabled,
+  )
+
   return {
+    defaultBasemap,
     styleUrl,
     maxZoom,
     photonUrl,
     geocoderEnabled,
+    osrmUrl,
+    routingEnabled,
   }
 }
 
 function getBuildTimeDefaults(): MapRuntimeConfig {
   const env = import.meta.env as Record<string, string | undefined>
   const base: MapRuntimeConfig = {
+    defaultBasemap: DEFAULT_MAP_BASEMAP,
     styleUrl: DEFAULT_MAP_STYLE_URL,
     maxZoom: DEFAULT_MAP_MAX_ZOOM,
     photonUrl: DEFAULT_PHOTON_URL,
     geocoderEnabled: true,
+    osrmUrl: DEFAULT_OSRM_URL,
+    routingEnabled: true,
   }
 
   return validateMapRuntimeConfig(
     {
+      defaultBasemap: isValidBasemapId(env.VITE_MAP_DEFAULT_BASEMAP?.trim())
+        ? (env.VITE_MAP_DEFAULT_BASEMAP.trim() as MapBasemapId)
+        : undefined,
       styleUrl: env.VITE_MAP_STYLE_URL,
       maxZoom: env.VITE_MAP_MAX_ZOOM
         ? Number(env.VITE_MAP_MAX_ZOOM)
         : undefined,
       photonUrl: env.VITE_MAP_PHOTON_URL,
       geocoderEnabled: parseBooleanFlag(env.VITE_MAP_GEOCODER_ENABLED, true),
+      osrmUrl: env.VITE_MAP_OSRM_URL,
+      routingEnabled: parseBooleanFlag(env.VITE_MAP_ROUTING_ENABLED, true),
     },
     base,
   )

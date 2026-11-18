@@ -113,7 +113,11 @@ describe('shared/maps MapLibre + OpenFreeMap foundation', () => {
       mapHandlers.error?.forEach((cb) => cb())
     })
     expect(region).toHaveAttribute('data-map-state', 'error')
-    expect(screen.getByRole('alert')).toHaveTextContent(/OpenFreeMap/i)
+    expect(region).toHaveAttribute('data-map-basemap', 'google-roadmap')
+    expect(screen.getByRole('alert')).toHaveTextContent(/Google Maps/i)
+    expect(
+      screen.getByRole('button', { name: /Chuyển sang OpenFreeMap/i }),
+    ).toBeInTheDocument()
 
     unmount()
     expect(mockMarkerInstance.remove).toHaveBeenCalled()

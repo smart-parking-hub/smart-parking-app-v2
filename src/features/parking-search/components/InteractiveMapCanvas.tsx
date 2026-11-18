@@ -11,17 +11,28 @@ import {
   ExternalLink,
   AlertTriangle,
   RefreshCw,
+  Loader2,
+  Route,
+  Clock,
 } from 'lucide-react'
 import {
   buildGoogleMapsDirectionsUrl,
   DEFAULT_MAP_CENTER,
   DEFAULT_MAP_ZOOM,
   ensureMapLibreWorkerConfigured,
+  fetchDrivingRoute,
+  formatRouteDistance,
+  formatRouteDuration,
+  getBasemapDisplayName,
   getMapRuntimeConfig,
   isValidCoordinates,
   loadMapRuntimeConfig,
+  resolveMapStyle,
+  RoutingError,
   toLngLatTuple,
   type Coordinates,
+  type DrivingRouteResult,
+  type MapBasemapId,
 } from '@/shared/maps'
 import { createParkingMarkerElement } from '@/entities/parking-lot/parkingMapMarker'
 import type { ParkingLotItem } from '../types/parkingSearchTypes'
@@ -33,6 +44,16 @@ interface Props {
   onSelectLot: (lot: ParkingLotItem) => void
   onQuickBook: (lot: ParkingLotItem) => void
 }
+
+type RouteState =
+  | { status: 'idle' }
+  | { status: 'loading' }
+  | { status: 'ready'; route: DrivingRouteResult }
+  | { status: 'error'; message: string }
+
+const ROUTE_SOURCE_ID = 'osrm-driving-route'
+const ROUTE_CASING_LAYER_ID = 'osrm-driving-route-casing'
+const ROUTE_LINE_LAYER_ID = 'osrm-driving-route-line'
 
 function getContainerWidth(container: HTMLDivElement | null): number {
   return container?.clientWidth ?? 0
@@ -82,6 +103,32 @@ function fitAllParkingLots(
   })
 }
 
+function fitRouteBounds(
+  instance: maplibregl.Map,
+  route: DrivingRouteResult,
+  origin: Coordinates,
+  destination: Coordinates,
+  container: HTMLDivElement | null,
+) {
+  const bounds = new maplibregl.LngLatBounds()
+  bounds.extend(toLngLatTuple(origin))
+  bounds.extend(toLngLatTuple(destination))
+  for (const coord of route.geometry.coordinates) {
+    if (coord.length >= 2) {
+      bounds.extend([coord[0], coord[1]])
+    }
+  }
+
+  const isDesktop = getContainerWidth(container) >= 960
+  instance.fitBounds(bounds, {
+    padding: isDesktop
+      ? { top: 96, bottom: 160, left: 470, right: 80 }
+      : { top: 48, bottom: 48, left: 48, right: 48 },
+    maxZoom: 16,
+    duration: flyDurationMs(),
+  })
+}
+
 function resolveAccentColor(element: HTMLElement | null): string {
   if (!element || typeof window === 'undefined') return '#ea580c'
   const value = window
@@ -89,6 +136,104 @@ function resolveAccentColor(element: HTMLElement | null): string {
     .getPropertyValue('--color-map-route')
     .trim()
   return value || '#ea580c'
+}
+
+function removeRouteOverlay(instance: maplibregl.Map) {
+  if (
+    typeof instance.getLayer !== 'function' ||
+    typeof instance.getSource !== 'function'
+  ) {
+    return
+  }
+
+  if (instance.getLayer(ROUTE_LINE_LAYER_ID)) {
+    instance.removeLayer(ROUTE_LINE_LAYER_ID)
+  }
+  if (instance.getLayer(ROUTE_CASING_LAYER_ID)) {
+    instance.removeLayer(ROUTE_CASING_LAYER_ID)
+  }
+  if (instance.getSource(ROUTE_SOURCE_ID)) {
+    instance.removeSource(ROUTE_SOURCE_ID)
+  }
+}
+
+function syncRouteOverlay(
+  instance: maplibregl.Map,
+  route: DrivingRouteResult | null,
+  accentColor: string,
+) {
+  if (
+    typeof instance.getLayer !== 'function' ||
+    typeof instance.getSource !== 'function' ||
+    typeof instance.addSource !== 'function' ||
+    typeof instance.addLayer !== 'function'
+  ) {
+    return
+  }
+
+  if (!route) {
+    removeRouteOverlay(instance)
+    return
+  }
+
+  const feature: GeoJSON.Feature<GeoJSON.LineString> = {
+    type: 'Feature',
+    properties: {
+      provider: route.provider,
+      distanceMeters: route.distanceMeters,
+      durationSeconds: route.durationSeconds,
+    },
+    geometry: route.geometry,
+  }
+
+  const existingSource = instance.getSource(ROUTE_SOURCE_ID) as
+    | maplibregl.GeoJSONSource
+    | undefined
+
+  if (existingSource && typeof existingSource.setData === 'function') {
+    existingSource.setData(feature)
+  } else {
+    removeRouteOverlay(instance)
+    instance.addSource(ROUTE_SOURCE_ID, {
+      type: 'geojson',
+      data: feature,
+      attribution: 'OSRM',
+    })
+  }
+
+  if (!instance.getLayer(ROUTE_CASING_LAYER_ID)) {
+    instance.addLayer({
+      id: ROUTE_CASING_LAYER_ID,
+      type: 'line',
+      source: ROUTE_SOURCE_ID,
+      layout: {
+        'line-cap': 'round',
+        'line-join': 'round',
+      },
+      paint: {
+        'line-color': '#ffffff',
+        'line-width': 8,
+        'line-opacity': 0.92,
+      },
+    })
+  }
+
+  if (!instance.getLayer(ROUTE_LINE_LAYER_ID)) {
+    instance.addLayer({
+      id: ROUTE_LINE_LAYER_ID,
+      type: 'line',
+      source: ROUTE_SOURCE_ID,
+      layout: {
+        'line-cap': 'round',
+        'line-join': 'round',
+      },
+      paint: {
+        'line-color': accentColor,
+        'line-width': 5,
+        'line-opacity': 0.95,
+      },
+    })
+  }
 }
 
 function createOriginMarkerElement(color: string): HTMLDivElement {
@@ -135,12 +280,29 @@ export function InteractiveMapCanvas({
   const hadOriginRef = useRef(false)
   const pendingOriginResetFit = useRef(false)
   const select = useRef(onSelectLot)
+  const activeRouteRef = useRef<DrivingRouteResult | null>(null)
 
   const [ready, setReady] = useState(false)
+  const [styleLoaded, setStyleLoaded] = useState(false)
   const [mapState, setMapState] = useState<'loading' | 'ready' | 'error'>(
     'loading',
   )
+  const [basemapOverride, setBasemapOverride] = useState<MapBasemapId | null>(
+    null,
+  )
+  const [activeBasemap, setActiveBasemap] = useState<MapBasemapId>(
+    () => getMapRuntimeConfig().defaultBasemap,
+  )
   const [retryToken, setRetryToken] = useState(0)
+  const [routeState, setRouteState] = useState<RouteState>({ status: 'idle' })
+
+  const originLat = origin && isValidCoordinates(origin) ? origin.latitude : null
+  const originLng = origin && isValidCoordinates(origin) ? origin.longitude : null
+  const selectedLotId = selectedLot?.id ?? null
+  const selectedLotLat =
+    selectedLot && isValidCoordinates(selectedLot) ? selectedLot.latitude : null
+  const selectedLotLng =
+    selectedLot && isValidCoordinates(selectedLot) ? selectedLot.longitude : null
 
   useEffect(() => {
     select.current = onSelectLot
@@ -152,15 +314,19 @@ export function InteractiveMapCanvas({
     let disposed = false
     let loaded = false
     setReady(false)
+    setStyleLoaded(false)
     setMapState('loading')
 
     const initialConfig = getMapRuntimeConfig()
+    const initialBasemap = basemapOverride ?? initialConfig.defaultBasemap
+    setActiveBasemap(initialBasemap)
+
     let instance: maplibregl.Map
     try {
       ensureMapLibreWorkerConfigured()
       instance = new maplibregl.Map({
         container: container.current,
-        style: initialConfig.styleUrl,
+        style: resolveMapStyle(initialConfig, initialBasemap),
         center: toLngLatTuple(DEFAULT_MAP_CENTER),
         zoom: DEFAULT_MAP_ZOOM,
         attributionControl: { compact: false },
@@ -175,7 +341,27 @@ export function InteractiveMapCanvas({
     instance.on('load', () => {
       if (disposed) return
       loaded = true
+      setStyleLoaded(true)
       setMapState('ready')
+      if (activeRouteRef.current) {
+        syncRouteOverlay(
+          instance,
+          activeRouteRef.current,
+          resolveAccentColor(container.current),
+        )
+      }
+    })
+
+    instance.on('style.load', () => {
+      if (disposed) return
+      setStyleLoaded(true)
+      if (activeRouteRef.current) {
+        syncRouteOverlay(
+          instance,
+          activeRouteRef.current,
+          resolveAccentColor(container.current),
+        )
+      }
     })
 
     instance.on('error', () => {
@@ -185,9 +371,15 @@ export function InteractiveMapCanvas({
     })
 
     void loadMapRuntimeConfig().then((runtimeConfig) => {
-      if (disposed) return
-      if (runtimeConfig.styleUrl !== initialConfig.styleUrl) {
-        instance.setStyle(runtimeConfig.styleUrl)
+      if (disposed || basemapOverride !== null) return
+      const nextBasemap = runtimeConfig.defaultBasemap
+      const styleChanged =
+        nextBasemap !== initialBasemap ||
+        (nextBasemap === 'openfreemap' &&
+          runtimeConfig.styleUrl !== initialConfig.styleUrl)
+      if (styleChanged) {
+        setActiveBasemap(nextBasemap)
+        instance.setStyle(resolveMapStyle(runtimeConfig, nextBasemap))
       }
     })
 
@@ -214,7 +406,86 @@ export function InteractiveMapCanvas({
       instance.remove()
       mapRef.current = null
     }
-  }, [retryToken])
+  }, [retryToken, basemapOverride])
+
+  // Fetch real driving route via OSRM whenever both origin and selectedLot are valid
+  useEffect(() => {
+    if (
+      originLat === null ||
+      originLng === null ||
+      selectedLotId === null ||
+      selectedLotLat === null ||
+      selectedLotLng === null
+    ) {
+      activeRouteRef.current = null
+      setRouteState({ status: 'idle' })
+      return
+    }
+
+    const controller = new AbortController()
+    let active = true
+    setRouteState({ status: 'loading' })
+
+    void fetchDrivingRoute(
+      { latitude: originLat, longitude: originLng },
+      { latitude: selectedLotLat, longitude: selectedLotLng },
+      { signal: controller.signal },
+    )
+      .then((route) => {
+        if (!active || controller.signal.aborted) return
+        activeRouteRef.current = route
+        setRouteState({ status: 'ready', route })
+      })
+      .catch((error: unknown) => {
+        if (!active || controller.signal.aborted) return
+        if (error instanceof DOMException && error.name === 'AbortError') return
+        activeRouteRef.current = null
+        const message =
+          error instanceof RoutingError
+            ? error.message
+            : 'Chưa tải được tuyến đường OSRM. Bạn vẫn có thể mở chỉ đường bằng Google Maps.'
+        setRouteState({ status: 'error', message })
+      })
+
+    return () => {
+      active = false
+      controller.abort()
+    }
+  }, [originLat, originLng, selectedLotId, selectedLotLat, selectedLotLng])
+
+  // Draw or clear OSRM route overlay on the MapLibre canvas
+  useEffect(() => {
+    const instance = mapRef.current
+    if (!instance || !ready || !styleLoaded) return
+
+    const route = routeState.status === 'ready' ? routeState.route : null
+    activeRouteRef.current = route
+    syncRouteOverlay(instance, route, resolveAccentColor(container.current))
+
+    if (
+      route &&
+      originLat !== null &&
+      originLng !== null &&
+      selectedLotLat !== null &&
+      selectedLotLng !== null
+    ) {
+      fitRouteBounds(
+        instance,
+        route,
+        { latitude: originLat, longitude: originLng },
+        { latitude: selectedLotLat, longitude: selectedLotLng },
+        container.current,
+      )
+    }
+  }, [
+    ready,
+    styleLoaded,
+    routeState,
+    originLat,
+    originLng,
+    selectedLotLat,
+    selectedLotLng,
+  ])
 
   useEffect(() => {
     const instance = mapRef.current
@@ -363,13 +634,19 @@ export function InteractiveMapCanvas({
       })
     : null
 
+  const activeBasemapLabel = getBasemapDisplayName(activeBasemap)
+  const fallbackBasemap: MapBasemapId =
+    activeBasemap === 'google-roadmap' ? 'openfreemap' : 'google-roadmap'
+  const fallbackBasemapLabel = getBasemapDisplayName(fallbackBasemap)
+
   return (
     <section
-      aria-label="Bản đồ bãi đỗ OpenFreeMap"
+      aria-label="Bản đồ bãi đỗ Google Maps và OSRM"
       data-map-state={mapState}
+      data-map-basemap={activeBasemap}
       className="parking-map relative w-full lg:h-full isolate"
     >
-      {/* Full-bleed MapLibre GL JS Vector Canvas */}
+      {/* Full-bleed MapLibre GL JS Canvas (Google Maps Street Tiles + OSRM Route Overlay) */}
       <div className="relative w-full h-[440px] sm:h-[520px] lg:h-full">
         <div ref={container} className="h-full w-full" />
 
@@ -386,8 +663,8 @@ export function InteractiveMapCanvas({
               />
               <div className="space-y-2">
                 <p className="text-brand-navy font-medium">
-                  Chưa tải được nền bản đồ vector OpenFreeMap. Kiểm tra kết nối
-                  mạng hoặc WebGL trên trình duyệt rồi thử lại.
+                  Chưa tải được nền bản đồ {activeBasemapLabel}. Kiểm tra kết
+                  nối mạng hoặc WebGL trên trình duyệt rồi thử lại.
                 </p>
                 <p className="text-xs text-brand-muted">
                   Bạn vẫn có thể xem danh sách bãi đỗ, lọc theo loại xe, đặt giữ
@@ -401,6 +678,13 @@ export function InteractiveMapCanvas({
                   >
                     <RefreshCw size={14} aria-hidden="true" />
                     Thử tải lại bản đồ
+                  </button>
+                  <button
+                    type="button"
+                    className="inline-flex items-center gap-1.5 font-semibold text-slate-700 underline underline-offset-4 cursor-pointer"
+                    onClick={() => setBasemapOverride(fallbackBasemap)}
+                  >
+                    Chuyển sang {fallbackBasemapLabel}
                   </button>
                   {selectedDirectionsUrl && (
                     <a
@@ -459,9 +743,9 @@ export function InteractiveMapCanvas({
         </div>
       </div>
 
-      {/* Bottom Selected Lot & Unlimited-Free Google Maps Directions CTA HUD */}
+      {/* Bottom Selected Lot + OSRM Route Info + Google Maps Directions CTA HUD */}
       {(selectedLot || origin) && (
-        <div className="mx-3 mt-3 lg:mx-0 lg:mt-0 lg:absolute lg:bottom-8 lg:left-[432px] xl:left-[464px] lg:right-24 lg:max-w-[580px] lg:z-[1000]">
+        <div className="mx-3 mt-3 lg:mx-0 lg:mt-0 lg:absolute lg:bottom-8 lg:left-[432px] xl:left-[464px] lg:right-24 lg:max-w-[600px] lg:z-[1000]">
           <div className="rounded-2xl border border-brand-border/90 bg-white/95 backdrop-blur-md p-3.5 shadow-xl">
             {selectedLot && (
               <div className="flex flex-wrap items-center justify-between gap-3">
@@ -532,17 +816,67 @@ export function InteractiveMapCanvas({
                 selectedLot ? 'mt-2.5 pt-2 border-t border-slate-100' : ''
               }`}
             >
-              <Navigation
-                size={14}
-                className="mt-0.5 shrink-0 text-brand-orange"
-              />
-              <p className="min-w-0 flex-1">
-                {selectedLot
-                  ? origin && isValidCoordinates(origin)
-                    ? 'Bấm “Chỉ đường bằng Google Maps” để xem tuyến đường và thời gian di chuyển từ vị trí bạn đã chọn.'
-                    : 'Bấm “Chỉ đường bằng Google Maps” để mở tuyến đường và thời gian di chuyển tới cổng bãi.'
-                  : 'Đã chọn điểm tìm kiếm. Chọn một bãi trên danh sách hoặc bản đồ để mở chỉ đường bằng Google Maps.'}
-              </p>
+              {selectedLot && origin && isValidCoordinates(origin) ? (
+                routeState.status === 'loading' ? (
+                  <>
+                    <Loader2
+                      size={14}
+                      className="mt-0.5 shrink-0 animate-spin text-brand-orange"
+                      aria-hidden="true"
+                    />
+                    <p className="min-w-0 flex-1">
+                      Đang tính tuyến đường di chuyển qua OSRM từ vị trí bạn đã
+                      chọn...
+                    </p>
+                  </>
+                ) : routeState.status === 'ready' ? (
+                  <div className="min-w-0 flex-1 space-y-1">
+                    <div className="flex flex-wrap items-center gap-2 text-brand-navy">
+                      <span className="inline-flex items-center gap-1 rounded-full bg-orange-50 border border-orange-200/80 px-2 py-0.5 text-[11px] font-bold text-[#b84e00] tabular-nums">
+                        <Route size={12} aria-hidden="true" />
+                        {formatRouteDistance(routeState.route.distanceMeters)}
+                      </span>
+                      <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-semibold text-brand-navy tabular-nums">
+                        <Clock size={12} aria-hidden="true" />~
+                        {formatRouteDuration(routeState.route.durationSeconds)}
+                      </span>
+                      <span className="text-[11px] font-medium text-slate-500">
+                        Lộ trình OSRM
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-slate-500">
+                      Tuyến đường tham khảo bằng OSRM · Bấm “Chỉ đường bằng
+                      Google Maps” để mở điều hướng chi tiết.
+                    </p>
+                  </div>
+                ) : (
+                  <>
+                    <Navigation
+                      size={14}
+                      className="mt-0.5 shrink-0 text-brand-orange"
+                      aria-hidden="true"
+                    />
+                    <p className="min-w-0 flex-1">
+                      {routeState.status === 'error'
+                        ? routeState.message
+                        : 'Bấm “Chỉ đường bằng Google Maps” để xem tuyến đường và thời gian di chuyển từ vị trí bạn đã chọn.'}
+                    </p>
+                  </>
+                )
+              ) : (
+                <>
+                  <Navigation
+                    size={14}
+                    className="mt-0.5 shrink-0 text-brand-orange"
+                    aria-hidden="true"
+                  />
+                  <p className="min-w-0 flex-1">
+                    {selectedLot
+                      ? 'Chọn “Vị trí của tôi” hoặc nhập điểm xuất phát để xem tuyến đường OSRM ngay trên bản đồ, hoặc bấm “Chỉ đường bằng Google Maps”.'
+                      : 'Đã chọn điểm xuất phát. Bấm vào một bãi trên danh sách hoặc bản đồ để xem tuyến đường di chuyển (OSRM).'}
+                  </p>
+                </>
+              )}
             </div>
           </div>
         </div>

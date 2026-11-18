@@ -8,6 +8,11 @@ import {
   type Coordinates,
 } from './coordinates'
 import {
+  getBasemapDisplayName,
+  resolveMapStyle,
+  type MapBasemapId,
+} from './basemaps'
+import {
   getMapRuntimeConfig,
   loadMapRuntimeConfig,
 } from './runtimeConfig'
@@ -79,6 +84,12 @@ export function MapLibreMapView({
   const [mapState, setMapState] = useState<'loading' | 'ready' | 'error'>(
     'loading',
   )
+  const [basemapOverride, setBasemapOverride] = useState<MapBasemapId | null>(
+    null,
+  )
+  const [activeBasemap, setActiveBasemap] = useState<MapBasemapId>(
+    () => getMapRuntimeConfig().defaultBasemap,
+  )
   const [retryCount, setRetryCount] = useState(0)
 
   const externalUrl = buildGoogleMapsSearchUrl({
@@ -99,6 +110,8 @@ export function MapLibreMapView({
     setMapState('loading')
 
     const initialConfig = getMapRuntimeConfig()
+    const initialBasemap = basemapOverride ?? initialConfig.defaultBasemap
+    setActiveBasemap(initialBasemap)
     const center = toLngLatTuple({ latitude: lat, longitude: lng })
 
     let mapInstance: maplibregl.Map
@@ -106,7 +119,7 @@ export function MapLibreMapView({
       ensureMapLibreWorkerConfigured()
       mapInstance = new maplibregl.Map({
         container,
-        style: initialConfig.styleUrl,
+        style: resolveMapStyle(initialConfig, initialBasemap),
         center,
         zoom,
         attributionControl: { compact: true },
@@ -149,9 +162,15 @@ export function MapLibreMapView({
     })
 
     void loadMapRuntimeConfig().then((runtimeConfig) => {
-      if (disposed) return
-      if (runtimeConfig.styleUrl !== initialConfig.styleUrl) {
-        mapInstance.setStyle(runtimeConfig.styleUrl)
+      if (disposed || basemapOverride !== null) return
+      const nextBasemap = runtimeConfig.defaultBasemap
+      const styleChanged =
+        nextBasemap !== initialBasemap ||
+        (nextBasemap === 'openfreemap' &&
+          runtimeConfig.styleUrl !== initialConfig.styleUrl)
+      if (styleChanged) {
+        setActiveBasemap(nextBasemap)
+        mapInstance.setStyle(resolveMapStyle(runtimeConfig, nextBasemap))
       }
     })
 
@@ -175,7 +194,7 @@ export function MapLibreMapView({
       marker.remove()
       mapInstance.remove()
     }
-  }, [showingEmbed, validCoords, lat, lng, zoom, markerTitle, retryCount])
+  }, [showingEmbed, validCoords, lat, lng, zoom, markerTitle, retryCount, basemapOverride])
 
   if (!validCoords && !validEmbedUrl) {
     return (
@@ -238,11 +257,17 @@ export function MapLibreMapView({
     )
   }
 
+  const activeBasemapLabel = getBasemapDisplayName(activeBasemap)
+  const fallbackBasemap: MapBasemapId =
+    activeBasemap === 'google-roadmap' ? 'openfreemap' : 'google-roadmap'
+  const fallbackBasemapLabel = getBasemapDisplayName(fallbackBasemap)
+
   return (
     <div
       role="region"
       aria-label={ariaLabel}
       data-map-state={mapState}
+      data-map-basemap={activeBasemap}
       className={`parking-map relative overflow-hidden ${className}`}
     >
       <div ref={containerRef} className="h-full w-full" />
@@ -270,7 +295,7 @@ export function MapLibreMapView({
               className="h-4 w-4 shrink-0 text-amber-600"
               aria-hidden="true"
             />
-            <span>Chưa tải được nền bản đồ OpenFreeMap.</span>
+            <span>Chưa tải được nền bản đồ {activeBasemapLabel}.</span>
           </div>
           <div className="flex flex-wrap items-center justify-center gap-2">
             <button
@@ -280,6 +305,13 @@ export function MapLibreMapView({
             >
               <RefreshCw className="h-3.5 w-3.5" aria-hidden="true" />
               Thử tải lại
+            </button>
+            <button
+              type="button"
+              onClick={() => setBasemapOverride(fallbackBasemap)}
+              className="inline-flex items-center gap-1.5 rounded-lg border border-slate-300 bg-white px-2.5 py-1 font-semibold text-slate-700 hover:bg-slate-100 cursor-pointer"
+            >
+              Chuyển sang {fallbackBasemapLabel}
             </button>
             {showExternalLinkOnError && externalUrl && (
               <a
