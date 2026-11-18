@@ -144,6 +144,80 @@ describe('PR #103 Review Regression Suite (F-02, F-03, F-04)', () => {
     expect(screen.getByTestId('revenue-kpi-fee-value')).toHaveTextContent(/10\.000/)
     expect(screen.getByTestId('lot-revenue-row-10')).toHaveTextContent(/100\.000/)
     expect(screen.getByTestId('lot-revenue-row-10')).toHaveTextContent(/120\.000/)
+
+    // 3. Also verify filtered lot (lot 10) + date period with DIFFERENT all-time vs period numbers -> both screens match!
+    const periodDiffPayload = {
+      ...sharedPayload,
+      totalGrossRevenue: 500000,
+      totalPlatformFee: 50000,
+      totalNetRevenue: 450000,
+      onlineTransferGrossRevenue: 500000,
+      onlineTransferNetRevenue: 450000,
+      onlineTransferCount: 5,
+      totalCashRevenue: 80000,
+      totalCashBookings: 4,
+      // Period figures match reviewer example (100k gross, 10k fee, 90k net, 20k cash -> 120k total gross)
+      periodTotalGrossRevenue: 100000,
+      periodTotalPlatformFee: 10000,
+      periodTotalNetRevenue: 90000,
+      periodOnlineTransferGrossRevenue: 100000,
+      periodOnlineTransferNetRevenue: 90000,
+      periodOnlineTransferCount: 1,
+      periodCashRevenue: 20000,
+      periodCashBookings: 1,
+    }
+
+    vi.spyOn(apiClient, 'get').mockImplementation((async (url: string) => {
+      if (url === '/api/v1/merchant/revenue') return { data: { data: periodDiffPayload } }
+      if (url === '/api/v1/merchant/parking-lots') return { data: { data: lotsPayload } }
+      if (url === '/api/v1/merchant/bookings') return { data: { data: { content: [], totalElements: 0 } } }
+      if (url === '/api/v1/merchant/revenue/ledger') {
+        return { data: { data: { content: [], currentPage: 0, totalPages: 0, totalElements: 0 } } }
+      }
+      return { data: { data: {} } }
+    }) as never)
+
+    cleanup()
+    getMerchantDashboardStoreSnapshot().resetStore()
+    getMerchantDashboardStoreSnapshot().setSelectedLotId(10)
+    getMerchantDashboardStoreSnapshot().setTimeRange('WEEK')
+
+    const filteredDashQc = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+    render(
+      <QueryClientProvider client={filteredDashQc}>
+        <MemoryRouter>
+          <MerchantDashboardPage />
+        </MemoryRouter>
+      </QueryClientProvider>,
+    )
+
+    expect(await screen.findByTestId('merchant-kpi-total-value')).toHaveTextContent(/120\.000/)
+    expect(screen.getByTestId('channel-card-transfer')).toHaveTextContent(/100\.000/)
+    expect(screen.getByTestId('channel-card-cash')).toHaveTextContent(/20\.000/)
+
+    cleanup()
+    const filteredRevQc = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+    render(
+      <QueryClientProvider client={filteredRevQc}>
+        <MemoryRouter>
+          <MerchantRevenuePage />
+        </MemoryRouter>
+      </QueryClientProvider>,
+    )
+
+    expect(await screen.findByText('Tổng Doanh thu (trước phí)')).toBeInTheDocument()
+    fireEvent.change(screen.getByLabelText('Cơ sở bãi đỗ'), { target: { value: '10' } })
+    fireEvent.change(screen.getByLabelText('Từ ngày'), { target: { value: '2026-11-12' } })
+    fireEvent.change(screen.getByLabelText('Đến ngày'), { target: { value: '2026-11-18' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Áp dụng' }))
+
+    await waitFor(() => {
+      expect(screen.getByTestId('revenue-kpi-total-value')).toHaveTextContent(/120\.000/)
+    })
+    expect(screen.getByTestId('channel-card-transfer')).toHaveTextContent(/100\.000/)
+    expect(screen.getByTestId('channel-card-cash')).toHaveTextContent(/20\.000/)
+    expect(screen.getByTestId('revenue-kpi-net-value')).toHaveTextContent(/90\.000/)
+    expect(screen.getByTestId('revenue-kpi-fee-value')).toHaveTextContent(/10\.000/)
   })
 
   it('F-03: invalidates booking status-summary KPI cache after gate cash checkout so Hoàn tất refreshes immediately', async () => {

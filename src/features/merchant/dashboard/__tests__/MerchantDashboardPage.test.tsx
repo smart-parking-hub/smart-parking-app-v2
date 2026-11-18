@@ -181,7 +181,7 @@ describe('Merchant dashboard real data', () => {
     expect((await screen.findAllByText('Bãi ICD Tân Cảng')).length).toBeGreaterThan(0)
 
     // Verify all-lots cash KPI, 2-channel cards (Chuyển khoản + Tiền mặt), grouped chart bars, and per-lot table (including lot 20 with 0 cash)
-    expect(screen.getByText('TỔNG DOANH THU')).toBeInTheDocument()
+    expect(screen.getByText('TỔNG DOANH THU (TRƯỚC PHÍ)')).toBeInTheDocument()
     expect(screen.getByTestId('merchant-kpi-cash-value')).toHaveTextContent(/120\.000/)
     expect(screen.getByTestId('channel-card-transfer')).toHaveTextContent(/500\.000/)
     expect(screen.getByTestId('channel-card-cash')).toHaveTextContent(/120\.000/)

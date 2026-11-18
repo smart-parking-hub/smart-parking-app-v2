@@ -426,7 +426,7 @@ export function RevenueVolumeComboChart({
                   {hovered.period}
                 </p>
                 <p className="flex justify-between gap-3 text-slate-200">
-                  <span>Chuyển khoản:</span>
+                  <span>Chuyển khoản (sau phí):</span>
                   <span className="font-bold text-white">
                     {formatVND(hovered.transferRevenue)}
                   </span>

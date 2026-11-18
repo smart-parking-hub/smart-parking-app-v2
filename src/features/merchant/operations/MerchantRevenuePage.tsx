@@ -248,7 +248,9 @@ export function MerchantRevenuePage() {
               >
                 <Panel>
                   <p className="text-xs text-brand-muted">
-                    {hasDateFilter ? 'Tổng Doanh thu (trong kỳ)' : 'Tổng Doanh thu'}
+                    {hasDateFilter
+                      ? 'Tổng Doanh thu trong kỳ (trước phí)'
+                      : 'Tổng Doanh thu (trước phí)'}
                   </p>
                   <p
                     data-testid="revenue-kpi-total-value"
@@ -275,10 +277,8 @@ export function MerchantRevenuePage() {
                 <Panel>
                   <p className="text-xs text-brand-muted">
                     {hasDateFilter
-                      ? 'Thực nhận chuyển khoản (trong kỳ)'
-                      : selectedLotId
-                        ? 'Thực nhận chuyển khoản'
-                        : 'Thực nhận chuyển khoản'}
+                      ? 'Thực nhận chuyển khoản trong kỳ (sau phí)'
+                      : 'Thực nhận chuyển khoản (sau phí)'}
                   </p>
                   <p
                     data-testid="revenue-kpi-net-value"
@@ -341,7 +341,7 @@ export function MerchantRevenuePage() {
                     <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
                       <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm">
                         <p>
-                          Chuyển khoản trong kỳ:{' '}
+                          Chuyển khoản (sau phí) trong kỳ:{' '}
                           <strong>{money(periodTransferChartRevenue)}</strong>
                         </p>
                         <p className="text-[#d95f00]">

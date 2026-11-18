@@ -77,7 +77,7 @@ describe('merchant revenue and wallet ledger', () => {
 
   it('toggles per-lot table on All Lots vs channel breakdown + chart on Specific Lot, removes Đối soát, and uses custom Select & DatePicker', async () => {
     show()
-    expect(await screen.findByText('Tổng Doanh thu')).toBeInTheDocument()
+    expect(await screen.findByText('Tổng Doanh thu (trước phí)')).toBeInTheDocument()
     expect(screen.getByTestId('revenue-kpi-total-value')).toHaveTextContent(/1\.150\.000/)
     expect(screen.getByTestId('revenue-kpi-cash-value')).toHaveTextContent(/150\.000/)
     expect(screen.queryByText('Đối soát')).not.toBeInTheDocument()
@@ -123,7 +123,7 @@ describe('merchant revenue and wallet ledger', () => {
 
   it('filters consistently by date period and gross/net basis without mixing out-of-period cumulative totals', async () => {
     show()
-    expect(await screen.findByText('Thực nhận chuyển khoản')).toBeInTheDocument()
+    expect(await screen.findByText('Thực nhận chuyển khoản (sau phí)')).toBeInTheDocument()
     expect(screen.getByText('Số dư ví khả dụng (Toàn tài khoản)')).toBeInTheDocument()
     expect(await screen.findByText('Giữ tiền rút')).toBeInTheDocument()
     expect(screen.getByText('-50.000 ₫')).toBeInTheDocument()
@@ -204,7 +204,7 @@ describe('merchant revenue and wallet ledger', () => {
     })
     show()
     expect(await screen.findByRole('alert')).toHaveTextContent('Không thể tải sổ cái')
-    expect(screen.getByText('Tổng Doanh thu')).toBeInTheDocument()
+    expect(screen.getByText('Tổng Doanh thu (trước phí)')).toBeInTheDocument()
     failed = false
     fireEvent.click(screen.getByRole('button', { name: 'Thử lại' }))
     expect(await screen.findByText('Giữ tiền rút')).toBeInTheDocument()

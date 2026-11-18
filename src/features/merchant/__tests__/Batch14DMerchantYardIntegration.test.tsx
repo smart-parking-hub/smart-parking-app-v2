@@ -184,7 +184,7 @@ describe('BATCH-14D: Merchant Yard Infrastructure Integration (SCR-026 to SCR-03
     renderWithProviders(<MerchantDashboardPage />, ['/merchant/dashboard'])
 
     // 5 KPI metrics
-    expect(await screen.findByText('TỔNG DOANH THU')).toBeInTheDocument()
+    expect(await screen.findByText('TỔNG DOANH THU (TRƯỚC PHÍ)')).toBeInTheDocument()
     expect(screen.getByText('TIỀN MẶT THU TẠI BÃI')).toBeInTheDocument()
     expect(screen.getByText('SỐ DƯ VÍ')).toBeInTheDocument()
     expect(screen.getByText('BÃI ĐỖ CỦA TÔI')).toBeInTheDocument()

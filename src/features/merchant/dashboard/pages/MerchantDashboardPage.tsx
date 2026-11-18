@@ -207,7 +207,7 @@ export function MerchantDashboardPage() {
             className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 animate-pulse"
           >
             {[
-              'TỔNG DOANH THU',
+              'TỔNG DOANH THU (TRƯỚC PHÍ)',
               'TIỀN MẶT THU TẠI BÃI',
               'SỐ DƯ VÍ',
               'BÃI ĐỖ CỦA TÔI',
@@ -225,7 +225,9 @@ export function MerchantDashboardPage() {
             className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4"
           >
             <Panel>
-              <p className="font-mono text-xs text-brand-muted">TỔNG DOANH THU</p>
+              <p className="font-mono text-xs text-brand-muted">
+                TỔNG DOANH THU (TRƯỚC PHÍ)
+              </p>
               <p
                 data-testid="merchant-kpi-total-value"
                 className="font-sora text-2xl font-bold mt-3 tabular-nums"

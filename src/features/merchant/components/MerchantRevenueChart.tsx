@@ -113,7 +113,7 @@ export function MerchantRevenueChart({ points }: { points: RevenuePoint[] }) {
                   Kỳ
                 </th>
                 <th scope="col" className="p-2 text-right">
-                  Chuyển khoản
+                  Chuyển khoản (sau phí)
                 </th>
                 <th scope="col" className="p-2 text-right">
                   Tiền mặt

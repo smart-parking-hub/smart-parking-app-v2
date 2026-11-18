@@ -389,9 +389,9 @@ describe('BATCH-14E: Merchant Gate, Bookings & Financial Settlement Integration 
     expect(screen.getByRole('combobox', { name: 'Mở bộ lọc nhóm thời gian' })).toBeInTheDocument()
 
     // 5 Metrics (including Tổng Doanh thu and Tiền mặt thu tại bãi)
-    expect(await screen.findByText('Tổng Doanh thu')).toBeInTheDocument()
+    expect(await screen.findByText('Tổng Doanh thu (trước phí)')).toBeInTheDocument()
     expect(screen.getByText('Tiền mặt thu tại bãi')).toBeInTheDocument()
-    expect(screen.getByText('Thực nhận chuyển khoản')).toBeInTheDocument()
+    expect(screen.getByText('Thực nhận chuyển khoản (sau phí)')).toBeInTheDocument()
     expect(screen.getByText('Phí nền tảng')).toBeInTheDocument()
     expect(screen.getByText('Số dư ví khả dụng (Toàn tài khoản)')).toBeInTheDocument()
 
