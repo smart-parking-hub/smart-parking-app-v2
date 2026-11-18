@@ -152,15 +152,19 @@ test('SCR-052: switching Admin accounts clears the previous feed before the new 
 
 test('SCR-052: 401 responses stay visible without automatic retry or fake data', async ({ page }) => {
   await authenticate(page)
-  let attempts = 0
+  let listAttempts = 0
+  let countAttempts = 0
   await page.route('**/api/v1/notifications**', route => {
-    attempts++
+    if (new URL(route.request().url()).pathname.endsWith('/unread-count')) countAttempts++
+    else listAttempts++
     return route.fulfill({ status: 401, json: { message: 'Phiên đăng nhập không hợp lệ' } })
   })
   await page.goto('/admin/notifications')
   await expect(page.getByText('Không tải được thông báo', { exact: true })).toBeVisible()
   await expect(page.getByRole('button', { name: 'Đánh dấu tất cả đã đọc' })).toBeDisabled()
-  expect(attempts).toBe(2)
+  // The header bell and inbox each fetch a count; neither retries a 401.
+  await expect.poll(() => countAttempts).toBe(2)
+  expect(listAttempts).toBe(1)
 })
 
 test('SCR-052: GET failure, count failure and retry without fake empty or zero', async ({ page }) => {
