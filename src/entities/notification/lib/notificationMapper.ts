@@ -118,13 +118,14 @@ export function resolveNotificationAction(
   const normalizedTarget = targetType?.trim().toUpperCase() ?? ''
   const normalizedType = normalizeNotificationType(type)
   const validTargetId = typeof targetId === 'number' && targetId > 0 ? targetId : null
+  const explicitRole = typeof role === 'string' ? role.trim() : ''
   const roleString =
-    typeof role === 'string'
-      ? role
+    explicitRole.length > 0
+      ? explicitRole
       : typeof sessionRole === 'function'
         ? sessionRole()
         : null
-  const currentRole = typeof roleString === 'string' ? roleString.toUpperCase() : ''
+  const currentRole = typeof roleString === 'string' ? roleString.trim().toUpperCase() : ''
 
   if (!normalizedTarget || !validTargetId) {
     return null
@@ -220,7 +221,8 @@ export function mapNotificationDto(
   dto: BackendNotificationDto,
   role?: Role | string | null,
 ): NotificationViewModel {
-  const normalizedRole = typeof role === 'string' ? (role as Role) : undefined
+  const explicitRole = typeof role === 'string' ? role.trim() : ''
+  const normalizedRole = explicitRole.length > 0 ? (explicitRole as Role) : undefined
   const normalizedType = normalizeNotificationType(dto.type)
   const readAtIso = toIsoNotificationDate(dto.readAt)
   const createdAtIso = toIsoNotificationDate(dto.createdAt)

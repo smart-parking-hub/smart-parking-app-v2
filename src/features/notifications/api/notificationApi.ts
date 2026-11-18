@@ -46,7 +46,7 @@ export async function fetchNotificationsPageApi(params?: {
     ...adapted,
     currentPage: resolvedPage,
     pageSize: safeSize,
-    content: adapted.content.map(mapNotificationDto),
+    content: adapted.content.map((dto) => mapNotificationDto(dto)),
   }
 }
 

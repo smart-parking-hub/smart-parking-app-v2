@@ -136,4 +136,28 @@ describe('entities/notification mapper & deep-link resolver', () => {
     expect(viewModel.action?.path).toBe('/queues')
     expect(viewModel.action?.state).toEqual({ targetQueueId: 909 })
   })
+
+  it('can be safely used inside Array.prototype.map with unary wrapper without index overriding role', () => {
+    const list = [
+      {
+        id: 1,
+        title: 'Đơn giữ chỗ mới',
+        content: 'Bãi xe vừa có đơn giữ chỗ mới #8821',
+        type: 'BOOKING',
+        targetType: 'BOOKING',
+        targetId: 8821,
+        createdAt: '2026-04-06T08:30:00Z',
+      },
+    ]
+    const mapped = list.map((dto) => mapNotificationDto(dto, 'MERCHANT'))
+    expect(mapped[0].action?.path).toBe('/merchant/bookings/8821')
+
+    const defaultMapped = list.map((dto) => mapNotificationDto(dto))
+    expect(defaultMapped[0].action?.path).toBe('/bookings')
+  })
+
+  it('falls back to default role when role is empty or whitespace string', () => {
+    const actionEmptyRole = resolveNotificationAction('BOOKING', 8821, 'BOOKING', '   ')
+    expect(actionEmptyRole?.path).toBe('/bookings')
+  })
 })
