@@ -16,7 +16,7 @@ import { ApiImage } from '@/shared/components/ApiImage'
 import {
   buildGoogleMapsSearchUrl,
   isValidCoordinates,
-  LeafletMapView,
+  MapLibreMapView,
 } from '@/shared/maps'
 import {
   Workspace,
@@ -170,7 +170,7 @@ export function LotOverview({ lot, showMap = false }: { lot: Lot; showMap?: bool
             latitude: lot.latitude,
             longitude: lot.longitude,
           }) ? (
-            <LeafletMapView
+            <MapLibreMapView
               coordinates={{ latitude: lot.latitude, longitude: lot.longitude }}
               markerTitle={lot.name}
               address={lot.address}

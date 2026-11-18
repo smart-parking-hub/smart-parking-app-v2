@@ -1,12 +1,38 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { act, render, screen } from '@testing-library/react'
-import L from 'leaflet'
 import { resetMapRuntimeConfigForTests } from '@/shared/maps'
 import { MerchantLotLocationMap } from './MerchantLotLocationMap'
 
-describe('MerchantLotLocationMap (Hybrid Leaflet viewer)', () => {
+const mapHandlers: Record<string, (() => void)[]> = {}
+const mockMapInstance = {
+  addControl: vi.fn(),
+  on: vi.fn((event: string, cb: () => void) => {
+    mapHandlers[event] = [...(mapHandlers[event] ?? []), cb]
+  }),
+  setStyle: vi.fn(),
+  resize: vi.fn(),
+  remove: vi.fn(),
+}
+
+const mockMarkerInstance = {
+  setLngLat: vi.fn().mockReturnThis(),
+  addTo: vi.fn().mockReturnThis(),
+  remove: vi.fn(),
+}
+
+vi.mock('maplibre-gl', () => ({
+  default: {
+    Map: vi.fn(() => mockMapInstance),
+    Marker: vi.fn(() => mockMarkerInstance),
+    NavigationControl: vi.fn(() => ({})),
+  },
+}))
+
+describe('MerchantLotLocationMap (MapLibre GL JS + OpenFreeMap viewer)', () => {
   beforeEach(() => {
     resetMapRuntimeConfigForTests()
+    for (const key of Object.keys(mapHandlers)) delete mapHandlers[key]
+    vi.clearAllMocks()
     vi.stubGlobal(
       'ResizeObserver',
       class {
@@ -25,24 +51,11 @@ describe('MerchantLotLocationMap (Hybrid Leaflet viewer)', () => {
   })
 
   afterEach(() => {
-    vi.restoreAllMocks()
     vi.unstubAllGlobals()
     resetMapRuntimeConfigForTests()
   })
 
-  it('mounts Leaflet map without Google key and transitions to ready on tileload', () => {
-    const handlers: Record<string, () => void> = {}
-    const fakeTiles = {
-      addTo: vi.fn().mockReturnThis(),
-      on: vi.fn((event: string, cb: () => void) => {
-        handlers[event] = cb
-        return fakeTiles
-      }),
-      redraw: vi.fn(),
-      remove: vi.fn(),
-    }
-    vi.spyOn(L, 'tileLayer').mockReturnValue(fakeTiles as unknown as L.TileLayer)
-
+  it('mounts MapLibre vector map at [lng, lat] without any API key and transitions to ready on load', () => {
     render(
       <MerchantLotLocationMap
         latitude={10.7721328}
@@ -53,26 +66,18 @@ describe('MerchantLotLocationMap (Hybrid Leaflet viewer)', () => {
 
     const region = screen.getByRole('region', { name: 'Bản đồ vị trí bãi đỗ' })
     expect(region).toHaveAttribute('data-map-state', 'loading')
+    expect(mockMarkerInstance.setLngLat).toHaveBeenCalledWith([
+      106.6948199,
+      10.7721328,
+    ])
 
     act(() => {
-      handlers.tileload?.()
+      mapHandlers.load?.forEach((cb) => cb())
     })
     expect(region).toHaveAttribute('data-map-state', 'ready')
   })
 
-  it('shows tile error fallback and Google Maps link when OpenStreetMap tiles fail', () => {
-    const handlers: Record<string, () => void> = {}
-    const fakeTiles = {
-      addTo: vi.fn().mockReturnThis(),
-      on: vi.fn((event: string, cb: () => void) => {
-        handlers[event] = cb
-        return fakeTiles
-      }),
-      redraw: vi.fn(),
-      remove: vi.fn(),
-    }
-    vi.spyOn(L, 'tileLayer').mockReturnValue(fakeTiles as unknown as L.TileLayer)
-
+  it('shows error fallback and Google Maps link when vector style fails to load', () => {
     render(
       <MerchantLotLocationMap
         latitude={10.7721328}
@@ -82,10 +87,10 @@ describe('MerchantLotLocationMap (Hybrid Leaflet viewer)', () => {
     )
 
     act(() => {
-      handlers.tileerror?.()
+      mapHandlers.error?.forEach((cb) => cb())
     })
 
-    expect(screen.getByRole('alert')).toHaveTextContent(/OpenStreetMap/i)
+    expect(screen.getByRole('alert')).toHaveTextContent(/OpenFreeMap/i)
     expect(
       screen.getByRole('link', { name: /Mở trên Google Maps/i }),
     ).toHaveAttribute(

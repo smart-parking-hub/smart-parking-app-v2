@@ -1,4 +1,4 @@
-import { LeafletMapView } from '@/shared/maps'
+import { MapLibreMapView } from '@/shared/maps'
 
 interface MerchantLotLocationMapProps {
   latitude: number
@@ -19,7 +19,7 @@ export function MerchantLotLocationMap({
 
   return (
     <div className="lot-location-map">
-      <LeafletMapView
+      <MapLibreMapView
         coordinates={{ latitude, longitude }}
         markerTitle={title}
         address={address}

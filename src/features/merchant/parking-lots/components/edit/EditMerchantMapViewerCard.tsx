@@ -1,7 +1,7 @@
 import { Layers, ExternalLink } from 'lucide-react'
 import {
   buildGoogleMapsSearchUrl,
-  LeafletMapView,
+  MapLibreMapView,
 } from '@/shared/maps'
 
 interface EditMerchantMapViewerCardProps {
@@ -34,12 +34,12 @@ export function EditMerchantMapViewerCard({
           </h3>
         </div>
         <span className="font-mono text-xs px-2 py-0.5 rounded-md bg-[#e6eeff] text-[#131b2e] font-semibold border border-slate-200">
-          {isCalibrated ? 'OpenStreetMap' : 'Chưa hiệu chỉnh'}
+          {isCalibrated ? 'OpenFreeMap' : 'Chưa hiệu chỉnh'}
         </span>
       </div>
 
       <div className="relative w-full h-72 rounded-xl overflow-hidden border border-slate-300 shadow-inner">
-        <LeafletMapView
+        <MapLibreMapView
           coordinates={{ latitude, longitude }}
           markerTitle={locationName || 'Vị trí bãi đỗ'}
           address={locationName}
