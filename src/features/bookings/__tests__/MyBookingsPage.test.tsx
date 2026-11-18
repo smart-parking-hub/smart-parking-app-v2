@@ -397,3 +397,103 @@ it('filters bookings by search keyword, status, and resets on Xóa lọc (TKT-05
   })
 })
 
+it('displays parking status notice banner and disables final payment when opening PARKING booking (PR #106 / SP-UI-03)', async () => {
+  // Arrange
+  const parkingBooking = {
+    id: 88,
+    bookingCode: 'BK-PARKING-88',
+    parkingLotId: 7,
+    merchantId: 9,
+    parkingLotName: 'Bãi Xe Cát Lái Đang Đỗ',
+    vehicleId: 3,
+    vehiclePlate: '51C-PARKED',
+    status: 'PARKING',
+    advanceDeposit: 50000,
+    totalAmount: 200000,
+    hourlyRate: 40000,
+    overtimePenaltyMultiplier: 1.0,
+    surgeMultiplier: 1,
+    expectedCheckInTime: '2026-02-14T10:00:00Z',
+    expectedCheckOutTime: '2026-02-14T18:00:00Z',
+    expiresAt: '2026-02-14T19:00:00Z',
+  }
+
+  vi.mocked(apiClient.get).mockImplementation(async (url) => ({
+    data: {
+      data: String(url).endsWith('/bookings')
+        ? { content: [parkingBooking], totalElements: 1, totalPages: 1, currentPage: 0 }
+        : String(url).includes('/disputes/me')
+          ? { content: [], totalElements: 0, totalPages: 1, currentPage: 0 }
+          : parkingBooking,
+    },
+  }))
+
+  // Act
+  mount(<MyBookingsPage />, '/bookings', '/bookings')
+  expect(await screen.findByText('BK-PARKING-88')).toBeInTheDocument()
+
+  // Mở modal chi tiết
+  const detailBtn = screen.getByRole('button', { name: /Xem vé & chi tiết/i })
+  fireEvent.click(detailBtn)
+
+  // Assert
+  const modal = await screen.findByRole('dialog')
+  expect(within(modal).getByRole('heading', { name: /Chi tiết lượt đặt chỗ/i })).toBeInTheDocument()
+
+  // Xác nhận banner nghiệp vụ đỗ xe xuất hiện
+  const noticeBanner = await within(modal).findByTestId('parking-status-notice')
+  expect(noticeBanner).toBeInTheDocument()
+  expect(within(noticeBanner).getByText(/Xe đang đỗ tại bãi\. Cước phí sẽ được chốt khi Barie quét xe tại cổng ra\./i)).toBeInTheDocument()
+
+  // Xác nhận không có nút thanh toán quyết toán khi xe đang đỗ
+  expect(within(modal).queryByRole('button', { name: /Thanh toán phần còn lại qua PayOS/i })).not.toBeInTheDocument()
+})
+
+it('displays dynamic deposit amount on payment CTA when booking is in PENDING_PAYMENT status', async () => {
+  // Arrange
+  const pendingPaymentBooking = {
+    id: 77,
+    bookingCode: 'BK-PENDING-77',
+    parkingLotId: 7,
+    merchantId: 9,
+    parkingLotName: 'Bãi Xe Cát Lái Chờ Cọc',
+    vehicleId: 3,
+    vehiclePlate: '51C-DEPOSIT',
+    status: 'PENDING_PAYMENT',
+    advanceDeposit: 150000,
+    totalAmount: 300000,
+    hourlyRate: 50000,
+    overtimePenaltyMultiplier: 1.0,
+    surgeMultiplier: 1,
+    expectedCheckInTime: new Date(Date.now() + 3600000).toISOString(),
+    expectedCheckOutTime: new Date(Date.now() + 7200000).toISOString(),
+    expiresAt: new Date(Date.now() + 600000).toISOString(),
+  }
+
+  vi.mocked(apiClient.get).mockImplementation(async (url) => ({
+    data: {
+      data: String(url).endsWith('/bookings')
+        ? { content: [pendingPaymentBooking], totalElements: 1, totalPages: 1, currentPage: 0 }
+        : String(url).includes('/disputes/me')
+          ? { content: [], totalElements: 0, totalPages: 1, currentPage: 0 }
+          : pendingPaymentBooking,
+    },
+  }))
+
+  // Act
+  mount(<MyBookingsPage />, '/bookings', '/bookings')
+  expect(await screen.findByText('51C-DEPOSIT')).toBeInTheDocument()
+
+  // Mở modal chi tiết
+  const detailBtn = screen.getByRole('button', { name: /Xem vé & chi tiết/i })
+  fireEvent.click(detailBtn)
+
+  // Assert
+  const modal = await screen.findByRole('dialog')
+  expect(within(modal).getByRole('heading', { name: /Chi tiết lượt đặt chỗ/i })).toBeInTheDocument()
+
+  // Nút thanh toán tiền cọc hiển thị đúng số tiền cọc dynamic
+  const depositButton = within(modal).getByRole('button', { name: /Thanh toán cọc 150\.000\s?₫ qua PayOS/i })
+  expect(depositButton).toBeInTheDocument()
+})
+

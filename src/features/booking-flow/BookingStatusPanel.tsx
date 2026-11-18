@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { ChevronDown, CreditCard, QrCode } from 'lucide-react'
+import { ChevronDown, CreditCard, QrCode, Info } from 'lucide-react'
 import { bookingTimestamp, bookingTimeLabel } from './time'
 import { BookingReview } from './BookingReview'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
@@ -156,6 +156,17 @@ function BookingStatusContent({
       </p>}
 
       {data.status === 'PENDING_CHECKIN' && <BookingCheckinTicket booking={data}/>}
+
+      {(data.status === 'PARKING' || data.status === 'OVERTIME') && (
+        <div
+          data-testid="parking-status-notice"
+          role="status"
+          className="w-full p-3.5 bg-blue-50/80 border border-blue-200/90 rounded-xl flex items-center gap-2.5 text-blue-900 text-xs sm:text-sm font-medium shadow-2xs"
+        >
+          <Info className="w-5 h-5 text-blue-600 shrink-0" aria-hidden="true" />
+          <span>Xe đang đỗ tại bãi. Cước phí sẽ được chốt khi Barie quét xe tại cổng ra.</span>
+        </div>
+      )}
 
       {compactPayment ? <QuickBookingPaymentSummary booking={data} expired={expired}/> : data.status !== 'PENDING_CHECKIN' && <>
       <dl className="grid gap-4 sm:grid-cols-2">
