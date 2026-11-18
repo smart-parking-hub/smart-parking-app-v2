@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import { TariffAuditTable } from '../components/TariffAuditTable'
-import { computeOvertimeDetails, parseBookingDateTime } from '../api/bookingApi'
+import { computeOvertimeDetails, parseBookingDateTime, isTimeInSurgeWindow } from '../api/bookingApi'
 import type { BookingItemDto } from '../types/bookingTypes'
 
 describe('TariffAuditTable - [SP-CHECKOUT-04] Overtime Penalty Audit', () => {
@@ -48,21 +48,22 @@ describe('TariffAuditTable - [SP-CHECKOUT-04] Overtime Penalty Audit', () => {
     expect(screen.queryByText(/Phụ phí đỗ quá giờ/i)).not.toBeInTheDocument()
   })
 
-  it('renders highlighted overtime penalty row with formula and multiplier when booking is overtime', () => {
-    // Arrange
+  it('renders highlighted overtime penalty row with formula and multiplier when booking is overtime (80 mins = 3 blocks = 90.000 đ)', () => {
+    // Arrange: 80 phút = 3 blocks 30p, rate 40k, multiplier 1.5 => 90.000 đ
     const overtimeBooking: BookingItemDto = {
       ...baseBooking,
       expectedCheckOutTime: '14:00 14/02/2026',
       actualCheckOutTime: '15:20 14/02/2026',
       isOvertime: true,
       overtimeMinutes: 80,
+      overtimeBlocks: 3,
       overtimeHoursText: '1 giờ 20 phút',
       overtimePenaltyMultiplier: 1.5,
-      penaltyAmount: 80000,
+      penaltyAmount: 90000,
       standardParkingFee: 160000,
-      parkingSubtotal: 240000,
+      parkingSubtotal: 250000,
       depositPaid: 40000,
-      remainingFinalPayment: 200000,
+      remainingFinalPayment: 210000,
     }
 
     // Act
@@ -81,10 +82,10 @@ describe('TariffAuditTable - [SP-CHECKOUT-04] Overtime Penalty Audit', () => {
     expect(screen.getByText('14:00 14/02/2026')).toBeInTheDocument()
     expect(screen.getByText('15:20 14/02/2026')).toBeInTheDocument()
 
-    // Formula & Amount
-    expect(screen.getAllByText(/\+80\.000 đ/).length).toBe(2)
+    // Formula & Amount (90.000 đ for 3 blocks 30p)
+    expect(screen.getAllByText(/\+90\.000 đ/).length).toBe(2)
     expect(
-      screen.getByText(/Công thức: Vượt 1 giờ 20 phút \(Hệ số phạt 1\.5× giá cơ bản 40\.000 đ\/h\) = \+80\.000 đ/)
+      screen.getByText(/Công thức: Vượt 1 giờ 20 phút \(3 block 30p • Hệ số phạt 1\.5× giá cơ bản 40\.000 đ\/h\) = \+90\.000 đ/)
     ).toBeInTheDocument()
 
     // Separated Standard Fee Row
@@ -93,19 +94,20 @@ describe('TariffAuditTable - [SP-CHECKOUT-04] Overtime Penalty Audit', () => {
 
     // Total footer with overtime notice
     expect(screen.getByText(/Đã bao gồm phụ phí đỗ quá giờ/)).toBeInTheDocument()
-    expect(screen.getByText('200.000 đ')).toBeInTheDocument()
+    expect(screen.getByText('210.000 đ')).toBeInTheDocument()
   })
 
   it('automatically calculates overtime if timestamps are provided without precomputed flags', () => {
-    // Arrange
+    // Arrange: 80 minutes overtime without precomputed penalty flags
     const rawTimesBooking: BookingItemDto = {
       ...baseBooking,
       expectedCheckOutTime: '2026-02-14T14:00:00',
       actualCheckOutTime: '2026-02-14T15:20:00',
       baseRatePerHour: 40000,
-      parkingSubtotal: 240000,
+      overtimePenaltyMultiplier: 1.5,
+      parkingSubtotal: 250000,
       depositPaid: 40000,
-      remainingFinalPayment: 200000,
+      remainingFinalPayment: 210000,
       isOvertime: undefined,
       penaltyAmount: undefined,
     }
@@ -119,6 +121,84 @@ describe('TariffAuditTable - [SP-CHECKOUT-04] Overtime Penalty Audit', () => {
     expect(screen.getByText('HỆ SỐ 1.5×')).toBeInTheDocument()
     expect(screen.getAllByText(/1 giờ 20 phút/).length).toBeGreaterThan(0)
     expect(screen.getAllByText(/\+90\.000 đ/).length).toBe(2)
+  })
+
+  describe('Reviewer Feedback Verification: computeOvertimeDetails exact backend parity', () => {
+    it('Reviewer Case 1: charges commenced 30m block when exceeding by just 1 second (14:00:00 -> 14:00:01)', () => {
+      // Exceeding by 1s counts as 1 commenced half-hour block (ParkingCharge.java: block.isBefore(until))
+      const result = computeOvertimeDetails(
+        '2026-02-14T14:00:00',
+        '2026-02-14T14:00:01',
+        40000,
+        1.5
+      )
+      expect(result.isOvertime).toBe(true)
+      expect(result.overtimeBlocks).toBe(1)
+      expect(result.overtimeHoursText).toBe('1 giây')
+      // 1 block * (40000 * 1.5 * 0.5) = 30000
+      expect(result.penaltyAmount).toBe(30000)
+    })
+
+    it('Reviewer Case 2: exactly 30 minutes charges 1 block, but 30 minutes 1 second charges 2 blocks', () => {
+      // Exactly 30m 00s => 1 block
+      const exactly30m = computeOvertimeDetails(
+        '2026-02-14T14:00:00',
+        '2026-02-14T14:30:00',
+        40000,
+        1.5
+      )
+      expect(exactly30m.overtimeBlocks).toBe(1)
+      expect(exactly30m.penaltyAmount).toBe(30000)
+
+      // 30m 01s => exceeds 30m threshold, enters 2nd half-hour block
+      const exceeds30m = computeOvertimeDetails(
+        '2026-02-14T14:00:00',
+        '2026-02-14T14:30:01',
+        40000,
+        1.5
+      )
+      expect(exceeds30m.overtimeBlocks).toBe(2)
+      expect(exceeds30m.penaltyAmount).toBe(60000)
+    })
+
+    it('Reviewer Case 3: applies peak surgeMultiplier correctly to blocks inside peak hours', () => {
+      // Peak window: 16:00 -> 18:00 with surgeMultiplier = 1.5
+      // Overtime: 15:30 -> 16:45 (75 mins = 3 blocks: 15:30, 16:00, 16:30)
+      // Base: 40000, penaltyMultiplier: 1.0 => base block rate = 20000
+      // Block 1 (15:30): outside peak => 20000 * 1.0 = 20000
+      // Block 2 (16:00): in peak => 20000 * 1.5 = 30000
+      // Block 3 (16:30): in peak => 20000 * 1.5 = 30000
+      // Total penalty = 20000 + 30000 + 30000 = 80000
+      const result = computeOvertimeDetails(
+        '2026-02-14T15:30:00',
+        '2026-02-14T16:45:00',
+        40000,
+        1.0,
+        250000,
+        1.5,
+        '16:00',
+        '18:00'
+      )
+      expect(result.isOvertime).toBe(true)
+      expect(result.overtimeBlocks).toBe(3)
+      expect(result.penaltyAmount).toBe(80000)
+    })
+
+    it('Reviewer Case 4: defaults overtimePenaltyMultiplier to 1.0 when missing (matching CheckInOutServiceImpl.java)', () => {
+      // When multiplier is null/undefined, backend uses BigDecimal.ONE (1.0)
+      // 60 minutes overtime = 2 blocks
+      // Base: 40000, penaltyMultiplier: undefined (defaults to 1.0)
+      // Penalty = 2 * (40000 * 1.0 * 0.5) = 40000 (NOT 60000 which was 1.5x)
+      const result = computeOvertimeDetails(
+        '2026-02-14T14:00:00',
+        '2026-02-14T15:00:00',
+        40000,
+        undefined
+      )
+      expect(result.overtimePenaltyMultiplier).toBe(1.0)
+      expect(result.overtimeBlocks).toBe(2)
+      expect(result.penaltyAmount).toBe(40000)
+    })
   })
 
   describe('computeOvertimeDetails & parseBookingDateTime helpers', () => {
@@ -147,10 +227,7 @@ describe('TariffAuditTable - [SP-CHECKOUT-04] Overtime Penalty Audit', () => {
       expect(result.overtimeMinutes).toBe(0)
     })
 
-    it('calculates 30-minute block commenced overtime correctly for 80 minutes', () => {
-      // 80 minutes = 3 half-hour blocks (30m, 30m, 20m -> 3 blocks)
-      // Rate = 40,000 * 1.5 = 60,000/h. Each 30m block = 30,000.
-      // 3 blocks * 30,000 = 90,000 -> capped at totalAmount or formula
+    it('calculates 30-minute block commenced overtime correctly for 80 minutes (3 blocks = 90.000 đ)', () => {
       const result = computeOvertimeDetails(
         '2026-02-14T14:00:00',
         '2026-02-14T15:20:00',
@@ -160,8 +237,23 @@ describe('TariffAuditTable - [SP-CHECKOUT-04] Overtime Penalty Audit', () => {
       )
       expect(result.isOvertime).toBe(true)
       expect(result.overtimeMinutes).toBe(80)
+      expect(result.overtimeBlocks).toBe(3)
       expect(result.overtimeHoursText).toBe('1 giờ 20 phút')
       expect(result.penaltyAmount).toBe(90000)
+    })
+
+    it('verifies isTimeInSurgeWindow handles daytime and overnight windows correctly', () => {
+      const afternoon = new Date('2026-02-14T16:30:00')
+      const morning = new Date('2026-02-14T09:00:00')
+      const night = new Date('2026-02-14T23:30:00')
+
+      // Daytime window: 16:00 -> 18:00
+      expect(isTimeInSurgeWindow(afternoon, '16:00', '18:00')).toBe(true)
+      expect(isTimeInSurgeWindow(morning, '16:00', '18:00')).toBe(false)
+
+      // Overnight window: 22:00 -> 06:00
+      expect(isTimeInSurgeWindow(night, '22:00', '06:00')).toBe(true)
+      expect(isTimeInSurgeWindow(morning, '22:00', '06:00')).toBe(false)
     })
   })
 })

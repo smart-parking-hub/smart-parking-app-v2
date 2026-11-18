@@ -17,18 +17,22 @@ export function TariffAuditTable({ booking }: TariffAuditTableProps) {
   const deposit = booking.depositPaid || 0
   const remaining = booking.remainingFinalPayment
 
-  // Detect and resolve overtime calculations with fallback
+  // Detect and resolve overtime calculations with fallback (matching Backend ParkingCharge.java)
   const computed = computeOvertimeDetails(
     booking.expectedCheckOutTime,
     booking.actualCheckOutTime,
     baseRate,
-    booking.overtimePenaltyMultiplier ?? 1.5,
-    subtotal
+    booking.overtimePenaltyMultiplier ?? 1.0,
+    subtotal,
+    booking.surgeMultiplier,
+    booking.surgeStartTime,
+    booking.surgeEndTime
   )
   const isOvertime = Boolean(booking.isOvertime ?? computed.isOvertime)
   const penaltyAmount = Number(booking.penaltyAmount ?? computed.penaltyAmount)
   const overtimeMultiplier = Number(booking.overtimePenaltyMultiplier ?? computed.overtimePenaltyMultiplier)
   const overtimeHoursText = booking.overtimeHoursText || computed.overtimeHoursText
+  const overtimeBlocks = booking.overtimeBlocks ?? computed.overtimeBlocks
   const hasPenalty = isOvertime && penaltyAmount > 0
   const standardFee = Number(booking.standardParkingFee ?? (hasPenalty ? Math.max(0, subtotal - penaltyAmount) : subtotal))
 
@@ -95,7 +99,7 @@ export function TariffAuditTable({ booking }: TariffAuditTableProps) {
                   {' '}(Vượt <span className="font-bold text-amber-950">{overtimeHoursText}</span>)
                 </p>
                 <p className="text-[10px] text-amber-800/90 font-mono">
-                  Công thức: Vượt {overtimeHoursText} (Hệ số phạt {overtimeMultiplier}× giá cơ bản {formatCurrency(baseRate)}/h) = +{formatCurrency(penaltyAmount)}
+                  Công thức: Vượt {overtimeHoursText} ({overtimeBlocks ? `${overtimeBlocks} block 30p • ` : ''}Hệ số phạt {overtimeMultiplier}× giá cơ bản {formatCurrency(baseRate)}/h{booking.surgeMultiplier && booking.surgeMultiplier > 1 ? ` • Cao điểm ×${booking.surgeMultiplier}` : ''}) = +{formatCurrency(penaltyAmount)}
                 </p>
               </div>
               <span className="font-mono font-bold text-[#d95f00] text-sm tabular-nums whitespace-nowrap pt-0.5">

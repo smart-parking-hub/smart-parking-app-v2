@@ -99,13 +99,14 @@ export const fallbackBookingsList: BookingItemDto[] = [
     actualDurationText: 'Hoàn thành: 14/02/2026 - 19:20 (Vượt 1 giờ 20 phút)',
     isOvertime: true,
     overtimeMinutes: 80,
+    overtimeBlocks: 3,
     overtimeHoursText: '1 giờ 20 phút',
     overtimePenaltyMultiplier: 1.5,
-    penaltyAmount: 80000,
+    penaltyAmount: 90000,
     standardParkingFee: 160000,
-    parkingSubtotal: 240000,
+    parkingSubtotal: 250000,
     depositPaid: 40000,
-    remainingFinalPayment: 200000,
+    remainingFinalPayment: 210000,
     gateToken: 'STH-8705',
   },
   {
@@ -144,12 +145,48 @@ export function parseBookingDateTime(str?: unknown): Date | null {
   return null
 }
 
+export function parseLocalTimeString(str?: unknown): { hour: number; minute: number; second: number } | null {
+  if (!str || typeof str !== 'string') return null
+  const match = str.trim().match(/^(\d{1,2}):(\d{2})(?::(\d{2}))?/)
+  if (!match) return null
+  return {
+    hour: Number(match[1]),
+    minute: Number(match[2]),
+    second: Number(match[3] ?? 0),
+  }
+}
+
+export function isTimeInSurgeWindow(
+  timeDate: Date,
+  surgeStartStr?: unknown,
+  surgeEndStr?: unknown
+): boolean {
+  const start = parseLocalTimeString(surgeStartStr)
+  const end = parseLocalTimeString(surgeEndStr)
+  if (!start || !end) return false
+
+  const startSec = start.hour * 3600 + start.minute * 60 + start.second
+  const endSec = end.hour * 3600 + end.minute * 60 + end.second
+  if (startSec === endSec) return false
+
+  const currentSec = timeDate.getHours() * 3600 + timeDate.getMinutes() * 60 + timeDate.getSeconds()
+
+  if (startSec < endSec) {
+    return currentSec >= startSec && currentSec < endSec
+  } else {
+    return currentSec >= startSec || currentSec < endSec
+  }
+}
+
 export function computeOvertimeDetails(
   expectedCheckOut?: unknown,
   actualCheckOut?: unknown,
   baseRatePerHour: number = 40000,
-  overtimeMultiplier: number = 1.5,
-  totalAmount?: number
+  overtimeMultiplier: number = 1.0,
+  totalAmount?: number,
+  surgeMultiplier?: number,
+  surgeStartTime?: unknown,
+  surgeEndTime?: unknown
 ) {
   const expectedDate = parseBookingDateTime(expectedCheckOut)
   const actualDate = parseBookingDateTime(actualCheckOut)
@@ -158,47 +195,90 @@ export function computeOvertimeDetails(
     return {
       isOvertime: false,
       overtimeMinutes: 0,
+      overtimeBlocks: 0,
       overtimeHoursText: '',
       overtimePenaltyMultiplier: overtimeMultiplier,
+      surgeMultiplier,
       penaltyAmount: 0,
       standardParkingFee: totalAmount ?? 0,
     }
   }
 
   const diffMs = actualDate.getTime() - expectedDate.getTime()
-  const diffMinutes = Math.floor(diffMs / 60000)
 
-  if (diffMinutes <= 0) {
+  if (diffMs <= 0) {
     return {
       isOvertime: false,
       overtimeMinutes: 0,
+      overtimeBlocks: 0,
       overtimeHoursText: '',
       overtimePenaltyMultiplier: overtimeMultiplier,
+      surgeMultiplier,
       penaltyAmount: 0,
       standardParkingFee: totalAmount ?? 0,
     }
   }
 
+  const diffMinutes = Math.floor(diffMs / 60000)
   const hours = Math.floor(diffMinutes / 60)
   const mins = diffMinutes % 60
-  const overtimeHoursText =
-    hours > 0 ? (mins > 0 ? `${hours} giờ ${mins} phút` : `${hours} giờ`) : `${mins} phút`
 
-  // Backend charges commenced half-hours (blocks of 30 mins) at (rate * multiplier)
-  const halfHourBlocks = Math.ceil(diffMinutes / 30)
-  const penaltyUnitRate = baseRatePerHour * overtimeMultiplier
-  const calculatedPenalty = Math.round(halfHourBlocks * (penaltyUnitRate * 0.5))
+  let overtimeHoursText: string
+  if (diffMinutes === 0) {
+    const diffSec = Math.max(1, Math.round(diffMs / 1000))
+    overtimeHoursText = `${diffSec} giây`
+  } else if (hours > 0) {
+    overtimeHoursText = mins > 0 ? `${hours} giờ ${mins} phút` : `${hours} giờ`
+  } else {
+    overtimeHoursText = `${mins} phút`
+  }
 
+  // Khớp chính xác 100% thuật toán ParkingCharge.java của Backend:
+  // Duyệt từng block 30 phút bắt đầu từ expectedDate đến actualDate
+  // Bất kỳ block nào bắt đầu trước actualDate đều được tính (commenced half-hour)
+  const fromMs = expectedDate.getTime()
+  const untilMs = actualDate.getTime()
+  const blockMs = 30 * 60 * 1000
+
+  const effectivePenalty =
+    typeof overtimeMultiplier === 'number' && overtimeMultiplier > 0
+      ? overtimeMultiplier
+      : 1.0
+
+  const penaltyRate = baseRatePerHour * effectivePenalty
+  const blockBaseRate = (penaltyRate * 30) / 60
+
+  let calculatedPenalty = 0
+  let overtimeBlocks = 0
+
+  for (let blockTime = fromMs; blockTime < untilMs; blockTime += blockMs) {
+    overtimeBlocks++
+    const blockDate = new Date(blockTime)
+    const inPeak = isTimeInSurgeWindow(blockDate, surgeStartTime, surgeEndTime)
+    const blockSurge =
+      inPeak && typeof surgeMultiplier === 'number' && surgeMultiplier > 0
+        ? surgeMultiplier
+        : 1.0
+    calculatedPenalty += blockBaseRate * blockSurge
+  }
+
+  const roundedPenalty = Math.round(calculatedPenalty)
   const penaltyAmount =
-    totalAmount != null && totalAmount > 0 ? Math.min(totalAmount, calculatedPenalty) : calculatedPenalty
+    totalAmount != null && totalAmount > 0
+      ? Math.min(totalAmount, roundedPenalty)
+      : roundedPenalty
   const standardParkingFee =
-    totalAmount != null && totalAmount > 0 ? Math.max(0, totalAmount - penaltyAmount) : 0
+    totalAmount != null && totalAmount > 0
+      ? Math.max(0, totalAmount - penaltyAmount)
+      : 0
 
   return {
     isOvertime: true,
     overtimeMinutes: diffMinutes,
+    overtimeBlocks,
     overtimeHoursText,
-    overtimePenaltyMultiplier: overtimeMultiplier,
+    overtimePenaltyMultiplier: effectivePenalty,
+    surgeMultiplier,
     penaltyAmount,
     standardParkingFee,
   }
@@ -218,13 +298,22 @@ function mapBackendDtoToBookingItem(raw: Record<string, unknown>, index: number)
   const totalAmount = Number(raw.totalAmount ?? 160000)
   const remainingFinalPayment = Math.max(0, totalAmount - depositPaid)
 
-  const overtimeMultiplier = Number(raw.overtimePenaltyMultiplier ?? 1.5)
+  // Khớp Backend CheckInOutServiceImpl.java: mặc định penalty là 1.0 nếu null
+  const overtimeMultiplier =
+    raw.overtimePenaltyMultiplier != null ? Number(raw.overtimePenaltyMultiplier) : 1.0
+  const surgeMultiplier = raw.surgeMultiplier != null ? Number(raw.surgeMultiplier) : undefined
+  const surgeStartTime = raw.surgeStartTime ? String(raw.surgeStartTime) : undefined
+  const surgeEndTime = raw.surgeEndTime ? String(raw.surgeEndTime) : undefined
+
   const overtimeInfo = computeOvertimeDetails(
     raw.expectedCheckOutTime,
     raw.checkOutTime ?? raw.actualCheckOutTime,
     baseRatePerHour,
     overtimeMultiplier,
-    totalAmount
+    totalAmount,
+    surgeMultiplier,
+    surgeStartTime,
+    surgeEndTime
   )
 
   return {
@@ -260,8 +349,13 @@ function mapBackendDtoToBookingItem(raw: Record<string, unknown>, index: number)
       : 'Dự kiến đỗ 4 giờ',
     parkingSubtotal: totalAmount,
     depositPaid,
+    advanceDeposit: depositPaid,
+    surgeMultiplier,
+    surgeStartTime,
+    surgeEndTime,
     isOvertime: overtimeInfo.isOvertime,
     overtimeMinutes: overtimeInfo.overtimeMinutes,
+    overtimeBlocks: overtimeInfo.overtimeBlocks,
     overtimeHoursText: overtimeInfo.overtimeHoursText,
     overtimePenaltyMultiplier: overtimeInfo.overtimePenaltyMultiplier,
     penaltyAmount: overtimeInfo.penaltyAmount,
