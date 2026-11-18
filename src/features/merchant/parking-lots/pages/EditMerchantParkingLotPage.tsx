@@ -8,6 +8,7 @@ import { Star, Trash2, Loader2, X } from 'lucide-react'
 import { ApiImage } from '@/shared/components/ApiImage'
 import { Workspace, Panel, Notice, Field, Badge, Dialog, control, button, secondary } from '@/shared/components/Workspace'
 import { errorMessage } from '@/shared/api/resources'
+import { buildGoogleMapsSearchUrl } from '@/shared/maps'
 import { CreateParkingLotMapPicker } from '../components/CreateParkingLotMapPicker'
 import {
   fetchMerchantParkingLotDetail,
@@ -294,7 +295,17 @@ function EditLotForm({ lot }: { lot: MerchantLotRecord }) {
           <div className="my-4 flex flex-wrap gap-3">
             <button type="button" className={secondary} disabled={mutation.isPending || locating} onClick={getDeviceLocation}>{locating ? 'Đang lấy vị trí…' : 'Lấy vị trí thiết bị'}</button>
             <button type="button" className={secondary} disabled={mutation.isPending || locating} onClick={() => setCoordinates(lot.latitude ?? NaN, lot.longitude ?? NaN)}>Khôi phục tọa độ đã lưu</button>
-            {Number.isFinite(latitude) && Number.isFinite(longitude) && <a className={secondary} href={`https://www.google.com/maps/search/?api=1&query=${latitude},${longitude}`} target="_blank" rel="noreferrer">Xem vị trí trên Google Maps</a>}
+            {(() => {
+              const googleMapsUrl = buildGoogleMapsSearchUrl({
+                coordinates: { latitude, longitude },
+                query: lot.address,
+              })
+              return googleMapsUrl ? (
+                <a className={secondary} href={googleMapsUrl} target="_blank" rel="noopener noreferrer">
+                  Xem vị trí trên Google Maps
+                </a>
+              ) : null
+            })()}
           </div>
           {gpsError && <Notice error>{gpsError}</Notice>}
           <CreateParkingLotMapPicker latitude={latitude} longitude={longitude} onCoordinatesChange={setCoordinates} />

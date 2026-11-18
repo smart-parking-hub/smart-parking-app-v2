@@ -1,165 +1,155 @@
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import {
   autocompleteLocations,
-  getDrivingRoute,
-  searchLocations,
+  clearGeocoderCacheForTests,
 } from './mapProvider'
 import { fetchParkingLots } from './parkingSearchApi'
 import { apiClient } from '@/shared/api/client'
-afterEach(() => {
-  vi.restoreAllMocks()
-  vi.unstubAllGlobals()
-})
-describe('Real OpenStreetMap services', () => {
-  it('sends longitude/latitude to OSRM and converts returned GeoJSON to Leaflet order', async () => {
+import {
+  resetMapRuntimeConfigForTests,
+  setMapRuntimeConfigOverrideForTests,
+} from '@/shared/maps'
+
+describe('Hybrid parking-search geocoder (Photon, no Google Billing, no Nominatim fallback)', () => {
+  beforeEach(() => {
+    clearGeocoderCacheForTests()
+    resetMapRuntimeConfigForTests()
+  })
+
+  afterEach(() => {
+    vi.restoreAllMocks()
+    vi.unstubAllGlobals()
+    clearGeocoderCacheForTests()
+    resetMapRuntimeConfigForTests()
+  })
+
+  it('requires at least 3 characters before querying Photon', async () => {
+    const fetchMock = vi.fn()
+    vi.stubGlobal('fetch', fetchMock)
+
+    expect(await autocompleteLocations('ab')).toEqual([])
+    expect(fetchMock).not.toHaveBeenCalled()
+  })
+
+  it('filters Photon results to Vietnam, converts GeoJSON [lng, lat], deduplicates, and caps at 5', async () => {
     const fetchMock = vi.fn().mockResolvedValue({
       ok: true,
+      status: 200,
       json: async () => ({
-        code: 'Ok',
-        routes: [
+        features: [
           {
-            distance: 12500,
-            duration: 900,
-            geometry: {
-              coordinates: [
-                [106.7, 10.7],
-                [106.8, 10.8],
-              ],
+            geometry: { coordinates: [106.7865, 10.7715] },
+            properties: {
+              osm_id: 10,
+              osm_type: 'N',
+              name: 'Cảng Cát Lái',
+              district: 'Phường Cát Lái',
+              city: 'TP. Thủ Đức',
+              countrycode: 'VN',
+            },
+          },
+          {
+            geometry: { coordinates: [100.5, 13.7] },
+            properties: {
+              osm_id: 11,
+              name: 'Outside VN',
+              countrycode: 'TH',
+            },
+          },
+          {
+            geometry: { coordinates: [106.7865, 10.7715] },
+            properties: {
+              osm_id: 12,
+              name: 'Cảng Cát Lái',
+              district: 'Phường Cát Lái',
+              city: 'TP. Thủ Đức',
+              countrycode: 'VN',
             },
           },
         ],
       }),
     })
     vi.stubGlobal('fetch', fetchMock)
-    const result = await getDrivingRoute(
-      { latitude: 10.7, longitude: 106.7 },
-      { latitude: 10.8, longitude: 106.8 },
-    )
-    expect(fetchMock.mock.calls[0][0]).toContain('/106.7,10.7;106.8,10.8?')
-    expect(result).toEqual({
-      points: [
-        [10.7, 106.7],
-        [10.8, 106.8],
-      ],
-      distanceKm: 12.5,
-      durationMinutes: 15,
-    })
-  })
-  it('reports a routing failure rather than drawing an invented route', async () => {
-    vi.stubGlobal(
-      'fetch',
-      vi
-        .fn()
-        .mockResolvedValue({
-          ok: true,
-          json: async () => ({ code: 'NoRoute', routes: [] }),
-        }),
-    )
-    await expect(
-      getDrivingRoute(
-        { latitude: 10, longitude: 106 },
-        { latitude: 11, longitude: 107 },
-      ),
-    ).rejects.toThrow('Chưa tìm thấy tuyến đường')
-  })
-  it('parses geocoder strings and limits results to Vietnam', async () => {
-    const fetchMock = vi
-      .fn()
-      .mockResolvedValue({
-        ok: true,
-        json: async () => [
-          { place_id: 1, display_name: 'Cát Lái', lat: '10.7', lon: '106.7' },
-        ],
-      })
-    vi.stubGlobal('fetch', fetchMock)
-    expect(await searchLocations('Cát Lái')).toEqual([
-      { id: '1', label: 'Cát Lái', latitude: 10.7, longitude: 106.7 },
-    ])
-    expect(fetchMock.mock.calls[0][0]).toContain('countrycodes=vn')
-  })
-  it('filters Photon autocomplete results to Vietnam and falls back to Nominatim on failure', async () => {
-    const fetchMock = vi
-      .fn()
-      .mockResolvedValueOnce({
-        ok: true,
-        json: async () => ({
-          features: [
-            {
-              geometry: { coordinates: [106.7865, 10.7715] },
-              properties: {
-                osm_id: 10,
-                osm_type: 'N',
-                name: 'Cảng Cát Lái',
-                district: 'Phường Cát Lái',
-                city: 'TP. Thủ Đức',
-                countrycode: 'VN',
-              },
-            },
-            {
-              geometry: { coordinates: [100.5, 13.7] },
-              properties: {
-                osm_id: 11,
-                name: 'Outside VN',
-                countrycode: 'TH',
-              },
-            },
-          ],
-        }),
-      })
-      .mockResolvedValueOnce({ ok: false, status: 503 })
-      .mockResolvedValueOnce({
-        ok: true,
-        json: async () => [
-          {
-            place_id: 99,
-            display_name: 'KCN Sóng Thần, Dĩ An, Bình Dương',
-            lat: '10.8924',
-            lon: '106.7725',
-          },
-        ],
-      })
-    vi.stubGlobal('fetch', fetchMock)
 
-    const live = await autocompleteLocations('Cát Lái')
-    expect(live).toHaveLength(1)
-    expect(live[0]).toMatchObject({
-      label: 'Cảng Cát Lái, Phường Cát Lái, TP. Thủ Đức',
-      latitude: 10.7715,
-      longitude: 106.7865,
-    })
-
-    const fallback = await autocompleteLocations('Sóng Thần')
-    expect(fallback).toEqual([
+    const results = await autocompleteLocations('Cát Lái')
+    expect(fetchMock).toHaveBeenCalledTimes(1)
+    expect(String(fetchMock.mock.calls[0][0])).toContain('photon.komoot.io')
+    expect(results).toEqual([
       {
-        id: '99',
-        label: 'KCN Sóng Thần, Dĩ An, Bình Dương',
-        latitude: 10.8924,
-        longitude: 106.7725,
+        id: 'N-10-10.7715',
+        label: 'Cảng Cát Lái, Phường Cát Lái, TP. Thủ Đức',
+        latitude: 10.7715,
+        longitude: 106.7865,
       },
     ])
+
+    // Short in-memory cache serves repeated query without hitting Photon again
+    const cached = await autocompleteLocations('Cát Lái')
+    expect(cached).toEqual(results)
+    expect(fetchMock).toHaveBeenCalledTimes(1)
   })
+
+  it('surfaces HTTP 429 rate-limit error without retry loops or Nominatim fallback', async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: false,
+      status: 429,
+    })
+    vi.stubGlobal('fetch', fetchMock)
+
+    await expect(autocompleteLocations('Sóng Thần')).rejects.toMatchObject({
+      name: 'GeocoderError',
+      code: 'RATE_LIMITED',
+    })
+    expect(fetchMock).toHaveBeenCalledTimes(1)
+    expect(String(fetchMock.mock.calls[0][0])).not.toContain('nominatim')
+  })
+
+  it('throws UNAVAILABLE on Photon error and never falls back to public Nominatim', async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: false,
+      status: 503,
+    })
+    vi.stubGlobal('fetch', fetchMock)
+
+    await expect(autocompleteLocations('Cát Lái')).rejects.toMatchObject({
+      name: 'GeocoderError',
+      code: 'UNAVAILABLE',
+    })
+    expect(fetchMock).toHaveBeenCalledTimes(1)
+  })
+
+  it('respects runtime geocoderEnabled=false configuration without issuing network requests', async () => {
+    setMapRuntimeConfigOverrideForTests({ geocoderEnabled: false })
+    const fetchMock = vi.fn()
+    vi.stubGlobal('fetch', fetchMock)
+
+    await expect(autocompleteLocations('Cát Lái')).rejects.toMatchObject({
+      name: 'GeocoderError',
+      code: 'DISABLED',
+    })
+    expect(fetchMock).not.toHaveBeenCalled()
+  })
+
   it('preserves zero capacity and prices and sends real search coordinates to the backend', async () => {
-    const request = vi
-      .spyOn(apiClient, 'get')
-      .mockResolvedValue({
+    const request = vi.spyOn(apiClient, 'get').mockResolvedValue({
+      data: {
         data: {
-          data: {
-            content: [
-              {
-                id: 1,
-                name: 'Bãi',
-                address: 'Địa chỉ',
-                latitude: 10.7,
-                longitude: 106.7,
-                availableCapacity: 0,
-                basePricePerHour: 0,
-                distanceKm: 0,
-                averageRating: 0,
-              },
-            ],
-          },
+          content: [
+            {
+              id: 1,
+              name: 'Bãi',
+              address: 'Địa chỉ',
+              latitude: 10.7,
+              longitude: 106.7,
+              availableCapacity: 0,
+              basePricePerHour: 0,
+              distanceKm: 0,
+              averageRating: 0,
+            },
+          ],
         },
-      })
+      },
+    })
     const result = await fetchParkingLots({
       selectedVehicleId: 'type:BUS_COACH',
       vehicleType: 'BUS_COACH',

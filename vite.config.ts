@@ -37,6 +37,7 @@ export default defineConfig(() => {
     },
     optimizeDeps: {
       include: ['qrcode.react'],
+      exclude: ['maplibre-gl'],
     },
     build: {
       rollupOptions: {

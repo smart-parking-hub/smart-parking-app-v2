@@ -5,6 +5,7 @@ import { ArrowLeft, ArrowUpRight, MapPin, Navigation, Car, Bus, Truck, Container
 import { MerchantLotNavigation } from '@/entities/parking-lot/components/MerchantLotNavigation'
 import { apiClient } from '@/shared/api/client'
 import { Notice, money } from '@/shared/components/Workspace'
+import { buildGoogleMapsSearchUrl, isValidCoordinates } from '@/shared/maps'
 import { vehicleLabels, type VehicleType } from '@/entities/operations'
 import { MerchantLotGallery } from '../components/detail'
 import { MerchantLotLocationMap } from '../components/detail/MerchantLotLocationMap'
@@ -51,7 +52,16 @@ export function MerchantParkingLotDetailPage() {
   const pricing = lot.pricingRules ?? []
   const total = slots.reduce((sum, slot) => sum + slot.totalCapacity, 0)
   const available = slots.reduce((sum, slot) => sum + slot.availableCapacity, 0)
-  const hasCoordinates = lot.latitude != null && lot.longitude != null && Number.isFinite(lot.latitude) && Number.isFinite(lot.longitude) && Math.abs(lot.latitude) <= 90 && Math.abs(lot.longitude) <= 180
+  const hasCoordinates = isValidCoordinates({
+    latitude: lot.latitude ?? undefined,
+    longitude: lot.longitude ?? undefined,
+  })
+  const externalMapUrl = buildGoogleMapsSearchUrl({
+    coordinates: hasCoordinates
+      ? { latitude: lot.latitude!, longitude: lot.longitude! }
+      : null,
+    query: lot.address || lot.name,
+  })
   return <div className="lot-detail"><div className="lot-detail-container">
     <Link to="/merchant/parking-lots" className="lot-detail-back"><ArrowLeft size={16} />Quay lại danh sách bãi</Link>
     <header className="lot-detail-header">
@@ -81,7 +91,7 @@ export function MerchantParkingLotDetailPage() {
       </section>
       <section className="lot-detail-panel lot-location-panel" aria-labelledby="lot-location-title">
         <div className="lot-panel-heading"><div><span className="lot-section-icon"><MapPin size={20} /></span><h2 id="lot-location-title">Vị trí bãi đỗ</h2></div><Navigation size={18} className="lot-muted-icon" /></div>
-        {hasCoordinates ? <><MerchantLotLocationMap latitude={lot.latitude!} longitude={lot.longitude!} /><div className="lot-location-info"><p><MapPin size={17} /><span>{lot.address || 'Vị trí đã đăng ký của bãi'}</span></p><dl><div><dt>Vĩ độ</dt><dd>{lot.latitude}</dd></div><div><dt>Kinh độ</dt><dd>{lot.longitude}</dd></div></dl><a className="lot-map-link" href={`https://www.google.com/maps/search/?api=1&query=${lot.latitude},${lot.longitude}`} target="_blank" rel="noreferrer">Mở trên Google Maps<ArrowUpRight size={17} /></a></div></> : <div className="lot-detail-empty"><MapPin size={28} /><p>Chưa có tọa độ.</p></div>}
+        {hasCoordinates ? <><MerchantLotLocationMap latitude={lot.latitude!} longitude={lot.longitude!} lotName={lot.name} address={lot.address} /><div className="lot-location-info"><p><MapPin size={17} /><span>{lot.address || 'Vị trí đã đăng ký của bãi'}</span></p><dl><div><dt>Vĩ độ</dt><dd>{lot.latitude}</dd></div><div><dt>Kinh độ</dt><dd>{lot.longitude}</dd></div></dl>{externalMapUrl && <a className="lot-map-link" href={externalMapUrl} target="_blank" rel="noopener noreferrer">Mở trên Google Maps<ArrowUpRight size={17} /></a>}</div></> : <div className="lot-detail-empty"><MapPin size={28} /><p>Chưa có tọa độ.</p></div>}
       </section>
     </div>
     <section className="lot-detail-panel lot-pricing-panel" id="pricing" aria-labelledby="lot-pricing-title">

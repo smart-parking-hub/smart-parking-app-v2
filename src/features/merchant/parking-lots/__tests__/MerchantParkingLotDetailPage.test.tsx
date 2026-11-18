@@ -29,7 +29,7 @@ describe('SCR-030 real-data lot profile', () => {
     expect(screen.getAllByRole('heading', { name: 'Đầu kéo / Container' })).toHaveLength(2)
     expect(screen.getByRole('progressbar', { name: 'Tỷ lệ sử dụng Đầu kéo / Container' })).toHaveAttribute('aria-valuenow', '60')
     expect(screen.getByText(/35\.000/)).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: 'Mở trên Google Maps' })).toHaveAttribute('href', 'https://www.google.com/maps/search/?api=1&query=10.7721328,106.6948199')
+    expect(screen.getByRole('link', { name: 'Mở trên Google Maps' })).toHaveAttribute('href', 'https://www.google.com/maps/search/?api=1&query=10.7721328%2C106.6948199')
     expect(screen.getByRole('link', { name: 'Cấu hình chỗ đỗ' })).toHaveAttribute('href', '/merchant/parking-lots/35/slots')
     expect(screen.getByRole('link', { name: 'Quét QR' })).toHaveAttribute('href', '/merchant/qr-scanner?lot=35')
     expect(screen.queryByText(/CONTAINER:|ALPR|Cát Lái|Doanh Thu/)).not.toBeInTheDocument()

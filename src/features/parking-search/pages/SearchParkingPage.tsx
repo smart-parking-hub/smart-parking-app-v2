@@ -1,5 +1,6 @@
-import { useEffect } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
+import axios from 'axios'
 import { AlertCircle, RefreshCw } from 'lucide-react'
 
 import {
@@ -8,7 +9,9 @@ import {
   type SearchFilterState,
 } from '../types/parkingSearchTypes'
 import {
+  fetchActiveParkingLotsForSearch,
   fetchParkingLots,
+  matchesParkingLotKeyword,
 } from '../api/parkingSearchApi'
 import {
   useParkingSearchStore,
@@ -23,7 +26,50 @@ import { InlineQuickBookPanel } from '../components/InlineQuickBookPanel'
 import { SearchParkingSkeleton } from '../components/SearchParkingSkeleton'
 import type { Coordinates, Place } from '../api/mapProvider'
 
+function classifyParkingSearchError(error: unknown): {
+  title: string
+  description: string
+} {
+  if (axios.isAxiosError(error)) {
+    const status = error.response?.status
+    if (status === 401 || status === 403) {
+      return {
+        title: 'Phiên đăng nhập hết hạn hoặc không có quyền truy cập',
+        description:
+          'Vui lòng đăng nhập lại để tải danh sách bãi đỗ xe từ hệ thống.',
+      }
+    }
+    if (error.code === 'ECONNABORTED') {
+      return {
+        title: 'Quá thời gian phản hồi từ máy chủ bãi xe',
+        description:
+          'Yêu cầu tìm kiếm bãi đỗ vượt quá thời gian chờ. Vui lòng thử lại.',
+      }
+    }
+    if (!error.response) {
+      return {
+        title: 'Không thể kết nối tới máy chủ bãi xe',
+        description:
+          'Kiểm tra kết nối mạng hoặc trạng thái API Gateway rồi thử tải lại.',
+      }
+    }
+    return {
+      title: `Không thể tải danh sách bãi đỗ (HTTP ${status})`,
+      description:
+        'Dịch vụ tìm kiếm bãi đỗ đang gặp sự cố. Bạn vẫn có thể xem bản đồ và thử tải lại sau ít giây.',
+    }
+  }
+
+  return {
+    title: 'Không thể tải danh sách bãi đỗ từ hệ thống',
+    description:
+      'Dịch vụ tìm kiếm bãi xe tạm thời gián đoạn. Vui lòng kiểm tra mạng hoặc thử tải lại.',
+  }
+}
+
 export function SearchParkingPage() {
+  const [lotSearchActivated, setLotSearchActivated] = useState(false)
+
   useEffect(() => {
     parkingSearchStore.setSelectedLotId(null)
   }, [])
@@ -45,6 +91,28 @@ export function SearchParkingPage() {
   const parsedFilters = searchFilterSchema.safeParse(filters)
   const validFilters = parsedFilters.success ? parsedFilters.data : filters
 
+  const queryFilters = useMemo(
+    () => ({
+      latitude: validFilters.latitude,
+      longitude: validFilters.longitude,
+      selectedVehicleId: validFilters.selectedVehicleId,
+      vehicleType: validFilters.vehicleType,
+      radiusKm: validFilters.radiusKm,
+      sortBy: validFilters.sortBy,
+      includeFull: validFilters.includeFull,
+      keyword: '',
+    }),
+    [
+      validFilters.latitude,
+      validFilters.longitude,
+      validFilters.selectedVehicleId,
+      validFilters.vehicleType,
+      validFilters.radiusKm,
+      validFilters.sortBy,
+      validFilters.includeFull,
+    ],
+  )
+
   const {
     data: lots = [],
     isLoading,
@@ -52,16 +120,69 @@ export function SearchParkingPage() {
     refetch,
     isRefetching,
   } = useQuery({
-    queryKey: ['parking-lots-search', validFilters],
-    queryFn: () => fetchParkingLots(validFilters),
+    queryKey: ['parking-lots-search', queryFilters],
+    queryFn: () => fetchParkingLots(queryFilters),
     staleTime: 30000,
   })
+
+  // Real-time live database query of all APPROVED (active) lots for TopFilterBar autocomplete
+  const activeLotsQuery = useQuery({
+    queryKey: ['active-parking-lots-suggest', validFilters.vehicleType],
+    queryFn: ({ signal }) =>
+      fetchActiveParkingLotsForSearch({
+        vehicleType: validFilters.vehicleType,
+        includeFull: true,
+        signal,
+      }),
+    enabled: lotSearchActivated || Boolean(validFilters.keyword.trim()),
+    staleTime: 15000,
+    refetchOnWindowFocus: true,
+  })
+
+  const activeLotsForSuggestions = useMemo(() => {
+    if (activeLotsQuery.data) return activeLotsQuery.data
+    return lots
+  }, [activeLotsQuery.data, lots])
+
+  const selectedLot = useMemo(
+    () =>
+      lots.find((l) => l.id === selectedLotId) ??
+      activeLotsForSuggestions.find((l) => l.id === selectedLotId),
+    [lots, activeLotsForSuggestions, selectedLotId],
+  )
+
+  const displayedLots = useMemo(() => {
+    const keyword = validFilters.keyword.trim()
+    if (!keyword) return lots
+
+    const matchedInScope = lots.filter((lot) =>
+      matchesParkingLotKeyword(lot, keyword),
+    )
+
+    // If user explicitly picked an active DB lot outside current geo radius, include it so card & map stay synced
+    if (
+      selectedLot &&
+      matchesParkingLotKeyword(selectedLot, keyword) &&
+      !matchedInScope.some((l) => l.id === selectedLot.id)
+    ) {
+      return [selectedLot, ...matchedInScope]
+    }
+    return matchedInScope
+  }, [lots, validFilters.keyword, selectedLot])
+
+  const mapLots = useMemo(() => {
+    if (
+      selectedLot &&
+      !displayedLots.some((lot) => lot.id === selectedLot.id)
+    ) {
+      return [selectedLot, ...displayedLots]
+    }
+    return displayedLots
+  }, [displayedLots, selectedLot])
 
   const handleFilterChange = (updated: Partial<SearchFilterState>) => {
     parkingSearchStore.setFilters(updated)
   }
-
-  const selectedLot = lots.find((l) => l.id === selectedLotId)
 
   const handleOpenQuickBook = (lot: ParkingLotItem) => {
     parkingSearchStore.openQuickBook(lot)
@@ -76,13 +197,13 @@ export function SearchParkingPage() {
   }
 
   return (
-    <div className="relative w-full bg-brand-surface font-inter">
+    <div className="relative w-full overflow-x-hidden bg-brand-surface font-inter">
       {/* Full-bleed Map Stage (occupies remaining screen height below DriverHeader while preserving DriverFooter below) */}
-      <div className="relative isolate z-0 w-full lg:h-[calc(100dvh-var(--driver-header-height))] lg:min-h-[600px] flex flex-col lg:block lg:overflow-hidden">
+      <div className="relative isolate z-0 w-full overflow-x-hidden lg:h-[calc(100dvh-var(--driver-header-height))] lg:min-h-[600px] flex flex-col lg:block lg:overflow-hidden">
         {/* Background Full-Bleed Map Canvas */}
         <div className="order-2 lg:order-none lg:absolute lg:inset-0 z-0 mt-2 lg:mt-0">
           <InteractiveMapCanvas
-            lots={lots}
+            lots={mapLots}
             selectedLot={selectedLot}
             origin={origin}
             onSelectLot={(lot) => parkingSearchStore.setSelectedLotId(lot.id)}
@@ -104,6 +225,7 @@ export function SearchParkingPage() {
             onClear={() => parkingSearchStore.clearLocation()}
             onLocateMe={handleLocateMe}
             onSelectPlace={handleSelectPlace}
+            biasCenter={origin}
             parkingLots={lots}
             onSelectLot={(lot) => parkingSearchStore.setSelectedLotId(lot.id)}
           />
@@ -116,9 +238,21 @@ export function SearchParkingPage() {
               filters={filters}
               vehicles={vehicleOptions}
               onChangeFilters={handleFilterChange}
-              totalResults={lots.length}
+              totalResults={displayedLots.length}
               onToggleIncludeFull={(includeFull) =>
                 handleFilterChange({ includeFull })
+              }
+              activeLots={activeLotsForSuggestions}
+              isLoadingSuggestions={
+                activeLotsQuery.isFetching || (isLoading && !activeLotsQuery.data)
+              }
+              suggestionsError={
+                Boolean(activeLotsQuery.isError) &&
+                activeLotsForSuggestions.length === 0
+              }
+              onSearchFocus={() => setLotSearchActivated(true)}
+              onSelectSuggestedLot={(lot) =>
+                parkingSearchStore.setSelectedLotId(lot.id)
               }
             />
           </div>
@@ -131,33 +265,37 @@ export function SearchParkingPage() {
             {isLoading ? (
               <SearchParkingSkeleton />
             ) : error ? (
-              <div
-                role="alert"
-                className="bg-rose-50 border border-rose-200 rounded-xl p-5 text-center my-auto"
-              >
-                <AlertCircle className="w-9 h-9 text-rose-600 mx-auto mb-2" />
-                <h4 className="font-sora text-sm font-bold text-rose-900">
-                  Không thể tải dữ liệu bản đồ bãi xe (Mã lỗi: ERR_GEO_DISPATCH_TIMEOUT)
-                </h4>
-                <p className="text-xs text-rose-700 mt-1 mb-4">
-                  Hệ thống tìm kiếm định vị tạm thời gián đoạn. Vui lòng kiểm tra
-                  mạng hoặc thử lại.
-                </p>
-                <button
-                  type="button"
-                  onClick={() => void refetch()}
-                  disabled={isRefetching}
-                  className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-brand-orange text-white text-xs font-semibold hover:bg-brand-orange-hover transition-colors cursor-pointer disabled:opacity-50"
-                >
-                  <RefreshCw
-                    className={`w-4 h-4 ${isRefetching ? 'animate-spin' : ''}`}
-                  />
-                  <span>{isRefetching ? 'Đang thử lại...' : 'Tải lại bãi xe'}</span>
-                </button>
-              </div>
+              (() => {
+                const errorInfo = classifyParkingSearchError(error)
+                return (
+                  <div
+                    role="alert"
+                    className="bg-rose-50 border border-rose-200 rounded-xl p-5 text-center my-auto"
+                  >
+                    <AlertCircle className="w-9 h-9 text-rose-600 mx-auto mb-2" />
+                    <h4 className="font-sora text-sm font-bold text-rose-900">
+                      {errorInfo.title}
+                    </h4>
+                    <p className="text-xs text-rose-700 mt-1 mb-4">
+                      {errorInfo.description}
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => void refetch()}
+                      disabled={isRefetching}
+                      className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-brand-orange text-white text-xs font-semibold hover:bg-brand-orange-hover transition-colors cursor-pointer disabled:opacity-50"
+                    >
+                      <RefreshCw
+                        className={`w-4 h-4 ${isRefetching ? 'animate-spin' : ''}`}
+                      />
+                      <span>{isRefetching ? 'Đang thử lại...' : 'Tải lại bãi xe'}</span>
+                    </button>
+                  </div>
+                )
+              })()
             ) : (
               <YardCardList
-                lots={lots}
+                lots={displayedLots}
                 selectedLotId={selectedLot?.id}
                 onSelectLot={(lot) => parkingSearchStore.setSelectedLotId(lot.id)}
                 onQuickBook={handleOpenQuickBook}

@@ -9,10 +9,10 @@ export function DriverWorkflowSection() {
     },
     {
       num: '2',
-      title: 'Bước 2: Dẫn Đường Xe Tải',
-      desc: 'Bản đồ tích hợp cảnh báo đường cấm giờ, cầu yếu, giới hạn chiều cao tĩnh không và hướng dẫn rẽ bán kính rộng cho xe container.',
-      tagLabel: 'An toàn:',
-      tagText: 'Loại bỏ 100% rủi ro lạc vào ngõ hẹp hoặc cầu cấm tải trọng.',
+      title: 'Bước 2: Chỉ Đường Tới Cổng Bãi',
+      desc: 'Bản đồ tương tác hiển thị chính xác vị trí cổng bãi đỗ, hỗ trợ mở trực tiếp ứng dụng Google Maps để xem tuyến đường và thời gian di chuyển tham khảo.',
+      tagLabel: 'Chủ động:',
+      tagText: 'Định vị chính xác tọa độ cổng vào bãi giúp tài xế chủ động lộ trình.',
     },
     {
       num: '3',

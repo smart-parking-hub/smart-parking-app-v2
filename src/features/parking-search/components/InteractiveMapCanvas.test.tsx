@@ -1,11 +1,88 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { render, screen, waitFor } from '@testing-library/react'
+import { act, render, screen, waitFor } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import L from 'leaflet'
 import { InteractiveMapCanvas } from './InteractiveMapCanvas'
-import * as mapProvider from '../api/mapProvider'
+import {
+  clearDrivingRouteCacheForTests,
+  resetMapRuntimeConfigForTests,
+} from '@/shared/maps'
 import type { ParkingLotItem } from '../types/parkingSearchTypes'
+
+const mapHandlers: Record<string, (() => void)[]> = {}
+const addedSources = new Map<string, unknown>()
+const addedLayers = new Set<string>()
+
+const mockMapInstance = {
+  on: vi.fn((event: string, cb: () => void) => {
+    mapHandlers[event] = [...(mapHandlers[event] ?? []), cb]
+  }),
+  setStyle: vi.fn(),
+  resize: vi.fn(),
+  remove: vi.fn(),
+  flyTo: vi.fn(),
+  fitBounds: vi.fn(),
+  getZoom: vi.fn(() => 12),
+  zoomIn: vi.fn(),
+  zoomOut: vi.fn(),
+  getSource: vi.fn((id: string) => addedSources.get(id)),
+  getLayer: vi.fn((id: string) => (addedLayers.has(id) ? { id } : undefined)),
+  addSource: vi.fn((id: string, def: unknown) => {
+    addedSources.set(id, { ...((def as object) ?? {}), setData: vi.fn() })
+  }),
+  addLayer: vi.fn((layer: { id: string }) => {
+    addedLayers.add(layer.id)
+  }),
+  removeSource: vi.fn((id: string) => {
+    addedSources.delete(id)
+  }),
+  removeLayer: vi.fn((id: string) => {
+    addedLayers.delete(id)
+  }),
+}
+
+const createdMarkers: Array<{ lngLat?: [number, number] }> = []
+const createdPopups: Array<{ lngLat?: [number, number] }> = []
+
+vi.mock('maplibre-gl', () => {
+  class FakeLngLatBounds {
+    points: [number, number][] = []
+    extend(point: [number, number]) {
+      this.points.push(point)
+      return this
+    }
+  }
+  return {
+    Map: vi.fn(() => mockMapInstance),
+    LngLatBounds: FakeLngLatBounds,
+    Marker: vi.fn(() => {
+      const entry: { lngLat?: [number, number] } = {}
+      createdMarkers.push(entry)
+      return {
+        setLngLat: vi.fn((coords: [number, number]) => {
+          entry.lngLat = coords
+          return {
+            addTo: vi.fn(() => ({ remove: vi.fn() })),
+          }
+        }),
+        remove: vi.fn(),
+      }
+    }),
+    Popup: vi.fn(() => {
+      const entry: { lngLat?: [number, number] } = {}
+      createdPopups.push(entry)
+      const popupApi = {
+        setLngLat: vi.fn((coords: [number, number]) => {
+          entry.lngLat = coords
+          return popupApi
+        }),
+        setDOMContent: vi.fn(() => popupApi),
+        addTo: vi.fn(() => popupApi),
+        remove: vi.fn(),
+      }
+      return popupApi
+    }),
+  }
+})
 
 const sampleLot: ParkingLotItem = {
   id: 1,
@@ -24,51 +101,69 @@ const sampleLot: ParkingLotItem = {
   ratingAverage: 4.8,
 }
 
-function createCanvas2dStub(): CanvasRenderingContext2D {
-  return {
-    scale: vi.fn(),
-    translate: vi.fn(),
-    clearRect: vi.fn(),
-    save: vi.fn(),
-    restore: vi.fn(),
-    beginPath: vi.fn(),
-    rect: vi.fn(),
-    clip: vi.fn(),
-    moveTo: vi.fn(),
-    lineTo: vi.fn(),
-    closePath: vi.fn(),
-    arc: vi.fn(),
-    fill: vi.fn(),
-    stroke: vi.fn(),
-    setTransform: vi.fn(),
-    setLineDash: vi.fn(),
-  } as unknown as CanvasRenderingContext2D
+const secondLot: ParkingLotItem = {
+  ...sampleLot,
+  id: 2,
+  name: 'Bãi ICD Sóng Thần',
+  latitude: 10.8924,
+  longitude: 106.7725,
 }
 
 function renderCanvas(ui: React.ReactElement) {
-  const client = new QueryClient({
-    defaultOptions: {
-      queries: { retry: false },
-    },
-  })
-  return {
-    client,
-    ...render(
-      <QueryClientProvider client={client}>
-        <MemoryRouter>{ui}</MemoryRouter>
-      </QueryClientProvider>,
-    ),
-  }
+  return render(<MemoryRouter>{ui}</MemoryRouter>)
 }
 
-describe('InteractiveMapCanvas pan stability', () => {
+describe('InteractiveMapCanvas (MapLibre GL JS + Google Maps Street + OSRM Routing)', () => {
   beforeEach(() => {
+    resetMapRuntimeConfigForTests()
+    clearDrivingRouteCacheForTests()
+    for (const key of Object.keys(mapHandlers)) delete mapHandlers[key]
+    addedSources.clear()
+    addedLayers.clear()
+    createdMarkers.length = 0
+    createdPopups.length = 0
+    vi.clearAllMocks()
     vi.stubGlobal(
       'ResizeObserver',
       class {
         observe() {}
         disconnect() {}
       },
+    )
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (input: RequestInfo | URL) => {
+        const url = String(input)
+        if (url.includes('/route/v1/driving/')) {
+          return {
+            ok: true,
+            status: 200,
+            headers: new Headers({ 'content-type': 'application/json' }),
+            json: async () => ({
+              code: 'Ok',
+              routes: [
+                {
+                  distance: 15420,
+                  duration: 1680,
+                  geometry: {
+                    type: 'LineString',
+                    coordinates: [
+                      [106.66, 10.77],
+                      [106.72, 10.766],
+                      [106.7865, 10.762622],
+                    ],
+                  },
+                },
+              ],
+            }),
+          }
+        }
+        return {
+          ok: false,
+          status: 404,
+          headers: new Headers(),
+        }
+      }),
     )
     Object.defineProperty(HTMLElement.prototype, 'clientWidth', {
       configurable: true,
@@ -81,27 +176,12 @@ describe('InteractiveMapCanvas pan stability', () => {
   })
 
   afterEach(() => {
-    vi.restoreAllMocks()
     vi.unstubAllGlobals()
+    clearDrivingRouteCacheForTests()
+    resetMapRuntimeConfigForTests()
   })
 
-  it('uses padded Canvas renderer, concrete route colors, and non-clipping non-interactive polyline', async () => {
-    const ctxStub = createCanvas2dStub()
-    vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue(ctxStub)
-    const canvasSpy = vi.spyOn(L, 'canvas')
-    const polylineSpy = vi.spyOn(L, 'polyline')
-    const circleSpy = vi.spyOn(L, 'circleMarker')
-
-    vi.spyOn(mapProvider, 'getDrivingRoute').mockResolvedValue({
-      points: [
-        [10.77, 106.66],
-        [10.766, 106.72],
-        [10.762622, 106.7865],
-      ],
-      distanceKm: 13.5,
-      durationMinutes: 25,
-    })
-
+  it('mounts Google Maps basemap, draws [lng, lat] markers, popup, OSRM driving route, and Google Maps CTA', async () => {
     renderCanvas(
       <InteractiveMapCanvas
         lots={[sampleLot]}
@@ -112,52 +192,50 @@ describe('InteractiveMapCanvas pan stability', () => {
       />,
     )
 
-    expect(canvasSpy).toHaveBeenCalledWith({ padding: 0.5 })
-    expect(circleSpy).toHaveBeenCalledWith(
-      [10.77, 106.66],
-      expect.objectContaining({
-        fillColor: '#ea580c',
-      }),
-    )
+    const region = screen.getByRole('region', {
+      name: 'Bản đồ bãi đỗ Google Maps và OSRM',
+    })
+    expect(region).toHaveAttribute('data-map-basemap', 'google-roadmap')
+
+    // Lot marker + origin marker placed in [lng, lat] order
+    expect(createdMarkers).toEqual([
+      { lngLat: [106.7865, 10.762622] },
+      { lngLat: [106.66, 10.77] },
+    ])
+    expect(createdPopups).toEqual([{ lngLat: [106.7865, 10.762622] }])
+
+    act(() => {
+      mapHandlers.load?.forEach((cb) => cb())
+    })
 
     await waitFor(() => {
-      expect(polylineSpy).toHaveBeenCalledWith(
-        [
-          [10.77, 106.66],
-          [10.766, 106.72],
-          [10.762622, 106.7865],
-        ],
-        expect.objectContaining({
-          color: '#ea580c',
-          noClip: true,
-          interactive: false,
-          lineCap: 'round',
-          lineJoin: 'round',
-        }),
+      expect(screen.getByText('15,4 km')).toBeInTheDocument()
+      expect(screen.getByText('~28 phút')).toBeInTheDocument()
+      expect(mockMapInstance.addSource).toHaveBeenCalledWith(
+        'osrm-driving-route',
+        expect.objectContaining({ type: 'geojson', attribution: 'OSRM' }),
+      )
+      expect(mockMapInstance.addLayer).toHaveBeenCalledWith(
+        expect.objectContaining({ id: 'osrm-driving-route-casing' }),
+      )
+      expect(mockMapInstance.addLayer).toHaveBeenCalledWith(
+        expect.objectContaining({ id: 'osrm-driving-route-line' }),
       )
     })
 
-    expect(await screen.findByText(/13\.5 km/i)).toBeInTheDocument()
+    expect(
+      screen.getByRole('link', { name: /Chỉ đường bằng Google Maps/i }),
+    ).toHaveAttribute(
+      'href',
+      'https://www.google.com/maps/dir/?api=1&destination=10.762622%2C106.7865&travelmode=driving&origin=10.77%2C106.66',
+    )
   })
 
-  it('falls back cleanly to padded SVG renderer and avoids spurious flyTo when lots array reference refreshes', async () => {
-    vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue(null)
-    const svgSpy = vi.spyOn(L, 'svg')
-    const flyToSpy = vi.spyOn(L.Map.prototype, 'flyTo')
-
-    vi.spyOn(mapProvider, 'getDrivingRoute').mockResolvedValue({
-      points: [
-        [10.77, 106.66],
-        [10.762622, 106.7865],
-      ],
-      distanceKm: 13.5,
-      durationMinutes: 25,
-    })
-
+  it('offers Google Maps directions CTA without origin and avoids spurious flyTo on lot array refresh', () => {
     const onSelectLot = vi.fn()
     const onQuickBook = vi.fn()
 
-    const { rerender, client } = renderCanvas(
+    const { rerender } = renderCanvas(
       <InteractiveMapCanvas
         lots={[sampleLot]}
         selectedLot={sampleLot}
@@ -166,46 +244,35 @@ describe('InteractiveMapCanvas pan stability', () => {
       />,
     )
 
-    expect(svgSpy).toHaveBeenCalledWith({ padding: 0.5 })
-    expect(flyToSpy).toHaveBeenCalledTimes(1)
-
-    rerender(
-      <QueryClientProvider client={client}>
-        <MemoryRouter>
-          <InteractiveMapCanvas
-            lots={[{ ...sampleLot }]}
-            selectedLot={{ ...sampleLot }}
-            onSelectLot={onSelectLot}
-            onQuickBook={onQuickBook}
-          />
-        </MemoryRouter>
-      </QueryClientProvider>,
+    expect(mockMapInstance.flyTo).toHaveBeenCalledTimes(1)
+    expect(
+      screen.getByRole('link', { name: /Chỉ đường bằng Google Maps/i }),
+    ).toHaveAttribute(
+      'href',
+      'https://www.google.com/maps/dir/?api=1&destination=10.762622%2C106.7865&travelmode=driving',
     )
 
-    expect(flyToSpy).toHaveBeenCalledTimes(1)
+    rerender(
+      <MemoryRouter>
+        <InteractiveMapCanvas
+          lots={[{ ...sampleLot }]}
+          selectedLot={{ ...sampleLot }}
+          onSelectLot={onSelectLot}
+          onQuickBook={onQuickBook}
+        />
+      </MemoryRouter>,
+    )
+
+    expect(mockMapInstance.flyTo).toHaveBeenCalledTimes(1)
   })
 
   it('re-fits all parking lots when origin is cleared back to unfiltered scope', async () => {
-    vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue(
-      createCanvas2dStub(),
-    )
-    const fitBoundsSpy = vi.spyOn(L.Map.prototype, 'fitBounds')
-
-    vi.spyOn(mapProvider, 'getDrivingRoute').mockResolvedValue({
-      points: [
-        [10.77, 106.66],
-        [10.762622, 106.7865],
-      ],
-      distanceKm: 13.5,
-      durationMinutes: 25,
-    })
-
     const onSelectLot = vi.fn()
     const onQuickBook = vi.fn()
 
-    const { rerender, client } = renderCanvas(
+    const { rerender } = renderCanvas(
       <InteractiveMapCanvas
-        lots={[sampleLot]}
+        lots={[sampleLot, secondLot]}
         selectedLot={sampleLot}
         origin={{ latitude: 10.77, longitude: 106.66 }}
         onSelectLot={onSelectLot}
@@ -213,28 +280,42 @@ describe('InteractiveMapCanvas pan stability', () => {
       />,
     )
 
-    await waitFor(() => {
-      expect(fitBoundsSpy).toHaveBeenCalledTimes(1)
-    })
-
     rerender(
-      <QueryClientProvider client={client}>
-        <MemoryRouter>
-          <InteractiveMapCanvas
-            lots={[sampleLot]}
-            selectedLot={sampleLot}
-            origin={undefined}
-            onSelectLot={onSelectLot}
-            onQuickBook={onQuickBook}
-          />
-        </MemoryRouter>
-      </QueryClientProvider>,
+      <MemoryRouter>
+        <InteractiveMapCanvas
+          lots={[sampleLot, secondLot]}
+          selectedLot={sampleLot}
+          origin={undefined}
+          onSelectLot={onSelectLot}
+          onQuickBook={onQuickBook}
+        />
+      </MemoryRouter>,
     )
 
     await waitFor(() => {
-      expect(fitBoundsSpy).toHaveBeenCalledTimes(2)
+      expect(mockMapInstance.fitBounds).toHaveBeenCalledTimes(1)
     })
-    expect(fitBoundsSpy.mock.calls[1][0]).toEqual([[sampleLot.latitude, sampleLot.longitude]])
+  })
+
+  it('shows non-blocking error banner with retry when Google Maps tiles fail', () => {
+    renderCanvas(
+      <InteractiveMapCanvas
+        lots={[sampleLot]}
+        selectedLot={sampleLot}
+        onSelectLot={vi.fn()}
+        onQuickBook={vi.fn()}
+      />,
+    )
+
+    act(() => {
+      mapHandlers.error?.forEach((cb) => cb())
+    })
+
+    expect(
+      screen.getByText(/Chưa tải được nền bản đồ Google Maps/i),
+    ).toBeInTheDocument()
+    expect(
+      screen.getByRole('button', { name: /Thử tải lại bản đồ/i }),
+    ).toBeInTheDocument()
   })
 })
-
