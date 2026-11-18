@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Link } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Loader2 } from 'lucide-react'
 import {
@@ -24,6 +25,7 @@ interface Notification {
   title: string
   content: string
   type: string
+  targetType?: string | null
   readAt: string | null
   createdAt: string
 }
@@ -118,6 +120,11 @@ export function PortalNotificationsPage() {
                     <p className="mt-1.5 max-w-xl whitespace-pre-wrap text-brand-muted text-xs leading-relaxed">
                       {r.content}
                     </p>
+                    {r.targetType === 'MERCHANT_VERIFICATION' && (
+                      <Link to="/merchant/profile#giay-to" className="mt-2 inline-block font-semibold text-brand-orange-ink hover:underline">
+                        Xem hồ sơ giấy tờ
+                      </Link>
+                    )}
                   </div>
                 ),
               },
