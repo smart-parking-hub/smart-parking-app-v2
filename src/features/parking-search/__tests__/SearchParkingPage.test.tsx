@@ -44,6 +44,7 @@ describe('SCR-015: Interactive Parking Search & Map (Bản đồ tìm kiếm bã
     HTMLDialogElement.prototype.showModal = function () { this.setAttribute('open', '') };
     HTMLDialogElement.prototype.close = function () { this.removeAttribute('open') };
     clearGeocoderCacheForTests()
+    parkingSearchStore.closeQuickBook()
     parkingSearchStore.resetFilters()
     vi.clearAllMocks()
     vi.mocked(apiClient.get).mockImplementation(async url => String(url).match(/parking-lots\/\d+$/) ? { data: { data: { id: 1, name: 'Bãi API', address: 'Địa chỉ', status: 'APPROVED', slots: [], pricingRules: [] } } } : String(url).includes('/vehicles') ? { data: { data: { content: [{ id: 3, licensePlate: '51C-TEST', vehicleType: 'CONTAINER', status: 'ACTIVE' }] } } } : {
@@ -363,5 +364,107 @@ describe('SCR-015: Interactive Parking Search & Map (Bản đồ tìm kiếm bã
 
     expect(screen.queryByText(/ERR_GEO_DISPATCH_TIMEOUT/i)).not.toBeInTheDocument()
     expect(screen.getByText(/Tải lại bãi xe/i)).toBeInTheDocument()
+  })
+
+  it('provides real-time database-backed parking lot suggestions in TopFilterBar without mock data', async () => {
+    const dbOnlyLot = {
+      id: 901,
+      name: 'Bãi Container Hiệp Phước Real DB',
+      address: 'KCN Hiệp Phước, Nhà Bè, TP.HCM',
+      availableCapacity: 7,
+      totalSlots: 30,
+      basePricePerHour: 42000,
+      latitude: 10.6421,
+      longitude: 106.7512,
+      averageRating: 4.9,
+    }
+
+    vi.mocked(apiClient.get).mockImplementation(async (url, config) => {
+      if (String(url).includes('/vehicles')) {
+        return {
+          data: {
+            data: {
+              content: [
+                {
+                  id: 3,
+                  licensePlate: '51C-TEST',
+                  vehicleType: 'CONTAINER',
+                  status: 'ACTIVE',
+                },
+              ],
+            },
+          },
+        }
+      }
+      const params = config?.params as { latitude?: number } | undefined
+      return {
+        data: {
+          data: {
+            content: params?.latitude === undefined ? [dbOnlyLot] : [],
+          },
+        },
+      }
+    })
+
+    renderWithProviders(<SearchParkingPage />)
+
+    const lotSearchInput = screen.getByRole('combobox', {
+      name: /Tìm nhanh bãi đỗ đang hoạt động/i,
+    })
+    fireEvent.focus(lotSearchInput)
+    fireEvent.change(lotSearchInput, { target: { value: 'hiep phuoc' } })
+
+    const suggestionListbox = await screen.findByRole('listbox', {
+      name: /Gợi ý bãi đỗ đang hoạt động/i,
+    })
+    expect(suggestionListbox).toBeInTheDocument()
+
+    const option = await screen.findByRole('option', {
+      name: /Bãi Container Hiệp Phước Real DB/i,
+    })
+    expect(option).toBeInTheDocument()
+    expect(option).toHaveTextContent('Còn 7 chỗ')
+    expect(option).toHaveTextContent('42.000 đ/h')
+
+    fireEvent.click(option)
+
+    expect(
+      screen.queryByRole('listbox', { name: /Gợi ý bãi đỗ đang hoạt động/i }),
+    ).not.toBeInTheDocument()
+    expect(
+      screen.getByRole('region', { name: 'Bản đồ bãi đỗ OpenFreeMap' }),
+    ).toHaveAttribute('data-selected-id', '901')
+
+    // Clearing the keyword restores empty input
+    fireEvent.click(
+      screen.getByRole('button', { name: /Xóa từ khóa bãi đỗ/i }),
+    )
+    expect(lotSearchInput).toHaveValue('')
+  })
+
+  it('shows honest empty message in TopFilterBar search when database has no matching active lots', async () => {
+    vi.mocked(apiClient.get).mockImplementation(async (url) => {
+      if (String(url).includes('/vehicles')) {
+        return { data: { data: { content: [] } } }
+      }
+      return { data: { data: { content: [] } } }
+    })
+
+    renderWithProviders(<SearchParkingPage />)
+
+    const lotSearchInput = screen.getByRole('combobox', {
+      name: /Tìm nhanh bãi đỗ đang hoạt động/i,
+    })
+    fireEvent.focus(lotSearchInput)
+    fireEvent.change(lotSearchInput, { target: { value: 'khong ton tai' } })
+
+    expect(
+      await screen.findByText(
+        /Không tìm thấy bãi đỗ đang hoạt động phù hợp với “khong ton tai”/i,
+      ),
+    ).toBeInTheDocument()
+    expect(
+      screen.queryByText(/Trạm Dừng & Bãi Container Tân Cảng - Phú Hữu/i),
+    ).not.toBeInTheDocument()
   })
 })

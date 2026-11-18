@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import axios from 'axios'
 import { AlertCircle, RefreshCw } from 'lucide-react'
@@ -9,7 +9,9 @@ import {
   type SearchFilterState,
 } from '../types/parkingSearchTypes'
 import {
+  fetchActiveParkingLotsForSearch,
   fetchParkingLots,
+  matchesParkingLotKeyword,
 } from '../api/parkingSearchApi'
 import {
   useParkingSearchStore,
@@ -66,6 +68,8 @@ function classifyParkingSearchError(error: unknown): {
 }
 
 export function SearchParkingPage() {
+  const [lotSearchActivated, setLotSearchActivated] = useState(false)
+
   useEffect(() => {
     parkingSearchStore.setSelectedLotId(null)
   }, [])
@@ -87,6 +91,28 @@ export function SearchParkingPage() {
   const parsedFilters = searchFilterSchema.safeParse(filters)
   const validFilters = parsedFilters.success ? parsedFilters.data : filters
 
+  const queryFilters = useMemo(
+    () => ({
+      latitude: validFilters.latitude,
+      longitude: validFilters.longitude,
+      selectedVehicleId: validFilters.selectedVehicleId,
+      vehicleType: validFilters.vehicleType,
+      radiusKm: validFilters.radiusKm,
+      sortBy: validFilters.sortBy,
+      includeFull: validFilters.includeFull,
+      keyword: '',
+    }),
+    [
+      validFilters.latitude,
+      validFilters.longitude,
+      validFilters.selectedVehicleId,
+      validFilters.vehicleType,
+      validFilters.radiusKm,
+      validFilters.sortBy,
+      validFilters.includeFull,
+    ],
+  )
+
   const {
     data: lots = [],
     isLoading,
@@ -94,16 +120,69 @@ export function SearchParkingPage() {
     refetch,
     isRefetching,
   } = useQuery({
-    queryKey: ['parking-lots-search', validFilters],
-    queryFn: () => fetchParkingLots(validFilters),
+    queryKey: ['parking-lots-search', queryFilters],
+    queryFn: () => fetchParkingLots(queryFilters),
     staleTime: 30000,
   })
+
+  // Real-time live database query of all APPROVED (active) lots for TopFilterBar autocomplete
+  const activeLotsQuery = useQuery({
+    queryKey: ['active-parking-lots-suggest', validFilters.vehicleType],
+    queryFn: ({ signal }) =>
+      fetchActiveParkingLotsForSearch({
+        vehicleType: validFilters.vehicleType,
+        includeFull: true,
+        signal,
+      }),
+    enabled: lotSearchActivated || Boolean(validFilters.keyword.trim()),
+    staleTime: 15000,
+    refetchOnWindowFocus: true,
+  })
+
+  const activeLotsForSuggestions = useMemo(() => {
+    if (activeLotsQuery.data) return activeLotsQuery.data
+    return lots
+  }, [activeLotsQuery.data, lots])
+
+  const selectedLot = useMemo(
+    () =>
+      lots.find((l) => l.id === selectedLotId) ??
+      activeLotsForSuggestions.find((l) => l.id === selectedLotId),
+    [lots, activeLotsForSuggestions, selectedLotId],
+  )
+
+  const displayedLots = useMemo(() => {
+    const keyword = validFilters.keyword.trim()
+    if (!keyword) return lots
+
+    const matchedInScope = lots.filter((lot) =>
+      matchesParkingLotKeyword(lot, keyword),
+    )
+
+    // If user explicitly picked an active DB lot outside current geo radius, include it so card & map stay synced
+    if (
+      selectedLot &&
+      matchesParkingLotKeyword(selectedLot, keyword) &&
+      !matchedInScope.some((l) => l.id === selectedLot.id)
+    ) {
+      return [selectedLot, ...matchedInScope]
+    }
+    return matchedInScope
+  }, [lots, validFilters.keyword, selectedLot])
+
+  const mapLots = useMemo(() => {
+    if (
+      selectedLot &&
+      !displayedLots.some((lot) => lot.id === selectedLot.id)
+    ) {
+      return [selectedLot, ...displayedLots]
+    }
+    return displayedLots
+  }, [displayedLots, selectedLot])
 
   const handleFilterChange = (updated: Partial<SearchFilterState>) => {
     parkingSearchStore.setFilters(updated)
   }
-
-  const selectedLot = lots.find((l) => l.id === selectedLotId)
 
   const handleOpenQuickBook = (lot: ParkingLotItem) => {
     parkingSearchStore.openQuickBook(lot)
@@ -124,7 +203,7 @@ export function SearchParkingPage() {
         {/* Background Full-Bleed Map Canvas */}
         <div className="order-2 lg:order-none lg:absolute lg:inset-0 z-0 mt-2 lg:mt-0">
           <InteractiveMapCanvas
-            lots={lots}
+            lots={mapLots}
             selectedLot={selectedLot}
             origin={origin}
             onSelectLot={(lot) => parkingSearchStore.setSelectedLotId(lot.id)}
@@ -159,9 +238,21 @@ export function SearchParkingPage() {
               filters={filters}
               vehicles={vehicleOptions}
               onChangeFilters={handleFilterChange}
-              totalResults={lots.length}
+              totalResults={displayedLots.length}
               onToggleIncludeFull={(includeFull) =>
                 handleFilterChange({ includeFull })
+              }
+              activeLots={activeLotsForSuggestions}
+              isLoadingSuggestions={
+                activeLotsQuery.isFetching || (isLoading && !activeLotsQuery.data)
+              }
+              suggestionsError={
+                Boolean(activeLotsQuery.isError) &&
+                activeLotsForSuggestions.length === 0
+              }
+              onSearchFocus={() => setLotSearchActivated(true)}
+              onSelectSuggestedLot={(lot) =>
+                parkingSearchStore.setSelectedLotId(lot.id)
               }
             />
           </div>
@@ -204,7 +295,7 @@ export function SearchParkingPage() {
               })()
             ) : (
               <YardCardList
-                lots={lots}
+                lots={displayedLots}
                 selectedLotId={selectedLot?.id}
                 onSelectLot={(lot) => parkingSearchStore.setSelectedLotId(lot.id)}
                 onQuickBook={handleOpenQuickBook}

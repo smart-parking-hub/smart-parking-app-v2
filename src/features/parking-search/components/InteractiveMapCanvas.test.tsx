@@ -211,18 +211,17 @@ describe('InteractiveMapCanvas (MapLibre GL JS + Google Maps Street + OSRM Routi
     await waitFor(() => {
       expect(screen.getByText('15,4 km')).toBeInTheDocument()
       expect(screen.getByText('~28 phút')).toBeInTheDocument()
+      expect(mockMapInstance.addSource).toHaveBeenCalledWith(
+        'osrm-driving-route',
+        expect.objectContaining({ type: 'geojson', attribution: 'OSRM' }),
+      )
+      expect(mockMapInstance.addLayer).toHaveBeenCalledWith(
+        expect.objectContaining({ id: 'osrm-driving-route-casing' }),
+      )
+      expect(mockMapInstance.addLayer).toHaveBeenCalledWith(
+        expect.objectContaining({ id: 'osrm-driving-route-line' }),
+      )
     })
-
-    expect(mockMapInstance.addSource).toHaveBeenCalledWith(
-      'osrm-driving-route',
-      expect.objectContaining({ type: 'geojson', attribution: 'OSRM' }),
-    )
-    expect(mockMapInstance.addLayer).toHaveBeenCalledWith(
-      expect.objectContaining({ id: 'osrm-driving-route-casing' }),
-    )
-    expect(mockMapInstance.addLayer).toHaveBeenCalledWith(
-      expect.objectContaining({ id: 'osrm-driving-route-line' }),
-    )
 
     expect(
       screen.getByRole('link', { name: /Chỉ đường bằng Google Maps/i }),
