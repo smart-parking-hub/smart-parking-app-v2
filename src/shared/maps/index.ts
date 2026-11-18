@@ -1,15 +1,18 @@
-// Pure map primitives & Google Maps URL helpers (zero paid API / SDK dependency)
+// Pure map primitives & Google Maps URL helpers (zero paid API / billing dependency)
 export {
+  createAccuracyCircleGeoJson,
   formatCoordinate,
   fromLatLng,
   isValidCoordinates,
   roundCoordinate,
   toLatLngLiteral,
   toLatLngTuple,
+  toLngLatTuple,
   type Coordinates,
   type LatLngLike,
   type LatLngLiteral,
   type LatLngTuple,
+  type LngLatTuple,
 } from './coordinates'
 
 export {
@@ -22,6 +25,7 @@ export {
 
 export {
   DEFAULT_MAP_CENTER,
+  DEFAULT_MAP_STYLE_URL,
   DEFAULT_MAP_ZOOM,
   DEFAULT_PHOTON_URL,
   DEFAULT_TILE_ATTRIBUTION,
@@ -41,4 +45,5 @@ export {
   type GoogleShareEmbedValidationResult,
 } from './shareEmbed'
 
+export { MapLibreMapView, type MapLibreMapViewProps } from './MapLibreMapView'
 export { LeafletMapView, type LeafletMapViewProps } from './LeafletMapView'

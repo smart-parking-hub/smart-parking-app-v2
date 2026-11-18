@@ -6,6 +6,7 @@ export const DEFAULT_MAP_CENTER: Coordinates = {
 }
 
 export const DEFAULT_MAP_ZOOM = 12
+export const DEFAULT_MAP_STYLE_URL = 'https://tiles.openfreemap.org/styles/liberty'
 export const DEFAULT_TILE_URL = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png'
 export const DEFAULT_TILE_ATTRIBUTION =
   '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
@@ -13,6 +14,7 @@ export const DEFAULT_TILE_MAX_ZOOM = 19
 export const DEFAULT_PHOTON_URL = 'https://photon.komoot.io/api/'
 
 export interface MapRuntimeConfig {
+  styleUrl: string
   tileUrl: string
   tileAttribution: string
   maxZoom: number
@@ -48,7 +50,6 @@ function isAllowedEndpointUrl(value: string): boolean {
 function isValidTileUrlTemplate(value: string): boolean {
   const trimmed = value.trim()
   if (!trimmed) return false
-  // Replace tile placeholders temporarily so URL validation works on template strings.
   const probe = trimmed
     .replace(/\{s\}/g, 'a')
     .replace(/\{[xyz]\}/g, '0')
@@ -91,6 +92,11 @@ export function validateMapRuntimeConfig(
 ): MapRuntimeConfig {
   if (!raw || typeof raw !== 'object') return base
 
+  const styleUrl =
+    typeof raw.styleUrl === 'string' && isAllowedEndpointUrl(raw.styleUrl.trim())
+      ? raw.styleUrl.trim()
+      : base.styleUrl
+
   const tileUrl =
     typeof raw.tileUrl === 'string' && isValidTileUrlTemplate(raw.tileUrl)
       ? raw.tileUrl.trim()
@@ -115,6 +121,7 @@ export function validateMapRuntimeConfig(
   )
 
   return {
+    styleUrl,
     tileUrl,
     tileAttribution,
     maxZoom,
@@ -126,6 +133,7 @@ export function validateMapRuntimeConfig(
 function getBuildTimeDefaults(): MapRuntimeConfig {
   const env = import.meta.env as Record<string, string | undefined>
   const base: MapRuntimeConfig = {
+    styleUrl: DEFAULT_MAP_STYLE_URL,
     tileUrl: DEFAULT_TILE_URL,
     tileAttribution: DEFAULT_TILE_ATTRIBUTION,
     maxZoom: DEFAULT_TILE_MAX_ZOOM,
@@ -135,6 +143,7 @@ function getBuildTimeDefaults(): MapRuntimeConfig {
 
   return validateMapRuntimeConfig(
     {
+      styleUrl: env.VITE_MAP_STYLE_URL,
       tileUrl: env.VITE_MAP_TILE_URL || env.VITE_OSM_TILE_URL,
       tileAttribution: env.VITE_MAP_TILE_ATTRIBUTION,
       maxZoom: env.VITE_MAP_TILE_MAX_ZOOM
@@ -161,7 +170,7 @@ export function getMapRuntimeConfig(): MapRuntimeConfig {
 
 /**
  * Optionally loads a same-origin /map-config.json override once per session so
- * operations can switch tile endpoints or disable the public geocoder without rebuilding.
+ * operations can switch vector styles or disable the public geocoder without rebuilding.
  */
 export async function loadMapRuntimeConfig(): Promise<MapRuntimeConfig> {
   if (runtimeFetchPromise) return runtimeFetchPromise

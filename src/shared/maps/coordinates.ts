@@ -3,7 +3,11 @@ export interface Coordinates {
   longitude: number
 }
 
+/** [latitude, longitude] tuple */
 export type LatLngTuple = [number, number]
+
+/** [longitude, latitude] tuple required by MapLibre GL JS and GeoJSON */
+export type LngLatTuple = [number, number]
 
 export interface LatLngLike {
   lat: number | (() => number)
@@ -35,6 +39,10 @@ export function toLatLngTuple(point: Coordinates): LatLngTuple {
   return [point.latitude, point.longitude]
 }
 
+export function toLngLatTuple(point: Coordinates): LngLatTuple {
+  return [point.longitude, point.latitude]
+}
+
 export function toLatLngLiteral(point: Coordinates): LatLngLiteral {
   return {
     lat: point.latitude,
@@ -59,4 +67,44 @@ export function roundCoordinate(value: number, precision = 7): number {
 export function formatCoordinate(value: number, precision = 7): string {
   if (!Number.isFinite(value)) return ''
   return value.toFixed(precision)
+}
+
+/**
+ * Builds a GeoJSON Polygon approximating a geodesic circle (in meters) around a coordinate.
+ * Used by MapLibre GL JS to display GPS accuracy rings.
+ */
+export function createAccuracyCircleGeoJson(
+  center: Coordinates,
+  radiusMeters: number,
+  steps = 48,
+): GeoJSON.Feature<GeoJSON.Polygon> {
+  const earthRadiusMeters = 6371008.8
+  const latRad = (center.latitude * Math.PI) / 180
+  const lngRad = (center.longitude * Math.PI) / 180
+  const angularDistance = radiusMeters / earthRadiusMeters
+
+  const ring: LngLatTuple[] = []
+  for (let i = 0; i <= steps; i++) {
+    const bearing = (i / steps) * 2 * Math.PI
+    const destLat = Math.asin(
+      Math.sin(latRad) * Math.cos(angularDistance) +
+        Math.cos(latRad) * Math.sin(angularDistance) * Math.cos(bearing),
+    )
+    const destLng =
+      lngRad +
+      Math.atan2(
+        Math.sin(bearing) * Math.sin(angularDistance) * Math.cos(latRad),
+        Math.cos(angularDistance) - Math.sin(latRad) * Math.sin(destLat),
+      )
+    ring.push([(destLng * 180) / Math.PI, (destLat * 180) / Math.PI])
+  }
+
+  return {
+    type: 'Feature',
+    properties: {},
+    geometry: {
+      type: 'Polygon',
+      coordinates: [ring],
+    },
+  }
 }
