@@ -83,6 +83,37 @@ describe('entities/notification mapper & deep-link resolver', () => {
     expect(resolveNotificationAction('USER_WARNING', 10, 'SYSTEM')).toBeNull()
   })
 
+  it('resolves role-specific deep links when user is MERCHANT', () => {
+    expect(resolveNotificationAction('BOOKING', 8821, 'BOOKING', 'MERCHANT')).toEqual(
+      expect.objectContaining({
+        label: 'Xem chi tiết đơn đặt',
+        path: '/merchant/bookings/8821',
+        state: { highlightBookingId: 8821 },
+      }),
+    )
+
+    expect(resolveNotificationAction('BOOKING', 23, 'PAYMENT', 'MERCHANT')).toEqual(
+      expect.objectContaining({
+        label: 'Xem lịch sử thanh toán',
+        path: '/merchant/revenue',
+      }),
+    )
+
+    expect(resolveNotificationAction('PARKING_LOT', 15, 'SYSTEM', 'MERCHANT')).toEqual(
+      expect.objectContaining({
+        label: 'Xem bãi đỗ',
+        path: '/merchant/parking-lots/15',
+      }),
+    )
+
+    expect(resolveNotificationAction('DISPUTE', 55, 'SYSTEM', 'MERCHANT')).toEqual(
+      expect.objectContaining({
+        label: 'Xem khiếu nại',
+        path: '/merchant/disputes/55',
+      }),
+    )
+  })
+
   it('maps BackendNotificationDto into NotificationViewModel preserving read status and action', () => {
     const viewModel = mapNotificationDto({
       id: 42,

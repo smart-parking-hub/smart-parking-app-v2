@@ -1,3 +1,4 @@
+import { sessionRole, type Role } from '@/features/auth/model/session'
 import type { BadgeProps } from '@/shared/components/Badge'
 import type {
   BackendNotificationDto,
@@ -112,10 +113,18 @@ export function resolveNotificationAction(
   targetType?: string | null,
   targetId?: number | null,
   type?: NotificationTypeEnum | string,
+  role?: Role | string | null,
 ): NotificationActionTarget | null {
   const normalizedTarget = targetType?.trim().toUpperCase() ?? ''
   const normalizedType = normalizeNotificationType(type)
   const validTargetId = typeof targetId === 'number' && targetId > 0 ? targetId : null
+  const roleString =
+    typeof role === 'string'
+      ? role
+      : typeof sessionRole === 'function'
+        ? sessionRole()
+        : null
+  const currentRole = typeof roleString === 'string' ? roleString.toUpperCase() : ''
 
   if (!normalizedTarget || !validTargetId) {
     return null
@@ -135,7 +144,7 @@ export function resolveNotificationAction(
   if (normalizedTarget === 'PARKING_LOT') {
     return {
       label: 'Xem bãi đỗ',
-      path: `/parking/${validTargetId}`,
+      path: currentRole === 'MERCHANT' ? `/merchant/parking-lots/${validTargetId}` : `/parking/${validTargetId}`,
       kind: 'parking',
       targetType: 'PARKING_LOT',
       targetId: validTargetId,
@@ -145,7 +154,12 @@ export function resolveNotificationAction(
   if (normalizedTarget === 'DISPUTE') {
     return {
       label: 'Xem khiếu nại',
-      path: `/disputes/${validTargetId}`,
+      path:
+        currentRole === 'MERCHANT'
+          ? `/merchant/disputes/${validTargetId}`
+          : currentRole === 'ADMIN'
+            ? `/admin/disputes/${validTargetId}`
+            : `/disputes/${validTargetId}`,
       kind: 'dispute',
       targetType: 'DISPUTE',
       targetId: validTargetId,
@@ -159,7 +173,7 @@ export function resolveNotificationAction(
   ) {
     return {
       label: 'Xem lịch sử thanh toán',
-      path: '/payments',
+      path: currentRole === 'MERCHANT' ? '/merchant/revenue' : '/payments',
       kind: 'payment',
       targetType: normalizedTarget,
       targetId: validTargetId,
@@ -170,13 +184,23 @@ export function resolveNotificationAction(
     if (normalizedType === 'PAYMENT') {
       return {
         label: 'Xem lịch sử thanh toán',
-        path: '/payments',
+        path: currentRole === 'MERCHANT' ? '/merchant/revenue' : '/payments',
         kind: 'payment',
         targetType: 'BOOKING',
         targetId: validTargetId,
       }
     }
     if (normalizedType === 'BOOKING') {
+      if (currentRole === 'MERCHANT') {
+        return {
+          label: 'Xem chi tiết đơn đặt',
+          path: `/merchant/bookings/${validTargetId}`,
+          kind: 'booking',
+          state: { highlightBookingId: validTargetId },
+          targetType: 'BOOKING',
+          targetId: validTargetId,
+        }
+      }
       return {
         label: 'Xem đặt chỗ',
         path: '/bookings',
@@ -192,7 +216,11 @@ export function resolveNotificationAction(
   return null
 }
 
-export function mapNotificationDto(dto: BackendNotificationDto): NotificationViewModel {
+export function mapNotificationDto(
+  dto: BackendNotificationDto,
+  role?: Role | string | null,
+): NotificationViewModel {
+  const normalizedRole = typeof role === 'string' ? (role as Role) : undefined
   const normalizedType = normalizeNotificationType(dto.type)
   const readAtIso = toIsoNotificationDate(dto.readAt)
   const createdAtIso = toIsoNotificationDate(dto.createdAt)
@@ -215,6 +243,6 @@ export function mapNotificationDto(dto: BackendNotificationDto): NotificationVie
     sentAt: sentAtIso,
     status: dto.status ?? null,
     timeLabel: formatNotificationTime(dto.createdAt ?? dto.sentAt),
-    action: resolveNotificationAction(dto.targetType, dto.targetId, normalizedType),
+    action: resolveNotificationAction(dto.targetType, dto.targetId, normalizedType, normalizedRole),
   }
 }
