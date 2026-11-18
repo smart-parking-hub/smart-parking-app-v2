@@ -117,7 +117,7 @@ export function BookingAvailabilityTimeline({
               const past = block.status === 'PAST' || blockTime <= now
               const unavailable = block.remainingCapacity === 0
               const buffer = block.status === 'BUFFER'
-              const label = past ? 'Đã qua' : buffer ? 'Đệm 30p' : unavailable ? 'Hết chỗ' : `${block.remainingCapacity} chỗ`
+              const label = past ? 'Đã qua' : buffer ? 'Khoảng đệm' : unavailable ? 'Hết chỗ' : `${block.remainingCapacity} chỗ`
               const color = past ? 'border-slate-200 bg-slate-100 text-slate-600'
                 : buffer ? 'border-amber-200 bg-amber-50 text-amber-900'
                 : unavailable ? 'border-red-200 bg-red-50 text-red-800'
@@ -149,7 +149,9 @@ export function BookingAvailabilityTimeline({
 
       {hasMore && onLoadNext && <button type="button" className={secondary} disabled={disabled || loadingMore} onClick={onLoadNext}>{loadingMore ? 'Đang tải ngày tiếp theo…' : 'Xem ngày tiếp theo'}</button>}
       <p className="border-t border-brand-border pt-2.5 text-xs leading-5 text-brand-muted">
-        Số chỗ đã tính khoảng đệm 30 phút. Hệ thống kiểm tra lại toàn bộ thời gian đỗ trước khi giữ chỗ.
+        Số chỗ đã tính {data.turnaroundMinutes ?? data.bufferMinutes} phút đệm sau lượt đỗ
+        {(data.checkInEarlyMinutes ?? 0) > 0 && ` và ${data.checkInEarlyMinutes} phút vào sớm`}.
+        Hệ thống kiểm tra lại toàn bộ khung giờ trước khi giữ chỗ.
       </p>
     </section>
   )

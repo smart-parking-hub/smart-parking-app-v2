@@ -73,6 +73,24 @@ describe('BookingStatusPanel - QR Check-in Integration', () => {
     expect(screen.getByRole('button', { name: 'Tải ảnh vé QR (PNG)' })).toBeInTheDocument()
   })
 
+  it.each([
+    { policy: 1, early: 0, displayed: '19:00' },
+    { policy: 2, early: 15, displayed: '18:45' },
+  ])('shows the arrival window saved on a policy $policy ticket', ({ policy, early, displayed }) => {
+    renderPanel({
+      ...samplePendingCheckinBooking,
+      expectedCheckInTime: '2026-11-18T19:00:00',
+      expectedCheckOutTime: '2026-11-18T21:00:00',
+      expiresAt: '2026-11-18T19:30:00',
+      schedulePolicyVersion: policy,
+      checkInEarlyMinutes: early,
+    }, true)
+    expect(screen.getByText('Từ').nextElementSibling).toHaveTextContent(displayed)
+    const earlyArrival = screen.queryByText(/Có thể vào sớm tối đa 15 phút nếu chỗ đã sẵn sàng/)
+    if (early) expect(earlyArrival).toBeInTheDocument()
+    else expect(earlyArrival).not.toBeInTheDocument()
+  })
+
   it('does not render QR check-in card when status is PENDING_PAYMENT', () => {
     // Arrange & Act
     renderPanel(samplePendingPaymentBooking)
