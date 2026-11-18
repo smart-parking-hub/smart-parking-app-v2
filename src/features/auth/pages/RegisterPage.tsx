@@ -162,9 +162,9 @@ export function RegisterPage({ mode = 'register' }: { mode?: 'login' | 'register
   const otp = useMutation<
     { expiresInSeconds: number; resendAfterSeconds: number; email: string },
     Error,
-    { generation: number; requestId: number; email: string }
+    { generation: number; requestId: number; email: string; phone?: string }
   >({
-    mutationFn: async ({ email }) => {
+    mutationFn: async ({ email, phone }) => {
       if (mode === 'register' && email && email.length > 100) {
         throw new Error('Email không được vượt quá 100 ký tự.')
       }
@@ -175,6 +175,7 @@ export function RegisterPage({ mode = 'register' }: { mode?: 'login' | 'register
       return requestEmailOtp(
         mode === 'register' ? 'register' : 'forgot',
         email.toLowerCase(),
+        phone,
       )
     },
     onMutate: () => {
@@ -201,13 +202,19 @@ export function RegisterPage({ mode = 'register' }: { mode?: 'login' | 'register
       }
       setCountdown(Math.max(1, data.resendAfterSeconds || data.expiresInSeconds || 60))
     },
-    onError: (_error, variables) => {
+    onError: (error, variables) => {
       if (
         variables.generation !== sessionGenerationRef.current ||
         variables.requestId !== activeSendRequestIdRef.current ||
         variables.email !== (form.getValues('email') ?? '').trim().toLowerCase()
       ) {
         return
+      }
+      const msg = errorMessage(error)
+      if (/số điện thoại|phone/i.test(msg)) {
+        setRegisterStepKey('info')
+        form.setError('phone', { message: msg })
+        setFieldToFocus('phone')
       }
     },
   })
@@ -622,11 +629,26 @@ export function RegisterPage({ mode = 'register' }: { mode?: 'login' | 'register
     verifyOtp.reset()
     setMagicLinkNotice(null)
     const email = (form.getValues('email') ?? '').trim().toLowerCase()
+    const rawPhone = form.getValues('phone') ?? ''
+    const cleanPhone = rawPhone.replace(/\s+/g, '')
+
+    if (mode === 'register') {
+      if (!cleanPhone || !/^(0|\+84)[35789][0-9]{8}$/.test(cleanPhone)) {
+        setRegisterStepKey('info')
+        form.setError('phone', {
+          message: 'Vui lòng nhập số điện thoại hợp lệ trước khi nhận mã OTP.',
+        })
+        setFieldToFocus('phone')
+        return
+      }
+    }
+
     const reqId = ++activeSendRequestIdRef.current
     otp.mutate({
       generation: sessionGenerationRef.current,
       requestId: reqId,
       email,
+      phone: cleanPhone || undefined,
     })
   }
 
