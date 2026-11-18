@@ -23,19 +23,24 @@ function fill(label: string, value: string) {
 
 const delivery = { data: { data: { expiresInSeconds: 300, resendAfterSeconds: 60 } } }
 const next = () => screen.getByRole('button', { name: 'Tiếp tục: Xác thực Email' })
-const magicUrl = '/register?email=driver%40example.test&otpCode=012345&autoVerify=true'
 
-async function readyToSubmit(url = magicUrl) {
-  mount(url)
+async function readyToSubmit(initialValues: Record<string, string> = {}) {
+  mount()
+  fill('Họ và tên', initialValues.fullName ?? 'Test Driver')
+  fill('Số điện thoại', initialValues.phone ?? '0901234567')
+  if (initialValues.citizenId !== undefined) {
+    fill('CCCD / CMND', initialValues.citizenId)
+  }
+  await userEvent.click(next())
+  await waitFor(() => expect(screen.getByLabelText('Email nhận mã xác thực')).toBeVisible())
+  fill('Email nhận mã xác thực', initialValues.email ?? 'driver@example.test')
+  await userEvent.click(screen.getByRole('button', { name: 'Gửi mã qua email' }))
+  await waitFor(() => expect(screen.getByLabelText('Mã xác thực email (6 số)')).toBeVisible())
+  fill('Mã xác thực email (6 số)', initialValues.otpCode ?? '012345')
+  await userEvent.click(screen.getByRole('button', { name: 'Tiếp tục: Thiết lập mật khẩu' }))
   await waitFor(() => expect(screen.getByLabelText('Mật khẩu')).toBeVisible())
-  fill('Mật khẩu', 'test-password')
-  fill('Xác nhận mật khẩu', 'test-password')
-}
-
-function draft(values: Record<string, string> = {}) {
-  sessionStorage.setItem('sp_register_draft', JSON.stringify({
-    role: 'DRIVER', fullName: 'Test Driver', phone: '0901234567', ...values,
-  }))
+  fill('Mật khẩu', initialValues.password ?? 'test-password')
+  fill('Xác nhận mật khẩu', initialValues.confirmPassword ?? 'test-password')
 }
 
 it.each([
@@ -85,6 +90,10 @@ it('allows empty driver citizen ID but requires it for a merchant', async () => 
   expect(screen.getByLabelText('Email nhận mã xác thực')).toBeVisible()
   await userEvent.click(screen.getByRole('button', { name: 'Quay lại' }))
   await userEvent.selectOptions(screen.getByLabelText('Bạn tham gia với vai trò'), 'MERCHANT')
+  expect(screen.getByRole('dialog')).toBeVisible()
+  await userEvent.click(screen.getByRole('button', { name: 'Đổi vai trò và nhập lại' }))
+  fill('Họ và tên', 'Test Merchant')
+  fill('Số điện thoại', '0901234567')
   await userEvent.click(screen.getByRole('button', { name: 'Tiếp tục: Kết nối ngân hàng' }))
   expect(await screen.findByText('CCCD / CMND là bắt buộc đối với Chủ bãi xe.')).toBeVisible()
   expect(screen.getByLabelText('CCCD / CMND')).toHaveFocus()
@@ -105,8 +114,7 @@ it.each(['12345678', '1234567890', '12345678901A'])(
 it.each(['012345678', '012345678901'])(
   'preserves leading zeros and submits normalized personal data for %s', async citizenId => {
     const request = vi.spyOn(apiClient, 'request').mockResolvedValue(delivery)
-    draft({ fullName: '  Test Driver  ', phone: '+84 901 234 567', citizenId: ` ${citizenId} ` })
-    await readyToSubmit()
+    await readyToSubmit({ fullName: '  Test Driver  ', phone: '+84 901 234 567', citizenId: ` ${citizenId} ` })
     await userEvent.click(screen.getByRole('button', { name: 'Tạo tài khoản' }))
     await waitFor(() => expect(request).toHaveBeenCalledWith(expect.objectContaining({
       url: '/api/v1/auth/register',
@@ -119,10 +127,10 @@ it.each([
   ['fullName', 'A', 'Họ và tên', 'Họ và tên phải có ít nhất 2 ký tự.'],
   ['phone', '0212345678', 'Số điện thoại', 'Số điện thoại Việt Nam chưa hợp lệ'],
   ['citizenId', '123', 'CCCD / CMND', 'CCCD / CMND phải gồm 9 hoặc 12 chữ số.'],
-])('reveals and focuses invalid restored %s after magic-link verification', async (field, value, label, message) => {
+])('reveals and focuses invalid field %s during final form submission', async (_field, value, label, message) => {
   const request = vi.spyOn(apiClient, 'request').mockResolvedValue(delivery)
-  draft({ [field]: value })
   await readyToSubmit()
+  fill(label, value)
   await userEvent.click(screen.getByRole('button', { name: 'Tạo tài khoản' }))
   expect(await screen.findByText(message, { exact: false })).toBeVisible()
   expect(screen.getByLabelText(label)).toHaveFocus()
@@ -133,16 +141,15 @@ it.each([
   ['Số điện thoại đã tồn tại trong hệ thống!', 'Số điện thoại'],
   ['Email đã tồn tại trong hệ thống!', 'Email nhận mã xác thực'],
 ])('shows server duplicate error at the visible field: %s', async (message, label) => {
-  const request = vi.spyOn(apiClient, 'request').mockResolvedValueOnce(delivery).mockRejectedValueOnce(new Error(message))
-  draft()
+  const request = vi.spyOn(apiClient, 'request').mockResolvedValue(delivery)
   await readyToSubmit()
+  request.mockRejectedValueOnce(new Error(message))
   await userEvent.click(screen.getByRole('button', { name: 'Tạo tài khoản' }))
   await waitFor(() => expect(screen.getByLabelText(label)).toBeVisible())
   expect(screen.getByLabelText(label)).toHaveFocus()
   expect(screen.getByLabelText(label)).toHaveAttribute('aria-invalid', 'true')
   expect(screen.getByLabelText(label)).toHaveAccessibleDescription(expect.stringContaining(message))
   expect(screen.queryByText('Đăng ký thành công!')).not.toBeInTheDocument()
-  expect(request).toHaveBeenCalledTimes(2)
 })
 
 it('blocks an overlong email before OTP delivery', async () => {

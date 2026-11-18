@@ -157,9 +157,8 @@ it('checks OTP on the server before revealing password fields and keeps rejectio
   expect(request.mock.calls.some(([config]) => config.url === '/api/v1/auth/register')).toBe(false)
 })
 
-it('supports Magic Link URL parameters to auto-verify email and advance directly to password step', async () => {
+it('supports Magic Link URL parameters to auto-verify email without bypassing missing personal info', async () => {
   const request = vi.spyOn(apiClient, 'request').mockResolvedValue({ data: { code: 'OTP_VERIFIED' } })
-  sessionStorage.setItem('sp_register_draft', JSON.stringify({ fullName: 'Magic User', phone: '0912345678' }))
 
   render(
     <QueryClientProvider client={new QueryClient({ defaultOptions: { mutations: { retry: false } } })}>
@@ -178,12 +177,12 @@ it('supports Magic Link URL parameters to auto-verify email and advance directly
     ),
   )
 
-  expect(await screen.findByText(/Email đã được xác thực thành công qua liên kết/i)).toBeInTheDocument()
-  expect(screen.getByLabelText('Mật khẩu')).toBeVisible()
-  sessionStorage.removeItem('sp_register_draft')
+  expect(await screen.findByText(/Email đã được xác thực qua liên kết. Vui lòng hoàn tất thông tin đăng ký./i)).toBeInTheDocument()
+  expect(screen.getByLabelText('Họ và tên')).toBeVisible()
+  expect(screen.getByLabelText('Mật khẩu')).not.toBeVisible()
 })
 
-it('restores draft from sessionStorage and preserves draft across registration steps', async () => {
+it('does not restore legacy draft from sessionStorage and cleans up the key', async () => {
   sessionStorage.setItem('sp_register_draft', JSON.stringify({ fullName: 'Draft Driver', phone: '0988776655' }))
 
   render(
@@ -194,8 +193,8 @@ it('restores draft from sessionStorage and preserves draft across registration s
     </QueryClientProvider>,
   )
 
-  expect(screen.getByLabelText('Họ và tên')).toHaveValue('Draft Driver')
-  expect(screen.getByLabelText('Số điện thoại')).toHaveValue('0988776655')
-  sessionStorage.removeItem('sp_register_draft')
+  expect(screen.getByLabelText('Họ và tên')).toHaveValue('')
+  expect(screen.getByLabelText('Số điện thoại')).toHaveValue('')
+  expect(sessionStorage.getItem('sp_register_draft')).toBeNull()
 })
 
