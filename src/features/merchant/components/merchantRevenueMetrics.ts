@@ -85,21 +85,36 @@ export function resolveScopedRevenueMetrics(
         data.periodOnlineTransferNetRevenue,
         data.periodCounterQrNetRevenue,
         data.periodUnclassifiedTransferNetRevenue,
-      ) && (channelNet !== 0 || transferCount > 0)
+      )
     : hasAnyDefined(
         data.onlineTransferNetRevenue,
         data.counterQrNetRevenue,
         data.unclassifiedTransferNetRevenue,
-      ) && (channelNet !== 0 || transferCount > 0)
+      )
+
+  const hasExplicitTotalNet = hasAnyDefined(
+    usePeriodValues ? data.periodTotalNetRevenue : data.totalNetRevenue,
+  )
 
   const transferNet = usePeriodValues
-    ? hasAnyDefined(data.periodTotalNetRevenue) &&
-      (num(data.periodTotalNetRevenue) !== 0 || !hasChannelNet)
+    ? hasExplicitTotalNet
       ? num(data.periodTotalNetRevenue)
       : channelNet
     : hasChannelNet
       ? channelNet
       : num(data.totalNetRevenue)
+
+  const hasExplicitChannelGross = usePeriodValues
+    ? hasAnyDefined(
+        data.periodOnlineTransferGrossRevenue,
+        data.periodCounterQrGrossRevenue,
+        data.periodUnclassifiedTransferGrossRevenue,
+      )
+    : hasAnyDefined(
+        data.onlineTransferGrossRevenue,
+        data.counterQrGrossRevenue,
+        data.unclassifiedTransferGrossRevenue,
+      )
 
   const channelGross = usePeriodValues
     ? num(data.periodOnlineTransferGrossRevenue) +
@@ -109,45 +124,35 @@ export function resolveScopedRevenueMetrics(
       num(data.counterQrGrossRevenue) +
       num(data.unclassifiedTransferGrossRevenue)
 
+  const hasExplicitTotalGross = hasAnyDefined(
+    usePeriodValues ? data.periodTotalGrossRevenue : data.totalGrossRevenue,
+  )
   const totalGrossField = usePeriodValues
     ? num(data.periodTotalGrossRevenue)
     : num(data.totalGrossRevenue)
 
+  const hasExplicitFee = hasAnyDefined(
+    usePeriodValues ? data.periodTotalPlatformFee : data.totalPlatformFee,
+  )
   const explicitFeeField = usePeriodValues
     ? num(data.periodTotalPlatformFee)
     : num(data.totalPlatformFee)
 
-  // Prefer explicit channel gross -> explicit total gross -> reconstructed (net + fee) -> fallback net (legacy mocks)
+  // Prefer explicit presence (including valid 0) before falling back to net for legacy mocks that omit gross fields.
   let transferGross: number
-  if (channelGross !== 0) {
+  if (hasExplicitChannelGross) {
     transferGross = channelGross
-  } else if (totalGrossField !== 0) {
+  } else if (hasExplicitTotalGross) {
     transferGross = totalGrossField
-  } else if (transferNet !== 0 && explicitFeeField !== 0) {
+  } else if (hasExplicitFee && transferNet !== 0) {
     transferGross = transferNet + explicitFeeField
-  } else if (
-    hasAnyDefined(
-      usePeriodValues
-        ? data.periodTotalGrossRevenue
-        : data.totalGrossRevenue,
-    ) &&
-    transferNet === 0
-  ) {
-    transferGross = 0
   } else {
     transferGross = transferNet
   }
 
-  const platformFee = usePeriodValues
-    ? hasAnyDefined(data.periodTotalPlatformFee) &&
-      (num(data.periodTotalPlatformFee) !== 0 ||
-        transferGross === transferNet)
-      ? num(data.periodTotalPlatformFee)
-      : Math.max(0, transferGross - transferNet)
-    : hasAnyDefined(data.totalPlatformFee) &&
-        (num(data.totalPlatformFee) !== 0 || transferGross === transferNet)
-      ? num(data.totalPlatformFee)
-      : Math.max(0, transferGross - transferNet)
+  const platformFee = hasExplicitFee
+    ? explicitFeeField
+    : Math.max(0, transferGross - transferNet)
 
   return {
     transferGross,
@@ -166,22 +171,38 @@ export function resolveLotTransferGross(
 ): number {
   if (!stats) return 0
   if (usePeriodValues) {
-    const periodGross =
-      num(stats.periodOnlineTransferGrossRevenue) +
-      num(stats.periodCounterQrGrossRevenue) +
-      num(stats.periodUnclassifiedTransferGrossRevenue)
-    if (periodGross !== 0) return periodGross
+    if (
+      hasAnyDefined(
+        stats.periodOnlineTransferGrossRevenue,
+        stats.periodCounterQrGrossRevenue,
+        stats.periodUnclassifiedTransferGrossRevenue,
+      )
+    ) {
+      return (
+        num(stats.periodOnlineTransferGrossRevenue) +
+        num(stats.periodCounterQrGrossRevenue) +
+        num(stats.periodUnclassifiedTransferGrossRevenue)
+      )
+    }
     return (
       num(stats.periodOnlineTransferRevenue) +
       num(stats.periodCounterQrRevenue) +
       num(stats.periodUnclassifiedTransferRevenue)
     )
   }
-  const allTimeGross =
-    num(stats.onlineTransferGrossRevenue) +
-    num(stats.counterQrGrossRevenue) +
-    num(stats.unclassifiedTransferGrossRevenue)
-  if (allTimeGross !== 0) return allTimeGross
+  if (
+    hasAnyDefined(
+      stats.onlineTransferGrossRevenue,
+      stats.counterQrGrossRevenue,
+      stats.unclassifiedTransferGrossRevenue,
+    )
+  ) {
+    return (
+      num(stats.onlineTransferGrossRevenue) +
+      num(stats.counterQrGrossRevenue) +
+      num(stats.unclassifiedTransferGrossRevenue)
+    )
+  }
   return (
     num(stats.onlineTransferRevenue) +
     num(stats.counterQrRevenue) +

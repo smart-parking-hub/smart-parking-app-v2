@@ -13,6 +13,10 @@ import { GateSettlementDialog } from '../operations/GateSettlementDialog'
 import { MerchantBookingsPage } from '../bookings/pages/MerchantBookingsPage'
 import { getMerchantBookingsStoreSnapshot } from '../bookings/store/merchantBookingsStore'
 import { MerchantRevenueByLotTable } from '../components/MerchantRevenueByLotTable'
+import {
+  resolveLotTransferGross,
+  resolveScopedRevenueMetrics,
+} from '../components/merchantRevenueMetrics'
 
 describe('PR #103 Review Regression Suite (F-02, F-03, F-04)', () => {
   beforeEach(() => {
@@ -397,5 +401,106 @@ describe('PR #103 Review Regression Suite (F-02, F-03, F-04)', () => {
     expect(within(orphanRow).getByTestId('lot-status-unknown-999')).toHaveTextContent('Chưa xác định')
     expect(within(orphanRow).queryByText('Đã duyệt')).not.toBeInTheDocument()
     expect(within(orphanRow).queryByText('APPROVED')).not.toBeInTheDocument()
+  })
+
+  it('preserves explicit zero gross (e.g. offsetting payment and refund with different fee rates) instead of falling back to net', async () => {
+    // Payment +100k (10% fee -> net +90k) + refund -100k (8% fee -> net -92k) => gross = 0, fee = +2k, net = -2k, cash = 20k
+    const zeroGrossOffsetPayload = {
+      totalGrossRevenue: 0,
+      totalPlatformFee: 2000,
+      totalNetRevenue: -2000,
+      periodTotalGrossRevenue: 0,
+      periodTotalPlatformFee: 2000,
+      periodTotalNetRevenue: -2000,
+      currentWalletBalance: 50000,
+      completedBookings: 1,
+      onlineTransferGrossRevenue: 0,
+      onlineTransferNetRevenue: -2000,
+      onlineTransferCount: 1,
+      periodOnlineTransferGrossRevenue: 0,
+      periodOnlineTransferNetRevenue: -2000,
+      periodOnlineTransferCount: 1,
+      counterQrGrossRevenue: 0,
+      counterQrNetRevenue: 0,
+      counterQrCount: 0,
+      periodCounterQrGrossRevenue: 0,
+      periodCounterQrNetRevenue: 0,
+      periodCounterQrCount: 0,
+      totalCashRevenue: 20000,
+      totalCashBookings: 1,
+      periodCashRevenue: 20000,
+      periodCashBookings: 1,
+      revenueByParkingLot: [
+        {
+          parkingLotId: 10,
+          onlineTransferGrossRevenue: 0,
+          onlineTransferRevenue: -2000,
+          onlineTransferCount: 1,
+          counterQrGrossRevenue: 0,
+          counterQrRevenue: 0,
+          counterQrCount: 0,
+          cashRevenue: 20000,
+          cashBookingCount: 1,
+          periodOnlineTransferGrossRevenue: 0,
+          periodOnlineTransferRevenue: -2000,
+          periodOnlineTransferCount: 1,
+          periodCounterQrGrossRevenue: 0,
+          periodCounterQrRevenue: 0,
+          periodCounterQrCount: 0,
+          periodCashRevenue: 20000,
+          periodCashBookingCount: 1,
+        },
+      ],
+      series: [{ period: '2026-11-18', revenue: -2000, cashRevenue: 20000, bookingCount: 1 }],
+    }
+
+    // Pure helper checks: both all-time and period MUST preserve 0 gross (never fall back to -2000 net!)
+    const allTime = resolveScopedRevenueMetrics(zeroGrossOffsetPayload, false)
+    expect(allTime.transferGross).toBe(0)
+    expect(allTime.platformFee).toBe(2000)
+    expect(allTime.transferNet).toBe(-2000)
+    expect(allTime.totalGrossCombined).toBe(20000)
+
+    const period = resolveScopedRevenueMetrics(zeroGrossOffsetPayload, true)
+    expect(period.transferGross).toBe(0)
+    expect(period.platformFee).toBe(2000)
+    expect(period.transferNet).toBe(-2000)
+    expect(period.totalGrossCombined).toBe(20000)
+
+    const lotBreakdown = zeroGrossOffsetPayload.revenueByParkingLot[0]
+    expect(resolveLotTransferGross(lotBreakdown, false)).toBe(0)
+    expect(resolveLotTransferGross(lotBreakdown, true)).toBe(0)
+
+    // Render through Dashboard Zod parser + per-lot table to ensure Zod preserves explicit 0 vs undefined
+    vi.spyOn(apiClient, 'get').mockImplementation((async (url: string) => {
+      if (url === '/api/v1/merchant/revenue') return { data: { data: zeroGrossOffsetPayload } }
+      if (url === '/api/v1/merchant/parking-lots') {
+        return {
+          data: {
+            data: {
+              content: [{ id: 10, name: 'Bãi Triệt Tiêu', address: 'Q1', status: 'APPROVED' }],
+              totalElements: 1,
+            },
+          },
+        }
+      }
+      if (url === '/api/v1/merchant/bookings') return { data: { data: { content: [], totalElements: 0 } } }
+      return { data: { data: {} } }
+    }) as never)
+
+    const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+    render(
+      <QueryClientProvider client={qc}>
+        <MemoryRouter>
+          <MerchantDashboardPage />
+        </MemoryRouter>
+      </QueryClientProvider>,
+    )
+
+    expect(await screen.findByTestId('merchant-kpi-total-value')).toHaveTextContent(/20\.000/)
+    expect(screen.getByTestId('channel-card-transfer')).toHaveTextContent(/^Chuyển khoản \(trước phí\)0%0\s*₫1 giao dịch$/)
+    const lotRow = screen.getByTestId('lot-revenue-row-10')
+    expect(lotRow).not.toHaveTextContent(/-2\.000/)
+    expect(lotRow).not.toHaveTextContent(/18\.000/)
   })
 })
