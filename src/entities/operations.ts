@@ -42,6 +42,7 @@ export interface Lot {
   longitude: number
   status: string
   reviewReason?: string
+  description?: string
   merchantName?: string
   merchantPhone?: string
   slots: Slot[]

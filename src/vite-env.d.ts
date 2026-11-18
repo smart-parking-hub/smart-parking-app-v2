@@ -15,3 +15,10 @@ interface ImportMetaEnv {
 interface ImportMeta {
   readonly env: ImportMetaEnv
 }
+
+declare module 'browser-image-compression' {
+  export default function imageCompression(
+    image: Blob | File,
+    options?: any,
+  ): Promise<Blob>
+}

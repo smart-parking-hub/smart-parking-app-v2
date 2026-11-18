@@ -44,3 +44,20 @@ it('keeps incomplete lot configuration readable and does not substitute demo pho
  expect(await screen.findByText('Chưa có bảng giá.')).toBeInTheDocument()
  expect(screen.queryByRole('img')).not.toBeInTheDocument()
 })
+it('renders operating profile and circulation guidelines when description is provided', async () => {
+ vi.mocked(apiClient.get).mockImplementation(async (url) => ({
+  data: {
+   data: String(url).includes('/vehicles')
+    ? { content: [] }
+    : {
+       ...lot,
+       description:
+        '### Khả năng tiếp vận & Quy mô\nBãi đỗ xe container 60T.\n\n### Nội quy PCCC\nGiữ chỗ tối đa 10 phút.',
+      },
+  },
+ }))
+ mount(<ParkingDetailPage />, '/parking/7', '/parking/:id')
+ expect(await screen.findByRole('heading', { name: 'Thông tin vận hành & Hướng dẫn lưu thông' })).toBeInTheDocument()
+ expect(screen.getByText(/Bãi đỗ xe container 60T/)).toBeInTheDocument()
+ expect(screen.getByText(/Giữ chỗ tối đa 10 phút/)).toBeInTheDocument()
+})

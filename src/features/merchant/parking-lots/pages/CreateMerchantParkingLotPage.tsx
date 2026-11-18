@@ -9,19 +9,31 @@ import type {
   AiContentSegments,
   ParkingLotImageItem,
   CreateParkingLotDraft,
+  ParkingLotArchetype,
 } from '../types/merchantParkingLotTypes'
 import {
   createMerchantParkingLot,
   uploadMerchantParkingLotImages,
+  generateAiParkingLotContent,
 } from '../api/merchantParkingLotApi'
 import { CreateParkingLotStepper } from '../components/CreateParkingLotStepper'
 import { CreateParkingLotBasicInfoCard } from '../components/CreateParkingLotBasicInfoCard'
+import { CreateParkingLotAiWidget } from '../components/CreateParkingLotAiWidget'
 import { CreateParkingLotGeoCard } from '../components/CreateParkingLotGeoCard'
 import { CreateParkingLotPhotosCard } from '../components/CreateParkingLotPhotosCard'
 import { CreateParkingLotConfirmStep } from '../components/CreateParkingLotConfirmStep'
 import { CreateParkingLotActionFooter } from '../components/CreateParkingLotActionFooter'
 
 const DRAFT_STORAGE_KEY = 'merchant_lot_registration_draft'
+
+const initialAiContent: AiContentSegments = {
+  logisticsCapacity:
+    'Depot chuyên dụng tiếp nhận đầu kéo container và xe tải nặng 3-4 chân, mặt bãi đầm nén bê tông cốt thép tải trọng trục 60T, hệ thống cắm điện lạnh Reefer 380V hoạt động liên tục 24/7.',
+  safetyRegulations:
+    'Nghiêm cấm sang chiết dầu trong khuôn viên depot. Bãi trang bị sẵn 08 họng trụ cứu hỏa D65 đấu nối nguồn nước áp lực cao cùng xe chữa cháy cơ động túc trực bảo vệ hàng hóa.',
+  circulationGuide:
+    'Tài xế đi từ trục đường chính tiếp cận cổng, duy trì vận tốc < 10km/h khi qua cổng nhận diện ALPR để camera quét biển số và mở barie tự động.',
+}
 
 // Zod Validation Schema matching Backend CreateParkingLotRequest
 const createLotFormSchema = z.object({
@@ -59,8 +71,30 @@ export function CreateMerchantParkingLotPage() {
   const [draftSaved, setDraftSaved] = useState(false)
 
   // AI Assistant State
+  const [lotArchetype, setLotArchetype] = useState<ParkingLotArchetype>('URBAN')
+  const [aiContent, setAiContent] = useState<AiContentSegments>(initialAiContent)
   const [appliedAiContent, setAppliedAiContent] = useState<AiContentSegments | null>(null)
   const [customHighlights, setCustomHighlights] = useState<string>('')
+
+  const handleGenerateNewAiContent = async (highlights?: string, arch?: ParkingLotArchetype) => {
+    const highlightsToUse = highlights !== undefined ? highlights : customHighlights
+    const archetypeToUse = arch || lotArchetype
+    const newContent = await generateAiParkingLotContent({
+      name: formValues.name,
+      address: formValues.address,
+      customHighlights: highlightsToUse,
+      archetype: archetypeToUse,
+    })
+    setAiContent(newContent)
+  }
+
+  const handleApplyAiContent = (content: AiContentSegments) => {
+    setAppliedAiContent(content)
+    setToastMessage('Đã đồng bộ nội dung AI vào hồ sơ bãi đỗ!')
+    setTimeout(() => {
+      setToastMessage(null)
+    }, 3000)
+  }
 
   const [images, setImages] = useState<ParkingLotImageItem[]>([])
 
@@ -99,6 +133,7 @@ export function CreateMerchantParkingLotPage() {
         if (typeof parsed.longitude === 'number') setValue('longitude', parsed.longitude)
         if (parsed.aiContent) setAppliedAiContent(parsed.aiContent)
         if (parsed.customHighlights) setCustomHighlights(parsed.customHighlights)
+        if (parsed.lotArchetype) setLotArchetype(parsed.lotArchetype)
       }
     } catch {
       // Ignore localStorage parse error
@@ -114,6 +149,7 @@ export function CreateMerchantParkingLotPage() {
       longitude: formValues.longitude,
       aiContent: appliedAiContent || undefined,
       customHighlights: customHighlights || undefined,
+      lotArchetype: lotArchetype || undefined,
       updatedAt: new Date().toISOString(),
     }
     try {
@@ -167,11 +203,16 @@ export function CreateMerchantParkingLotPage() {
     try {
       // Phase 1: Create Parking Lot Record if not already created
       if (!lotId) {
+        const description = appliedAiContent
+          ? `### Khả năng tiếp vận & Quy mô\n${appliedAiContent.logisticsCapacity}\n\n### Nội quy PCCC & An toàn\n${appliedAiContent.safetyRegulations}\n\n### Hướng dẫn phân luồng & Lưu thông\n${appliedAiContent.circulationGuide}`
+          : undefined
+
         const created = await createMerchantParkingLot({
           name: data.name,
           address: data.address,
           latitude: data.latitude,
           longitude: data.longitude,
+          ...(description ? { description } : {}),
         })
         lotId = created.id
         setCreatedParkingLotId(created.id)
@@ -271,6 +312,22 @@ export function CreateMerchantParkingLotPage() {
               <legend className="sr-only">{['Thông tin bãi đỗ', 'Vị trí bãi đỗ', 'Kiểm tra hồ sơ'][currentStep]}</legend>
               {currentStep === 0 && <>
                 <CreateParkingLotBasicInfoCard register={register} errors={errors} aiContent={appliedAiContent} onClearAiContent={() => setAppliedAiContent(null)} />
+                <CreateParkingLotAiWidget
+                  currentAiContent={aiContent}
+                  onGenerateNewAiContent={handleGenerateNewAiContent}
+                  onApplyAiContent={handleApplyAiContent}
+                  onContentChange={(content) => {
+                    setAiContent(content)
+                    if (appliedAiContent) {
+                      setAppliedAiContent(content)
+                    }
+                  }}
+                  isApplied={Boolean(appliedAiContent)}
+                  initialHighlights={customHighlights}
+                  onHighlightsChange={setCustomHighlights}
+                  initialArchetype={lotArchetype}
+                  onArchetypeChange={setLotArchetype}
+                />
                 <CreateParkingLotPhotosCard images={images} onImagesChange={setImages} />
               </>}
               {currentStep === 1 && <CreateParkingLotGeoCard latitude={formValues.latitude} longitude={formValues.longitude} setValue={setValue} errors={errors} />}

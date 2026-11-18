@@ -163,6 +163,19 @@ export function LotOverview({ lot, showMap = false }: { lot: Lot; showMap?: bool
           })()}
         </Panel>
       </div>
+      <Panel title="Hồ sơ vận hành & Hướng dẫn bãi đỗ">
+        {lot.description ? (
+          <div className="rounded-2xl border border-orange-200/70 bg-orange-50/30 p-5 shadow-xs">
+            <div className="whitespace-pre-line text-sm leading-relaxed text-brand-dark/90 font-normal">
+              {lot.description}
+            </div>
+          </div>
+        ) : (
+          <div className="rounded-xl border border-dashed border-brand-border bg-brand-surface/50 p-4 text-sm text-brand-muted">
+            Chủ bãi chưa bổ sung hồ sơ vận hành hoặc nội quy qua trợ lý AI cho bãi đỗ này.
+          </div>
+        )}
+      </Panel>
       {showMap && (
         <Panel title="Vị trí bãi đỗ">
           <p className="mb-4 text-sm text-brand-muted">{lot.address}</p>
