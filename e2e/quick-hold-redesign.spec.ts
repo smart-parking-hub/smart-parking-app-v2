@@ -1,3 +1,4 @@
+import { mockBookingSchedule } from './fixtures/booking-schedule'
 import { test, expect } from '@playwright/test'
 import { mockEmptyDriverWallet } from './fixtures/payment-reads'
 
@@ -143,6 +144,7 @@ for (const width of [390, 650, 1440]) {
     await page.route('**/api/v1/driver/profile', route => route.fulfill({ json: { data: { fullName: 'Tài xế kiểm thử' } } }))
     await page.route('**/api/v1/notifications/unread-count', route => route.fulfill({ json: { data: 0 } }))
     await page.route('**/api/v1/disputes/me**', route => route.fulfill({ json: { data: { content: [], totalElements: 0, totalPages: 0 } } }))
+    await mockBookingSchedule(page)
     await page.goto('/parking')
     const triggerBtn = page.getByRole('button', { name: 'ĐẶT GIỮ CHỖ', exact: true })
     await triggerBtn.click()
@@ -168,7 +170,17 @@ for (const width of [390, 650, 1440]) {
     // Real vehicle select option is loaded from API and attached
     const vehicleOption = dialog.getByRole('option', { name: /51C-12345/ })
     await expect(vehicleOption).toBeAttached()
-    await expect(dialog.getByRole('combobox')).toHaveValue('3')
+    await expect(dialog.getByRole('combobox', {name:'Phương tiện của bạn'})).toHaveValue('3')
+
+    // The time grid stays inside the modal, and Escape closes only this picker.
+    const arrival=dialog.getByRole('button',{name:'Giờ vào dự kiến'})
+    await arrival.click()
+    const timeGrid=dialog.getByRole('dialog',{name:'Chọn giờ vào dự kiến'})
+    await expect(timeGrid).toBeVisible()
+    expect(await dialog.evaluate(el=>el.scrollWidth<=el.clientWidth)).toBe(true)
+    await page.screenshot({path:`.artifacts/playwright/quick-hold-time-grid-${width}.png`})
+    await page.keyboard.press('Escape')
+    await expect(timeGrid).toBeHidden();await expect(dialog).toBeVisible();await expect(arrival).toBeFocused()
 
     // 15-minute deposit rule and 20% deposit notice is shown
     await expect(dialog.getByText(/20%/)).toBeVisible()

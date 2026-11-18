@@ -19,7 +19,7 @@ export function readHoldRestriction(error: unknown) {
 }
 export function useBookingHoldRestriction(error: unknown) {
   const details = readHoldRestriction(error)
-  const deadline = details?.retryAt ? bookingTimestamp(details.retryAt) : NaN
+  const deadline = details?.reason !== 'RATE_LIMIT' && details?.retryAt ? bookingTimestamp(details.retryAt) : NaN
   const [, setTick] = useState(0)
   useEffect(() => {
     if (!Number.isFinite(deadline)) return
@@ -29,13 +29,16 @@ export function useBookingHoldRestriction(error: unknown) {
     return () => { window.clearInterval(timer); window.removeEventListener('focus', tick) }
   }, [deadline])
   const seconds = Number.isFinite(deadline) ? Math.max(0, Math.ceil((deadline - Date.now()) / 1000)) : 0
-  return { details, blocked: seconds > 0, remaining: `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}` }
+  const remaining = `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}`
+  return { details, seconds, blocked: seconds > 0, remaining }
 }
 export function BookingHoldRestrictionNotice({ error }: { error: unknown }) {
-  const details = readHoldRestriction(error)
+  const { details } = useBookingHoldRestriction(error)
+  const hasDeadline = Boolean(details?.retryAt && Number.isFinite(bookingTimestamp(details.retryAt)))
+  if (details?.reason === 'RATE_LIMIT') return <Notice error>Chưa tạo được booking. Vui lòng thử lại.</Notice>
   return <Notice error><div className="min-w-0 space-y-2">
     <p>{errorMessage(error)}</p>
-    {details?.retryAt && Number.isFinite(bookingTimestamp(details.retryAt)) && <p className="text-xs leading-relaxed">Có thể thử lại từ <strong>{bookingTimeLabel(details.retryAt)}</strong> (giờ Việt Nam). Khi đến giờ, bấm tạo booking để kiểm tra lại.</p>}
+    {details?.retryAt && hasDeadline && <p className="text-xs leading-relaxed">Có thể thử lại từ <strong>{bookingTimeLabel(details.retryAt)}</strong> (giờ Việt Nam). Khi đến giờ, bấm tạo booking để kiểm tra lại.</p>}
     {details?.existingBookingId && <Link className={`${secondary} !px-3 !py-2 !text-xs`} to={`/bookings?bookingId=${details.existingBookingId}`}>Xem vé đang giữ</Link>}
     {details?.reason === 'ACCOUNT_LIMIT' && <Link className={`${secondary} !px-3 !py-2 !text-xs`} to="/bookings">Xem các vé chờ cọc</Link>}
   </div></Notice>

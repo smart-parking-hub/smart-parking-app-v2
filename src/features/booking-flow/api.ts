@@ -10,6 +10,9 @@ export const bookingSchema = z.object({
   advanceDeposit: money, totalAmount: money.nullable(), hourlyRate: money.nullable(),
   surgeMultiplier: money.nullish(), surgeStartTime: z.string().nullish(), surgeEndTime: z.string().nullish(), overtimePenaltyMultiplier: money.nullish(),
   expectedCheckInTime: z.string(), expectedCheckOutTime: z.string(), expiresAt: z.string(),
+  physicalSlotId: z.string().nullish(), physicalSlotCode: z.string().nullish(),
+  schedulePolicyVersion: z.number().nullish(), checkInEarlyMinutes: z.number().nullish(),
+  bookingBlockMinutes: z.number().nullish(), turnaroundMinutes: z.number().nullish(),
 })
 export type Booking = z.infer<typeof bookingSchema>
 export interface Vehicle { id: number; licensePlate: string; vehicleType: 'SEDAN_SUV'|'BUS_COACH'|'LIGHT_TRUCK'|'HEAVY_TRUCK'|'CONTAINER'; status: string }
@@ -35,7 +38,7 @@ export async function fetchBookingsPage(page: number, size = 8, filters?: Bookin
 }
 export async function fetchVehicles() { const page = await getData<Page<Vehicle>>('/api/v1/vehicles', { size: 100 }); return page.content.filter(vehicle => vehicle.status === 'ACTIVE') }
 export const fetchLot = (id: number) => getData<Lot>(`/api/v1/parking-lots/${id}`)
-export interface BookingInput { vehicleId: number; parkingLotId: number; vehicleType: Vehicle['vehicleType']; expectedCheckInTime: string; expectedCheckOutTime: string; requestId: string }
+export interface BookingInput { vehicleId: number; parkingLotId: number; vehicleType: Vehicle['vehicleType']; expectedCheckInTime: string; expectedCheckOutTime: string; requestId: string; physicalSlotId?: string }
 export async function createBooking(input: BookingInput) { return bookingSchema.parse(await sendData<unknown>('post', '/api/v1/bookings', input)) }
 export async function paymentLink(bookingId: number, final = false) {
   const url = await sendData<unknown>('post', '/api/v1/payments', { bookingId, paymentType: final ? 'FINAL_PAYMENT' : 'DEPOSIT' })
