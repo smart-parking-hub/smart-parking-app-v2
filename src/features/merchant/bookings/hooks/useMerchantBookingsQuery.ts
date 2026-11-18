@@ -11,11 +11,11 @@ import {
 export const merchantBookingsQueryKeys = {
   all: ['merchant-bookings'] as const,
   list: (params: { page: number; size: number; parkingLotId: number | null }) =>
-    ['merchant-bookings', params] as const,
+    ['merchant-bookings', 'list', params] as const,
   statusSummary: (parkingLotId: number | null) =>
-    ['merchant-bookings-status-summary', { parkingLotId }] as const,
+    ['merchant-bookings', 'status-summary', { parkingLotId }] as const,
   summary: (parkingLotId: number | null) =>
-    ['merchant-bookings-summary', { parkingLotId }] as const,
+    ['merchant-bookings', 'summary', { parkingLotId }] as const,
   detail: (id: string | number) => ['merchant-booking', String(id)] as const,
   lotsFilter: ['merchant-bookings-lots-filter'] as const,
 }

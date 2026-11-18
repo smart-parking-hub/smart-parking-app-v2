@@ -85,6 +85,9 @@ export function MerchantScannerPage() {
       void cache.invalidateQueries({ queryKey: ['merchant-booking'] })
       void cache.invalidateQueries({ queryKey: ['real-bookings'] })
       void cache.invalidateQueries({ queryKey: ['booking'] })
+      void cache.invalidateQueries({ queryKey: ['merchant-revenue'] })
+      void cache.invalidateQueries({ queryKey: ['merchant-dashboard-summary'] })
+      void cache.invalidateQueries({ queryKey: ['merchant-revenue-stats'] })
     },
     onError: () => setCamera(false),
     onSettled: () => { scanPending.current = false },

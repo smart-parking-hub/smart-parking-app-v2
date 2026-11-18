@@ -13,6 +13,10 @@ import { RecentMerchantBookings } from '../components/RecentMerchantBookings'
 import { MerchantChannelBreakdownCards } from '../../components/MerchantChannelBreakdownCards'
 import { MerchantRevenueByLotTable } from '../../components/MerchantRevenueByLotTable'
 import {
+  resolveLotTransferGross,
+  resolveScopedRevenueMetrics,
+} from '../../components/merchantRevenueMetrics'
+import {
   Notice,
   Panel,
   Badge,
@@ -117,54 +121,16 @@ export function MerchantDashboardPage() {
     (l) => l.id === selectedLotId,
   )?.name
 
-  const currentNetRevenue = activeRevenue
-    ? usePeriodValues && activeRevenue.periodTotalNetRevenue
-      ? activeRevenue.periodTotalNetRevenue
-      : activeRevenue.totalNetRevenue
-    : 0
+  const scopedMetrics = activeRevenue
+    ? resolveScopedRevenueMetrics(activeRevenue, usePeriodValues)
+    : null
 
-  const currentCashRevenue = activeRevenue
-    ? usePeriodValues
-      ? activeRevenue.periodCashRevenue
-      : activeRevenue.totalCashRevenue
-    : 0
-
-  const currentCashBookings = activeRevenue
-    ? usePeriodValues
-      ? activeRevenue.periodCashBookings
-      : activeRevenue.totalCashBookings
-    : 0
-
-  const currentTransferRevenue = activeRevenue
-    ? usePeriodValues
-      ? activeRevenue.periodOnlineTransferNetRevenue +
-        activeRevenue.periodCounterQrNetRevenue +
-        activeRevenue.periodUnclassifiedTransferNetRevenue
-      : activeRevenue.onlineTransferNetRevenue +
-        activeRevenue.counterQrNetRevenue +
-        activeRevenue.unclassifiedTransferNetRevenue
-    : 0
-
-  const currentTransferCount = activeRevenue
-    ? usePeriodValues
-      ? activeRevenue.periodOnlineTransferCount +
-        activeRevenue.periodCounterQrCount +
-        activeRevenue.periodUnclassifiedTransferCount
-      : activeRevenue.onlineTransferCount +
-        activeRevenue.counterQrCount +
-        activeRevenue.unclassifiedTransferCount
-    : 0
-
-  const hasChannelBreakdown =
-    currentTransferRevenue > 0 || currentTransferCount > 0
-
-  const currentTotalRevenue = activeRevenue
-    ? usePeriodValues
-      ? currentTransferRevenue + currentCashRevenue
-      : hasChannelBreakdown
-        ? currentTransferRevenue + currentCashRevenue
-        : currentNetRevenue + currentCashRevenue
-    : 0
+  const currentNetRevenue = scopedMetrics?.transferNet ?? 0
+  const currentCashRevenue = scopedMetrics?.cash ?? 0
+  const currentCashBookings = scopedMetrics?.cashBookings ?? 0
+  const currentTransferRevenue = scopedMetrics?.transferGross ?? 0
+  const currentTransferCount = scopedMetrics?.transferCount ?? 0
+  const currentTotalRevenue = scopedMetrics?.totalGrossCombined ?? 0
 
   const currentBookings = isLotScoped
     ? (lotRevenueQuery.data?.completedBookings ?? '—')
@@ -260,7 +226,10 @@ export function MerchantDashboardPage() {
           >
             <Panel>
               <p className="font-mono text-xs text-brand-muted">TỔNG DOANH THU</p>
-              <p className="font-sora text-2xl font-bold mt-3 tabular-nums">
+              <p
+                data-testid="merchant-kpi-total-value"
+                className="font-sora text-2xl font-bold mt-3 tabular-nums"
+              >
                 {money(currentTotalRevenue)}
               </p>
             </Panel>
@@ -375,6 +344,7 @@ export function MerchantDashboardPage() {
                 selectedLotId={selectedLotId}
                 onSelectLot={setSelectedLotId}
                 usePeriodValues={usePeriodValues}
+                useGrossTransfer={true}
                 periodLabel={periodLabel}
               />
             )}
@@ -393,13 +363,10 @@ export function MerchantDashboardPage() {
                     const lotCash = usePeriodValues
                       ? (stats?.periodCashRevenue ?? 0)
                       : (stats?.cashRevenue ?? 0)
-                    const lotTransfer = usePeriodValues
-                      ? (stats?.periodOnlineTransferRevenue ?? 0) +
-                        (stats?.periodCounterQrRevenue ?? 0) +
-                        (stats?.periodUnclassifiedTransferRevenue ?? 0)
-                      : (stats?.onlineTransferRevenue ?? 0) +
-                        (stats?.counterQrRevenue ?? 0) +
-                        (stats?.unclassifiedTransferRevenue ?? 0)
+                    const lotTransfer = resolveLotTransferGross(
+                      stats,
+                      usePeriodValues,
+                    )
 
                     return (
                       <li

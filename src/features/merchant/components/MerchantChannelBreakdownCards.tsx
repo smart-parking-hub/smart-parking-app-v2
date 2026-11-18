@@ -28,7 +28,7 @@ export function MerchantChannelBreakdownCards({
   const channels = [
     {
       key: 'transfer',
-      label: 'Chuyển khoản',
+      label: 'Chuyển khoản (trước phí)',
       amount: transferAmount,
       count: transferCount,
       countUnit: 'giao dịch',
@@ -66,7 +66,7 @@ export function MerchantChannelBreakdownCards({
           <span>{periodLabel}</span>
           <span className="text-slate-300">·</span>
           <span className="font-mono tabular-nums text-[#0d1c2e]">
-            Tổng doanh thu: {money(totalCombined)}
+            Tổng doanh thu (trước phí): {money(totalCombined)}
           </span>
         </div>
       </div>

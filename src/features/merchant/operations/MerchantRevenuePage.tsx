@@ -19,6 +19,7 @@ import { MerchantWalletLedger } from '../components/MerchantWalletLedger'
 import { MerchantChannelBreakdownCards } from '../components/MerchantChannelBreakdownCards'
 import { MerchantRevenueByLotTable } from '../components/MerchantRevenueByLotTable'
 import { MerchantDatePicker } from '../components/MerchantDatePicker'
+import { resolveScopedRevenueMetrics } from '../components/merchantRevenueMetrics'
 import {
   getMerchantLotsForRevenue,
   getMerchantRevenue,
@@ -225,68 +226,14 @@ export function MerchantRevenuePage() {
             0,
           )
 
-          const totalCashRevenue = data.totalCashRevenue ?? 0
-          const totalCashBookings = data.totalCashBookings ?? 0
-          const scopedCashRevenue = hasDateFilter
-            ? (data.periodCashRevenue ?? 0)
-            : totalCashRevenue
-          const scopedCashBookings = hasDateFilter
-            ? (data.periodCashBookings ?? 0)
-            : totalCashBookings
-
-          const hasAllTimeGrossChannelFields =
-            data.onlineTransferGrossRevenue !== undefined ||
-            data.counterQrGrossRevenue !== undefined ||
-            data.unclassifiedTransferGrossRevenue !== undefined
-
-          const allTimeTransferGross = hasAllTimeGrossChannelFields
-            ? (data.onlineTransferGrossRevenue ?? 0) +
-              (data.counterQrGrossRevenue ?? 0) +
-              (data.unclassifiedTransferGrossRevenue ?? 0)
-            : (data.totalGrossRevenue ?? 0)
-
-          const hasPeriodGrossChannelFields =
-            data.periodOnlineTransferGrossRevenue !== undefined ||
-            data.periodCounterQrGrossRevenue !== undefined ||
-            data.periodUnclassifiedTransferGrossRevenue !== undefined
-
-          const periodTransferGross = hasPeriodGrossChannelFields
-            ? (data.periodOnlineTransferGrossRevenue ?? 0) +
-              (data.periodCounterQrGrossRevenue ?? 0) +
-              (data.periodUnclassifiedTransferGrossRevenue ?? 0)
-            : data.periodTotalGrossRevenue !== undefined
-              ? data.periodTotalGrossRevenue
-              : (data.periodOnlineTransferNetRevenue ?? 0) +
-                (data.periodCounterQrNetRevenue ?? 0) +
-                (data.periodUnclassifiedTransferNetRevenue ?? 0)
-
-          const scopedTransferGross = hasDateFilter
-            ? periodTransferGross
-            : allTimeTransferGross
-
-          const scopedTransferNet = hasDateFilter
-            ? data.periodTotalNetRevenue !== undefined
-              ? data.periodTotalNetRevenue
-              : (data.periodOnlineTransferNetRevenue ?? 0) +
-                (data.periodCounterQrNetRevenue ?? 0) +
-                (data.periodUnclassifiedTransferNetRevenue ?? 0)
-            : (data.totalNetRevenue ?? 0)
-
-          const scopedPlatformFee = hasDateFilter
-            ? data.periodTotalPlatformFee !== undefined
-              ? data.periodTotalPlatformFee
-              : Math.max(0, scopedTransferGross - scopedTransferNet)
-            : (data.totalPlatformFee ?? 0)
-
-          const scopedCombinedRevenue = scopedTransferGross + scopedCashRevenue
-
-          const transferCount = hasDateFilter
-            ? (data.periodOnlineTransferCount ?? 0) +
-              (data.periodCounterQrCount ?? 0) +
-              (data.periodUnclassifiedTransferCount ?? 0)
-            : (data.onlineTransferCount ?? 0) +
-              (data.counterQrCount ?? 0) +
-              (data.unclassifiedTransferCount ?? 0)
+          const metrics = resolveScopedRevenueMetrics(data, hasDateFilter)
+          const scopedCashRevenue = metrics.cash
+          const scopedCashBookings = metrics.cashBookings
+          const scopedTransferGross = metrics.transferGross
+          const scopedTransferNet = metrics.transferNet
+          const scopedPlatformFee = metrics.platformFee
+          const scopedCombinedRevenue = metrics.totalGrossCombined
+          const transferCount = metrics.transferCount
 
           const scopeLabel = selectedLotName
             ? selectedLotName

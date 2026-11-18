@@ -34,11 +34,11 @@ export function MerchantRevenueChart({ points }: { points: RevenuePoint[] }) {
   return (
     <figure aria-label="Biểu đồ doanh thu theo kỳ">
       <figcaption className="mb-4 flex flex-wrap items-center justify-between gap-2 text-sm text-brand-muted">
-        <span>So sánh 2 cột đứng cạnh nhau: Chuyển khoản và Tiền mặt.</span>
+        <span>So sánh 2 cột đứng cạnh nhau: Chuyển khoản (sau phí) và Tiền mặt.</span>
         <span className="flex flex-wrap items-center gap-3 text-xs font-medium text-slate-600">
           <span className="inline-flex items-center gap-1.5">
             <span className="h-2.5 w-2.5 rounded-xs bg-[#0d1c2e]" />
-            Chuyển khoản
+            Chuyển khoản (sau phí)
           </span>
           <span className="inline-flex items-center gap-1.5">
             <span className="h-2.5 w-2.5 rounded-xs bg-[#d95f00]" />

@@ -49,7 +49,7 @@ describe('Merchant dashboard real data', () => {
       }
     }))
     renderPage()
-    expect(await screen.findByText(/123.456/, { selector: 'p' })).toBeInTheDocument()
+    expect(await screen.findByTestId('merchant-kpi-total-value')).toHaveTextContent(/123\.456/)
     expect(screen.getByRole('link', { name: 'BK-8' })).toHaveAttribute('href', '/merchant/bookings/8')
     expect(screen.getByText('Đã hủy')).toBeInTheDocument()
     expect(screen.getAllByText('Từ chối').length).toBeGreaterThan(0)

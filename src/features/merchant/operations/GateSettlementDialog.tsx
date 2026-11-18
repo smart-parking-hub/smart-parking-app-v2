@@ -45,12 +45,6 @@ export function GateSettlementDialog({ settlement, parkingLotId, onClose, onComp
     retry: false,
   })
 
-  useEffect(() => {
-    if (status.data?.status === 'COMPLETED') {
-      onComplete({ ...settlement, amountDue: 0, bookingStatus: 'COMPLETED', finalPaymentMethod: status.data.finalPaymentMethod ?? undefined })
-    }
-  }, [status.data, settlement, onComplete])
-
   const invalidate = () => {
     for (const queryKey of [
       ['merchant-bookings'],
@@ -63,6 +57,13 @@ export function GateSettlementDialog({ settlement, parkingLotId, onClose, onComp
     ])
       void cache.invalidateQueries({ queryKey })
   }
+
+  useEffect(() => {
+    if (status.data?.status === 'COMPLETED') {
+      invalidate()
+      onComplete({ ...settlement, amountDue: 0, bookingStatus: 'COMPLETED', finalPaymentMethod: status.data.finalPaymentMethod ?? undefined })
+    }
+  }, [status.data, settlement, onComplete])
 
   const payosAccepted = (status.data?.finalPaymentMethod ?? settlement.finalPaymentMethod) === 'PAYOS'
 

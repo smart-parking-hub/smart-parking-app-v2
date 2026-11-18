@@ -1,12 +1,13 @@
 import { Banknote, CheckCircle2, Filter } from 'lucide-react'
 import type { LotRevenueBreakdown } from '@/entities/operations'
 import { Badge, Panel, money } from '@/shared/components/Workspace'
+import { resolveLotTransferGross } from './merchantRevenueMetrics'
 
 export interface LotTableItem {
   id: number
   name: string
   address?: string | null
-  status: string
+  status?: string | null
 }
 
 export interface MerchantRevenueByLotTableProps {
@@ -35,38 +36,15 @@ export function MerchantRevenueByLotTable({
 
   const resolveTransfer = (stats?: LotRevenueBreakdown) => {
     if (!stats) return 0
+    if (useGrossTransfer) {
+      return resolveLotTransferGross(stats, usePeriodValues)
+    }
     if (usePeriodValues) {
-      if (useGrossTransfer) {
-        const hasPeriodGross =
-          stats.periodOnlineTransferGrossRevenue !== undefined ||
-          stats.periodCounterQrGrossRevenue !== undefined ||
-          stats.periodUnclassifiedTransferGrossRevenue !== undefined
-        if (hasPeriodGross) {
-          return (
-            (stats.periodOnlineTransferGrossRevenue ?? 0) +
-            (stats.periodCounterQrGrossRevenue ?? 0) +
-            (stats.periodUnclassifiedTransferGrossRevenue ?? 0)
-          )
-        }
-      }
       return (
         (stats.periodOnlineTransferRevenue ?? 0) +
         (stats.periodCounterQrRevenue ?? 0) +
         (stats.periodUnclassifiedTransferRevenue ?? 0)
       )
-    }
-    if (useGrossTransfer) {
-      const hasAllTimeGross =
-        stats.onlineTransferGrossRevenue !== undefined ||
-        stats.counterQrGrossRevenue !== undefined ||
-        stats.unclassifiedTransferGrossRevenue !== undefined
-      if (hasAllTimeGross) {
-        return (
-          (stats.onlineTransferGrossRevenue ?? 0) +
-          (stats.counterQrGrossRevenue ?? 0) +
-          (stats.unclassifiedTransferGrossRevenue ?? 0)
-        )
-      }
     }
     return (
       (stats.onlineTransferRevenue ?? 0) +
@@ -126,7 +104,7 @@ export function MerchantRevenueByLotTable({
         id: b.parkingLotId,
         name: `Bãi đỗ #${b.parkingLotId}`,
         address: null,
-        status: 'APPROVED',
+        status: null,
       },
       transfer,
       transferCount,
@@ -191,13 +169,13 @@ export function MerchantRevenueByLotTable({
                 Cơ sở bãi đỗ
               </th>
               <th scope="col" className="px-3 py-3 text-right">
-                Chuyển khoản
+                {useGrossTransfer ? 'Chuyển khoản (trước phí)' : 'Chuyển khoản (sau phí)'}
               </th>
               <th scope="col" className="px-3 py-3 text-right">
                 Tiền mặt
               </th>
               <th scope="col" className="px-3 py-3 text-right">
-                {useGrossTransfer ? 'Tổng doanh thu' : 'Tổng thực thu'}
+                {useGrossTransfer ? 'Tổng doanh thu (trước phí)' : 'Tổng thực thu'}
               </th>
               <th scope="col" className="py-3 pl-3 pr-5 text-right md:pr-6">
                 Tỷ trọng tiền mặt
@@ -240,7 +218,16 @@ export function MerchantRevenueByLotTable({
                         {row.lot.address || '—'}
                       </span>
                       <span className="mt-1">
-                        <Badge value={row.lot.status} size="sm" />
+                        {row.lot.status ? (
+                          <Badge value={row.lot.status} size="sm" />
+                        ) : (
+                          <span
+                            data-testid={`lot-status-unknown-${row.lot.id}`}
+                            className="inline-flex items-center rounded-full border border-slate-200 bg-slate-100 px-2 py-0.5 text-[11px] font-semibold text-slate-600"
+                          >
+                            Chưa xác định
+                          </span>
+                        )}
                       </span>
                     </button>
                   </td>

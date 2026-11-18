@@ -202,7 +202,7 @@ export function RevenueVolumeComboChart({
         <div className="flex flex-wrap items-center gap-3 text-[11px]">
           <div className="flex items-center gap-1.5">
             <span className="w-3 h-3 bg-[#0d1c2e] rounded-xs" />
-            <span className="text-[#45464d]">Chuyển khoản</span>
+            <span className="text-[#45464d]">Chuyển khoản (sau phí)</span>
           </div>
           <div className="flex items-center gap-1.5">
             <span className="w-3 h-3 bg-[#d95f00] rounded-xs" />
