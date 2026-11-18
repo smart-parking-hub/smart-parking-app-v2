@@ -44,7 +44,6 @@ export interface BookingItemDto {
   reeferHours?: number
   reeferSubtotal?: number
   depositPaid: number
-  advanceDeposit?: number
   penaltyAmount?: number
   remainingFinalPayment: number
   holdExpiresAt?: string

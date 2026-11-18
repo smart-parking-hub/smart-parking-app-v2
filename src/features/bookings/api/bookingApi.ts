@@ -169,7 +169,6 @@ function mapBackendDtoToBookingItem(raw: Record<string, unknown>, index: number)
     actualDurationText: 'Dự kiến đỗ 4 giờ',
     parkingSubtotal: totalAmount,
     depositPaid,
-    advanceDeposit: depositPaid,
     remainingFinalPayment,
     gateToken: `STH-${id}`,
   }
