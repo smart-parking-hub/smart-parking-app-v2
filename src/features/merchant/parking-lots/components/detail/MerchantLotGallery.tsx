@@ -6,8 +6,13 @@ import {
   X,
   ChevronLeft,
   ChevronRight,
+  Loader2,
 } from 'lucide-react'
 import type { YardGalleryImage } from '../../types/merchantParkingLotTypes'
+import {
+  compressImageFile,
+  isSupportedImageFile,
+} from '@/shared/utils/imageCompressionUtil'
 
 interface MerchantLotGalleryProps {
   images: YardGalleryImage[]
@@ -23,16 +28,39 @@ export function MerchantLotGallery({
   disabled = false,
 }: MerchantLotGalleryProps) {
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null)
+  const [compressing, setCompressing] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files || e.target.files.length === 0) return
     const fileList = Array.from(e.target.files)
-    if (onUploadImages) {
-      await onUploadImages(fileList)
-    }
-    if (fileInputRef.current) {
-      fileInputRef.current.value = ''
+    setCompressing(true)
+
+    try {
+      const compressedFiles: File[] = []
+      for (const f of fileList) {
+        if (isSupportedImageFile(f)) {
+          const res = await compressImageFile(f)
+          compressedFiles.push(res.file)
+        } else {
+          compressedFiles.push(f)
+        }
+      }
+
+      if (onUploadImages && compressedFiles.length > 0) {
+        await onUploadImages(compressedFiles)
+      }
+    } catch (err) {
+      console.warn('Lỗi khi nén ảnh gallery:', err)
+      // Fallback gửi files gốc nếu có lỗi
+      if (onUploadImages) {
+        await onUploadImages(fileList)
+      }
+    } finally {
+      setCompressing(false)
+      if (fileInputRef.current) {
+        fileInputRef.current.value = ''
+      }
     }
   }
 
@@ -76,6 +104,8 @@ export function MerchantLotGallery({
     }
   }, [lightboxIndex, closeLightbox, prevImage, nextImage])
 
+  const isBusy = uploading || compressing
+
   return (
     <div className="bg-white p-5 lg:p-6 rounded-2xl shadow-xs border border-slate-200/80 flex flex-col gap-4">
       {/* Hidden File Input */}
@@ -83,7 +113,7 @@ export function MerchantLotGallery({
         ref={fileInputRef}
         type="file"
         multiple
-        accept="image/jpeg,image/png,image/webp"
+        accept="image/jpeg,image/png,image/webp,image/heic,image/heif,.heic,.heif"
         onChange={handleFileChange}
         className="hidden"
       />
@@ -106,12 +136,22 @@ export function MerchantLotGallery({
 
         <button
           type="button"
-          disabled={disabled || uploading}
+          disabled={disabled || isBusy}
           onClick={() => fileInputRef.current?.click()}
           className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-[#eff4ff] hover:bg-[#d5e3fc] text-[#0d1c2e] disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-semibold text-xs lg:text-sm cursor-pointer border border-slate-200/70"
         >
-          <UploadCloud className="w-4 h-4 text-slate-600" />
-          <span>{uploading ? 'Đang tải ảnh...' : 'Tải thêm ảnh mới'}</span>
+          {isBusy ? (
+            <Loader2 className="w-4 h-4 text-slate-600 animate-spin" />
+          ) : (
+            <UploadCloud className="w-4 h-4 text-slate-600" />
+          )}
+          <span>
+            {compressing
+              ? 'Đang nén ảnh...'
+              : uploading
+                ? 'Đang tải ảnh...'
+                : 'Tải thêm ảnh mới'}
+          </span>
         </button>
       </div>
 
@@ -138,6 +178,8 @@ export function MerchantLotGallery({
               <img
                 src={img.url}
                 alt={img.title}
+                loading="lazy"
+                decoding="async"
                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
               />
 
