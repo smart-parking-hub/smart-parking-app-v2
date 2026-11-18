@@ -37,7 +37,7 @@ export function PayOsCheckoutModal({
 
   const amount =
     paymentType === 'DEPOSIT'
-      ? booking.depositPaid || 100000
+      ? booking.advanceDeposit ?? booking.depositPaid ?? 100000
       : booking.remainingFinalPayment
 
   const formatCurrency = (val: number) => {

@@ -6,6 +6,7 @@ import {
   Star,
   XCircle,
   Wallet,
+  Info,
 } from 'lucide-react'
 import type { BookingItemDto } from '../types/bookingTypes'
 import { Link } from 'react-router-dom'
@@ -38,6 +39,9 @@ export function BookingActionCommands({
   const canCancel =
     booking.status === 'PENDING_PAYMENT' || booking.status === 'PENDING_CHECKIN'
 
+  const depositAmount = booking.advanceDeposit ?? booking.depositPaid ?? 100000
+  const depositFormatted = new Intl.NumberFormat('vi-VN').format(depositAmount) + ' Đ'
+
   const handleCallHotline = () => {
     window.location.href = 'tel:0908123456'
   }
@@ -53,8 +57,20 @@ export function BookingActionCommands({
         </Link>
       )}
 
+      {/* Thông báo nghiệp vụ khi xe đang đỗ trong bãi (chưa quét cổng ra) */}
+      {(isParking || booking.status === 'OVERTIME') && (
+        <div
+          data-testid="parking-status-notice"
+          role="status"
+          className="w-full p-3.5 bg-blue-50/80 border border-blue-200/90 rounded-xl flex items-center gap-2.5 text-blue-900 text-xs sm:text-sm font-medium shadow-2xs"
+        >
+          <Info className="w-5 h-5 text-blue-600 shrink-0" aria-hidden="true" />
+          <span>Xe đang đỗ tại bãi. Cước phí sẽ được chốt khi Barie quét xe tại cổng ra.</span>
+        </div>
+      )}
+
       {/* Primary CTA Buttons according to lifecycle */}
-      {(isParking || isAwaitingFinal) && (
+      {isAwaitingFinal && (
         <button
           type="button"
           onClick={onPayFinal}
@@ -72,7 +88,7 @@ export function BookingActionCommands({
           className="w-full h-12 py-3 px-6 bg-[#d95f00] hover:bg-[#b84e00] text-white rounded-xl text-xs font-bold transition-all shadow-md flex items-center justify-center gap-2 uppercase tracking-wider cursor-pointer"
         >
           <CreditCard className="w-5 h-5 text-white" />
-          <span>THANH TOÁN TIỀN CỌC 100.000 Đ QUA PAYOS VIETQR ➔</span>
+          <span>THANH TOÁN TIỀN CỌC {depositFormatted} QUA PAYOS VIETQR ➔</span>
         </button>
       )}
 
