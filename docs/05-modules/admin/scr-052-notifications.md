@@ -1,5 +1,7 @@
 # SCR-052 — Trung tâm thông báo quản trị
 
+Update 2026-11-17; owner: SPH. Reading a notification now refreshes the header unread indicator immediately as well as the inbox/count. Live local lot #42 reached all three ACTIVE Admin inboxes exactly once. See [persistence audit](../../09-audit/notifications-persistence-2026-11-17.md) for verified DB storage, backend delivery fixes and test evidence; this does not assert VPS acceptance or historical backfill.
+
 > Update 2026-11-15; owner: SPH frontend. List/count refresh every 15 seconds and on focus. Existing PARKING_LOT target metadata now supplies a validated `/admin/parking-lots/:id` dossier link. AdminLayout has a bell with the existing unread indicator. This supersedes the older exclusion of business CTAs below, per the user's explicit request. Server read permissions and per-session cache isolation are unchanged. Delivery still uses the existing parking outbox → Kafka → AdminOperationsHandler flow; no synthetic notification is created by the UI.
 
 - Task: `SP-S3-UI-16`; owner: Đội phát triển SPH; reviewer/người nghiệm thu chưa được gán.

@@ -37,6 +37,8 @@ export function PortalNotificationsPage() {
     queryFn: () =>
       getData<Page<Notification>>('/api/v1/notifications', { page, size: 20, sort }),
     retry: false,
+    refetchOnWindowFocus: true,
+    refetchInterval: 15_000,
   })
   const read = useMutation({
     mutationFn: (id?: number) =>

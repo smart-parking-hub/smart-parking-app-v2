@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { getData, sendData } from '@/shared/api/resources'
 import { SESSION_EVENT } from '@/features/auth'
+import { UnreadNotificationDot } from '@/features/notifications'
 import { AdminNotificationsPage } from '../pages/AdminNotificationsPage'
 import type { AdminNotification } from '../api/adminNotifications'
 
@@ -44,10 +45,10 @@ function mockRequests() {
   })
 }
 
-function mount() {
+function mount(includeIndicator = false) {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false, gcTime: 0 }, mutations: { retry: false } } })
   clients.push(client)
-  return { client, ...render(<QueryClientProvider client={client}><MemoryRouter><AdminNotificationsPage /></MemoryRouter></QueryClientProvider>) }
+  return { client, ...render(<QueryClientProvider client={client}><MemoryRouter>{includeIndicator && <UnreadNotificationDot />}<AdminNotificationsPage /></MemoryRouter></QueryClientProvider>) }
 }
 
 function deferred<T>() {
@@ -69,6 +70,14 @@ afterEach(() => {
 })
 
 describe('SCR-052 Admin notifications', () => {
+  it('clears the header unread dot immediately after the server saves read-all', async () => {
+    mount(true)
+    expect(await screen.findByRole('img', { name: 'Có thông báo chưa đọc' })).toBeInTheDocument()
+    await userEvent.click(await screen.findByRole('button', { name: 'Đánh dấu tất cả đã đọc' }))
+    await screen.findByText('0 thông báo chưa đọc')
+    await waitFor(() => expect(screen.queryByRole('img', { name: 'Có thông báo chưa đọc' })).not.toBeInTheDocument())
+  })
+
   it('automatically shows a new lot review notification and links to its exact dossier', async () => {
     vi.useFakeTimers()
     try {
