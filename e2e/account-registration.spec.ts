@@ -37,9 +37,7 @@ for (const width of [1440, 390]) {
 
   test(`registration duplicates ${width}px: server phone and email conflicts reveal the field`, async ({ page }) => {
     await page.setViewportSize({ width, height: 1000 })
-    await page.addInitScript(() => sessionStorage.setItem('sp_register_draft', JSON.stringify({
-      role: 'DRIVER', fullName: 'Test Driver', phone: '0901234567',
-    })))
+    await page.route('**/api/v1/auth/otp/send', route => route.fulfill({ json: { data: { expiresInSeconds: 300, resendAfterSeconds: 60 } } }))
     await page.route('**/api/v1/auth/otp/verify', route => route.fulfill({ json: { data: null } }))
     let registrations = 0
     await page.route('**/api/v1/auth/register', route => {
@@ -47,7 +45,14 @@ for (const width of [1440, 390]) {
       return route.fulfill({ status: 409, json: { message: registrations === 1
         ? 'Số điện thoại đã tồn tại trong hệ thống!' : 'Email đã tồn tại trong hệ thống!' } })
     })
-    await page.goto('/register?email=driver%40example.test&otpCode=012345&autoVerify=true')
+    await page.goto('/register')
+    await page.getByLabel('Họ và tên').fill('Test Driver')
+    await page.getByLabel('Số điện thoại').fill('0901234567')
+    await page.getByRole('button', { name: 'Tiếp tục: Xác thực Email' }).click()
+    await page.getByLabel('Email nhận mã xác thực').fill('driver@example.test')
+    await page.getByRole('button', { name: 'Gửi mã qua email' }).click()
+    await page.getByLabel('Mã xác thực email (6 số)').fill('012345')
+    await page.getByRole('button', { name: 'Tiếp tục: Thiết lập mật khẩu' }).click()
     await page.getByLabel('Mật khẩu', { exact: true }).fill('test-password')
     await page.getByLabel('Xác nhận mật khẩu', { exact: true }).fill('test-password')
     await page.getByRole('button', { name: 'Tạo tài khoản' }).click()

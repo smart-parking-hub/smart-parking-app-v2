@@ -1,5 +1,21 @@
 # Inline Quick Booking & Server Reservation Integration
 
+## Cập nhật 2026-11-17 — bỏ chặn tần suất tạo booking
+
+Theo yêu cầu tiếp theo của người dùng, thay thế phương án đếm ngược bên dưới: booking-service bỏ gọi rate limiter trong luồng tạo booking. Frontend không khóa nút hoặc hiện cảnh báo “thao tác quá nhanh” cho RATE_LIMIT cũ; chỉ báo tạo chưa thành công và cho thử lại ngay, giữ nguyên form và requestId. Chặn gửi đồng thời khi đang xử lý, kiểm tra lịch/chỗ, quyền sở hữu và các hạn chế nghiệp vụ khác vẫn giữ. Evidence: `BookingHoldRestrictionNotice.test.tsx`, `booking-rate-limit.spec.ts`, backend `UnpaidHoldPolicyIntegrationTest`.
+
+## Cập nhật 2026-11-17 — chống spam với thời gian chờ ngắn
+
+Owner: SPH frontend. `last_verified`: 2026-11-17. Evidence: `BookingHoldRestrictionNotice`, `BookingHoldRestrictionNotice.test.tsx`, `e2e/booking-rate-limit.spec.ts`, backend `docs/api-contracts/unpaid-hold-policy.md`.
+
+- `BOOKING_HOLD_RATE_LIMIT` hiển thị số giây còn lại thay cho mốc ngày giờ. Hết hạn chuyển thành “Bạn có thể thử tạo booking lại.” và mở nút gửi; không tự tạo booking hoặc mở thanh toán.
+- Backend giới hạn khoảng đếm spam tối đa 60 giây và phục hồi cửa sổ có thời gian bắt đầu nằm trong tương lai. Bấm lại khi đang bị chặn không kéo dài hạn. Frontend dùng `retryAt` theo giờ Việt Nam do backend trả về, cập nhật mỗi giây và khi tab lấy lại focus.
+- Giữ xe, giờ và thời lượng đã chọn, requestId chống tạo trùng, trạng thái đang xử lý và các loại hạn chế khác. Không thêm CAPTCHA hoặc dịch vụ ngoài trong lần sửa này.
+
+## Cập nhật 2026-11-17 — lịch đặt theo block 30 phút
+
+Luồng đặt dùng chung `ReservationFlow` đã thêm chọn ngày, giờ vào 00/30, thời lượng bội số 30 phút và timeline từ backend. Khả dụng được kiểm tra cho toàn bộ thời lượng, gồm khoảng đệm 30 phút giữa hai lượt cùng ô. Booking mới check-in từ giờ đã đặt; lịch cũ dùng chính sách từ server. Giữ tiền cọc 20%, hạn thanh toán 15 phút, PayOS/ví/QR và quy tắc giá hiện có. Chi tiết contract, capability parity và tests: [booking schedule](schedule.md). Các mục lịch sử về check-in sớm 30 phút bên dưới tiếp tục áp dụng cho vé legacy, không áp dụng mặc định cho booking policy 1.
+
 ## Cập nhật 2026-11-18 — bố cục thanh toán thoáng hơn
 
 Owner: SPH frontend. `last_verified`: 2026-11-18. Evidence: `QuickBookingPaymentSummary`, `BookingStatusPanel`, `WalletDepositPayment`, `e2e/quick-hold-redesign.spec.ts`.

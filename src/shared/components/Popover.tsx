@@ -126,6 +126,7 @@ export interface PopoverContentProps {
   className?: string
   align?: 'start' | 'center' | 'end'
   side?: 'top' | 'bottom'
+  ariaLabel?: string
 }
 
 export function PopoverContent({
@@ -133,6 +134,7 @@ export function PopoverContent({
   className,
   align = 'start',
   side = 'bottom',
+  ariaLabel,
 }: PopoverContentProps) {
   const context = useContext(PopoverContext)
   if (!context) throw new Error('PopoverContent must be used within Popover')
@@ -155,6 +157,7 @@ export function PopoverContent({
     <div
       id={popoverId}
       role="dialog"
+      aria-label={ariaLabel}
       aria-modal="false"
       className={cn(
         'absolute z-50 rounded-2xl border border-slate-200/90 bg-white p-4 text-slate-800 shadow-xl outline-none animate-in fade-in zoom-in-95 duration-150',

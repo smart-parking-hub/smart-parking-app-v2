@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test'
+import { mockBookingSchedule } from './fixtures/booking-schedule'
 
 for (const width of [390, 1440]) {
   for (const reason of ['VEHICLE_LIMIT', 'COOLDOWN'] as const) {
@@ -35,6 +36,7 @@ for (const width of [390, 1440]) {
         return route.fulfill({ json: { data } })
       })
       await page.route('**/*tiles.openfreemap.org/**', route => route.abort())
+      await mockBookingSchedule(page)
       await page.goto('/parking')
       await page.getByRole('button', { name: 'ĐẶT GIỮ CHỖ', exact: true }).click()
       const dialog = page.getByRole('dialog', { name: 'Đặt giữ chỗ nhanh' })

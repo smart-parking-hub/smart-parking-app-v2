@@ -1,4 +1,4 @@
-import { useEffect, useId, useRef, type ReactNode } from 'react'
+import { useEffect, useId, useRef, type ReactNode, type RefObject } from 'react'
 import { X } from 'lucide-react'
 import { cn } from '@/shared/utils/cn'
 
@@ -6,6 +6,7 @@ export interface DialogProps {
   isOpen?: boolean
   onClose: () => void
   onAfterClose?: () => void
+  initialFocusRef?: RefObject<HTMLElement | null>
   title: string
   description?: string
   children: ReactNode
@@ -18,6 +19,7 @@ export function Dialog({
   isOpen = true,
   onClose,
   onAfterClose,
+  initialFocusRef,
   title,
   description,
   children,
@@ -47,6 +49,7 @@ export function Dialog({
         element.setAttribute('open', '')
       }
       document.body.style.overflow = 'hidden'
+      initialFocusRef?.current?.focus()
     }
 
     return () => {
@@ -70,7 +73,7 @@ export function Dialog({
       }
       if (isOpen) afterClose.current?.()
     }
-  }, [isOpen])
+  }, [isOpen, initialFocusRef])
 
   if (!isOpen) return null
 

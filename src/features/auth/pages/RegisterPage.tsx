@@ -1,9 +1,17 @@
-import { useEffect, useState } from 'react'
-import { Link, useNavigate, useSearchParams } from 'react-router-dom'
+import { useCallback, useEffect, useRef, useState } from 'react'
+import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import { useForm, type FieldErrors } from 'react-hook-form'
 import { useMutation } from '@tanstack/react-query'
 import { ArrowRight, Check, Eye, EyeOff, LoaderCircle, ShieldCheck, Store, Truck } from 'lucide-react'
 import type { AuthFields } from '../model/authFields'
+import {
+  cleanLegacyRegisterDraftStorage,
+  getRegistrationDefaults,
+  hasProtectedRegistrationData,
+  isRegistrationRole,
+  ROLE_LABELS,
+  type RegistrationRole,
+} from '../model/registrationLifecycle'
 import { BankField } from '../components/BankField'
 import {
   requestEmailOtp,
@@ -11,6 +19,7 @@ import {
 } from '../api/emailOtp'
 import { errorMessage, sendData } from '@/shared/api/resources'
 import { AuthLayout } from '@/layouts/AuthLayout'
+import { Dialog } from '@/shared/components/Dialog'
 import { Select, type SelectOption } from '@/shared/components/Select'
 import { control, Notice } from '@/shared/components/Workspace'
 
@@ -29,18 +38,21 @@ const ROLE_OPTIONS: SelectOption[] = [
   },
 ]
 
+const MAGIC_LINK_PARAMS = ['email', 'otpCode', 'otp', 'autoVerify']
+
 export function RegisterPage({ mode = 'register' }: { mode?: 'login' | 'register' | 'forgot' }) {
+  const navigate = useNavigate()
+  const location = useLocation()
   const [searchParams] = useSearchParams()
-  const paramEmail = searchParams.get('email')
-  const paramOtp = searchParams.get('otpCode') || searchParams.get('otp')
-  const paramAutoVerify = searchParams.get('autoVerify') === 'true'
   const [magicLinkNotice, setMagicLinkNotice] = useState<string | null>(null)
 
   const form = useForm<AuthFields>({
-    defaultValues: { role: 'DRIVER' },
+    defaultValues: getRegistrationDefaults('DRIVER'),
     mode: mode === 'register' ? 'onTouched' : 'onSubmit',
   })
+  const { reset: resetForm, clearErrors, setValue } = form
   const emailValue = (form.watch('email') ?? '').trim().toLowerCase()
+  const currentOtpCode = (form.watch('otpCode') ?? '').trim()
   const selectedRole = form.watch('role')
   const [sent, setSent] = useState(false)
   const [countdown, setCountdown] = useState(0)
@@ -56,41 +68,62 @@ export function RegisterPage({ mode = 'register' }: { mode?: 'login' | 'register
     }
   }, [fieldToFocus, registerStepKey, form])
 
-  // Restore registration form draft from sessionStorage
-  useEffect(() => {
-    if (mode !== 'register') return
-    try {
-      const raw = sessionStorage.getItem('sp_register_draft')
-      if (raw) {
-        const parsed = JSON.parse(raw) as Partial<AuthFields>
-        if (parsed.fullName) form.setValue('fullName', parsed.fullName)
-        if (parsed.phone) form.setValue('phone', parsed.phone)
-        if (parsed.citizenId) form.setValue('citizenId', parsed.citizenId)
-        if (parsed.role) form.setValue('role', parsed.role)
-        if (parsed.bankName) form.setValue('bankName', parsed.bankName)
-        if (parsed.bankAccountNum) form.setValue('bankAccountNum', parsed.bankAccountNum)
-      }
-    } catch {
-      // ignore storage access errors
-    }
-  }, [mode, form])
+  // Role change confirmation & session tracking
+  const [pendingRole, setPendingRole] = useState<RegistrationRole | null>(null)
+  const [isConfirmRoleDialogOpen, setIsConfirmRoleDialogOpen] = useState(false)
+  const [roleChangeAnnouncement, setRoleChangeAnnouncement] = useState<string | null>(null)
+  const shouldFocusFullNameAfterCloseRef = useRef(false)
+  const pendingFocusRafRef = useRef<number>(0)
+  const cancelRoleBtnRef = useRef<HTMLButtonElement>(null)
 
-  // Persist registration draft to sessionStorage
-  const draftValues = form.watch(['fullName', 'phone', 'citizenId', 'role', 'bankName', 'bankAccountNum'])
+  // Lifecycle generations & request IDs
+  const sessionGenerationRef = useRef(1)
+  const navigationIntakeIdRef = useRef(0)
+  const activeSendRequestIdRef = useRef(0)
+  const activeVerifyRequestIdRef = useRef(0)
+  const activeSubmitRequestIdRef = useRef(0)
+
+  // Intake tracking
+  const consumedThisUrlRef = useRef(false)
+  const pendingIntakeRef = useRef<{
+    email: string
+    otpCode: string
+    isAutoVerify: boolean
+  } | null>(null)
+
+  // Proofs & Sources (memory only)
+  const sentOtpProofRef = useRef<{
+    generation: number
+    requestId: number
+    email: string
+  } | null>(null)
+
+  const linkOtpSourceRef = useRef<{
+    generation: number
+    intakeId: number
+    email: string
+    otpCode: string
+  } | null>(null)
+
+  const verifiedProofRef = useRef<{
+    generation: number
+    email: string
+    otpCode: string
+  } | null>(null)
+
+  // Clean legacy registration draft if present in sessionStorage
   useEffect(() => {
     if (mode !== 'register') return
-    const [fullName, phone, citizenId, role, bankName, bankAccountNum] = draftValues
-    if (fullName || phone || citizenId || bankName || bankAccountNum) {
-      try {
-        sessionStorage.setItem(
-          'sp_register_draft',
-          JSON.stringify({ fullName, phone, citizenId, role, bankName, bankAccountNum }),
-        )
-      } catch {
-        // ignore storage access errors
+    cleanLegacyRegisterDraftStorage()
+  }, [mode])
+
+  useEffect(() => {
+    return () => {
+      if (pendingFocusRafRef.current) {
+        cancelAnimationFrame(pendingFocusRafRef.current)
       }
     }
-  }, [mode, draftValues])
+  }, [])
 
   useEffect(() => {
     if (!countdown) return
@@ -98,12 +131,7 @@ export function RegisterPage({ mode = 'register' }: { mode?: 'login' | 'register
     return () => clearTimeout(timer)
   }, [countdown])
 
-  // Automatically adjust step if switching role from MERCHANT to DRIVER while on bank step
-  useEffect(() => {
-    if (selectedRole === 'DRIVER' && registerStepKey === 'bank') {
-      setRegisterStepKey('email')
-    }
-  }, [selectedRole, registerStepKey])
+
 
   const registerSteps =
     selectedRole === 'MERCHANT'
@@ -131,13 +159,19 @@ export function RegisterPage({ mode = 'register' }: { mode?: 'login' | 'register
         ? 'Bắt đầu hành trình mới.'
         : 'Khôi phục quyền truy cập.'
 
-  const otp = useMutation({
-    mutationFn: async () => {
-      const email = form.getValues('email')?.trim()
-      if (mode === 'register' && email && email.length > 100) throw new Error('Email không được vượt quá 100 ký tự.')
+  const otp = useMutation<
+    { expiresInSeconds: number; resendAfterSeconds: number; email: string },
+    Error,
+    { generation: number; requestId: number; email: string }
+  >({
+    mutationFn: async ({ email }) => {
+      if (mode === 'register' && email && email.length > 100) {
+        throw new Error('Email không được vượt quá 100 ký tự.')
+      }
       const valid = Boolean(email && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))
-      if (!valid)
+      if (!valid) {
         throw new Error('Nhập email hợp lệ để nhận mã.')
+      }
       return requestEmailOtp(
         mode === 'register' ? 'register' : 'forgot',
         email.toLowerCase(),
@@ -145,72 +179,145 @@ export function RegisterPage({ mode = 'register' }: { mode?: 'login' | 'register
     },
     onMutate: () => {
       setSent(false)
+      sentOtpProofRef.current = null
+      linkOtpSourceRef.current = null
+      verifiedProofRef.current = null
       form.setValue('otpCode', '')
       form.clearErrors(['email', 'otpCode'])
     },
-    onSuccess: (data) => {
+    onSuccess: (data, variables) => {
+      if (
+        variables.generation !== sessionGenerationRef.current ||
+        variables.requestId !== activeSendRequestIdRef.current ||
+        variables.email !== (form.getValues('email') ?? '').trim().toLowerCase()
+      ) {
+        return
+      }
       setSent(true)
+      sentOtpProofRef.current = {
+        generation: variables.generation,
+        requestId: variables.requestId,
+        email: variables.email,
+      }
       setCountdown(Math.max(1, data.resendAfterSeconds || data.expiresInSeconds || 60))
+    },
+    onError: (_error, variables) => {
+      if (
+        variables.generation !== sessionGenerationRef.current ||
+        variables.requestId !== activeSendRequestIdRef.current ||
+        variables.email !== (form.getValues('email') ?? '').trim().toLowerCase()
+      ) {
+        return
+      }
     },
   })
 
-  const sentValid = sent && otp.data?.email === emailValue
+  const isSentValid =
+    sent &&
+    Boolean(
+      sentOtpProofRef.current &&
+        sentOtpProofRef.current.generation === sessionGenerationRef.current &&
+        sentOtpProofRef.current.email === emailValue,
+    )
 
-  const verifyOtp = useMutation({
-    mutationFn: async (data: { email: string; otpCode: string }) => {
-      await verifyRegisterOtp(data.email, data.otpCode)
-      return data
+  const isLinkEligible = Boolean(
+    linkOtpSourceRef.current &&
+      linkOtpSourceRef.current.generation === sessionGenerationRef.current &&
+      linkOtpSourceRef.current.email === emailValue &&
+      linkOtpSourceRef.current.otpCode === currentOtpCode,
+  )
+
+  const isOtpEligible = isSentValid || isLinkEligible
+
+  const isOtpVerified = Boolean(
+    verifiedProofRef.current &&
+      verifiedProofRef.current.generation === sessionGenerationRef.current &&
+      verifiedProofRef.current.email === emailValue &&
+      verifiedProofRef.current.otpCode === currentOtpCode,
+  )
+
+  const verifyOtp = useMutation<
+    { email: string; otpCode: string },
+    Error,
+    {
+      generation: number
+      requestId: number
+      intakeId?: number
+      email: string
+      otpCode: string
+      isAutoVerify?: boolean
+    }
+  >({
+    mutationFn: async (variables) => {
+      await verifyRegisterOtp(variables.email, variables.otpCode)
+      return { email: variables.email, otpCode: variables.otpCode }
     },
-    onSuccess: (data) => {
-      if (data.email === form.getValues('email').trim().toLowerCase() &&
-          data.otpCode === form.getValues('otpCode')) {
+    onSuccess: (_data, variables) => {
+      if (
+        variables.generation !== sessionGenerationRef.current ||
+        variables.requestId !== activeVerifyRequestIdRef.current ||
+        (variables.intakeId && variables.intakeId !== navigationIntakeIdRef.current) ||
+        variables.email !== (form.getValues('email') ?? '').trim().toLowerCase() ||
+        variables.otpCode !== (form.getValues('otpCode') ?? '').trim()
+      ) {
+        return
+      }
+      verifiedProofRef.current = {
+        generation: variables.generation,
+        email: variables.email,
+        otpCode: variables.otpCode,
+      }
+      if (variables.isAutoVerify) {
+        const values = form.getValues()
+        const hasFullName = Boolean(values.fullName && values.fullName.trim().length >= 2)
+        const hasPhone = Boolean(values.phone && /^(0|\+84)[35789][0-9]{8}$/.test(values.phone.replace(/\s/g, '')))
+        const isMerchant = values.role === 'MERCHANT'
+        const hasBank = isMerchant ? Boolean(values.bankName && values.bankAccountNum && /^\d{6,25}$/.test(values.bankAccountNum)) : true
+        const hasCitizen = isMerchant ? Boolean(values.citizenId && /^(?:[0-9]{9}|[0-9]{12})$/.test(values.citizenId.trim())) : true
+
+        if (hasFullName && hasPhone && hasCitizen && hasBank) {
+          setRegisterStepKey('password')
+          setMagicLinkNotice(
+            'Email đã được xác thực thành công qua liên kết! Vui lòng thiết lập mật khẩu.',
+          )
+        } else {
+          if (!hasFullName || !hasPhone || (isMerchant && !hasCitizen)) {
+            setRegisterStepKey('info')
+          } else if (isMerchant && !hasBank) {
+            setRegisterStepKey('bank')
+          }
+          setMagicLinkNotice(
+            'Email đã được xác thực qua liên kết. Vui lòng hoàn tất thông tin đăng ký.',
+          )
+        }
+      } else {
         setRegisterStepKey('password')
       }
     },
-    onError: (error) => {
-      form.setError('otpCode', { message: errorMessage(error) }, { shouldFocus: true })
+    onError: (error, variables) => {
+      if (
+        variables.generation !== sessionGenerationRef.current ||
+        variables.requestId !== activeVerifyRequestIdRef.current ||
+        (variables.intakeId && variables.intakeId !== navigationIntakeIdRef.current) ||
+        variables.email !== (form.getValues('email') ?? '').trim().toLowerCase() ||
+        variables.otpCode !== (form.getValues('otpCode') ?? '').trim()
+      ) {
+        return
+      }
+      if (variables.isAutoVerify) {
+        setRegisterStepKey('info')
+      } else {
+        form.setError('otpCode', { message: errorMessage(error) }, { shouldFocus: true })
+      }
     },
   })
 
-  const isVerifiedOrSent =
-    sentValid ||
-    (verifyOtp.isSuccess &&
-      Boolean(form.getValues('otpCode')) &&
-      /^\d{6}$/.test(form.getValues('otpCode')))
-
-  // Support Magic Link URL pre-filling and auto-verification
-  const verifyMagicLink = verifyOtp.mutate
-  useEffect(() => {
-    if (mode !== 'register') return
-    if (paramEmail && paramOtp && /^\d{6}$/.test(paramOtp)) {
-      const normalizedEmail = paramEmail.trim().toLowerCase()
-      form.setValue('email', normalizedEmail)
-      form.setValue('otpCode', paramOtp)
-      setSent(true)
-
-      if (paramAutoVerify) {
-        verifyMagicLink(
-          { email: normalizedEmail, otpCode: paramOtp },
-          {
-            onSuccess: () => {
-              setRegisterStepKey('password')
-              setMagicLinkNotice(
-                'Email đã được xác thực thành công qua liên kết! Vui lòng thiết lập mật khẩu.',
-              )
-            },
-            onError: () => {
-              setRegisterStepKey('email')
-            },
-          },
-        )
-      } else {
-        setRegisterStepKey('email')
-      }
-    }
-  }, [mode, paramEmail, paramOtp, paramAutoVerify, form, verifyMagicLink])
-
-  const submit = useMutation({
-    mutationFn: async (data: AuthFields) => {
+  const submit = useMutation<
+    void,
+    Error,
+    { generation: number; requestId: number; data: AuthFields }
+  >({
+    mutationFn: async ({ data }) => {
       if (mode === 'register') {
         if (data.confirmPassword && data.confirmPassword !== data.password) {
           throw new Error('Mật khẩu xác nhận không trùng khớp.')
@@ -238,7 +345,13 @@ export function RegisterPage({ mode = 'register' }: { mode?: 'login' | 'register
         })
       }
     },
-    onError: (error) => {
+    onError: (error, variables) => {
+      if (
+        variables.generation !== sessionGenerationRef.current ||
+        variables.requestId !== activeSubmitRequestIdRef.current
+      ) {
+        return
+      }
       const msg = errorMessage(error)
       if (/số điện thoại|phone/i.test(msg)) {
         setRegisterStepKey('info')
@@ -266,16 +379,256 @@ export function RegisterPage({ mode = 'register' }: { mode?: 'login' | 'register
     },
   })
 
+  const { reset: resetOtp } = otp
+  const { mutate: verifyCode, reset: resetVerifyOtp } = verifyOtp
+  const { reset: resetSubmit } = submit
+
+  const handleFullReset = useCallback(
+    (targetRole: RegistrationRole) => {
+      sessionGenerationRef.current += 1
+      activeSendRequestIdRef.current += 1
+      activeVerifyRequestIdRef.current += 1
+      activeSubmitRequestIdRef.current += 1
+
+      sentOtpProofRef.current = null
+      linkOtpSourceRef.current = null
+      verifiedProofRef.current = null
+      pendingIntakeRef.current = null
+
+      if (pendingFocusRafRef.current) {
+        cancelAnimationFrame(pendingFocusRafRef.current)
+        pendingFocusRafRef.current = 0
+      }
+      shouldFocusFullNameAfterCloseRef.current = false
+
+      resetForm(getRegistrationDefaults(targetRole))
+      clearErrors()
+
+      setRegisterStepKey('info')
+      setSent(false)
+      setCountdown(0)
+      setMagicLinkNotice(null)
+      setShowPassword({})
+      setIsOtpFocused(false)
+      setFieldToFocus(null)
+
+      setIsConfirmRoleDialogOpen(false)
+      setPendingRole(null)
+      setRoleChangeAnnouncement(null)
+
+      resetOtp()
+      resetVerifyOtp()
+      resetSubmit()
+    },
+    [resetForm, clearErrors, resetOtp, resetVerifyOtp, resetSubmit],
+  )
+
+  useEffect(() => {
+    if (mode !== 'register') return
+    const handlePageShow = (event: PageTransitionEvent) => {
+      if (event.persisted) {
+        handleFullReset('DRIVER')
+      }
+    }
+    const handlePopState = () => {
+      handleFullReset('DRIVER')
+    }
+    window.addEventListener('pageshow', handlePageShow)
+    window.addEventListener('popstate', handlePopState)
+    return () => {
+      window.removeEventListener('pageshow', handlePageShow)
+      window.removeEventListener('popstate', handlePopState)
+    }
+  }, [mode, handleFullReset])
+
+  const handleRoleChange = (val: string) => {
+    if (submit.isPending || verifyOtp.isPending) return
+    if (!isRegistrationRole(val)) return
+
+    const currentRole = form.getValues('role')
+    if (val === currentRole) return
+
+    const hasData = hasProtectedRegistrationData(form.getValues(), {
+      sent: isSentValid,
+      isVerified: isOtpVerified,
+      hasParamOtp: Boolean(searchParams.get('otpCode') || searchParams.get('otp')),
+      hasLinkOtp: Boolean(linkOtpSourceRef.current),
+    })
+
+    if (!hasData) {
+      handleFullReset(val)
+      return
+    }
+
+    setPendingRole(val)
+    setIsConfirmRoleDialogOpen(true)
+  }
+
+  const handleCancelRoleChange = () => {
+    setIsConfirmRoleDialogOpen(false)
+    setPendingRole(null)
+    pendingFocusRafRef.current = requestAnimationFrame(() => {
+      const trigger = document.getElementById('auth-role-trigger')
+      trigger?.focus()
+    })
+  }
+
+  const handleConfirmRoleChange = () => {
+    if (!pendingRole) return
+    const targetRole = pendingRole
+    handleFullReset(targetRole)
+    setRoleChangeAnnouncement(`Đã chuyển sang ${ROLE_LABELS[targetRole]}. Vui lòng nhập thông tin đăng ký mới.`)
+    shouldFocusFullNameAfterCloseRef.current = true
+    setIsConfirmRoleDialogOpen(false)
+    setPendingRole(null)
+  }
+
+  const handleDialogAfterClose = () => {
+    if (shouldFocusFullNameAfterCloseRef.current) {
+      shouldFocusFullNameAfterCloseRef.current = false
+      pendingFocusRafRef.current = requestAnimationFrame(() => {
+        form.setFocus('fullName')
+      })
+    }
+  }
+
+  const applyLinkIntake = useCallback(
+    (normalizedEmail: string, trimmedOtp: string, isAutoVerify: boolean) => {
+      const currentIntakeId = ++navigationIntakeIdRef.current
+      activeSendRequestIdRef.current += 1
+      activeVerifyRequestIdRef.current += 1
+
+      setSent(false)
+      setCountdown(0)
+      sentOtpProofRef.current = null
+      verifiedProofRef.current = null
+      setMagicLinkNotice(null)
+      resetOtp()
+      resetVerifyOtp()
+      resetSubmit()
+
+      setValue('password', '')
+      setValue('confirmPassword', '')
+      clearErrors(['password', 'confirmPassword', 'email', 'otpCode'])
+
+      const isValidEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail)
+      const isValidOtp = /^\d{6}$/.test(trimmedOtp)
+
+      if (isValidEmail) {
+        setValue('email', normalizedEmail)
+      }
+      if (isValidOtp) {
+        setValue('otpCode', trimmedOtp)
+      }
+
+      if (isValidEmail && isValidOtp) {
+        linkOtpSourceRef.current = {
+          email: normalizedEmail,
+          otpCode: trimmedOtp,
+          generation: sessionGenerationRef.current,
+          intakeId: currentIntakeId,
+        }
+      } else {
+        linkOtpSourceRef.current = null
+      }
+
+      if (isAutoVerify && isValidEmail && isValidOtp) {
+        const reqId = ++activeVerifyRequestIdRef.current
+        verifyCode({
+          generation: sessionGenerationRef.current,
+          requestId: reqId,
+          intakeId: currentIntakeId,
+          email: normalizedEmail,
+          otpCode: trimmedOtp,
+          isAutoVerify: true,
+        })
+      } else {
+        setRegisterStepKey('info')
+      }
+    },
+    [clearErrors, setValue, resetOtp, resetVerifyOtp, resetSubmit, verifyCode],
+  )
+
+  // Support Magic Link URL pre-filling and auto-verification (navigation-based intake)
+  useEffect(() => {
+    if (mode !== 'register') return
+
+    const rawEmail = searchParams.get('email')
+    const rawOtp = searchParams.get('otpCode') || searchParams.get('otp')
+    const isAutoVerify = searchParams.get('autoVerify') === 'true'
+
+    const hasLinkParams = MAGIC_LINK_PARAMS.some((param) => searchParams.has(param))
+    if (!hasLinkParams) {
+      consumedThisUrlRef.current = false
+      return
+    }
+
+    if (consumedThisUrlRef.current) return
+    consumedThisUrlRef.current = true
+
+    // Remove email, otpCode, otp, autoVerify from URL search params without reload, preserving non-sensitive query params and hash
+    const cleanParams = new URLSearchParams(searchParams)
+    for (const param of MAGIC_LINK_PARAMS) cleanParams.delete(param)
+    const cleanSearch = cleanParams.toString()
+    navigate(
+      {
+        pathname: location.pathname,
+        search: cleanSearch ? `?${cleanSearch}` : '',
+        hash: location.hash,
+      },
+      { replace: true },
+    )
+
+    const normalizedEmail = (rawEmail ?? '').trim().toLowerCase()
+    const trimmedOtp = (rawOtp ?? '').trim()
+
+    if (!normalizedEmail && !trimmedOtp) return
+
+    if (submit.isPending) {
+      pendingIntakeRef.current = {
+        email: normalizedEmail,
+        otpCode: trimmedOtp,
+        isAutoVerify,
+      }
+      return
+    }
+
+    applyLinkIntake(normalizedEmail, trimmedOtp, isAutoVerify)
+  }, [mode, searchParams, navigate, location.pathname, location.hash, submit.isPending, applyLinkIntake])
+
+  useEffect(() => {
+    if (submit.isPending) return
+    if (submit.isSuccess) {
+      pendingIntakeRef.current = null
+      return
+    }
+    if (submit.isError && pendingIntakeRef.current) {
+      const intake = pendingIntakeRef.current
+      pendingIntakeRef.current = null
+      applyLinkIntake(intake.email, intake.otpCode, intake.isAutoVerify)
+    }
+  }, [submit.isPending, submit.isSuccess, submit.isError, applyLinkIntake])
+
   // Clear registration draft on successful account registration
   useEffect(() => {
     if (submit.isSuccess) {
-      try {
-        sessionStorage.removeItem('sp_register_draft')
-      } catch {
-        // ignore storage errors
-      }
+      cleanLegacyRegisterDraftStorage()
     }
   }, [submit.isSuccess])
+
+  const handleSendOtp = () => {
+    if (otp.isPending || verifyOtp.isPending || countdown > 0) return
+    activeVerifyRequestIdRef.current += 1
+    verifyOtp.reset()
+    setMagicLinkNotice(null)
+    const email = (form.getValues('email') ?? '').trim().toLowerCase()
+    const reqId = ++activeSendRequestIdRef.current
+    otp.mutate({
+      generation: sessionGenerationRef.current,
+      requestId: reqId,
+      email,
+    })
+  }
 
   const advanceRegisterStep = async () => {
     if (verifyOtp.isPending || submit.isPending) return
@@ -288,14 +641,29 @@ export function RegisterPage({ mode = 'register' }: { mode?: 'login' | 'register
       const valid = await form.trigger(['bankName', 'bankAccountNum'], { shouldFocus: true })
       if (valid) setRegisterStepKey('email')
     } else if (registerStepKey === 'email') {
-      if (!isVerifiedOrSent || otp.isPending) {
+      if (!isOtpEligible && !isOtpVerified) {
         form.setError('email', { message: 'Vui lòng gửi mã OTP thành công đến email này trước khi tiếp tục.' })
         return
       }
-      if (await form.trigger(['email', 'otpCode'])) {
-        submit.reset()
-        verifyOtp.mutate({ email: emailValue, otpCode: form.getValues('otpCode') })
+      if (otp.isPending) return
+
+      const valid = await form.trigger(['email', 'otpCode'], { shouldFocus: true })
+      if (!valid) return
+
+      if (isOtpVerified) {
+        setRegisterStepKey('password')
+        return
       }
+
+      submit.reset()
+      const reqId = ++activeVerifyRequestIdRef.current
+      verifyOtp.mutate({
+        generation: sessionGenerationRef.current,
+        requestId: reqId,
+        email: emailValue,
+        otpCode: currentOtpCode,
+        isAutoVerify: false,
+      })
     }
   }
 
@@ -447,21 +815,45 @@ export function RegisterPage({ mode = 'register' }: { mode?: 'login' | 'register
             className="space-y-3.5 [&_input:not([role='combobox'])]:min-h-11 [&_input:not([role='combobox'])]:sm:min-h-12 [&_input:not([role='combobox'])]:text-sm [&_input:not([role='combobox'])]:sm:text-base [&_input:not([role='combobox'])]:rounded-xl [&_input:not([role='combobox'])]:px-3.5 [&_select]:min-h-11 [&_select]:sm:min-h-12 [&_select]:text-sm [&_select]:sm:text-base [&_select]:rounded-xl [&_select]:px-3.5 [&_label]:gap-1"
             onChange={() => { if (submit.isError) submit.reset() }}
             onSubmit={async (event) => {
-              if (submit.isPending || verifyOtp.isPending) { event.preventDefault(); return }
+              if (submit.isPending || verifyOtp.isPending) {
+                event.preventDefault()
+                return
+              }
               if (mode === 'register' && registerStepKey !== 'password') {
                 event.preventDefault()
                 void advanceRegisterStep()
                 return
               }
-              if (mode === 'register' && (!isVerifiedOrSent || otp.isPending)) {
+              if (mode === 'register' && (!isOtpVerified || otp.isPending)) {
                 event.preventDefault()
                 setRegisterStepKey('email')
-                form.setError('email', { message: 'Vui lòng gửi mã OTP thành công đến email này trước khi tiếp tục.' })
+                form.setError('email', {
+                  message: 'Vui lòng gửi mã OTP thành công đến email này trước khi tiếp tục.',
+                })
                 return
               }
-              void form.handleSubmit((data) => submit.mutate(data), showInvalidRegistrationStep)(event)
+              void form.handleSubmit(
+                (data) => {
+                  const reqId = ++activeSubmitRequestIdRef.current
+                  submit.mutate({
+                    generation: sessionGenerationRef.current,
+                    requestId: reqId,
+                    data,
+                  })
+                },
+                showInvalidRegistrationStep,
+              )(event)
             }}
           >
+            {verifyOtp.isError &&
+              verifyOtp.variables?.isAutoVerify &&
+              verifyOtp.variables.generation === sessionGenerationRef.current &&
+              verifyOtp.variables.requestId === activeVerifyRequestIdRef.current &&
+              verifyOtp.variables.intakeId === navigationIntakeIdRef.current &&
+              verifyOtp.variables.email === emailValue &&
+              verifyOtp.variables.otpCode === currentOtpCode && (
+                <Notice error>{errorMessage(verifyOtp.error)}</Notice>
+              )}
             {magicLinkNotice && (
               <div className="flex items-start gap-2.5 p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs sm:text-sm mb-3">
                 <Check size={18} className="text-emerald-600 shrink-0 mt-0.5" />
@@ -532,17 +924,17 @@ export function RegisterPage({ mode = 'register' }: { mode?: 'login' | 'register
                     id="auth-role"
                     triggerAriaHidden={true}
                     value={form.watch('role')}
-                    onChange={(val) => {
-                      form.setValue('role', val as 'DRIVER' | 'MERCHANT', {
-                        shouldValidate: true,
-                      })
-                    }}
+                    onChange={handleRoleChange}
+                    disabled={submit.isPending || verifyOtp.isPending}
                     options={ROLE_OPTIONS}
                     variant="default"
                     size="lg"
                     triggerClassName="min-h-11 sm:min-h-12 text-sm sm:text-base bg-white border border-slate-300 text-black rounded-xl px-3.5 py-2.5 shadow-2xs hover:border-[#d95f00] hover:bg-orange-50/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d95f00] focus-visible:ring-offset-1 transition-all cursor-pointer font-normal"
                     dropdownClassName="border border-slate-200 shadow-xl rounded-xl z-50 bg-white"
                   />
+                  <p id="auth-role-hint" className="text-xs text-slate-500 font-normal leading-relaxed mt-1">
+                    Đổi vai trò sẽ xóa thông tin đã nhập. Tải lại trang sẽ bắt đầu đăng ký mới.
+                  </p>
                 </div>
               )}
 
@@ -709,8 +1101,13 @@ export function RegisterPage({ mode = 'register' }: { mode?: 'login' | 'register
                           maxLength: mode === 'register' ? { value: 100, message: 'Email không được vượt quá 100 ký tự.' } : undefined,
                           pattern: { value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/, message: 'Nhập email hợp lệ để nhận mã.' },
                           onChange: () => {
+                            activeVerifyRequestIdRef.current += 1
+                            setMagicLinkNotice(null)
                             setSent(false)
                             setCountdown(0)
+                            sentOtpProofRef.current = null
+                            linkOtpSourceRef.current = null
+                            verifiedProofRef.current = null
                             otp.reset()
                             verifyOtp.reset()
                             form.setValue('otpCode', '')
@@ -729,7 +1126,7 @@ export function RegisterPage({ mode = 'register' }: { mode?: 'login' | 'register
                             : 'Gửi mã qua email'
                       }
                       disabled={otp.isPending || verifyOtp.isPending || countdown > 0}
-                      onClick={() => otp.mutate()}
+                      onClick={handleSendOtp}
                       className="shrink-0 min-h-12 sm:min-h-14 px-3.5 sm:px-4 rounded-xl border border-slate-300 bg-white text-xs sm:text-sm font-semibold text-black hover:bg-orange-50 hover:border-[#d95f00] hover:text-[#d95f00] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d95f00] focus-visible:ring-offset-1 disabled:opacity-50 transition-all shadow-2xs cursor-pointer flex items-center justify-center gap-2 whitespace-nowrap"
                     >
                       {otp.isPending ? (
@@ -761,7 +1158,7 @@ export function RegisterPage({ mode = 'register' }: { mode?: 'login' | 'register
                 </div>
               )}
 
-              {(sentValid || verifyOtp.isSuccess) && (
+              {(isOtpVerified || isSentValid || isLinkEligible) && (
                 <div className="flex items-start gap-3 rounded-xl border border-brand-border bg-brand-surface p-3 sm:p-3.5 text-xs">
                   <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#d95f00] text-white">
                     <Check size={18} strokeWidth={2.5} aria-hidden="true" />
@@ -770,31 +1167,41 @@ export function RegisterPage({ mode = 'register' }: { mode?: 'login' | 'register
                     <p className="font-sora text-xs sm:text-sm font-semibold leading-5 text-black">
                       {mode === 'forgot'
                         ? 'Kiểm tra hộp thư của bạn'
-                        : verifyOtp.isSuccess
+                        : isOtpVerified
                           ? 'Email đã được xác thực thành công'
-                          : 'Mã xác thực đã được gửi'}
+                          : isLinkEligible
+                            ? 'Mã xác thực nhận từ liên kết'
+                            : 'Mã xác thực đã được gửi'}
                     </p>
                     <p className="mt-0.5 text-xs leading-relaxed text-black/70">
                       {mode === 'forgot' ? (
                         'Nếu email đã đăng ký, bạn sẽ nhận được mã. '
-                      ) : verifyOtp.isSuccess ? (
+                      ) : isOtpVerified ? (
                         <>
                           Đã xác thực email{' '}
                           <strong className="break-all font-semibold text-black">
-                            {otp.data?.email || form.getValues('email')}
+                            {emailValue}
                           </strong>
                           . Bạn có thể tiếp tục thiết lập mật khẩu.
+                        </>
+                      ) : isLinkEligible ? (
+                        <>
+                          Email{' '}
+                          <strong className="break-all font-semibold text-black">
+                            {emailValue}
+                          </strong>{' '}
+                          đã nhận mã từ liên kết. Chọn Tiếp tục để xác thực.
                         </>
                       ) : (
                         <>
                           Gửi đến{' '}
                           <strong className="break-all font-semibold text-black">
-                            {otp.data?.email || form.getValues('email')}
+                            {emailValue}
                           </strong>
                           .{' '}
                         </>
                       )}
-                      {!verifyOtp.isSuccess && 'Mã gồm 6 số, có hiệu lực 5 phút.'}
+                      {!isOtpVerified && !isLinkEligible && 'Mã gồm 6 số, có hiệu lực 5 phút.'}
                     </p>
                   </div>
                 </div>
@@ -819,6 +1226,10 @@ export function RegisterPage({ mode = 'register' }: { mode?: 'login' | 'register
                       className="absolute inset-0 z-10 w-full h-full opacity-0 cursor-pointer caret-transparent"
                       {...form.register('otpCode', {
                         onChange: () => {
+                          activeVerifyRequestIdRef.current += 1
+                          verifiedProofRef.current = null
+                          linkOtpSourceRef.current = null
+                          setMagicLinkNotice(null)
                           verifyOtp.reset()
                           form.clearErrors('otpCode')
                         },
@@ -882,7 +1293,11 @@ export function RegisterPage({ mode = 'register' }: { mode?: 'login' | 'register
                   </button>
                 </div>
               )}
-              {otp.isError && <Notice error>{errorMessage(otp.error)}</Notice>}
+              {otp.isError &&
+                otp.variables?.generation === sessionGenerationRef.current &&
+                otp.variables?.requestId === activeSendRequestIdRef.current && (
+                  <Notice error>{errorMessage(otp.error)}</Notice>
+                )}
             </div>
 
             {/* STEP 4 (hoặc 3 cho Tài xế): Thiết lập mật khẩu & Submit */}
@@ -1006,7 +1421,47 @@ export function RegisterPage({ mode = 'register' }: { mode?: 'login' | 'register
                 </button>
               )}
             </div>
-            {submit.isError && <Notice error>{errorMessage(submit.error)}</Notice>}
+            {submit.isError &&
+              submit.variables?.generation === sessionGenerationRef.current &&
+              submit.variables?.requestId === activeSubmitRequestIdRef.current && (
+                <Notice error>{errorMessage(submit.error)}</Notice>
+              )}
+
+            {mode === 'register' && isConfirmRoleDialogOpen && (
+              <Dialog
+                isOpen={isConfirmRoleDialogOpen}
+                onClose={handleCancelRoleChange}
+                onAfterClose={handleDialogAfterClose}
+                initialFocusRef={cancelRoleBtnRef}
+                title={`Đổi sang vai trò ${pendingRole ? ROLE_LABELS[pendingRole] : ''}?`}
+                description="Thông tin đã nhập cho vai trò hiện tại sẽ bị xóa, bao gồm thông tin cá nhân, ngân hàng và xác thực email. Bạn cần nhập lại từ đầu."
+                maxWidth="sm"
+              >
+                <div className="flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-end gap-3 mt-6">
+                  <button
+                    ref={cancelRoleBtnRef}
+                    type="button"
+                    onClick={handleCancelRoleChange}
+                    className="min-h-11 px-4 py-2.5 rounded-xl border border-slate-300 bg-white text-sm font-semibold text-slate-700 hover:bg-slate-50 transition-colors cursor-pointer"
+                  >
+                    Giữ vai trò hiện tại
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleConfirmRoleChange}
+                    className="min-h-11 px-4 py-2.5 rounded-xl bg-[#d95f00] hover:bg-[#b84e00] active:bg-[#9e4300] text-white text-sm font-bold transition-colors cursor-pointer"
+                  >
+                    Đổi vai trò và nhập lại
+                  </button>
+                </div>
+              </Dialog>
+            )}
+
+            {roleChangeAnnouncement && (
+              <div role="status" aria-live="polite" className="sr-only">
+                {roleChangeAnnouncement}
+              </div>
+            )}
           </form>
         )}
 
