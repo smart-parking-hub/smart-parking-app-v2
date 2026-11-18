@@ -17,6 +17,7 @@ import { MerchantChannelBreakdownCards } from '../components/MerchantChannelBrea
 import { MerchantRevenueChart } from '../components/MerchantRevenueChart'
 import { RevenueVolumeComboChart } from '../dashboard/components/RevenueVolumeComboChart'
 import { groupRevenueSeries } from '../operations/merchantFinanceApi'
+import { fetchRevenueStats } from '../dashboard/api/merchantDashboardApi'
 import {
   resolveLotTransferGross,
   resolveScopedRevenueMetrics,
@@ -126,6 +127,17 @@ describe('PR #103 Review Regression Suite (F-02, F-03, F-04)', () => {
     expect(screen.getByTitle(/Chưa phân loại:/)).toHaveAttribute('style', 'height: 168px;')
     view.unmount()
     render(<RevenueVolumeComboChart data={points} />)
+    expect(screen.queryByTestId('bar-transfer-2026-11-18')).not.toBeInTheDocument()
+    expect(screen.getByTestId('bar-unclassified-2026-11-18')).toHaveAttribute('height', '185')
+  })
+
+  it('keeps legacy daily totals visible as unclassified through the dashboard API parser', async () => {
+    vi.spyOn(apiClient, 'get').mockResolvedValue({ data: { data: {
+      totalNetRevenue: 90000, currentWalletBalance: 90000,
+      series: [{ period: '2026-11-18', revenue: 90000, bookingCount: 1 }],
+    } } })
+    const revenue = await fetchRevenueStats()
+    render(<RevenueVolumeComboChart data={revenue.series} />)
     expect(screen.queryByTestId('bar-transfer-2026-11-18')).not.toBeInTheDocument()
     expect(screen.getByTestId('bar-unclassified-2026-11-18')).toHaveAttribute('height', '185')
   })
