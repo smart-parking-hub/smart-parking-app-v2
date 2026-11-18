@@ -1,13 +1,25 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { ArrowRight, Navigation, FileText, CheckCircle2 } from 'lucide-react'
+import { buildGoogleMapsDirectionsUrl, type Coordinates } from '@/shared/maps'
 
 interface TerminalActionBarProps {
   onDownloadPdf?: () => void
+  destination?: Partial<Coordinates> | null
+  destinationAddress?: string | null
 }
 
-export function TerminalActionBar({ onDownloadPdf }: TerminalActionBarProps) {
+export function TerminalActionBar({
+  onDownloadPdf,
+  destination,
+  destinationAddress,
+}: TerminalActionBarProps) {
   const [pdfDownloaded, setPdfDownloaded] = useState(false)
+
+  const directionsUrl = buildGoogleMapsDirectionsUrl({
+    destination,
+    destinationAddress,
+  })
 
   const handlePdfClick = () => {
     setPdfDownloaded(true)
@@ -30,16 +42,18 @@ export function TerminalActionBar({ onDownloadPdf }: TerminalActionBarProps) {
         <ArrowRight className="w-4 h-4 text-white" />
       </Link>
 
-      {/* Secondary Navigation Button (Google Maps) */}
-      <a
-        href="https://maps.google.com/?q=Tan+Cang+Cat+Lai+Gate+2+Ho+Chi+Minh"
-        target="_blank"
-        rel="noopener noreferrer"
-        className="h-[52px] px-6 bg-white hover:bg-slate-100 text-slate-800 border border-slate-200 font-mono text-xs sm:text-sm rounded-xl font-bold flex items-center justify-center gap-2 transition-colors shadow-xs cursor-pointer"
-      >
-        <Navigation className="w-4 h-4 text-orange-600" />
-        <span>DẪN ĐƯỜNG GOOGLE MAPS</span>
-      </a>
+      {/* Secondary Navigation Button (Google Maps) — rendered only with real booking destination */}
+      {directionsUrl && (
+        <a
+          href={directionsUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="h-[52px] px-6 bg-white hover:bg-slate-100 text-slate-800 border border-slate-200 font-mono text-xs sm:text-sm rounded-xl font-bold flex items-center justify-center gap-2 transition-colors shadow-xs cursor-pointer"
+        >
+          <Navigation className="w-4 h-4 text-orange-600" />
+          <span>DẪN ĐƯỜNG GOOGLE MAPS</span>
+        </a>
+      )}
 
       {/* Download Receipt PDF Button */}
       <button

@@ -4,6 +4,7 @@ import { MemoryRouter } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { apiClient } from '@/shared/api/client'
 import { SearchParkingPage } from '../pages/SearchParkingPage'
+import { clearGeocoderCacheForTests } from '../api/mapProvider'
 import { fallbackParkingLots } from '../api/parkingSearchApi'
 import { parkingSearchStore } from '../store/parkingSearchStore'
 
@@ -15,7 +16,7 @@ vi.mock('@/shared/api/client', () => ({
 }))
 vi.mock('../components/InteractiveMapCanvas', () => ({
   InteractiveMapCanvas: ({ selectedLot }: { selectedLot?: { id: number } }) => (
-    <section aria-label="Bản đồ bãi đỗ OpenStreetMap" data-selected-id={selectedLot?.id ?? ''} />
+    <section aria-label="Bản đồ bãi đỗ OpenFreeMap" data-selected-id={selectedLot?.id ?? ''} />
   ),
 }))
 
@@ -42,6 +43,8 @@ describe('SCR-015: Interactive Parking Search & Map (Bản đồ tìm kiếm bã
   beforeEach(() => {
     HTMLDialogElement.prototype.showModal = function () { this.setAttribute('open', '') };
     HTMLDialogElement.prototype.close = function () { this.removeAttribute('open') };
+    clearGeocoderCacheForTests()
+    parkingSearchStore.closeQuickBook()
     parkingSearchStore.resetFilters()
     vi.clearAllMocks()
     vi.mocked(apiClient.get).mockImplementation(async url => String(url).match(/parking-lots\/\d+$/) ? { data: { data: { id: 1, name: 'Bãi API', address: 'Địa chỉ', status: 'APPROVED', slots: [], pricingRules: [] } } } : String(url).includes('/vehicles') ? { data: { data: { content: [{ id: 3, licensePlate: '51C-TEST', vehicleType: 'CONTAINER', status: 'ACTIVE' }] } } } : {
@@ -56,6 +59,7 @@ describe('SCR-015: Interactive Parking Search & Map (Bản đồ tìm kiếm bã
   })
 
   afterEach(() => {
+    vi.restoreAllMocks()
     vi.unstubAllGlobals()
   })
 
@@ -63,7 +67,7 @@ describe('SCR-015: Interactive Parking Search & Map (Bản đồ tìm kiếm bã
     parkingSearchStore.setSelectedLotId(fallbackParkingLots[0].id)
     const view = renderWithProviders(<SearchParkingPage />)
     const cards = await screen.findAllByRole('button', { name: /^Chọn bãi xe / }, { timeout: 10000 })
-    const map = screen.getByRole('region', { name: 'Bản đồ bãi đỗ OpenStreetMap' })
+    const map = screen.getByRole('region', { name: 'Bản đồ bãi đỗ OpenFreeMap' })
     expect(map).toHaveAttribute('data-selected-id', '')
     expect(cards.every(card => card.getAttribute('aria-pressed') === 'false')).toBe(true)
     fireEvent.click(cards[1])
@@ -71,7 +75,7 @@ describe('SCR-015: Interactive Parking Search & Map (Bản đồ tìm kiếm bã
     expect(map).toHaveAttribute('data-selected-id', String(parkingSearchStore.getState().selectedLotId))
     view.unmount()
     renderWithProviders(<SearchParkingPage />)
-    expect(screen.getByRole('region', { name: 'Bản đồ bãi đỗ OpenStreetMap' })).toHaveAttribute('data-selected-id', '')
+    expect(screen.getByRole('region', { name: 'Bản đồ bãi đỗ OpenFreeMap' })).toHaveAttribute('data-selected-id', '')
   })
 
   it('renders top filter bar with vehicle selector, 5 classifications and radius slider', async () => {
@@ -134,7 +138,7 @@ describe('SCR-015: Interactive Parking Search & Map (Bản đồ tìm kiếm bã
 
     // Map canvas
     expect(
-      screen.getByRole('region', { name: 'Bản đồ bãi đỗ OpenStreetMap' }),
+      screen.getByRole('region', { name: 'Bản đồ bãi đỗ OpenFreeMap' }),
     ).toBeInTheDocument()
     expect(screen.queryByText(/Lưu lượng xe 85%/i)).not.toBeInTheDocument()
 
@@ -151,11 +155,12 @@ describe('SCR-015: Interactive Parking Search & Map (Bản đồ tìm kiếm bã
     ).toBeTruthy()
   })
 
-  it('shows real-time parking lot and map location suggestions below input while typing without clicking submit', async () => {
+  it('shows real-time parking lot and Photon suggestions below input while typing without clicking submit', async () => {
     vi.stubGlobal(
       'fetch',
       vi.fn().mockResolvedValue({
         ok: true,
+        status: 200,
         json: async () => ({
           features: [
             {
@@ -188,13 +193,13 @@ describe('SCR-015: Interactive Parking Search & Map (Bản đồ tìm kiếm bã
     })
     expect(depotOption).toBeInTheDocument()
 
-    // Debounced map suggestions arrive automatically without clicking submit
-    const osmOption = await screen.findByRole(
+    // Debounced Photon suggestions arrive automatically without clicking submit
+    const photonOption = await screen.findByRole(
       'option',
       { name: /Cảng Tân Cảng Cát Lái, TP\. Thủ Đức/i },
-      { timeout: 2000 },
+      { timeout: 2500 },
     )
-    expect(osmOption).toBeInTheDocument()
+    expect(photonOption).toBeInTheDocument()
 
     // Selecting the matching yard updates selection & closes dropdown
     fireEvent.click(depotOption)
@@ -211,6 +216,7 @@ describe('SCR-015: Interactive Parking Search & Map (Bản đồ tìm kiếm bã
       'fetch',
       vi.fn().mockResolvedValue({
         ok: true,
+        status: 200,
         json: async () => ({
           features: [
             {
@@ -345,17 +351,120 @@ describe('SCR-015: Interactive Parking Search & Map (Bản đồ tìm kiếm bã
     fireEvent.click(expandBtn)
   })
 
-  it('displays error alert with ERR_GEO_DISPATCH_TIMEOUT when server request fails', async () => {
+  it('displays accurate error alert without hardcoded ERR_GEO_DISPATCH_TIMEOUT when server request fails', async () => {
     vi.mocked(apiClient.get).mockImplementation(async url => { if (String(url).includes('/vehicles')) return { data: { data: { content: [] } } }; throw new Error('Network connection timeout') })
 
     renderWithProviders(<SearchParkingPage />)
 
     await waitFor(() => {
       expect(
-        screen.getByText(/ERR_GEO_DISPATCH_TIMEOUT/i),
+        screen.getByText(/Không thể tải danh sách bãi đỗ từ hệ thống/i),
       ).toBeInTheDocument()
     })
 
+    expect(screen.queryByText(/ERR_GEO_DISPATCH_TIMEOUT/i)).not.toBeInTheDocument()
     expect(screen.getByText(/Tải lại bãi xe/i)).toBeInTheDocument()
+  })
+
+  it('provides real-time database-backed parking lot suggestions in TopFilterBar without mock data', async () => {
+    const dbOnlyLot = {
+      id: 901,
+      name: 'Bãi Container Hiệp Phước Real DB',
+      address: 'KCN Hiệp Phước, Nhà Bè, TP.HCM',
+      availableCapacity: 7,
+      totalSlots: 30,
+      basePricePerHour: 42000,
+      latitude: 10.6421,
+      longitude: 106.7512,
+      averageRating: 4.9,
+    }
+
+    vi.mocked(apiClient.get).mockImplementation(async (url, config) => {
+      if (String(url).includes('/vehicles')) {
+        return {
+          data: {
+            data: {
+              content: [
+                {
+                  id: 3,
+                  licensePlate: '51C-TEST',
+                  vehicleType: 'CONTAINER',
+                  status: 'ACTIVE',
+                },
+              ],
+            },
+          },
+        }
+      }
+      const params = config?.params as { latitude?: number } | undefined
+      return {
+        data: {
+          data: {
+            content: params?.latitude === undefined ? [dbOnlyLot] : [],
+          },
+        },
+      }
+    })
+
+    renderWithProviders(<SearchParkingPage />)
+
+    const lotSearchInput = screen.getByRole('combobox', {
+      name: /Tìm nhanh bãi đỗ đang hoạt động/i,
+    })
+    fireEvent.focus(lotSearchInput)
+    fireEvent.change(lotSearchInput, { target: { value: 'hiep phuoc' } })
+
+    const suggestionListbox = await screen.findByRole('listbox', {
+      name: /Gợi ý bãi đỗ đang hoạt động/i,
+    })
+    expect(suggestionListbox).toBeInTheDocument()
+
+    const option = await screen.findByRole('option', {
+      name: /Bãi Container Hiệp Phước Real DB/i,
+    })
+    expect(option).toBeInTheDocument()
+    expect(option).toHaveTextContent('Còn 7 chỗ')
+    expect(option).toHaveTextContent('42.000 đ/h')
+
+    fireEvent.click(option)
+
+    expect(
+      screen.queryByRole('listbox', { name: /Gợi ý bãi đỗ đang hoạt động/i }),
+    ).not.toBeInTheDocument()
+    expect(
+      screen.getByRole('region', { name: 'Bản đồ bãi đỗ OpenFreeMap' }),
+    ).toHaveAttribute('data-selected-id', '901')
+
+    // Clearing the keyword restores empty input
+    fireEvent.click(
+      screen.getByRole('button', { name: /Xóa từ khóa bãi đỗ/i }),
+    )
+    expect(lotSearchInput).toHaveValue('')
+  })
+
+  it('shows honest empty message in TopFilterBar search when database has no matching active lots', async () => {
+    vi.mocked(apiClient.get).mockImplementation(async (url) => {
+      if (String(url).includes('/vehicles')) {
+        return { data: { data: { content: [] } } }
+      }
+      return { data: { data: { content: [] } } }
+    })
+
+    renderWithProviders(<SearchParkingPage />)
+
+    const lotSearchInput = screen.getByRole('combobox', {
+      name: /Tìm nhanh bãi đỗ đang hoạt động/i,
+    })
+    fireEvent.focus(lotSearchInput)
+    fireEvent.change(lotSearchInput, { target: { value: 'khong ton tai' } })
+
+    expect(
+      await screen.findByText(
+        /Không tìm thấy bãi đỗ đang hoạt động phù hợp với “khong ton tai”/i,
+      ),
+    ).toBeInTheDocument()
+    expect(
+      screen.queryByText(/Trạm Dừng & Bãi Container Tân Cảng - Phú Hữu/i),
+    ).not.toBeInTheDocument()
   })
 })

@@ -290,6 +290,28 @@ describe('GROUP 10 - Admin Parking Lots Moderation & Dashboard', () => {
       ).toBeInTheDocument()
       expect(sendData).not.toHaveBeenCalled()
     })
+
+    it('displays operating profile & AI regulations when description is present', async () => {
+      vi.mocked(getData).mockResolvedValue({
+        ...mockLot,
+        description: '### Khả năng tiếp vận & Quy mô\nDepot container 60T chuẩn ALPR.',
+      })
+
+      render(
+        <QueryClientProvider client={createTestQueryClient()}>
+          <MemoryRouter initialEntries={['/admin/parking-lots/101']}>
+            <Routes>
+              <Route path="/admin/parking-lots/:id" element={<AdminLotDetailPage />} />
+            </Routes>
+          </MemoryRouter>
+        </QueryClientProvider>,
+      )
+
+      expect(
+        await screen.findByRole('heading', { name: 'Hồ sơ vận hành & Hướng dẫn bãi đỗ' }),
+      ).toBeInTheDocument()
+      expect(screen.getByText(/Depot container 60T chuẩn ALPR/)).toBeInTheDocument()
+    })
   })
 
   describe('AdminLayout Harmonization', () => {

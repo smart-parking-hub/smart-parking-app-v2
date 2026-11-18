@@ -93,6 +93,8 @@ export function ReservationFlow({lotId}:{lotId:number}) {
   if(lot.isPending||vehicles.isPending)return <p role="status">Đang tải bãi và phương tiện…</p>
   if(lot.isError||vehicles.isError)return <Notice error><div>{errorMessage(lot.error??vehicles.error)}<button type="button" className={`${secondary} mt-3`} onClick={()=>{void lot.refetch();void vehicles.refetch()}}>Thử lại</button></div></Notice>
   if(!vehicles.data?.length)return <Notice><div>Bạn chưa có phương tiện đang hoạt động.<Link to="/vehicles" className={`${secondary} mt-3`}>Đăng ký phương tiện</Link></div></Notice>
+  const schedulePolicy = available.data ?? timelineData
+  const earlyCheckInMinutes = schedulePolicy?.checkInEarlyMinutes ?? 0
   const blocked=lot.data.status!=='APPROVED'||!tariff||!slot
   const selectedSlotValid=!values.physicalSlotId||available.data?.slots.some(item=>item.id===values.physicalSlotId)
   const ready=validWindow&&bookingTimestamp(values.start)>Date.now()&&!available.isError&&!available.isFetching&&Boolean(available.data&&available.data.remainingCapacity>0)&&selectedSlotValid
@@ -113,16 +115,19 @@ export function ReservationFlow({lotId}:{lotId:number}) {
         hasMore={hasNextPage} loadingMore={isFetchingNextPage} onLoadNext={()=>void fetchNextPage()}/>
       {available.isError?<Notice error><p>{errorMessage(available.error)}</p><button type="button" className={secondary} onClick={()=>void available.refetch()}>Kiểm tra lại khung giờ</button></Notice>:
         available.isFetching?<p role="status">Đang kiểm tra toàn bộ khung giờ…</p>:
-        validWindow&&available.data&&<p role="status" className={available.data.remainingCapacity>0?'text-emerald-800':'text-red-700'}>{available.data.remainingCapacity>0?`Có ${available.data.remainingCapacity} chỗ phù hợp trống suốt khung giờ đã chọn.`:'Không có chỗ trống suốt khung giờ và khoảng đệm 30 phút. Chọn giờ hoặc ngày khác.'}</p>}
+        validWindow&&available.data&&<p role="status" className={available.data.remainingCapacity>0?'text-emerald-800':'text-red-700'}>{available.data.remainingCapacity>0?`Có ${available.data.remainingCapacity} chỗ phù hợp trống suốt khung giờ đã chọn.`:'Không có chỗ trống suốt khung giờ đã chọn. Chọn giờ hoặc ngày khác.'}</p>}
       {available.data?.allocationMode==='PHYSICAL'&&<Field label="Ô đỗ"><select className={control} {...form.register('physicalSlotId')} disabled={available.isFetching||save.isPending}>
         <option value="">Tự chọn ô phù hợp</option>{available.data.slots.map(item=><option key={item.id} value={item.id}>{item.code}</option>)}
       </select></Field>}
     </>}
-    <p className="text-xs leading-5 text-brand-muted">Giờ Việt Nam (UTC+7) · Mỗi lượt cùng ô cách nhau tối thiểu 30 phút. Khoảng đệm không cộng vào thời lượng đặt. Booking mới check-in từ đúng giờ đã đặt.</p>
+    <p className="text-xs leading-5 text-brand-muted">Giờ Việt Nam (UTC+7) · Hai lượt liên tiếp cùng ô cách nhau tối thiểu 30 phút.
+      {schedulePolicy && (earlyCheckInMinutes > 0
+        ? ` Có thể vào sớm tối đa ${earlyCheckInMinutes} phút nếu chỗ đã sẵn sàng.`
+        : ' Check-in từ giờ đã đặt.')}</p>
     {tariff&&<div className="overflow-hidden rounded-xl border border-brand-border text-sm">
       <dl className="grid grid-cols-2 gap-3 bg-brand-surface p-3.5"><div><dt className="text-xs text-brand-muted">Giá cơ bản</dt><dd className="mt-1 font-semibold">{formatMoney(Number(tariff.basePricePerHour))}/giờ</dd></div><div><dt className="text-xs text-brand-muted">Cọc giữ chỗ</dt><dd className="mt-1 font-semibold">20% phí dự kiến</dd></div></dl>
       <div className="space-y-1.5 p-3.5 text-xs leading-relaxed text-brand-muted">
-        <p>Phí đỗ thông thường tính theo giờ bắt đầu: đặt 30 phút vẫn tính tối thiểu 1 giờ.</p>
+        <p>Phí đỗ tính từ lúc xe vào bãi theo mỗi giờ bắt đầu. Đặt 30 phút vẫn tính tối thiểu 1 giờ.</p>
         <p>Giờ cao điểm: ×{tariff.surgeMultiplier} {tariff.surgeStartTime&&tariff.surgeEndTime?`(${tariff.surgeStartTime.slice(0,5)} – ${tariff.surgeEndTime.slice(0,5)})`:'(chưa cấu hình khung giờ)'}.</p>
         <p>Sau giờ ra dự kiến: ×{tariff.overtimePenaltyMultiplier} cho phần quá giờ, tính theo block 30 phút.</p>
         <p>Thanh toán cọc trong <strong>15 phút</strong> kể từ lúc tạo booking.</p>

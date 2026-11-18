@@ -39,6 +39,10 @@ export function BookingCheckinTicket({ booking }: { booking: Booking }) {
   const [copied, setCopied] = useState(false)
   const [notice, setNotice] = useState('')
   const [error, setError] = useState('')
+  const checkInEarlyMinutes = booking.checkInEarlyMinutes ?? ((booking.schedulePolicyVersion ?? 0) === 0 ? 30 : 0)
+  const earliestCheckIn = bookingTimestamp(booking.expectedCheckInTime) - checkInEarlyMinutes * 60_000
+  const closesAtScheduledEnd = booking.schedulePolicyVersion === 2 &&
+    bookingTimestamp(booking.expiresAt) === bookingTimestamp(booking.expectedCheckOutTime)
   const copyCode = async () => {
     setError('')
     try {
@@ -96,9 +100,11 @@ export function BookingCheckinTicket({ booking }: { booking: Booking }) {
     <div className="space-y-3 border-y border-brand-border bg-brand-surface p-4">
       <div className="flex items-center gap-2 font-medium"><Clock size={15} className="shrink-0 text-brand-primary" aria-hidden="true"/>Khung giờ check-in hợp lệ</div>
       <dl className="grid grid-cols-2 gap-3 text-xs">
-        <div><dt className="text-brand-muted">Từ</dt><dd className="mt-1 font-semibold tabular-nums leading-5">{bookingTimeLabel(bookingTimestamp(booking.expectedCheckInTime) - (booking.checkInEarlyMinutes ?? (booking.schedulePolicyVersion == null ? 30 : 0)) * 60000)}</dd></div>
-        <div><dt className="text-brand-muted">Đến</dt><dd className="mt-1 font-semibold tabular-nums leading-5">{bookingTimeLabel(booking.expiresAt)}</dd></div>
+        <div><dt className="text-brand-muted">Từ</dt><dd className="mt-1 font-semibold tabular-nums leading-5">{bookingTimeLabel(earliestCheckIn)}</dd></div>
+        <div><dt className="text-brand-muted">{closesAtScheduledEnd ? 'Trước' : 'Đến'}</dt><dd className="mt-1 font-semibold tabular-nums leading-5">{bookingTimeLabel(booking.expiresAt)}</dd></div>
       </dl>
+      {booking.schedulePolicyVersion === 2 && checkInEarlyMinutes > 0 &&
+        <p className="text-xs leading-5 text-brand-muted">Có thể vào sớm tối đa {checkInEarlyMinutes} phút nếu chỗ đã sẵn sàng. Phí đỗ tính từ lúc xe vào bãi.</p>}
     </div>
 
     <div className="space-y-4 p-4">

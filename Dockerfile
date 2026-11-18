@@ -12,6 +12,27 @@ RUN npm ci
 # Copy entire frontend source code
 COPY . .
 
+# Vite injects VITE_* defaults at build time (map endpoints can also be overridden via /map-config.json)
+ARG VITE_API_BASE_URL=/api
+ARG VITE_APP_ENV=production
+ARG VITE_MAP_DEFAULT_BASEMAP=google-roadmap
+ARG VITE_MAP_STYLE_URL=https://tiles.openfreemap.org/styles/liberty
+ARG VITE_MAP_PHOTON_URL=https://photon.komoot.io/api/
+ARG VITE_MAP_GEOCODER_ENABLED=true
+ARG VITE_MAP_OSRM_URL=https://router.project-osrm.org
+ARG VITE_MAP_ROUTING_ENABLED=true
+ARG VITE_APP_KEY=
+
+ENV VITE_API_BASE_URL=$VITE_API_BASE_URL \
+    VITE_APP_ENV=$VITE_APP_ENV \
+    VITE_MAP_DEFAULT_BASEMAP=$VITE_MAP_DEFAULT_BASEMAP \
+    VITE_MAP_STYLE_URL=$VITE_MAP_STYLE_URL \
+    VITE_MAP_PHOTON_URL=$VITE_MAP_PHOTON_URL \
+    VITE_MAP_GEOCODER_ENABLED=$VITE_MAP_GEOCODER_ENABLED \
+    VITE_MAP_OSRM_URL=$VITE_MAP_OSRM_URL \
+    VITE_MAP_ROUTING_ENABLED=$VITE_MAP_ROUTING_ENABLED \
+    VITE_APP_KEY=$VITE_APP_KEY
+
 # Run production build via Vite + TypeScript compiler
 RUN npm run build
 

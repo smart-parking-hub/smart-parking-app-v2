@@ -14,6 +14,11 @@ import { getData, sendData, errorMessage } from '@/shared/api/resources'
 import { QueryState } from '@/shared/components/QueryState'
 import { ApiImage } from '@/shared/components/ApiImage'
 import {
+  buildGoogleMapsSearchUrl,
+  isValidCoordinates,
+  MapLibreMapView,
+} from '@/shared/maps'
+import {
   Workspace,
   Panel,
   Metrics,
@@ -140,28 +145,59 @@ export function LotOverview({ lot, showMap = false }: { lot: Lot; showMap?: bool
               )
             })}
           </div>
-          <a
-            className={`${secondary} mt-6`}
-            target="_blank"
-            rel="noreferrer"
-            href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${lot.latitude},${lot.longitude}`)}`}
-          >
-            Xem vị trí trên bản đồ ↗
-          </a>
+          {(() => {
+            const mapLink = buildGoogleMapsSearchUrl({
+              coordinates: { latitude: lot.latitude, longitude: lot.longitude },
+              query: lot.address || lot.name,
+            })
+            return mapLink ? (
+              <a
+                className={`${secondary} mt-6`}
+                target="_blank"
+                rel="noopener noreferrer"
+                href={mapLink}
+              >
+                Xem vị trí trên bản đồ ↗
+              </a>
+            ) : null
+          })()}
         </Panel>
       </div>
-      {showMap && <Panel title="Vị trí bãi đỗ">
-        <p className="mb-4 text-sm text-brand-muted">{lot.address}</p>
-        {Number.isFinite(lot.latitude) && Number.isFinite(lot.longitude) && Math.abs(lot.latitude) <= 90 && Math.abs(lot.longitude) <= 180 ? (
-          <iframe
-            title={`Bản đồ vị trí ${lot.name}`}
-            className="h-80 w-full rounded-xl border-0 sm:h-96"
-            src={`https://www.google.com/maps?q=${encodeURIComponent(`${lot.latitude},${lot.longitude}`)}&z=16&output=embed`}
-            referrerPolicy="no-referrer-when-downgrade"
-            allowFullScreen
-          />
-        ) : <Notice>Chưa có tọa độ hợp lệ để hiển thị vị trí bãi trên bản đồ.</Notice>}
-      </Panel>}
+      <Panel title="Hồ sơ vận hành & Hướng dẫn bãi đỗ">
+        {lot.description ? (
+          <div className="rounded-2xl border border-orange-200/70 bg-orange-50/30 p-5 shadow-xs">
+            <div className="whitespace-pre-line text-sm leading-relaxed text-brand-dark/90 font-normal">
+              {lot.description}
+            </div>
+          </div>
+        ) : (
+          <div className="rounded-xl border border-dashed border-brand-border bg-brand-surface/50 p-4 text-sm text-brand-muted">
+            Chủ bãi chưa bổ sung hồ sơ vận hành hoặc nội quy qua trợ lý AI cho bãi đỗ này.
+          </div>
+        )}
+      </Panel>
+      {showMap && (
+        <Panel title="Vị trí bãi đỗ">
+          <p className="mb-4 text-sm text-brand-muted">{lot.address}</p>
+          {isValidCoordinates({
+            latitude: lot.latitude,
+            longitude: lot.longitude,
+          }) ? (
+            <MapLibreMapView
+              coordinates={{ latitude: lot.latitude, longitude: lot.longitude }}
+              markerTitle={lot.name}
+              address={lot.address}
+              zoom={16}
+              ariaLabel={`Bản đồ vị trí ${lot.name}`}
+              className="h-80 w-full rounded-xl border border-brand-border sm:h-96"
+            />
+          ) : (
+            <Notice>
+              Chưa có tọa độ hợp lệ để hiển thị vị trí bãi trên bản đồ.
+            </Notice>
+          )}
+        </Panel>
+      )}
       <Panel title="Biểu phí hiện hành">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">

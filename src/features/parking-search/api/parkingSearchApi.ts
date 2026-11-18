@@ -2,6 +2,7 @@ import { apiClient } from '@/shared/api/client'
 import type {
   ParkingLotItem,
   SearchFilterState,
+  VehicleClassification,
   VehicleOption,
 } from '../types/parkingSearchTypes'
 
@@ -102,17 +103,118 @@ export const fallbackParkingLots: ParkingLotItem[] = [
   },
 ]
 
+type SearchLotDto = Partial<ParkingLotItem> & {
+  id: number
+  name: string
+  address: string
+  availableCapacity?: number
+  basePricePerHour?: number
+  averageRating?: number
+}
+
+function mapSearchLotDto(item: SearchLotDto): ParkingLotItem {
+  const availableSlots = item.availableCapacity ?? item.availableSlots ?? 0
+  return {
+    id: item.id,
+    name: item.name,
+    address: item.address,
+    distanceKm: item.distanceKm ?? 0,
+    etaMinutes: item.etaMinutes ?? 0,
+    availableSlots,
+    totalSlots: item.totalSlots ?? 0,
+    slotTypeLabel: item.slotTypeLabel ?? `Còn ${availableSlots} chỗ`,
+    hourlyRate: item.basePricePerHour ?? item.hourlyRate ?? 0,
+    depositAmount: item.depositAmount ?? 0,
+    isBestMatch: item.isBestMatch,
+    maxVehicleLength: item.maxVehicleLength,
+    isFull: availableSlots === 0,
+    queueActive: item.queueActive,
+    queueWaitingCount: item.queueWaitingCount,
+    queueEtaMinutes: item.queueEtaMinutes,
+    amenities: item.amenities ?? [],
+    latitude: item.latitude != null ? Number(item.latitude) : NaN,
+    longitude: item.longitude != null ? Number(item.longitude) : NaN,
+    ratingAverage: item.averageRating ?? item.ratingAverage ?? 0,
+  }
+}
+
+export function normalizeParkingSearchText(text: string): string {
+  return text
+    .toLocaleLowerCase('vi')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/đ/g, 'd')
+    .replace(/\s+/g, ' ')
+    .trim()
+}
+
+export function matchesParkingLotKeyword(
+  lot: Pick<ParkingLotItem, 'name' | 'address'>,
+  keyword: string,
+): boolean {
+  const normalizedQuery = normalizeParkingSearchText(keyword)
+  if (!normalizedQuery) return true
+
+  const haystack = normalizeParkingSearchText(`${lot.name} ${lot.address}`)
+  const tokens = normalizedQuery.split(' ').filter(Boolean)
+  return tokens.every((token) => haystack.includes(token))
+}
+
+export function rankParkingLotSuggestions(
+  lots: ParkingLotItem[],
+  keyword: string,
+  limit = 8,
+): ParkingLotItem[] {
+  const normalizedQuery = normalizeParkingSearchText(keyword)
+  if (!normalizedQuery) return []
+
+  return lots
+    .filter((lot) => matchesParkingLotKeyword(lot, normalizedQuery))
+    .sort((a, b) => {
+      const aName = normalizeParkingSearchText(a.name)
+      const bName = normalizeParkingSearchText(b.name)
+      const aStarts = aName.startsWith(normalizedQuery) ? 0 : 1
+      const bStarts = bName.startsWith(normalizedQuery) ? 0 : 1
+      if (aStarts !== bStarts) return aStarts - bStarts
+
+      const aInName = aName.includes(normalizedQuery) ? 0 : 1
+      const bInName = bName.includes(normalizedQuery) ? 0 : 1
+      if (aInName !== bInName) return aInName - bInName
+
+      if (a.isFull !== b.isFull) return a.isFull ? 1 : -1
+      return b.availableSlots - a.availableSlots
+    })
+    .slice(0, limit)
+}
+
+/**
+ * Fetches live APPROVED (active) parking lots directly from backend database
+ * for real-time parking lot autocomplete without geo-radius clipping or mock data.
+ */
+export async function fetchActiveParkingLotsForSearch(params: {
+  vehicleType?: VehicleClassification
+  includeFull?: boolean
+  signal?: AbortSignal
+}): Promise<ParkingLotItem[]> {
+  const response = await apiClient.get<{
+    data?: { content: SearchLotDto[] }
+    content?: SearchLotDto[]
+  }>('/api/v1/parking-lots/search', {
+    signal: params.signal,
+    params: {
+      vehicleType: params.vehicleType,
+      includeFull: params.includeFull ?? true,
+      size: 100,
+      sort: 'id,asc',
+    },
+  })
+  const rawData = response.data.data?.content ?? response.data.content ?? []
+  return rawData.map(mapSearchLotDto)
+}
+
 export async function fetchParkingLots(
   filters: SearchFilterState,
 ): Promise<ParkingLotItem[]> {
-  type SearchLotDto = Partial<ParkingLotItem> & {
-    id: number
-    name: string
-    address: string
-    availableCapacity?: number
-    basePricePerHour?: number
-    averageRating?: number
-  }
   const response = await apiClient.get<{
     data?: { content: SearchLotDto[] }
     content?: SearchLotDto[]
@@ -128,30 +230,7 @@ export async function fetchParkingLots(
     },
   })
   const rawData = response.data.data?.content ?? response.data.content ?? []
-  const mapped = rawData.map((item): ParkingLotItem => ({
-    id: item.id,
-    name: item.name,
-    address: item.address,
-    distanceKm: item.distanceKm ?? 0,
-    etaMinutes: item.etaMinutes ?? 0,
-    availableSlots: item.availableCapacity ?? item.availableSlots ?? 0,
-    totalSlots: item.totalSlots ?? 0,
-    slotTypeLabel:
-      item.slotTypeLabel ??
-      `Còn ${item.availableCapacity ?? item.availableSlots ?? 0} chỗ`,
-    hourlyRate: item.basePricePerHour ?? item.hourlyRate ?? 0,
-    depositAmount: item.depositAmount ?? 0,
-    isBestMatch: item.isBestMatch,
-    maxVehicleLength: item.maxVehicleLength,
-    isFull: (item.availableCapacity ?? item.availableSlots ?? 0) === 0,
-    queueActive: item.queueActive,
-    queueWaitingCount: item.queueWaitingCount,
-    queueEtaMinutes: item.queueEtaMinutes,
-    amenities: item.amenities ?? [],
-    latitude: item.latitude != null ? Number(item.latitude) : NaN,
-    longitude: item.longitude != null ? Number(item.longitude) : NaN,
-    ratingAverage: item.averageRating ?? item.ratingAverage ?? 0,
-  }))
+  const mapped = rawData.map(mapSearchLotDto)
   return mapped
     .filter((lot) => filters.includeFull || !lot.isFull)
     .sort((a, b) =>

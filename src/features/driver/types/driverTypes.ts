@@ -14,6 +14,8 @@ export interface BookingDto {
   bookingCode: string
   parkingLotName: string
   parkingLotAddress: string
+  parkingLotLatitude?: number
+  parkingLotLongitude?: number
   vehicleLicensePlate: string
   trailerLicensePlate?: string
   containerType?: string

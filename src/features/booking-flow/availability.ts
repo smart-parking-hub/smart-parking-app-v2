@@ -3,7 +3,9 @@ import { getData } from '@/shared/api/resources'
 import type { Vehicle } from './api'
 
 const availabilitySchema = z.object({
-  timezone: z.literal('Asia/Ho_Chi_Minh'), blockMinutes: z.literal(30), bufferMinutes: z.literal(30),
+  timezone: z.literal('Asia/Ho_Chi_Minh'), blockMinutes: z.literal(30), bufferMinutes: z.number().int().nonnegative(),
+  checkInEarlyMinutes: z.number().int().nonnegative().optional(),
+  turnaroundMinutes: z.number().int().nonnegative().optional(),
   allocationMode: z.enum(['PHYSICAL', 'GROUP']), updatedAt: z.string(),
   remainingCapacity: z.number().int().nonnegative(),
   slots: z.array(z.object({ id: z.string(), code: z.string() })),

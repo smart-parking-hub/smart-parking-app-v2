@@ -97,7 +97,7 @@ it('disables full and buffer times from the timeline while keeping other hours s
   mount('2026-11-17T20:30',unavailableBlocks);openTimes()
   const full=screen.getByRole('button',{name:'21:00 · Hết chỗ'})
   expect(full).toBeDisabled()
-  expect(screen.getByRole('button',{name:'21:30 · Đệm 30p'})).toBeDisabled()
+  expect(screen.getByRole('button',{name:'21:30 · Khoảng đệm'})).toBeDisabled()
   fireEvent.click(full)
   expect(arrival()).toHaveTextContent('20:30')
   expect(screen.getByRole('dialog',{name:'Chọn giờ vào dự kiến'})).toBeInTheDocument()

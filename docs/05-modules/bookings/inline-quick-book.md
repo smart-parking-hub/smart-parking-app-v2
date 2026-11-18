@@ -14,7 +14,7 @@ Owner: SPH frontend. `last_verified`: 2026-11-17. Evidence: `BookingHoldRestrict
 
 ## Cập nhật 2026-11-17 — lịch đặt theo block 30 phút
 
-Luồng đặt dùng chung `ReservationFlow` đã thêm chọn ngày, giờ vào 00/30, thời lượng bội số 30 phút và timeline từ backend. Khả dụng được kiểm tra cho toàn bộ thời lượng, gồm khoảng đệm 30 phút giữa hai lượt cùng ô. Booking mới check-in từ giờ đã đặt; lịch cũ dùng chính sách từ server. Giữ tiền cọc 20%, hạn thanh toán 15 phút, PayOS/ví/QR và quy tắc giá hiện có. Chi tiết contract, capability parity và tests: [booking schedule](schedule.md). Các mục lịch sử về check-in sớm 30 phút bên dưới tiếp tục áp dụng cho vé legacy, không áp dụng mặc định cho booking policy 1.
+Luồng đặt dùng chung `ReservationFlow` đã thêm chọn ngày, giờ vào 00/30, thời lượng bội số 30 phút và timeline từ backend. Khả dụng được kiểm tra cho toàn bộ thời lượng, gồm khoảng đệm 30 phút giữa hai lượt cùng ô. Booking policy 2 có thể vào sớm tối đa 15 phút nếu chỗ đã sẵn sàng. Mỗi lượt mới có 15 phút đệm sau khi đỗ. Vé cũ hiển thị theo quy tắc đã lưu từ server. Giữ tiền cọc 20%, hạn thanh toán 15 phút, PayOS/ví/QR và quy tắc giá hiện có. Chi tiết contract, capability parity và tests: [booking schedule](schedule.md). Các mục lịch sử về check-in sớm 30 phút bên dưới tiếp tục áp dụng cho vé legacy, không áp dụng mặc định cho booking policy 1.
 
 ## Cập nhật 2026-11-18 — bố cục thanh toán thoáng hơn
 
