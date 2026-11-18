@@ -681,7 +681,8 @@
 - **Mục đích:** Danh sách hồ sơ bãi đỗ xe do các chủ bãi đăng ký; phân loại theo trạng thái kiểm duyệt (Chờ duyệt, Đã duyệt, Đã từ chối, Yêu cầu bổ sung thông tin).
 - **Hành động chính:** Tìm kiếm theo tên bãi / tỉnh thành, mở hồ sơ thẩm định chi tiết.
 - **Màn hình liên quan:** `SCR-044`.
-- **Dịch vụ API:** `GET /api/v1/admin/parking-lots`.
+- **Dịch vụ API:** `GET /api/v1/admin/parking-lots` và `GET /api/v1/admin/users/{id}`.
+- **Cột Chủ bãi:** Hiển thị `fullName` từ hồ sơ người dùng theo `merchantId`. Khi chưa lấy được tên, cột hiển thị mã chủ bãi.
 - **Bảo vệ quyền:** JWT Token hợp lệ & Role `ADMIN`.
 - **Trạng thái:** `VERIFIED`
 

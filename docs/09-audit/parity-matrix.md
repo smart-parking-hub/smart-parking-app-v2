@@ -12,6 +12,10 @@ User selected quick duration choices plus “Thời lượng khác”. Default r
 
 User-requested replacement of the arrival dropdown with a four-column, period-grouped time board. Date selection, future-only half-hour starts, live expiry correction, duration/checkout, exact-window capacity checks and all booking/payment behavior are preserved. Keyboard selection and Escape containment inside quick booking are verified. [Implementation and checks](./booking-time-grid-2026-11-17.md).
 
+## SCR-016 real photos and readable rates — 2026-11-17
+
+Name/address, back navigation, current free/total counts, all configured tariff factors, invalid-ID/loading/error/retry states and the complete reservation/payment flow are preserved. Existing image metadata now drives a cover-first, keyboard-operable gallery; vehicle names reuse the shared Vietnamese labels. No stock images or unverified facilities are added. The arrival dropdown hides elapsed blocks on today's date and retains all hours for future dates. [Contracts and capability parity](../05-modules/parking-detail/presentation.md).
+
 ## Quick booking payment layout — 2026-11-18
 
 User-requested presentation change: wider dialog and simpler information hierarchy. Lot, full address, vehicle, exact schedule, deposit, fee, deadline, copy order, PayOS, wallet eligibility/reconciliation, expiry handling, QR eligibility, price details, demo gating, cancellation and booking navigation are preserved. [Detailed parity and verification](./quick-payment-layout-2026-11-18.md).

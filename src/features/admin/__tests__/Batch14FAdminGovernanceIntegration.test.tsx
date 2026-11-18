@@ -242,7 +242,7 @@ describe('BATCH-14F: Admin Governance, Lot Moderation & User Enforcement (SCR-03
         ],
         totalPages: 1,
         totalElements: 1,
-      })
+      }).mockResolvedValueOnce({ id: 88, fullName: null })
 
       render(
         <QueryClientProvider client={createTestQueryClient()}>

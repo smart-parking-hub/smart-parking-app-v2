@@ -94,7 +94,7 @@ describe('GROUP 10 - Admin Parking Lots Moderation & Dashboard', () => {
   })
 
   describe('AdminParkingLotsPage', () => {
-    it('renders table with "Xử lý" column and "Thẩm định" CTA button styled with brand orange', async () => {
+    it('shows owner names, keeps the ID if lookup fails, and preserves appraisal links', async () => {
       vi.mocked(getData).mockResolvedValueOnce({
         content: [
           {
@@ -108,10 +108,14 @@ describe('GROUP 10 - Admin Parking Lots Moderation & Dashboard', () => {
             hourlyRate: 35000,
             overnightRate: 150000,
           },
+          { id: 102, name: 'Bãi xe Cát Lái 2', merchantId: 88, status: 'PENDING_APPROVAL' },
+          { id: 103, name: 'Bãi xe An Phú', merchantId: 99, status: 'PENDING_APPROVAL' },
         ],
         totalPages: 1,
-        totalElements: 1,
+        totalElements: 3,
       })
+        .mockResolvedValueOnce({ id: 88, fullName: 'Nguyễn Văn Minh' })
+        .mockRejectedValueOnce(new Error('Không tìm thấy người dùng'))
 
       render(
         <QueryClientProvider client={createTestQueryClient()}>
@@ -123,9 +127,16 @@ describe('GROUP 10 - Admin Parking Lots Moderation & Dashboard', () => {
 
       expect(await screen.findByText('Bãi xe Cát Lái Express')).toBeInTheDocument()
       expect(screen.getByText('Đường Nguyễn Thị Định, Cát Lái, Q2')).toBeInTheDocument()
-      expect(screen.getByText('#88')).toBeInTheDocument()
+      expect(await screen.findAllByText('Nguyễn Văn Minh')).toHaveLength(2)
+      expect(screen.queryByText('#88')).not.toBeInTheDocument()
+      expect(screen.getByText('#99')).toBeInTheDocument()
+      expect(vi.mocked(getData).mock.calls.map(([url]) => url)).toEqual([
+        '/api/v1/admin/parking-lots',
+        '/api/v1/admin/users/88',
+        '/api/v1/admin/users/99',
+      ])
 
-      const reviewCta = screen.getByRole('link', { name: /Thẩm định/i })
+      const [reviewCta] = screen.getAllByRole('link', { name: /Thẩm định/i })
       expect(reviewCta).toBeInTheDocument()
       expect(reviewCta).toHaveAttribute('href', '/admin/parking-lots/101')
       expect(reviewCta.className).toContain('bg-[#d95f00]')
