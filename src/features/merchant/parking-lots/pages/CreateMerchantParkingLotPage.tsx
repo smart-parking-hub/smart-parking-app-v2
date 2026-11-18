@@ -178,7 +178,9 @@ export function CreateMerchantParkingLotPage() {
       }
 
       // Phase 2: Upload Images if files present
-      const filesToUpload = images.filter((img) => img.file).map((img) => img.file as File)
+      // Đưa ảnh đại diện bìa (isCover === true) lên vị trí đầu tiên để backend lưu làm cover
+      const sortedImages = [...images].sort((a, b) => (b.isCover ? 1 : 0) - (a.isCover ? 1 : 0))
+      const filesToUpload = sortedImages.filter((img) => img.file).map((img) => img.file as File)
       if (filesToUpload.length > 0 && lotId) {
         await uploadMerchantParkingLotImages(lotId, filesToUpload)
       }
