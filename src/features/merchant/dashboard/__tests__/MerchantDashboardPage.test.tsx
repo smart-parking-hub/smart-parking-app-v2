@@ -318,4 +318,111 @@ describe('Merchant dashboard real data', () => {
       await screen.findByText('Không thể làm mới dữ liệu. Vui lòng kiểm tra kết nối.'),
     ).toBeInTheDocument()
   })
+
+  it('shows scoped skeleton while switching lots and shows retryable KPI error instead of leaking prior lot or all-lots figures', async () => {
+    let rejectLotB!: (err: Error) => void
+    let lotBAttempt = 0
+
+    vi.mocked(apiClient.get).mockImplementation(async (url, config) => {
+      const params = config?.params as Record<string, unknown> | undefined
+      if (url === '/api/v1/merchant/revenue' && params?.parkingLotId === 10) {
+        return {
+          data: {
+            data: {
+              totalNetRevenue: 300000,
+              currentWalletBalance: 100000,
+              completedBookings: 3,
+              onlineTransferNetRevenue: 300000,
+              onlineTransferCount: 3,
+              totalCashRevenue: 75000,
+              totalCashBookings: 2,
+              periodCashRevenue: 75000,
+              periodCashBookings: 2,
+              series: [{ period: '2026-11-01', revenue: 300000, cashRevenue: 75000, bookingCount: 3 }],
+            },
+          },
+        }
+      }
+      if (url === '/api/v1/merchant/revenue' && params?.parkingLotId === 20) {
+        lotBAttempt++
+        if (lotBAttempt === 1) {
+          return new Promise((_resolve, reject) => {
+            rejectLotB = reject
+          })
+        }
+        return {
+          data: {
+            data: {
+              totalNetRevenue: 90000,
+              currentWalletBalance: 100000,
+              completedBookings: 1,
+              onlineTransferNetRevenue: 90000,
+              onlineTransferCount: 1,
+              totalCashRevenue: 20000,
+              totalCashBookings: 1,
+              periodCashRevenue: 20000,
+              periodCashBookings: 1,
+              series: [{ period: '2026-11-01', revenue: 90000, cashRevenue: 20000, bookingCount: 1 }],
+            },
+          },
+        }
+      }
+      return {
+        data: {
+          data: {
+            ...responses,
+            '/api/v1/merchant/revenue': {
+              totalNetRevenue: 500000,
+              currentWalletBalance: 100000,
+              onlineTransferNetRevenue: 500000,
+              onlineTransferCount: 5,
+              totalCashRevenue: 120000,
+              totalCashBookings: 3,
+              periodCashRevenue: 120000,
+              periodCashBookings: 3,
+              series: [{ period: '2026-11-01', revenue: 500000, cashRevenue: 120000, bookingCount: 5 }],
+            },
+            '/api/v1/merchant/parking-lots': {
+              content: [
+                { id: 10, name: 'Bãi A Nhanh', address: 'Quận 9', status: 'APPROVED' },
+                { id: 20, name: 'Bãi B Chậm', address: 'Thủ Đức', status: 'APPROVED' },
+              ],
+              totalElements: 2,
+            },
+          }[url],
+        },
+      }
+    })
+
+    renderPage()
+    expect((await screen.findAllByText('Bãi A Nhanh')).length).toBeGreaterThan(0)
+
+    // Switch to Lot A -> resolves immediately
+    const lotCombobox = screen.getByRole('combobox', { name: 'Mở bộ lọc cơ sở bãi đỗ' })
+    fireEvent.click(lotCombobox)
+    fireEvent.click(within(await screen.findByRole('listbox', { name: 'Mở bộ lọc cơ sở bãi đỗ' })).getByRole('option', { name: 'Bãi A Nhanh' }))
+    await waitFor(() => {
+      expect(screen.getByTestId('merchant-kpi-cash-value')).toHaveTextContent(/75\.000/)
+    })
+
+    // Switch to Lot B (pending) -> must show skeleton and MUST NOT show Lot A's 75.000 or All-Lots 120.000 under Lot B
+    fireEvent.click(lotCombobox)
+    fireEvent.click(within(await screen.findByRole('listbox', { name: 'Mở bộ lọc cơ sở bãi đỗ' })).getByRole('option', { name: 'Bãi B Chậm' }))
+
+    expect(await screen.findByTestId('merchant-lot-revenue-skeleton')).toBeInTheDocument()
+    expect(screen.queryByTestId('merchant-kpi-cash-value')).not.toBeInTheDocument()
+    expect(screen.queryByTestId('merchant-channel-breakdown-cards')).not.toBeInTheDocument()
+
+    // Lot B fails -> must display scoped error alert with Retry button
+    rejectLotB(new Error('Lot B timeout'))
+    const errorBox = await screen.findByTestId('merchant-lot-revenue-error')
+    expect(errorBox).toHaveTextContent(/Bãi B Chậm/)
+    expect(screen.queryByTestId('merchant-kpi-cash-value')).not.toBeInTheDocument()
+
+    // Retry recovers Lot B with its true numbers
+    fireEvent.click(within(errorBox).getByRole('button', { name: 'Thử lại' }))
+    await waitFor(() => {
+      expect(screen.getByTestId('merchant-kpi-cash-value')).toHaveTextContent(/20\.000/)
+    })
+  })
 })

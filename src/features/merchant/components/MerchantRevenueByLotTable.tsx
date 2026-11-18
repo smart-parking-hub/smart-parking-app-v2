@@ -36,18 +36,43 @@ export function MerchantRevenueByLotTable({
   const resolveTransfer = (stats?: LotRevenueBreakdown) => {
     if (!stats) return 0
     if (usePeriodValues) {
+      if (useGrossTransfer) {
+        const hasPeriodGross =
+          stats.periodOnlineTransferGrossRevenue !== undefined ||
+          stats.periodCounterQrGrossRevenue !== undefined ||
+          stats.periodUnclassifiedTransferGrossRevenue !== undefined
+        if (hasPeriodGross) {
+          return (
+            (stats.periodOnlineTransferGrossRevenue ?? 0) +
+            (stats.periodCounterQrGrossRevenue ?? 0) +
+            (stats.periodUnclassifiedTransferGrossRevenue ?? 0)
+          )
+        }
+      }
       return (
         (stats.periodOnlineTransferRevenue ?? 0) +
-        (stats.periodCounterQrRevenue ?? 0)
+        (stats.periodCounterQrRevenue ?? 0) +
+        (stats.periodUnclassifiedTransferRevenue ?? 0)
       )
     }
     if (useGrossTransfer) {
-      const grossOnline =
-        stats.onlineTransferGrossRevenue ?? stats.onlineTransferRevenue ?? 0
-      const grossQr = stats.counterQrGrossRevenue ?? stats.counterQrRevenue ?? 0
-      return grossOnline + grossQr
+      const hasAllTimeGross =
+        stats.onlineTransferGrossRevenue !== undefined ||
+        stats.counterQrGrossRevenue !== undefined ||
+        stats.unclassifiedTransferGrossRevenue !== undefined
+      if (hasAllTimeGross) {
+        return (
+          (stats.onlineTransferGrossRevenue ?? 0) +
+          (stats.counterQrGrossRevenue ?? 0) +
+          (stats.unclassifiedTransferGrossRevenue ?? 0)
+        )
+      }
     }
-    return (stats.onlineTransferRevenue ?? 0) + (stats.counterQrRevenue ?? 0)
+    return (
+      (stats.onlineTransferRevenue ?? 0) +
+      (stats.counterQrRevenue ?? 0) +
+      (stats.unclassifiedTransferRevenue ?? 0)
+    )
   }
 
   const rows = lots.map((lot) => {
@@ -55,8 +80,11 @@ export function MerchantRevenueByLotTable({
     const transfer = resolveTransfer(stats)
     const transferCount = usePeriodValues
       ? (stats?.periodOnlineTransferCount ?? 0) +
-        (stats?.periodCounterQrCount ?? 0)
-      : (stats?.onlineTransferCount ?? 0) + (stats?.counterQrCount ?? 0)
+        (stats?.periodCounterQrCount ?? 0) +
+        (stats?.periodUnclassifiedTransferCount ?? 0)
+      : (stats?.onlineTransferCount ?? 0) +
+        (stats?.counterQrCount ?? 0) +
+        (stats?.unclassifiedTransferCount ?? 0)
     const cash = usePeriodValues
       ? (stats?.periodCashRevenue ?? 0)
       : (stats?.cashRevenue ?? 0)
@@ -83,8 +111,12 @@ export function MerchantRevenueByLotTable({
     if (knownIds.has(b.parkingLotId)) continue
     const transfer = resolveTransfer(b)
     const transferCount = usePeriodValues
-      ? b.periodOnlineTransferCount + b.periodCounterQrCount
-      : b.onlineTransferCount + b.counterQrCount
+      ? (b.periodOnlineTransferCount ?? 0) +
+        (b.periodCounterQrCount ?? 0) +
+        (b.periodUnclassifiedTransferCount ?? 0)
+      : (b.onlineTransferCount ?? 0) +
+        (b.counterQrCount ?? 0) +
+        (b.unclassifiedTransferCount ?? 0)
     const cash = usePeriodValues ? b.periodCashRevenue : b.cashRevenue
     const cashCount = usePeriodValues
       ? b.periodCashBookingCount
@@ -165,7 +197,7 @@ export function MerchantRevenueByLotTable({
                 Tiền mặt
               </th>
               <th scope="col" className="px-3 py-3 text-right">
-                Tổng thực thu
+                {useGrossTransfer ? 'Tổng doanh thu' : 'Tổng thực thu'}
               </th>
               <th scope="col" className="py-3 pl-3 pr-5 text-right md:pr-6">
                 Tỷ trọng tiền mặt

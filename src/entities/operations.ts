@@ -108,12 +108,22 @@ export interface LotRevenueBreakdown {
   counterQrGrossRevenue?: number
   counterQrRevenue: number
   counterQrCount: number
+  unclassifiedTransferGrossRevenue?: number
+  unclassifiedTransferRevenue?: number
+  unclassifiedTransferCount?: number
+  pendingSettlementGrossRevenue?: number
+  periodPendingSettlementGrossRevenue?: number
   cashRevenue: number
   cashBookingCount: number
+  periodOnlineTransferGrossRevenue?: number
   periodOnlineTransferRevenue: number
   periodOnlineTransferCount: number
+  periodCounterQrGrossRevenue?: number
   periodCounterQrRevenue: number
   periodCounterQrCount: number
+  periodUnclassifiedTransferGrossRevenue?: number
+  periodUnclassifiedTransferRevenue?: number
+  periodUnclassifiedTransferCount?: number
   periodCashRevenue: number
   periodCashBookingCount: number
 }
@@ -123,28 +133,43 @@ export interface RevenueSeriesPoint {
   bookingCount: number
   onlineTransferRevenue?: number
   counterQrRevenue?: number
+  unclassifiedTransferRevenue?: number
   cashRevenue?: number
   onlineTransferCount?: number
   counterQrCount?: number
+  unclassifiedTransferCount?: number
   cashBookingCount?: number
 }
 export interface Revenue {
   totalGrossRevenue: number
   totalPlatformFee: number
   totalNetRevenue: number
+  periodTotalGrossRevenue?: number
+  periodTotalPlatformFee?: number
+  periodTotalNetRevenue?: number
+  pendingSettlementGrossRevenue?: number
+  periodPendingSettlementGrossRevenue?: number
   currentWalletBalance: number
   completedBookings: number
   minWithdrawalAmount: number
   onlineTransferGrossRevenue?: number
   onlineTransferNetRevenue?: number
   onlineTransferCount?: number
+  periodOnlineTransferGrossRevenue?: number
   periodOnlineTransferNetRevenue?: number
   periodOnlineTransferCount?: number
   counterQrGrossRevenue?: number
   counterQrNetRevenue?: number
   counterQrCount?: number
+  periodCounterQrGrossRevenue?: number
   periodCounterQrNetRevenue?: number
   periodCounterQrCount?: number
+  unclassifiedTransferGrossRevenue?: number
+  unclassifiedTransferNetRevenue?: number
+  unclassifiedTransferCount?: number
+  periodUnclassifiedTransferGrossRevenue?: number
+  periodUnclassifiedTransferNetRevenue?: number
+  periodUnclassifiedTransferCount?: number
   totalCashRevenue?: number
   totalCashBookings?: number
   periodCashRevenue?: number

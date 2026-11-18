@@ -11,21 +11,24 @@ vi.mock('@/shared/api/resources', async importOriginal => ({
 }))
 const get = vi.mocked(getData)
 const revenue = {
-  totalGrossRevenue: 1000000, totalNetRevenue: 400000, totalPlatformFee: 100000,
+  totalGrossRevenue: 1000000, totalNetRevenue: 900000, totalPlatformFee: 100000,
+  periodTotalGrossRevenue: 300000, periodTotalNetRevenue: 270000, periodTotalPlatformFee: 30000,
   currentWalletBalance: 400000, completedBookings: 3, minWithdrawalAmount: 50000,
-  onlineTransferGrossRevenue: 700000, onlineTransferNetRevenue: 280000, onlineTransferCount: 2,
-  counterQrGrossRevenue: 300000, counterQrNetRevenue: 120000, counterQrCount: 1,
+  onlineTransferGrossRevenue: 700000, onlineTransferNetRevenue: 630000, onlineTransferCount: 2,
+  periodOnlineTransferGrossRevenue: 200000, periodOnlineTransferNetRevenue: 180000, periodOnlineTransferCount: 1,
+  counterQrGrossRevenue: 300000, counterQrNetRevenue: 270000, counterQrCount: 1,
+  periodCounterQrGrossRevenue: 100000, periodCounterQrNetRevenue: 90000, periodCounterQrCount: 1,
   totalCashRevenue: 150000, totalCashBookings: 2,
-  periodCashRevenue: 150000, periodCashBookings: 2,
+  periodCashRevenue: 50000, periodCashBookings: 1,
   revenueByParkingLot: [
     {
       parkingLotId: 10,
-      onlineTransferGrossRevenue: 700000, onlineTransferRevenue: 280000, onlineTransferCount: 2,
-      counterQrGrossRevenue: 300000, counterQrRevenue: 120000, counterQrCount: 1,
+      onlineTransferGrossRevenue: 700000, onlineTransferRevenue: 630000, onlineTransferCount: 2,
+      counterQrGrossRevenue: 300000, counterQrRevenue: 270000, counterQrCount: 1,
       cashRevenue: 150000, cashBookingCount: 2,
-      periodOnlineTransferRevenue: 280000, periodOnlineTransferCount: 2,
-      periodCounterQrRevenue: 120000, periodCounterQrCount: 1,
-      periodCashRevenue: 150000, periodCashBookingCount: 2,
+      periodOnlineTransferGrossRevenue: 200000, periodOnlineTransferRevenue: 180000, periodOnlineTransferCount: 1,
+      periodCounterQrGrossRevenue: 100000, periodCounterQrRevenue: 90000, periodCounterQrCount: 1,
+      periodCashRevenue: 50000, periodCashBookingCount: 1,
     },
   ],
   series: [
@@ -118,17 +121,44 @@ describe('merchant revenue and wallet ledger', () => {
     expect(screen.getByText('Nhịp doanh thu')).toBeInTheDocument()
   })
 
-  it('filters only the series for a selected lot, groups monthly, and keeps the independent ledger paginated at 5 rows per page', async () => {
+  it('filters consistently by date period and gross/net basis without mixing out-of-period cumulative totals', async () => {
     show()
-    expect(await screen.findByText('Biến động ví tích lũy')).toBeInTheDocument()
+    expect(await screen.findByText('Thực nhận chuyển khoản')).toBeInTheDocument()
+    expect(screen.getByText('Số dư ví khả dụng (Toàn tài khoản)')).toBeInTheDocument()
     expect(await screen.findByText('Giữ tiền rút')).toBeInTheDocument()
     expect(screen.getByText('-50.000 ₫')).toBeInTheDocument()
-    fireEvent.change(screen.getByLabelText('Cơ sở bãi đỗ'), { target: { value: '10' } })
+
+    // Apply date range filter -> KPIs, table, and channel cards must ALL use period figures (not all-time 1.150.000)
     fireEvent.change(screen.getByLabelText('Từ ngày'), { target: { value: '2026-01-01' } })
     fireEvent.change(screen.getByLabelText('Đến ngày'), { target: { value: '2026-01-31' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Áp dụng' }))
+
+    await waitFor(() =>
+      expect(get).toHaveBeenCalledWith('/api/v1/merchant/revenue', {
+        startDate: '2026-01-01',
+        endDate: '2026-01-31',
+        granularity: 'DAY',
+        parkingLotId: undefined,
+      }),
+    )
+
+    // Period gross transfer (300k) + period cash (50k) = 350k, fee = 30k, net = 270k, wallet balance unchanged (400k)
+    expect(screen.getByTestId('revenue-kpi-total-value')).toHaveTextContent(/350\.000/)
+    expect(screen.getByTestId('revenue-kpi-cash-value')).toHaveTextContent(/50\.000/)
+    expect(screen.getByTestId('revenue-kpi-net-value')).toHaveTextContent(/270\.000/)
+    expect(screen.getByTestId('revenue-kpi-fee-value')).toHaveTextContent(/30\.000/)
+    expect(screen.getByTestId('revenue-kpi-wallet-value')).toHaveTextContent(/400\.000/)
+    // Per-lot table keeps consistent gross basis in date-filtered mode (300k + 50k = 350k)
+    expect(screen.getByTestId('lot-revenue-row-10')).toHaveTextContent(/300\.000/)
+    expect(screen.getByTestId('lot-revenue-row-10')).toHaveTextContent(/350\.000/)
+
+    // Now also filter to lot 10 + monthly grouping and check channel cards match period gross (300k + 50k = 350k)
+    fireEvent.change(screen.getByLabelText('Cơ sở bãi đỗ'), { target: { value: '10' } })
     fireEvent.change(screen.getByLabelText('Nhóm thời gian'), { target: { value: 'MONTH' } })
     fireEvent.click(screen.getByRole('button', { name: 'Áp dụng' }))
     await waitFor(() => expect(get).toHaveBeenCalledWith('/api/v1/merchant/revenue', { startDate: '2026-01-01', endDate: '2026-01-31', granularity: 'DAY', parkingLotId: 10 }))
+    expect(await screen.findByTestId('channel-card-transfer')).toHaveTextContent(/300\.000/)
+    expect(screen.getByTestId('channel-card-cash')).toHaveTextContent(/50\.000/)
     expect(within(await screen.findByRole('figure')).getAllByText('2026-01')).toHaveLength(2)
     expect(screen.getByRole('button', { name: 'Trước' })).toBeDisabled()
     fireEvent.click(screen.getByRole('button', { name: 'Sau' }))

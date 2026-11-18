@@ -391,9 +391,9 @@ describe('BATCH-14E: Merchant Gate, Bookings & Financial Settlement Integration 
     // 5 Metrics (including Tổng Doanh thu and Tiền mặt thu tại bãi)
     expect(await screen.findByText('Tổng Doanh thu')).toBeInTheDocument()
     expect(screen.getByText('Tiền mặt thu tại bãi')).toBeInTheDocument()
-    expect(screen.getByText('Biến động ví tích lũy')).toBeInTheDocument()
+    expect(screen.getByText('Thực nhận chuyển khoản')).toBeInTheDocument()
     expect(screen.getByText('Phí nền tảng')).toBeInTheDocument()
-    expect(screen.getByText('Số dư khả dụng')).toBeInTheDocument()
+    expect(screen.getByText('Số dư ví khả dụng (Toàn tài khoản)')).toBeInTheDocument()
 
     // All lots view -> shows per-lot table, hides Nhịp doanh thu
     expect(await screen.findByTestId('merchant-revenue-by-lot-table')).toBeInTheDocument()

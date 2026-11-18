@@ -227,37 +227,66 @@ export function MerchantRevenuePage() {
 
           const totalCashRevenue = data.totalCashRevenue ?? 0
           const totalCashBookings = data.totalCashBookings ?? 0
-          const totalCombinedRevenue =
-            (data.totalGrossRevenue ?? 0) + totalCashRevenue
-          const periodCashRevenue = hasDateFilter
-            ? (data.periodCashRevenue ?? totalCashRevenue)
+          const scopedCashRevenue = hasDateFilter
+            ? (data.periodCashRevenue ?? 0)
             : totalCashRevenue
-          const periodCashBookings = hasDateFilter
-            ? (data.periodCashBookings ?? totalCashBookings)
+          const scopedCashBookings = hasDateFilter
+            ? (data.periodCashBookings ?? 0)
             : totalCashBookings
 
-          const hasGrossChannelFields =
+          const hasAllTimeGrossChannelFields =
             data.onlineTransferGrossRevenue !== undefined ||
-            data.counterQrGrossRevenue !== undefined
+            data.counterQrGrossRevenue !== undefined ||
+            data.unclassifiedTransferGrossRevenue !== undefined
 
-          const allTimeTransferGross = hasGrossChannelFields
+          const allTimeTransferGross = hasAllTimeGrossChannelFields
             ? (data.onlineTransferGrossRevenue ?? 0) +
-              (data.counterQrGrossRevenue ?? 0)
-            : (data.totalGrossRevenue ??
-              (data.onlineTransferNetRevenue ?? 0) +
-                (data.counterQrNetRevenue ?? 0))
+              (data.counterQrGrossRevenue ?? 0) +
+              (data.unclassifiedTransferGrossRevenue ?? 0)
+            : (data.totalGrossRevenue ?? 0)
 
-          const transferAmount = hasDateFilter
-            ? (data.periodOnlineTransferNetRevenue ??
-                data.onlineTransferNetRevenue ??
-                0) +
-              (data.periodCounterQrNetRevenue ?? data.counterQrNetRevenue ?? 0)
+          const hasPeriodGrossChannelFields =
+            data.periodOnlineTransferGrossRevenue !== undefined ||
+            data.periodCounterQrGrossRevenue !== undefined ||
+            data.periodUnclassifiedTransferGrossRevenue !== undefined
+
+          const periodTransferGross = hasPeriodGrossChannelFields
+            ? (data.periodOnlineTransferGrossRevenue ?? 0) +
+              (data.periodCounterQrGrossRevenue ?? 0) +
+              (data.periodUnclassifiedTransferGrossRevenue ?? 0)
+            : data.periodTotalGrossRevenue !== undefined
+              ? data.periodTotalGrossRevenue
+              : (data.periodOnlineTransferNetRevenue ?? 0) +
+                (data.periodCounterQrNetRevenue ?? 0) +
+                (data.periodUnclassifiedTransferNetRevenue ?? 0)
+
+          const scopedTransferGross = hasDateFilter
+            ? periodTransferGross
             : allTimeTransferGross
 
+          const scopedTransferNet = hasDateFilter
+            ? data.periodTotalNetRevenue !== undefined
+              ? data.periodTotalNetRevenue
+              : (data.periodOnlineTransferNetRevenue ?? 0) +
+                (data.periodCounterQrNetRevenue ?? 0) +
+                (data.periodUnclassifiedTransferNetRevenue ?? 0)
+            : (data.totalNetRevenue ?? 0)
+
+          const scopedPlatformFee = hasDateFilter
+            ? data.periodTotalPlatformFee !== undefined
+              ? data.periodTotalPlatformFee
+              : Math.max(0, scopedTransferGross - scopedTransferNet)
+            : (data.totalPlatformFee ?? 0)
+
+          const scopedCombinedRevenue = scopedTransferGross + scopedCashRevenue
+
           const transferCount = hasDateFilter
-            ? (data.periodOnlineTransferCount ?? data.onlineTransferCount ?? 0) +
-              (data.periodCounterQrCount ?? data.counterQrCount ?? 0)
-            : (data.onlineTransferCount ?? 0) + (data.counterQrCount ?? 0)
+            ? (data.periodOnlineTransferCount ?? 0) +
+              (data.periodCounterQrCount ?? 0) +
+              (data.periodUnclassifiedTransferCount ?? 0)
+            : (data.onlineTransferCount ?? 0) +
+              (data.counterQrCount ?? 0) +
+              (data.unclassifiedTransferCount ?? 0)
 
           const scopeLabel = selectedLotName
             ? selectedLotName
@@ -265,54 +294,73 @@ export function MerchantRevenuePage() {
 
           return (
             <>
-              {/* Uniform 5-Card KPI Strip */}
+              {/* Uniform 5-Card KPI Strip: Cards 1-4 share exact lot + date scope & gross/net basis; Card 5 explicitly labeled account-wide wallet balance */}
               <div
                 data-testid="merchant-revenue-kpis"
                 className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5"
               >
                 <Panel>
-                  <p className="text-xs text-brand-muted">Tổng Doanh thu</p>
+                  <p className="text-xs text-brand-muted">
+                    {hasDateFilter ? 'Tổng Doanh thu (trong kỳ)' : 'Tổng Doanh thu'}
+                  </p>
                   <p
                     data-testid="revenue-kpi-total-value"
                     className="mt-3 font-sora text-2xl font-bold tabular-nums"
                   >
-                    {money(totalCombinedRevenue)}
+                    {money(scopedCombinedRevenue)}
                   </p>
                 </Panel>
 
                 <Panel>
                   <p className="text-xs text-brand-muted">
-                    Tiền mặt thu tại bãi
+                    {hasDateFilter
+                      ? 'Tiền mặt thu tại bãi (trong kỳ)'
+                      : 'Tiền mặt thu tại bãi'}
                   </p>
                   <p
                     data-testid="revenue-kpi-cash-value"
                     className="mt-3 font-sora text-2xl font-bold tabular-nums"
                   >
-                    {money(periodCashRevenue)}
+                    {money(scopedCashRevenue)}
                   </p>
                 </Panel>
 
                 <Panel>
                   <p className="text-xs text-brand-muted">
-                    {selectedLotId
-                      ? 'Thực nhận chuyển khoản'
-                      : 'Biến động ví tích lũy'}
+                    {hasDateFilter
+                      ? 'Thực nhận chuyển khoản (trong kỳ)'
+                      : selectedLotId
+                        ? 'Thực nhận chuyển khoản'
+                        : 'Thực nhận chuyển khoản'}
                   </p>
-                  <p className="mt-3 font-sora text-2xl font-bold tabular-nums">
-                    {money(data.totalNetRevenue)}
-                  </p>
-                </Panel>
-
-                <Panel>
-                  <p className="text-xs text-brand-muted">Phí nền tảng</p>
-                  <p className="mt-3 font-sora text-2xl font-bold tabular-nums">
-                    {money(data.totalPlatformFee)}
+                  <p
+                    data-testid="revenue-kpi-net-value"
+                    className="mt-3 font-sora text-2xl font-bold tabular-nums"
+                  >
+                    {money(scopedTransferNet)}
                   </p>
                 </Panel>
 
                 <Panel>
-                  <p className="text-xs text-brand-muted">Số dư khả dụng</p>
-                  <p className="mt-3 font-sora text-2xl font-bold tabular-nums">
+                  <p className="text-xs text-brand-muted">
+                    {hasDateFilter ? 'Phí nền tảng (trong kỳ)' : 'Phí nền tảng'}
+                  </p>
+                  <p
+                    data-testid="revenue-kpi-fee-value"
+                    className="mt-3 font-sora text-2xl font-bold tabular-nums"
+                  >
+                    {money(scopedPlatformFee)}
+                  </p>
+                </Panel>
+
+                <Panel>
+                  <p className="text-xs text-brand-muted">
+                    Số dư ví khả dụng (Toàn tài khoản)
+                  </p>
+                  <p
+                    data-testid="revenue-kpi-wallet-value"
+                    className="mt-3 font-sora text-2xl font-bold tabular-nums"
+                  >
                     {money(data.currentWalletBalance)}
                   </p>
                 </Panel>
@@ -327,17 +375,17 @@ export function MerchantRevenuePage() {
                     selectedLotId={selectedLotId}
                     onSelectLot={handleSelectLotFromTable}
                     usePeriodValues={hasDateFilter}
-                    useGrossTransfer={!hasDateFilter}
+                    useGrossTransfer={true}
                     periodLabel={periodLabel}
                   />
                 )
               ) : (
                 <>
                   <MerchantChannelBreakdownCards
-                    transferAmount={transferAmount}
+                    transferAmount={scopedTransferGross}
                     transferCount={transferCount}
-                    cashAmount={periodCashRevenue}
-                    cashBookingCount={periodCashBookings}
+                    cashAmount={scopedCashRevenue}
+                    cashBookingCount={scopedCashBookings}
                     scopeLabel={scopeLabel}
                     periodLabel={periodLabel}
                   />

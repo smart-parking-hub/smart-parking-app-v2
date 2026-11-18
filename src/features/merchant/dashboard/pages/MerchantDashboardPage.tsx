@@ -1,5 +1,5 @@
 import { useMemo } from 'react'
-import { useQuery, keepPreviousData } from '@tanstack/react-query'
+import { useQuery } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
 import {
   fetchMerchantDashboardData,
@@ -51,7 +51,6 @@ export function MerchantDashboardPage() {
     queryFn: () =>
       fetchMerchantDashboardData(dateRange.startDate, dateRange.endDate),
     staleTime: 20000,
-    placeholderData: keepPreviousData,
   })
 
   const lotRevenueQuery = useQuery({
@@ -60,7 +59,7 @@ export function MerchantDashboardPage() {
       fetchRevenueStats(selectedLotId, dateRange.startDate, dateRange.endDate),
     enabled: selectedLotId !== null,
     staleTime: 20000,
-    placeholderData: keepPreviousData,
+    retry: false,
   })
 
   const handleManualRefresh = async () => {
@@ -107,53 +106,69 @@ export function MerchantDashboardPage() {
     )
   if (!data) return null
 
-  const activeRevenue =
-    selectedLotId !== null && lotRevenueQuery.data
-      ? lotRevenueQuery.data
-      : data.revenue
+  const isLotScoped = selectedLotId !== null
+  const isLotRevenuePending = isLotScoped && lotRevenueQuery.isPending
+  const isLotRevenueError = isLotScoped && lotRevenueQuery.isError && !lotRevenueQuery.data
+  const activeRevenue = isLotScoped ? (lotRevenueQuery.data ?? null) : data.revenue
 
-  const currentRevenueSeries = activeRevenue.series
+  const currentRevenueSeries = activeRevenue?.series ?? []
 
   const selectedLotName = data.lots.content.find(
     (l) => l.id === selectedLotId,
   )?.name
 
-  const currentNetRevenue =
-    selectedLotId !== null
-      ? (lotRevenueQuery.data?.totalNetRevenue ?? 0)
-      : data.revenue.totalNetRevenue
+  const currentNetRevenue = activeRevenue
+    ? usePeriodValues && activeRevenue.periodTotalNetRevenue
+      ? activeRevenue.periodTotalNetRevenue
+      : activeRevenue.totalNetRevenue
+    : 0
 
-  const currentCashRevenue = usePeriodValues
-    ? activeRevenue.periodCashRevenue
-    : activeRevenue.totalCashRevenue
+  const currentCashRevenue = activeRevenue
+    ? usePeriodValues
+      ? activeRevenue.periodCashRevenue
+      : activeRevenue.totalCashRevenue
+    : 0
 
-  const currentCashBookings = usePeriodValues
-    ? activeRevenue.periodCashBookings
-    : activeRevenue.totalCashBookings
+  const currentCashBookings = activeRevenue
+    ? usePeriodValues
+      ? activeRevenue.periodCashBookings
+      : activeRevenue.totalCashBookings
+    : 0
 
-  const currentTransferRevenue = usePeriodValues
-    ? activeRevenue.periodOnlineTransferNetRevenue +
-      activeRevenue.periodCounterQrNetRevenue
-    : activeRevenue.onlineTransferNetRevenue + activeRevenue.counterQrNetRevenue
+  const currentTransferRevenue = activeRevenue
+    ? usePeriodValues
+      ? activeRevenue.periodOnlineTransferNetRevenue +
+        activeRevenue.periodCounterQrNetRevenue +
+        activeRevenue.periodUnclassifiedTransferNetRevenue
+      : activeRevenue.onlineTransferNetRevenue +
+        activeRevenue.counterQrNetRevenue +
+        activeRevenue.unclassifiedTransferNetRevenue
+    : 0
 
-  const currentTransferCount = usePeriodValues
-    ? activeRevenue.periodOnlineTransferCount +
-      activeRevenue.periodCounterQrCount
-    : activeRevenue.onlineTransferCount + activeRevenue.counterQrCount
+  const currentTransferCount = activeRevenue
+    ? usePeriodValues
+      ? activeRevenue.periodOnlineTransferCount +
+        activeRevenue.periodCounterQrCount +
+        activeRevenue.periodUnclassifiedTransferCount
+      : activeRevenue.onlineTransferCount +
+        activeRevenue.counterQrCount +
+        activeRevenue.unclassifiedTransferCount
+    : 0
 
   const hasChannelBreakdown =
     currentTransferRevenue > 0 || currentTransferCount > 0
 
-  const currentTotalRevenue = usePeriodValues
-    ? currentTransferRevenue + currentCashRevenue
-    : hasChannelBreakdown
+  const currentTotalRevenue = activeRevenue
+    ? usePeriodValues
       ? currentTransferRevenue + currentCashRevenue
-      : currentNetRevenue + currentCashRevenue
+      : hasChannelBreakdown
+        ? currentTransferRevenue + currentCashRevenue
+        : currentNetRevenue + currentCashRevenue
+    : 0
 
-  const currentBookings =
-    selectedLotId !== null
-      ? (lotRevenueQuery.data?.completedBookings ?? '—')
-      : data.bookings.totalElements
+  const currentBookings = isLotScoped
+    ? (lotRevenueQuery.data?.completedBookings ?? '—')
+    : data.bookings.totalElements
 
   const breakdownByLotId = new Map(
     data.revenue.revenueByParkingLot.map((b) => [b.parkingLotId, b]),
@@ -190,53 +205,102 @@ export function MerchantDashboardPage() {
       <MerchantCommandSurface />
 
       <div className="max-w-[1280px] w-full mx-auto px-4 lg:px-8 py-6 flex flex-col gap-6">
-        {/* Clean 5-Card KPI Strip (no sub-text clutter) */}
-        <div
-          data-testid="merchant-dashboard-kpis"
-          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4"
-        >
-          <Panel>
-            <p className="font-mono text-xs text-brand-muted">TỔNG DOANH THU</p>
-            <p className="font-sora text-2xl font-bold mt-3 tabular-nums">
-              {money(currentTotalRevenue)}
-            </p>
-          </Panel>
+        {/* Clean 5-Card KPI Strip — never attributes stale or all-lot numbers to a pending/errored lot */}
+        {isLotRevenueError ? (
+          <div
+            data-testid="merchant-lot-revenue-error"
+            className="space-y-3 rounded-2xl border border-rose-200 bg-rose-50/60 p-5"
+          >
+            <Notice error>
+              Không thể tải số liệu doanh thu cho bãi{' '}
+              <strong>{selectedLotName ?? `#${selectedLotId}`}</strong>. Vui lòng thử lại.
+            </Notice>
+            <div className="flex flex-wrap items-center gap-3">
+              <button
+                type="button"
+                className={secondary}
+                disabled={lotRevenueQuery.isFetching}
+                onClick={() => void lotRevenueQuery.refetch()}
+              >
+                {lotRevenueQuery.isFetching ? 'Đang thử lại...' : 'Thử lại'}
+              </button>
+              <button
+                type="button"
+                className="text-xs font-semibold text-[#d95f00] hover:underline cursor-pointer"
+                onClick={() => setSelectedLotId(null)}
+              >
+                ← Quay lại tất cả bãi đỗ
+              </button>
+            </div>
+          </div>
+        ) : isLotRevenuePending ? (
+          <div
+            data-testid="merchant-lot-revenue-skeleton"
+            role="status"
+            aria-label="Đang tải số liệu bãi đã chọn"
+            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 animate-pulse"
+          >
+            {[
+              'TỔNG DOANH THU',
+              'TIỀN MẶT THU TẠI BÃI',
+              'SỐ DƯ VÍ',
+              'BÃI ĐỖ CỦA TÔI',
+              'TỔNG LƯỢT ĐẶT CHỖ',
+            ].map((label) => (
+              <Panel key={label}>
+                <p className="font-mono text-xs text-brand-muted">{label}</p>
+                <div className="mt-3 h-8 w-32 rounded-lg bg-slate-200" />
+              </Panel>
+            ))}
+          </div>
+        ) : (
+          <div
+            data-testid="merchant-dashboard-kpis"
+            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4"
+          >
+            <Panel>
+              <p className="font-mono text-xs text-brand-muted">TỔNG DOANH THU</p>
+              <p className="font-sora text-2xl font-bold mt-3 tabular-nums">
+                {money(currentTotalRevenue)}
+              </p>
+            </Panel>
 
-          <Panel>
-            <p className="font-mono text-xs text-brand-muted">
-              TIỀN MẶT THU TẠI BÃI
-            </p>
-            <p
-              data-testid="merchant-kpi-cash-value"
-              className="font-sora text-2xl font-bold mt-3 tabular-nums"
-            >
-              {money(currentCashRevenue)}
-            </p>
-          </Panel>
+            <Panel>
+              <p className="font-mono text-xs text-brand-muted">
+                TIỀN MẶT THU TẠI BÃI
+              </p>
+              <p
+                data-testid="merchant-kpi-cash-value"
+                className="font-sora text-2xl font-bold mt-3 tabular-nums"
+              >
+                {money(currentCashRevenue)}
+              </p>
+            </Panel>
 
-          <Panel>
-            <p className="font-mono text-xs text-brand-muted">SỐ DƯ VÍ</p>
-            <p className="font-sora text-2xl font-bold mt-3 tabular-nums">
-              {money(data.revenue.currentWalletBalance)}
-            </p>
-          </Panel>
+            <Panel>
+              <p className="font-mono text-xs text-brand-muted">SỐ DƯ VÍ</p>
+              <p className="font-sora text-2xl font-bold mt-3 tabular-nums">
+                {money(data.revenue.currentWalletBalance)}
+              </p>
+            </Panel>
 
-          <Panel>
-            <p className="font-mono text-xs text-brand-muted">BÃI ĐỖ CỦA TÔI</p>
-            <p className="font-sora text-2xl font-bold mt-3 tabular-nums">
-              {data.lots.totalElements}
-            </p>
-          </Panel>
+            <Panel>
+              <p className="font-mono text-xs text-brand-muted">BÃI ĐỖ CỦA TÔI</p>
+              <p className="font-sora text-2xl font-bold mt-3 tabular-nums">
+                {data.lots.totalElements}
+              </p>
+            </Panel>
 
-          <Panel>
-            <p className="font-mono text-xs text-brand-muted">
-              TỔNG LƯỢT ĐẶT CHỖ
-            </p>
-            <p className="font-sora text-2xl font-bold mt-3 tabular-nums">
-              {currentBookings}
-            </p>
-          </Panel>
-        </div>
+            <Panel>
+              <p className="font-mono text-xs text-brand-muted">
+                TỔNG LƯỢT ĐẶT CHỖ
+              </p>
+              <p className="font-sora text-2xl font-bold mt-3 tabular-nums">
+                {currentBookings}
+              </p>
+            </Panel>
+          </div>
+        )}
 
         {/* Empty Lots Notice */}
         {data.lots.totalElements === 0 && (
@@ -252,7 +316,9 @@ export function MerchantDashboardPage() {
             totalLots={data.lots.totalElements}
             selectedLotId={selectedLotId}
             selectedLotName={selectedLotName}
-            currentNetRevenueFormatted={money(currentTotalRevenue)}
+            currentNetRevenueFormatted={
+              activeRevenue ? money(currentTotalRevenue) : undefined
+            }
             timeRange={timeRange}
             onLotChange={setSelectedLotId}
             onTimeRangeChange={setTimeRange}
@@ -261,15 +327,17 @@ export function MerchantDashboardPage() {
           />
         )}
 
-        {/* 2-Channel Revenue Breakdown (Chuyển khoản vs Tiền mặt) */}
-        <MerchantChannelBreakdownCards
-          transferAmount={currentTransferRevenue}
-          transferCount={currentTransferCount}
-          cashAmount={currentCashRevenue}
-          cashBookingCount={currentCashBookings}
-          scopeLabel={scopeLabel}
-          periodLabel={periodLabel}
-        />
+        {/* 2-Channel Revenue Breakdown (Chuyển khoản vs Tiền mặt) — only renders when scope data matches */}
+        {activeRevenue && !isLotRevenuePending && !isLotRevenueError && (
+          <MerchantChannelBreakdownCards
+            transferAmount={currentTransferRevenue}
+            transferCount={currentTransferCount}
+            cashAmount={currentCashRevenue}
+            cashBookingCount={currentCashBookings}
+            scopeLabel={scopeLabel}
+            periodLabel={periodLabel}
+          />
+        )}
 
         {/* Main Grid: Chart + Per-Lot Table + Booking List + Sidebar */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
@@ -327,9 +395,11 @@ export function MerchantDashboardPage() {
                       : (stats?.cashRevenue ?? 0)
                     const lotTransfer = usePeriodValues
                       ? (stats?.periodOnlineTransferRevenue ?? 0) +
-                        (stats?.periodCounterQrRevenue ?? 0)
+                        (stats?.periodCounterQrRevenue ?? 0) +
+                        (stats?.periodUnclassifiedTransferRevenue ?? 0)
                       : (stats?.onlineTransferRevenue ?? 0) +
-                        (stats?.counterQrRevenue ?? 0)
+                        (stats?.counterQrRevenue ?? 0) +
+                        (stats?.unclassifiedTransferRevenue ?? 0)
 
                     return (
                       <li
