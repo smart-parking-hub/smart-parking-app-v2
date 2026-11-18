@@ -10,9 +10,9 @@ export function TariffAuditTable({ booking }: TariffAuditTableProps) {
     return new Intl.NumberFormat('vi-VN').format(val) + ' đ'
   }
 
-  const baseRate = booking.baseRatePerHour || 40000
+  const baseRate = booking.baseRatePerHour
   const durationText = booking.actualDurationText || 'Dự kiến đỗ'
-  const subtotal = booking.parkingSubtotal || baseRate * (booking.actualDurationHours || 4)
+  const subtotal = booking.parkingSubtotal
   const reeferTotal = booking.reeferSubtotal || 0
   const deposit = booking.depositPaid || 0
   const remaining = booking.remainingFinalPayment
@@ -35,17 +35,15 @@ export function TariffAuditTable({ booking }: TariffAuditTableProps) {
   const overtimeHoursText = booking.overtimeHoursText || computed.overtimeHoursText
   const overtimeBlocks = booking.overtimeBlocks ?? computed.overtimeBlocks
   const surgeBlocks = booking.surgeBlocks ?? computed.surgeBlocks ?? 0
-  const hasSurgeApplied = Boolean(booking.hasSurgeApplied ?? computed.hasSurgeApplied)
   const surgeMultiplier = booking.surgeMultiplier ?? computed.surgeMultiplier
   const hasPenalty = isOvertime && penaltyAmount > 0
   const standardFee = Number(booking.standardParkingFee ?? (hasPenalty ? Math.max(0, subtotal - penaltyAmount) : subtotal))
 
-  const surgeFormulaText =
-    hasSurgeApplied && surgeMultiplier && surgeMultiplier > 1
-      ? surgeBlocks > 0 && surgeBlocks < overtimeBlocks
-        ? ` • ${surgeBlocks}/${overtimeBlocks} block cao điểm ×${surgeMultiplier}`
-        : ` • Cao điểm ×${surgeMultiplier}`
-      : ''
+  const standardBlocks = Math.max(0, overtimeBlocks - surgeBlocks)
+  const blockFormula = [
+    standardBlocks > 0 ? `${standardBlocks} block thường` : '',
+    surgeBlocks > 0 ? `${surgeBlocks} block cao điểm × ${surgeMultiplier ?? 1}` : '',
+  ].filter(Boolean).join(' + ')
 
   return (
     <div className="bg-white rounded-xl shadow-xs border border-slate-200/80 overflow-hidden">
@@ -65,7 +63,7 @@ export function TariffAuditTable({ booking }: TariffAuditTableProps) {
           <div className="flex flex-col">
             <span className="font-semibold text-slate-800">Giá cơ bản niêm yết</span>
             <span className="text-[11px] text-slate-400">
-              Áp dụng cho {booking.vehicleType} tại {booking.parkingLotName}
+              {booking.vehicleType ? `Áp dụng cho ${booking.vehicleType} tại ${booking.parkingLotName}` : booking.parkingLotName}
             </span>
           </div>
           <span className="font-mono font-semibold text-slate-900">
@@ -110,7 +108,7 @@ export function TariffAuditTable({ booking }: TariffAuditTableProps) {
                   {' '}(Vượt <span className="font-bold text-amber-950">{overtimeHoursText}</span>)
                 </p>
                 <p className="text-[10px] text-amber-800/90 font-mono">
-                  Công thức: Vượt {overtimeHoursText} ({overtimeBlocks ? `${overtimeBlocks} block 30p • ` : ''}Hệ số phạt {overtimeMultiplier}× giá cơ bản {formatCurrency(baseRate)}/h{surgeFormulaText}) = +{formatCurrency(penaltyAmount)}
+                  Công thức: Vượt {overtimeHoursText}: ({blockFormula}) × {formatCurrency(baseRate)}/h × hệ số phạt {overtimeMultiplier} ÷ 2 ≈ +{formatCurrency(penaltyAmount)}
                 </p>
               </div>
               <span className="font-mono font-bold text-[#d95f00] text-sm tabular-nums whitespace-nowrap pt-0.5">
@@ -153,7 +151,9 @@ export function TariffAuditTable({ booking }: TariffAuditTableProps) {
         <div className="bg-slate-50 p-4 rounded-lg flex flex-col sm:flex-row sm:items-center justify-between gap-2 mt-1 border border-slate-200/80">
           <div>
             <span className="font-mono text-xs font-bold uppercase text-slate-900 block">
-              TỔNG TIỀN CẦN THANH TOÁN XUẤT CỔNG:
+              {booking.status === 'COMPLETED' || booking.status === 'REVIEWED'
+                ? 'PHÍ XUẤT CỔNG SAU KHI TRỪ CỌC:'
+                : 'TỔNG TIỀN CẦN THANH TOÁN XUẤT CỔNG:'}
             </span>
             <span className="text-[11px] text-slate-500">
               Đã khấu trừ toàn bộ tiền cọc {formatCurrency(deposit)}

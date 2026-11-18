@@ -85,7 +85,7 @@ describe('TariffAuditTable - [SP-CHECKOUT-04] Overtime Penalty Audit', () => {
     // Formula & Amount (90.000 đ for 3 blocks 30p)
     expect(screen.getAllByText(/\+90\.000 đ/).length).toBe(2)
     expect(
-      screen.getByText(/Công thức: Vượt 1 giờ 20 phút \(3 block 30p • Hệ số phạt 1\.5× giá cơ bản 40\.000 đ\/h\) = \+90\.000 đ/)
+      screen.getByText(/Công thức: Vượt 1 giờ 20 phút: \(3 block thường\) × 40\.000 đ\/h × hệ số phạt 1\.5 ÷ 2 ≈ \+90\.000 đ/)
     ).toBeInTheDocument()
 
     // Separated Standard Fee Row
@@ -205,13 +205,11 @@ describe('TariffAuditTable - [SP-CHECKOUT-04] Overtime Penalty Audit', () => {
     it('parses both ISO format and VN slashed datetime format', () => {
       const iso = parseBookingDateTime('2026-02-14T14:00:00')
       expect(iso).not.toBeNull()
-      expect(iso?.getFullYear()).toBe(2026)
+      expect(iso?.toISOString()).toBe('2026-02-14T07:00:00.000Z')
 
       const vn = parseBookingDateTime('14/02/2026 - 15:20')
       expect(vn).not.toBeNull()
-      expect(vn?.getFullYear()).toBe(2026)
-      expect(vn?.getHours()).toBe(15)
-      expect(vn?.getMinutes()).toBe(20)
+      expect(vn?.toISOString()).toBe('2026-02-14T08:20:00.000Z')
     })
 
     it('returns isOvertime = false when check-out is on time or early', () => {
@@ -243,9 +241,9 @@ describe('TariffAuditTable - [SP-CHECKOUT-04] Overtime Penalty Audit', () => {
     })
 
     it('verifies isTimeInSurgeWindow handles daytime and overnight windows correctly', () => {
-      const afternoon = new Date('2026-02-14T16:30:00')
-      const morning = new Date('2026-02-14T09:00:00')
-      const night = new Date('2026-02-14T23:30:00')
+      const afternoon = new Date('2026-02-14T09:30:00Z')
+      const morning = new Date('2026-02-14T02:00:00Z')
+      const night = new Date('2026-02-14T16:30:00Z')
 
       // Daytime window: 16:00 -> 18:00
       expect(isTimeInSurgeWindow(afternoon, '16:00', '18:00')).toBe(true)
@@ -342,7 +340,7 @@ describe('TariffAuditTable - [SP-CHECKOUT-04] Overtime Penalty Audit', () => {
       const penaltyRow = screen.getByTestId('overtime-penalty-row')
       expect(penaltyRow).toBeInTheDocument()
       // Hiển thị rõ số block áp dụng cao điểm
-      expect(penaltyRow.textContent).toContain('2/3 block cao điểm ×1.5')
+      expect(penaltyRow.textContent).toContain('2 block cao điểm × 1.5')
     })
   })
 })

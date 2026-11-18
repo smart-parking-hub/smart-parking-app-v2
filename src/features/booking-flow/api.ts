@@ -6,6 +6,7 @@ const money = z.coerce.number().finite().nonnegative()
 export const bookingSchema = z.object({
   id: z.number(), bookingCode: z.string(), parkingLotId: z.number(), merchantId: z.number().nullable(),
   parkingLotName: z.string().nullish(), parkingLotAddress: z.string().nullish(), vehicleId: z.number(), vehiclePlate: z.string().nullish(),
+  vehicleType: z.string().nullish(),
   status: z.enum(['PENDING_PAYMENT','PENDING_CHECKIN','PARKING','OVERTIME','AWAITING_FINAL_PAYMENT','COMPLETED','CANCELLED','EXPIRED','REVIEWED']),
   refundAmount: money.nullish(), refundPercentage: z.number().nullish(), refundStatus: z.string().nullish(), refundChannel: z.string().nullish(), refundReference: z.string().nullish(),
   advanceDeposit: money, totalAmount: money.nullable(), hourlyRate: money.nullable(),

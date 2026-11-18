@@ -1,4 +1,5 @@
 import { apiClient } from '@/shared/api/client'
+import type { Booking } from '@/features/booking-flow'
 import type {
   BookingItemDto,
   CancelBookingRequest,
@@ -134,15 +135,15 @@ export const fallbackBookingsList: BookingItemDto[] = [
 export function parseBookingDateTime(str?: unknown): Date | null {
   if (!str || typeof str !== 'string') return null
   const trimmed = str.trim()
-  const d = new Date(trimmed)
-  if (!isNaN(d.getTime())) return d
-
-  const match = trimmed.match(/(\d{1,2})\/(\d{1,2})\/(\d{4})[^\d]*(\d{1,2}):(\d{2})/)
+  const match = trimmed.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})\s*-?\s+(\d{1,2}):(\d{2})$/)
   if (match) {
     const [, day, month, year, hours, minutes] = match
-    return new Date(Number(year), Number(month) - 1, Number(day), Number(hours), Number(minutes))
+    return parseBookingDateTime(`${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}T${hours.padStart(2, '0')}:${minutes}`)
   }
-  return null
+  if (!/^\d{4}-\d{2}-\d{2}T/.test(trimmed)) return null
+  // The booking API's LocalDateTime values use Vietnam wall time.
+  const date = new Date(/(?:Z|[+-]\d{2}:\d{2})$/.test(trimmed) ? trimmed : `${trimmed}+07:00`)
+  return Number.isFinite(date.getTime()) ? date : null
 }
 
 export function parseLocalTimeString(str?: unknown): { hour: number; minute: number; second: number } | null {
@@ -169,7 +170,8 @@ export function isTimeInSurgeWindow(
   const endSec = end.hour * 3600 + end.minute * 60 + end.second
   if (startSec === endSec) return false
 
-  const currentSec = timeDate.getHours() * 3600 + timeDate.getMinutes() * 60 + timeDate.getSeconds()
+  const currentSec =
+    ((timeDate.getUTCHours() + 7) % 24) * 3600 + timeDate.getUTCMinutes() * 60 + timeDate.getUTCSeconds()
 
   if (startSec < endSec) {
     return currentSec >= startSec && currentSec < endSec
@@ -390,60 +392,50 @@ function mapBackendDtoToBookingItem(raw: Record<string, unknown>, index: number)
 }
 
 /** Chuyển đổi dữ liệu Booking từ API backend / booking-flow thành BookingItemDto hiển thị chuẩn */
-export function bookingToItemDto(b: Record<string, unknown>): BookingItemDto {
-  const id = Number(b.id ?? 1)
-  const bookingCode = String(b.bookingCode ?? `BK-${id}`)
-  const parkingLotName = String(b.parkingLotName ?? 'Bãi đỗ xe đối tác ALPR')
-  const parkingLotAddress = String(b.parkingLotAddress ?? 'Hệ thống bãi đỗ SmartParking')
-  const vehiclePlate = String(b.vehiclePlate ?? b.vehicleLicensePlate ?? 'Phương tiện')
-  const vehicleType = String(b.vehicleType ?? 'Container 40FT')
-  const status = String(b.status ?? 'AWAITING_FINAL_PAYMENT') as BookingItemDto['status']
-
-  const baseRatePerHour = Number(b.hourlyRate ?? 40000)
-  const depositPaid = Number(b.advanceDeposit ?? 0)
-  const totalAmount = b.totalAmount != null ? Number(b.totalAmount) : depositPaid
+export function bookingToItemDto(b: Booking & { hourlyRate: number; totalAmount: number }): BookingItemDto {
+  const { id, bookingCode, status, advanceDeposit: depositPaid, totalAmount, hourlyRate: baseRatePerHour } = b
   const remainingFinalPayment = Math.max(0, totalAmount - depositPaid)
 
-  const overtimeMultiplier =
-    b.overtimePenaltyMultiplier != null ? Number(b.overtimePenaltyMultiplier) : 1.0
-  const surgeMultiplier = b.surgeMultiplier != null ? Number(b.surgeMultiplier) : undefined
-  const surgeStartTime = b.surgeStartTime ? String(b.surgeStartTime) : undefined
-  const surgeEndTime = b.surgeEndTime ? String(b.surgeEndTime) : undefined
-
-  const checkInRaw = b.checkInTime ?? b.actualCheckInTime
-  const checkOutRaw = b.checkOutTime ?? b.actualCheckOutTime
+  const overtimeMultiplier = b.overtimePenaltyMultiplier ?? 1
+  const surgeMultiplier = b.surgeMultiplier ?? undefined
+  const surgeStartTime = b.surgeStartTime ?? undefined
+  const surgeEndTime = b.surgeEndTime ?? undefined
+  const checkIn = parseBookingDateTime(b.checkInTime)
+  const checkOut = parseBookingDateTime(b.checkOutTime)
+  const durationMinutes = checkIn && checkOut
+    ? Math.max(0, Math.floor((checkOut.getTime() - checkIn.getTime()) / 60000))
+    : 0
+  const timeLabel = (date: Date | null) => date?.toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' })
 
   const overtimeInfo = computeOvertimeDetails(
     b.expectedCheckOutTime,
-    checkOutRaw,
+    b.checkOutTime,
     baseRatePerHour,
     overtimeMultiplier,
     totalAmount,
     surgeMultiplier,
     surgeStartTime,
     surgeEndTime,
-    checkInRaw
+    b.checkInTime
   )
 
   return {
     id,
     bookingCode,
-    parkingLotName,
-    parkingLotAddress,
-    vehiclePlate,
-    vehicleType,
+    parkingLotName: b.parkingLotName ?? 'Chưa có tên bãi',
+    parkingLotAddress: b.parkingLotAddress ?? '',
+    vehiclePlate: b.vehiclePlate ?? '',
+    vehicleType: b.vehicleType ?? '',
     status,
     statusBadgeLabel: status,
-    createdAtText: b.createdAt ? String(b.createdAt).slice(0, 16) : 'Hôm nay',
-    expectedCheckInTime: b.expectedCheckInTime ? String(b.expectedCheckInTime).slice(0, 16) : 'Theo lịch hẹn',
-    expectedCheckOutTime: b.expectedCheckOutTime ? String(b.expectedCheckOutTime).slice(0, 16) : 'Theo lịch hẹn',
-    actualCheckInTime: checkInRaw ? String(checkInRaw).slice(0, 16) : undefined,
-    actualCheckOutTime: checkOutRaw ? String(checkOutRaw).slice(0, 16) : undefined,
+    createdAtText: '',
+    expectedCheckInTime: timeLabel(parseBookingDateTime(b.expectedCheckInTime)) ?? 'Theo lịch hẹn',
+    expectedCheckOutTime: timeLabel(parseBookingDateTime(b.expectedCheckOutTime)) ?? 'Theo lịch hẹn',
+    actualCheckInTime: timeLabel(checkIn),
+    actualCheckOutTime: timeLabel(checkOut),
     baseRatePerHour,
-    actualDurationHours: 4,
-    actualDurationText: overtimeInfo.isOvertime
-      ? `Quá hạn: Vượt ${overtimeInfo.overtimeHoursText}`
-      : 'Theo lịch hẹn',
+    actualDurationHours: durationMinutes / 60,
+    actualDurationText: checkIn && checkOut ? `${durationMinutes} phút` : 'Chưa có giờ vào hoặc giờ ra',
     parkingSubtotal: totalAmount,
     depositPaid,
     advanceDeposit: depositPaid,
@@ -460,7 +452,7 @@ export function bookingToItemDto(b: Record<string, unknown>): BookingItemDto {
     penaltyAmount: overtimeInfo.penaltyAmount,
     standardParkingFee: overtimeInfo.standardParkingFee,
     remainingFinalPayment,
-    gateToken: `STH-${id}`,
+    gateToken: '',
   }
 }
 

@@ -409,7 +409,7 @@ it('opens booking detail modal and displays overtime penalty breakdown from Tari
     vehiclePlate: '51C-OVERTIME',
     status: 'AWAITING_FINAL_PAYMENT',
     advanceDeposit: 40000,
-    totalAmount: 160000,
+    totalAmount: 250000,
     hourlyRate: 40000,
     overtimePenaltyMultiplier: 1.5,
     surgeMultiplier: 1,
@@ -448,6 +448,8 @@ it('opens booking detail modal and displays overtime penalty breakdown from Tari
   expect(penaltyRow).toBeInTheDocument()
   expect(within(penaltyRow).getByText('Phụ phí đỗ quá giờ quy định')).toBeInTheDocument()
   expect(within(penaltyRow).getByText(/HỆ SỐ 1.5×/i)).toBeInTheDocument()
+  expect(within(penaltyRow).getAllByText(/\+90\.000 đ/)).toHaveLength(2)
+  expect(within(modal).getByText('160.000 đ')).toBeInTheDocument()
   expect(within(modal).getByText('BẢNG ĐỐI SOÁT CƯỚC PHÍ CHI TIẾT')).toBeInTheDocument()
 })
 

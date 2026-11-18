@@ -120,7 +120,14 @@ function BookingStatusContent({
     {['PENDING_PAYMENT', 'PENDING_CHECKIN'].includes(data.status) && <button className={secondary} disabled={busy} onClick={() => { setAcceptWallet(false); setCancelOpen(true) }}>Hủy booking</button>}
     {!embedded && <Link className={secondary} to={compactView ? `/bookings?bookingId=${bookingId}` : '/bookings'}>Xem các lượt đặt chỗ</Link>}
   </>
-  const priceDetails = <p className="text-sm leading-relaxed text-brand-muted">Quá giờ ra dự kiến: ×{data.overtimePenaltyMultiplier ?? 1} trên phí phần quá giờ. Mỗi phần tính theo giờ bắt đầu; hệ số giờ cao điểm ×{data.surgeMultiplier ?? 1} trong khung đã công bố của bãi.</p>
+  const priceDetails = <p className="text-sm leading-relaxed text-brand-muted">Phần quá giờ tính theo block 30 phút đã bắt đầu, với hệ số ×{data.overtimePenaltyMultiplier ?? 1}. Hệ số cao điểm ×{data.surgeMultiplier ?? 1} áp dụng trong khung giờ công bố của bãi.</p>
+  const { hourlyRate, totalAmount } = data
+  const tariffAudit = ['AWAITING_FINAL_PAYMENT', 'COMPLETED', 'REVIEWED'].includes(data.status)
+    && Boolean(data.checkInTime && data.checkOutTime) && hourlyRate != null && hourlyRate > 0 && totalAmount != null && (
+    <div className="pt-2" data-testid="booking-status-tariff-audit">
+      <TariffAuditTable booking={bookingToItemDto({ ...data, hourlyRate, totalAmount })} />
+    </div>
+  )
 
   return (
     <div className={`${compactView ? 'space-y-4 text-sm' : 'space-y-5 text-base'} text-brand-navy`}>
@@ -194,12 +201,7 @@ function BookingStatusContent({
       )}
 
       </>}
-      {!compactView && priceDetails}
-      {!compactView && ['AWAITING_FINAL_PAYMENT', 'COMPLETED', 'REVIEWED'].includes(data.status) && (
-        <div className="pt-2" data-testid="booking-status-tariff-audit">
-          <TariffAuditTable booking={bookingToItemDto(data as unknown as Record<string, unknown>)} />
-        </div>
-      )}
+      {!compactView && (tariffAudit || priceDetails)}
 
       {(!compactView || payable) && <div className={compactPayment ? 'space-y-3' : 'flex flex-wrap gap-3'}>
         {compactPayment && !checkoutOpen && <h3 className="text-sm font-semibold">Thanh toán {finalPayment ? 'phần còn lại' : 'tiền cọc'}</h3>}
@@ -231,7 +233,7 @@ function BookingStatusContent({
       {compactPayment && !finalPayment && <p className="flex items-start gap-2 text-xs leading-5 text-brand-muted"><QrCode size={15} className="mt-0.5 shrink-0" aria-hidden="true"/><span>Mã check-in và QR sẽ hiển thị sau khi xác nhận thanh toán cọc.</span></p>}
 
       {compactView && <div className="divide-y divide-brand-border border-t border-brand-border text-xs">
-        <details className="group py-3.5"><summary className="flex cursor-pointer list-none items-center justify-between gap-3 font-medium text-brand-muted [&::-webkit-details-marker]:hidden">Chi tiết giá & phụ phí<ChevronDown size={16} aria-hidden="true" className="shrink-0 transition-transform group-open:rotate-180"/></summary><div className="pt-3">{priceDetails}</div></details>
+        <details className="group py-3.5"><summary className="flex cursor-pointer list-none items-center justify-between gap-3 font-medium text-brand-muted [&::-webkit-details-marker]:hidden">Chi tiết giá & phụ phí<ChevronDown size={16} aria-hidden="true" className="shrink-0 transition-transform group-open:rotate-180"/></summary><div className="pt-3">{tariffAudit || priceDetails}</div></details>
         <details className="group py-3.5"><summary className="flex cursor-pointer list-none items-center justify-between gap-3 font-medium text-brand-muted [&::-webkit-details-marker]:hidden">Tác vụ khác<ChevronDown size={16} aria-hidden="true" className="shrink-0 transition-transform group-open:rotate-180"/></summary><div className="flex flex-wrap gap-2 pt-3 [&>a]:!px-3 [&>a]:!py-2 [&>a]:!text-xs [&>button]:!px-3 [&>button]:!py-2 [&>button]:!text-xs">{otherActions}</div></details>
       </div>}
 
