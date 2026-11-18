@@ -52,7 +52,15 @@ export function GateSettlementDialog({ settlement, parkingLotId, onClose, onComp
   }, [status.data, settlement, onComplete])
 
   const invalidate = () => {
-    for (const queryKey of [['merchant-bookings'], ['merchant-booking'], ['real-bookings'], ['booking'], ['merchant-revenue']])
+    for (const queryKey of [
+      ['merchant-bookings'],
+      ['merchant-booking'],
+      ['real-bookings'],
+      ['booking'],
+      ['merchant-revenue'],
+      ['merchant-dashboard-summary'],
+      ['merchant-revenue-stats'],
+    ])
       void cache.invalidateQueries({ queryKey })
   }
 

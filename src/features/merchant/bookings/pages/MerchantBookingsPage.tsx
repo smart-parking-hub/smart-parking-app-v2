@@ -268,6 +268,7 @@ export function MerchantBookingsPage() {
           <MerchantBookingsMetrics
             totalElements={serverTotalCount}
             pageRows={pageRows}
+            statusCounts={statusCounts}
             selectedLotName={selectedLotName}
           />
 

@@ -10,6 +10,8 @@ import { MerchantDashboardSkeleton } from '../components/MerchantDashboardSkelet
 import { RevenueVolumeComboChart } from '../components/RevenueVolumeComboChart'
 import { MerchantDashboardFilterForm } from '../components/MerchantDashboardFilterForm'
 import { RecentMerchantBookings } from '../components/RecentMerchantBookings'
+import { MerchantChannelBreakdownCards } from '../../components/MerchantChannelBreakdownCards'
+import { MerchantRevenueByLotTable } from '../../components/MerchantRevenueByLotTable'
 import {
   Notice,
   Panel,
@@ -18,8 +20,18 @@ import {
   secondary,
 } from '@/shared/components/Workspace'
 import { Toast } from '@/shared/components/Toast'
-import { useMerchantDashboardStore } from '../store/merchantDashboardStore'
+import {
+  useMerchantDashboardStore,
+  type TimeRangeFilter,
+} from '../store/merchantDashboardStore'
 import { computeDateRange } from '../types/merchantDashboardSchemas'
+
+const TIME_RANGE_LABELS: Record<TimeRangeFilter, string> = {
+  ALL: 'Toàn thời gian',
+  TODAY: 'Hôm nay',
+  WEEK: '7 ngày qua',
+  MONTH: '30 ngày qua',
+}
 
 export function MerchantDashboardPage() {
   const selectedLotId = useMerchantDashboardStore((s) => s.selectedLotId)
@@ -31,6 +43,8 @@ export function MerchantDashboardPage() {
   const clearToast = useMerchantDashboardStore((s) => s.clearToast)
 
   const dateRange = useMemo(() => computeDateRange(timeRange), [timeRange])
+  const usePeriodValues = timeRange !== 'ALL'
+  const periodLabel = TIME_RANGE_LABELS[timeRange]
 
   const { data, isLoading, error, refetch, isRefetching } = useQuery({
     queryKey: ['merchant-dashboard-summary', timeRange],
@@ -93,10 +107,12 @@ export function MerchantDashboardPage() {
     )
   if (!data) return null
 
-  const currentRevenueSeries =
-    selectedLotId !== null
-      ? (lotRevenueQuery.data?.series ?? [])
-      : data.revenue.series
+  const activeRevenue =
+    selectedLotId !== null && lotRevenueQuery.data
+      ? lotRevenueQuery.data
+      : data.revenue
+
+  const currentRevenueSeries = activeRevenue.series
 
   const selectedLotName = data.lots.content.find(
     (l) => l.id === selectedLotId,
@@ -107,17 +123,45 @@ export function MerchantDashboardPage() {
       ? (lotRevenueQuery.data?.totalNetRevenue ?? 0)
       : data.revenue.totalNetRevenue
 
+  const currentCashRevenue = usePeriodValues
+    ? activeRevenue.periodCashRevenue
+    : activeRevenue.totalCashRevenue
+
+  const currentCashBookings = usePeriodValues
+    ? activeRevenue.periodCashBookings
+    : activeRevenue.totalCashBookings
+
+  const currentTransferRevenue = usePeriodValues
+    ? activeRevenue.periodOnlineTransferNetRevenue +
+      activeRevenue.periodCounterQrNetRevenue
+    : activeRevenue.onlineTransferNetRevenue + activeRevenue.counterQrNetRevenue
+
+  const currentTransferCount = usePeriodValues
+    ? activeRevenue.periodOnlineTransferCount +
+      activeRevenue.periodCounterQrCount
+    : activeRevenue.onlineTransferCount + activeRevenue.counterQrCount
+
+  const hasChannelBreakdown =
+    currentTransferRevenue > 0 || currentTransferCount > 0
+
+  const currentTotalRevenue = usePeriodValues
+    ? currentTransferRevenue + currentCashRevenue
+    : hasChannelBreakdown
+      ? currentTransferRevenue + currentCashRevenue
+      : currentNetRevenue + currentCashRevenue
+
   const currentBookings =
     selectedLotId !== null
       ? (lotRevenueQuery.data?.completedBookings ?? '—')
       : data.bookings.totalElements
 
-  const metrics = [
-    ['TỔNG DOANH THU THỰC NHẬN', money(currentNetRevenue)],
-    ['SỐ DƯ VÍ', money(data.revenue.currentWalletBalance)],
-    ['BÃI ĐỖ CỦA TÔI', data.lots.totalElements],
-    ['TỔNG LƯỢT ĐẶT CHỖ', currentBookings],
-  ] as const
+  const breakdownByLotId = new Map(
+    data.revenue.revenueByParkingLot.map((b) => [b.parkingLotId, b]),
+  )
+
+  const scopeLabel = selectedLotName
+    ? selectedLotName
+    : `Tất cả bãi đỗ (${data.lots.totalElements})`
 
   return (
     <div className="w-full flex flex-col pb-12">
@@ -146,14 +190,52 @@ export function MerchantDashboardPage() {
       <MerchantCommandSurface />
 
       <div className="max-w-[1280px] w-full mx-auto px-4 lg:px-8 py-6 flex flex-col gap-6">
-        {/* KPI Metrics */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-5">
-          {metrics.map(([label, value]) => (
-            <Panel key={label}>
-              <p className="font-mono text-xs text-brand-muted">{label}</p>
-              <p className="font-sora text-2xl font-bold mt-3">{value}</p>
-            </Panel>
-          ))}
+        {/* Clean 5-Card KPI Strip (no sub-text clutter) */}
+        <div
+          data-testid="merchant-dashboard-kpis"
+          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4"
+        >
+          <Panel>
+            <p className="font-mono text-xs text-brand-muted">TỔNG DOANH THU</p>
+            <p className="font-sora text-2xl font-bold mt-3 tabular-nums">
+              {money(currentTotalRevenue)}
+            </p>
+          </Panel>
+
+          <Panel>
+            <p className="font-mono text-xs text-brand-muted">
+              TIỀN MẶT THU TẠI BÃI
+            </p>
+            <p
+              data-testid="merchant-kpi-cash-value"
+              className="font-sora text-2xl font-bold mt-3 tabular-nums"
+            >
+              {money(currentCashRevenue)}
+            </p>
+          </Panel>
+
+          <Panel>
+            <p className="font-mono text-xs text-brand-muted">SỐ DƯ VÍ</p>
+            <p className="font-sora text-2xl font-bold mt-3 tabular-nums">
+              {money(data.revenue.currentWalletBalance)}
+            </p>
+          </Panel>
+
+          <Panel>
+            <p className="font-mono text-xs text-brand-muted">BÃI ĐỖ CỦA TÔI</p>
+            <p className="font-sora text-2xl font-bold mt-3 tabular-nums">
+              {data.lots.totalElements}
+            </p>
+          </Panel>
+
+          <Panel>
+            <p className="font-mono text-xs text-brand-muted">
+              TỔNG LƯỢT ĐẶT CHỖ
+            </p>
+            <p className="font-sora text-2xl font-bold mt-3 tabular-nums">
+              {currentBookings}
+            </p>
+          </Panel>
         </div>
 
         {/* Empty Lots Notice */}
@@ -170,7 +252,7 @@ export function MerchantDashboardPage() {
             totalLots={data.lots.totalElements}
             selectedLotId={selectedLotId}
             selectedLotName={selectedLotName}
-            currentNetRevenueFormatted={money(currentNetRevenue)}
+            currentNetRevenueFormatted={money(currentTotalRevenue)}
             timeRange={timeRange}
             onLotChange={setSelectedLotId}
             onTimeRangeChange={setTimeRange}
@@ -179,7 +261,17 @@ export function MerchantDashboardPage() {
           />
         )}
 
-        {/* Main Grid: Chart + Booking List + Lot List + Barrier Gateway */}
+        {/* 2-Channel Revenue Breakdown (Chuyển khoản vs Tiền mặt) */}
+        <MerchantChannelBreakdownCards
+          transferAmount={currentTransferRevenue}
+          transferCount={currentTransferCount}
+          cashAmount={currentCashRevenue}
+          cashBookingCount={currentCashBookings}
+          scopeLabel={scopeLabel}
+          periodLabel={periodLabel}
+        />
+
+        {/* Main Grid: Chart + Per-Lot Table + Booking List + Sidebar */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
           <div className="lg:col-span-8 space-y-6">
             <Panel title="Doanh thu theo kỳ">
@@ -187,18 +279,14 @@ export function MerchantDashboardPage() {
                 data={currentRevenueSeries}
                 isLoading={lotRevenueQuery.isLoading}
                 parkingLotName={selectedLotName}
-                totalNetRevenue={
-                  selectedLotId !== null
-                    ? (lotRevenueQuery.data?.totalNetRevenue ?? 0)
-                    : data.revenue.totalNetRevenue
-                }
+                totalNetRevenue={currentNetRevenue}
               />
               <div className="mt-4 flex flex-wrap items-center justify-between gap-3 text-xs">
                 <Link
                   to="/merchant/revenue"
                   className="underline font-semibold text-brand-navy"
                 >
-                  Xem báo cáo doanh thu
+                  Xem báo cáo doanh thu chi tiết
                 </Link>
                 {selectedLotId !== null && (
                   <button
@@ -212,6 +300,17 @@ export function MerchantDashboardPage() {
               </div>
             </Panel>
 
+            {data.lots.totalElements > 0 && (
+              <MerchantRevenueByLotTable
+                lots={data.lots.content}
+                breakdowns={data.revenue.revenueByParkingLot}
+                selectedLotId={selectedLotId}
+                onSelectLot={setSelectedLotId}
+                usePeriodValues={usePeriodValues}
+                periodLabel={periodLabel}
+              />
+            )}
+
             <RecentMerchantBookings bookings={data.bookings.content} />
           </div>
 
@@ -221,23 +320,43 @@ export function MerchantDashboardPage() {
                 <p>Chưa có bãi đỗ.</p>
               ) : (
                 <ul className="space-y-4">
-                  {data.lots.content.slice(0, 5).map((lot) => (
-                    <li
-                      key={lot.id}
-                      className="space-y-2 border-b border-brand-border pb-3"
-                    >
-                      <Link
-                        to={`/merchant/parking-lots/${lot.id}`}
-                        className="font-semibold underline"
+                  {data.lots.content.slice(0, 5).map((lot) => {
+                    const stats = breakdownByLotId.get(lot.id)
+                    const lotCash = usePeriodValues
+                      ? (stats?.periodCashRevenue ?? 0)
+                      : (stats?.cashRevenue ?? 0)
+                    const lotTransfer = usePeriodValues
+                      ? (stats?.periodOnlineTransferRevenue ?? 0) +
+                        (stats?.periodCounterQrRevenue ?? 0)
+                      : (stats?.onlineTransferRevenue ?? 0) +
+                        (stats?.counterQrRevenue ?? 0)
+
+                    return (
+                      <li
+                        key={lot.id}
+                        className="space-y-2 border-b border-brand-border pb-3"
                       >
-                        {lot.name}
-                      </Link>
-                      <p className="text-sm text-brand-muted">
-                        {lot.address || '—'}
-                      </p>
-                      <Badge value={lot.status} />
-                    </li>
-                  ))}
+                        <Link
+                          to={`/merchant/parking-lots/${lot.id}`}
+                          className="font-semibold underline"
+                        >
+                          {lot.name}
+                        </Link>
+                        <p className="text-sm text-brand-muted">
+                          {lot.address || '—'}
+                        </p>
+                        <div className="flex flex-wrap items-center gap-2 text-xs">
+                          <Badge value={lot.status} />
+                          <span className="rounded-md bg-orange-50 px-2 py-0.5 font-mono font-semibold text-[#b84e00] border border-orange-200/80">
+                            Tiền mặt: {money(lotCash)}
+                          </span>
+                          <span className="rounded-md bg-slate-100 px-2 py-0.5 font-mono text-slate-700">
+                            Chuyển khoản: {money(lotTransfer)}
+                          </span>
+                        </div>
+                      </li>
+                    )
+                  })}
                 </ul>
               )}
               <Link

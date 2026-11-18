@@ -245,6 +245,12 @@ export function computeRemainingBookingAmount(
   return null
 }
 
+export function formatShortBookingCode(code: string, maxLength = 16): string {
+  const trimmed = code.trim()
+  if (trimmed.length <= maxLength) return trimmed
+  return `${trimmed.slice(0, maxLength)}...`
+}
+
 export function formatDurationMinutes(totalMinutes: number): string {
   const safeMinutes = Math.max(0, Math.round(totalMinutes))
   if (safeMinutes === 0) return 'Dưới 1 phút'

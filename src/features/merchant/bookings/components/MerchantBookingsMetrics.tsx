@@ -1,19 +1,28 @@
 import type { Booking } from '@/entities/operations'
+import type { MerchantBookingStatusCounts } from '../types/merchantBookingsTypes'
 
 interface MerchantBookingsMetricsProps {
   totalElements: number
   pageRows: Booking[]
+  statusCounts?: MerchantBookingStatusCounts
   selectedLotName?: string | null
 }
 
 export function MerchantBookingsMetrics({
   totalElements,
   pageRows,
+  statusCounts,
   selectedLotName,
 }: MerchantBookingsMetricsProps) {
-  const pendingCheckInCount = pageRows.filter((row) => row.status === 'PENDING_CHECKIN').length
-  const parkingCount = pageRows.filter((row) => row.status === 'PARKING').length
-  const completedCount = pageRows.filter((row) => row.status === 'COMPLETED').length
+  const pendingCheckInCount =
+    statusCounts?.PENDING_CHECKIN ??
+    pageRows.filter((row) => row.status === 'PENDING_CHECKIN').length
+  const parkingCount =
+    statusCounts?.PARKING ??
+    pageRows.filter((row) => row.status === 'PARKING').length
+  const completedCount =
+    statusCounts?.COMPLETED ??
+    pageRows.filter((row) => row.status === 'COMPLETED').length
 
   const cards = [
     {
@@ -22,19 +31,19 @@ export function MerchantBookingsMetrics({
       title: selectedLotName ? `Đang lọc theo bãi: ${selectedLotName}` : undefined,
     },
     {
-      label: 'Chờ vào · trang này',
+      label: 'Chờ vào',
       value: pendingCheckInCount,
-      title: 'Đơn đã cọc đang chờ check-in trên trang hiện tại',
+      title: 'Đơn đã cọc đang chờ check-in',
     },
     {
-      label: 'Đang đỗ · trang này',
+      label: 'Đang đỗ',
       value: parkingCount,
-      title: 'Phương tiện đang lưu trú trong bãi trên trang hiện tại',
+      title: 'Phương tiện đang lưu trú trong bãi',
     },
     {
-      label: 'Hoàn tất · trang này',
+      label: 'Hoàn tất',
       value: completedCount,
-      title: 'Đơn đã quyết toán hoàn tất trên trang hiện tại',
+      title: 'Đơn đã quyết toán hoàn tất',
     },
   ]
 
@@ -60,4 +69,3 @@ export function MerchantBookingsMetrics({
     </div>
   )
 }
-

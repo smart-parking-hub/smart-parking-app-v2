@@ -1,60 +1,392 @@
 import { DepositStatements } from '@/features/deposit-statements'
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { useForm } from 'react-hook-form'
+import { Controller, useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Link } from 'react-router-dom'
+import { Building2, Calendar } from 'lucide-react'
 import { QueryState } from '@/shared/components/QueryState'
-import { Workspace, Metrics, Panel, Field, Notice, money, control, button } from '@/shared/components/Workspace'
+import { Select, type SelectOption } from '@/shared/components/Select'
+import {
+  Workspace,
+  Panel,
+  Notice,
+  money,
+  button,
+} from '@/shared/components/Workspace'
 import { MerchantRevenueChart } from '../components/MerchantRevenueChart'
 import { MerchantWalletLedger } from '../components/MerchantWalletLedger'
-import { getMerchantRevenue, groupRevenueSeries, revenueFiltersSchema, type RevenueFilters } from './merchantFinanceApi'
+import { MerchantChannelBreakdownCards } from '../components/MerchantChannelBreakdownCards'
+import { MerchantRevenueByLotTable } from '../components/MerchantRevenueByLotTable'
+import { MerchantDatePicker } from '../components/MerchantDatePicker'
+import {
+  getMerchantLotsForRevenue,
+  getMerchantRevenue,
+  groupRevenueSeries,
+  revenueFiltersSchema,
+  type RevenueFilters,
+} from './merchantFinanceApi'
+
+const GRANULARITY_OPTIONS: SelectOption[] = [
+  { value: 'DAY', label: 'Theo ngày' },
+  { value: 'MONTH', label: 'Theo tháng' },
+  { value: 'YEAR', label: 'Theo năm' },
+]
 
 export function MerchantRevenuePage() {
   const filters = useForm<RevenueFilters>({
     resolver: zodResolver(revenueFiltersSchema),
-    defaultValues: { startDate: '', endDate: '', granularity: 'DAY' },
+    defaultValues: {
+      startDate: '',
+      endDate: '',
+      granularity: 'DAY',
+      parkingLotId: '',
+    },
   })
-  const [range, setRange] = useState(filters.getValues())
+  const [range, setRange] = useState<RevenueFilters>(filters.getValues())
+
+  const lotsQuery = useQuery({
+    queryKey: ['merchant-revenue-lots'],
+    queryFn: getMerchantLotsForRevenue,
+    retry: false,
+  })
+
   const query = useQuery({
-    queryKey: ['merchant-revenue', { startDate: range.startDate, endDate: range.endDate }],
+    queryKey: [
+      'merchant-revenue',
+      {
+        startDate: range.startDate,
+        endDate: range.endDate,
+        parkingLotId: range.parkingLotId || '',
+      },
+    ],
     queryFn: () => getMerchantRevenue(range),
     retry: false,
   })
+
+  const lots = useMemo(
+    () => (Array.isArray(lotsQuery.data?.content) ? lotsQuery.data.content : []),
+    [lotsQuery.data?.content],
+  )
+
+  const lotSelectOptions = useMemo<SelectOption[]>(
+    () => [
+      { value: '', label: `Tất cả bãi đỗ (${lots.length})` },
+      ...lots.map((lot) => ({ value: String(lot.id), label: lot.name })),
+    ],
+    [lots],
+  )
+
+  const selectedLotId =
+    range.parkingLotId && Number(range.parkingLotId) > 0
+      ? Number(range.parkingLotId)
+      : null
+  const selectedLotName = lots.find((l) => l.id === selectedLotId)?.name
+  const hasDateFilter = Boolean(range.startDate || range.endDate)
+  const periodLabel = hasDateFilter
+    ? `${range.startDate || '...'} → ${range.endDate || '...'}`
+    : 'Toàn thời gian'
+
+  const handleSelectLotFromTable = (lotId: number | null) => {
+    const nextLotStr = lotId ? String(lotId) : ''
+    filters.setValue('parkingLotId', nextLotStr)
+    setRange((prev) => ({ ...prev, parkingLotId: nextLotStr }))
+  }
+
   return (
-    <Workspace title="Hiệu quả kinh doanh" eyebrow="FINANCE / REVENUE"
-      description="Theo dõi doanh thu, phí nền tảng và dòng tiền thực nhận."
-      actions={<Link className={button} to="/merchant/withdrawals">Ví & Rút tiền →</Link>}>
+    <Workspace
+      title="Hiệu quả kinh doanh"
+      eyebrow="FINANCE / REVENUE"
+      description="Theo dõi doanh thu chuyển khoản, tiền mặt thu tại bãi, phí nền tảng và dòng tiền thực nhận theo từng bãi."
+      actions={
+        <Link className={button} to="/merchant/withdrawals">
+          Ví &amp; Rút tiền →
+        </Link>
+      }
+    >
       <Panel>
-        <form className="flex flex-wrap items-end gap-4" onSubmit={filters.handleSubmit(setRange)}>
-          <Field label="Từ ngày"><input type="date" className={control} {...filters.register('startDate')} /></Field>
-          <Field label="Đến ngày"><input type="date" className={control} aria-invalid={Boolean(filters.formState.errors.endDate)} aria-describedby={filters.formState.errors.endDate ? 'revenue-date-error' : undefined} {...filters.register('endDate')} /></Field>
-          <Field label="Nhóm thời gian"><select className={control} {...filters.register('granularity')}>
-            <option value="DAY">Theo ngày</option><option value="MONTH">Theo tháng</option><option value="YEAR">Theo năm</option>
-          </select></Field>
-          <button type="submit" className={button}>Áp dụng</button>
-          {filters.formState.errors.endDate && <div id="revenue-date-error"><Notice error>{filters.formState.errors.endDate.message}</Notice></div>}
+        <form
+          className="flex flex-wrap lg:flex-nowrap items-end gap-4 w-full"
+          onSubmit={filters.handleSubmit(setRange)}
+        >
+          <div className="flex flex-col min-w-0 gap-2 text-sm font-medium w-full sm:w-auto sm:min-w-[220px] lg:max-w-[440px]">
+            <label htmlFor="revenue-lot-filter">Cơ sở bãi đỗ</label>
+            <Controller
+              name="parkingLotId"
+              control={filters.control}
+              render={({ field }) => (
+                <Select
+                  id="revenue-lot-filter"
+                  value={field.value ?? ''}
+                  onChange={field.onChange}
+                  options={lotSelectOptions}
+                  placeholder=""
+                  prefixIcon={
+                    <Building2
+                      className="w-4 h-4 text-slate-400 shrink-0"
+                      aria-hidden="true"
+                    />
+                  }
+                  ariaLabel="Mở bộ lọc cơ sở bãi đỗ"
+                  variant="default"
+                  size="md"
+                  dropdownClassName="w-full min-w-[260px]"
+                />
+              )}
+            />
+          </div>
+
+          <Controller
+            name="startDate"
+            control={filters.control}
+            render={({ field }) => (
+              <MerchantDatePicker
+                id="revenue-start-date"
+                label="Từ ngày"
+                value={field.value ?? ''}
+                onChange={field.onChange}
+                className="sm:w-auto sm:flex-1 sm:min-w-[155px]"
+              />
+            )}
+          />
+
+          <Controller
+            name="endDate"
+            control={filters.control}
+            render={({ field }) => (
+              <MerchantDatePicker
+                id="revenue-end-date"
+                label="Đến ngày"
+                value={field.value ?? ''}
+                onChange={field.onChange}
+                hasError={Boolean(filters.formState.errors.endDate)}
+                ariaDescribedBy={
+                  filters.formState.errors.endDate
+                    ? 'revenue-date-error'
+                    : undefined
+                }
+                className="sm:w-auto sm:flex-1 sm:min-w-[155px]"
+              />
+            )}
+          />
+
+          <div className="flex flex-col min-w-0 gap-2 text-sm font-medium w-full sm:flex-1 sm:min-w-[155px]">
+            <label htmlFor="revenue-granularity-filter">Nhóm thời gian</label>
+            <Controller
+              name="granularity"
+              control={filters.control}
+              render={({ field }) => (
+                <Select
+                  id="revenue-granularity-filter"
+                  value={field.value}
+                  onChange={(val) =>
+                    field.onChange(val as RevenueFilters['granularity'])
+                  }
+                  options={GRANULARITY_OPTIONS}
+                  placeholder=""
+                  prefixIcon={
+                    <Calendar
+                      className="w-4 h-4 text-slate-400 shrink-0"
+                      aria-hidden="true"
+                    />
+                  }
+                  ariaLabel="Mở bộ lọc nhóm thời gian"
+                  variant="default"
+                  size="md"
+                  dropdownClassName="w-full min-w-[180px]"
+                />
+              )}
+            />
+          </div>
+
+          <button
+            type="submit"
+            className={`${button} h-[44px] shrink-0 px-6`}
+          >
+            Áp dụng
+          </button>
+          {filters.formState.errors.endDate && (
+            <div id="revenue-date-error">
+              <Notice error>{filters.formState.errors.endDate.message}</Notice>
+            </div>
+          )}
         </form>
-        <p className="mt-3 text-sm text-brand-muted">Khoảng ngày áp dụng cho biểu đồ. Để trống để xem kỳ mặc định của hệ thống.</p>
       </Panel>
-      <QueryState query={query}>{data => {
-        const points = groupRevenueSeries(data.series ?? [], range.granularity)
-        const periodRevenue = points.reduce((sum, point) => sum + point.revenue, 0)
-        return <>
-          <Metrics items={[
-            { label: 'Doanh thu gộp', value: money(data.totalGrossRevenue), note: 'Tích lũy từ thanh toán thành công' },
-            { label: 'Biến động ví tích lũy', value: money(data.totalNetRevenue), note: 'Gồm cộng doanh thu, giữ tiền rút, hoàn và điều chỉnh' },
-            { label: 'Phí nền tảng', value: money(data.totalPlatformFee), note: 'Tích lũy theo sổ cái' },
-            { label: 'Số dư khả dụng', value: money(data.currentWalletBalance), note: 'Số dư ví hiện tại' },
-          ]} />
-          <Panel title="Nhịp doanh thu">
-            <p className="mb-4 text-sm">Doanh thu sau phí trong kỳ: <strong>{money(periodRevenue)}</strong></p>
-            {points.length > 0 && <p className="mb-4 text-xs text-brand-muted">Kỳ hiển thị: {points[0].period} → {points[points.length - 1].period}</p>}
-            <MerchantRevenueChart points={points} />
-          </Panel>
-          <Panel title="Đối soát"><p className="text-sm leading-7 text-brand-muted">Các chỉ số tích lũy và số dư ví không thay đổi theo bộ lọc ngày. Biểu đồ phản ánh thanh toán thành công sau phí; sổ cái phản ánh các khoản thực tế đã ghi vào ví. Lượt ghi nhận được cộng từ dữ liệu từng ngày, có thể gồm nhiều khoản thanh toán cho cùng một đặt chỗ.</p></Panel>
-        </>
-      }}</QueryState>
+
+      <QueryState query={query}>
+        {(data) => {
+          const points = groupRevenueSeries(data.series ?? [], range.granularity)
+          const periodTransferChartRevenue = points.reduce(
+            (sum, point) => sum + point.revenue,
+            0,
+          )
+          const periodCashChartRevenue = points.reduce(
+            (sum, point) => sum + (point.cashRevenue ?? 0),
+            0,
+          )
+
+          const totalCashRevenue = data.totalCashRevenue ?? 0
+          const totalCashBookings = data.totalCashBookings ?? 0
+          const totalCombinedRevenue =
+            (data.totalGrossRevenue ?? 0) + totalCashRevenue
+          const periodCashRevenue = hasDateFilter
+            ? (data.periodCashRevenue ?? totalCashRevenue)
+            : totalCashRevenue
+          const periodCashBookings = hasDateFilter
+            ? (data.periodCashBookings ?? totalCashBookings)
+            : totalCashBookings
+
+          const hasGrossChannelFields =
+            data.onlineTransferGrossRevenue !== undefined ||
+            data.counterQrGrossRevenue !== undefined
+
+          const allTimeTransferGross = hasGrossChannelFields
+            ? (data.onlineTransferGrossRevenue ?? 0) +
+              (data.counterQrGrossRevenue ?? 0)
+            : (data.totalGrossRevenue ??
+              (data.onlineTransferNetRevenue ?? 0) +
+                (data.counterQrNetRevenue ?? 0))
+
+          const transferAmount = hasDateFilter
+            ? (data.periodOnlineTransferNetRevenue ??
+                data.onlineTransferNetRevenue ??
+                0) +
+              (data.periodCounterQrNetRevenue ?? data.counterQrNetRevenue ?? 0)
+            : allTimeTransferGross
+
+          const transferCount = hasDateFilter
+            ? (data.periodOnlineTransferCount ?? data.onlineTransferCount ?? 0) +
+              (data.periodCounterQrCount ?? data.counterQrCount ?? 0)
+            : (data.onlineTransferCount ?? 0) + (data.counterQrCount ?? 0)
+
+          const scopeLabel = selectedLotName
+            ? selectedLotName
+            : `Tất cả bãi đỗ (${lots.length})`
+
+          return (
+            <>
+              {/* Uniform 5-Card KPI Strip */}
+              <div
+                data-testid="merchant-revenue-kpis"
+                className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5"
+              >
+                <Panel>
+                  <p className="text-xs text-brand-muted">Tổng Doanh thu</p>
+                  <p
+                    data-testid="revenue-kpi-total-value"
+                    className="mt-3 font-sora text-2xl font-bold tabular-nums"
+                  >
+                    {money(totalCombinedRevenue)}
+                  </p>
+                </Panel>
+
+                <Panel>
+                  <p className="text-xs text-brand-muted">
+                    Tiền mặt thu tại bãi
+                  </p>
+                  <p
+                    data-testid="revenue-kpi-cash-value"
+                    className="mt-3 font-sora text-2xl font-bold tabular-nums"
+                  >
+                    {money(periodCashRevenue)}
+                  </p>
+                </Panel>
+
+                <Panel>
+                  <p className="text-xs text-brand-muted">
+                    {selectedLotId
+                      ? 'Thực nhận chuyển khoản'
+                      : 'Biến động ví tích lũy'}
+                  </p>
+                  <p className="mt-3 font-sora text-2xl font-bold tabular-nums">
+                    {money(data.totalNetRevenue)}
+                  </p>
+                </Panel>
+
+                <Panel>
+                  <p className="text-xs text-brand-muted">Phí nền tảng</p>
+                  <p className="mt-3 font-sora text-2xl font-bold tabular-nums">
+                    {money(data.totalPlatformFee)}
+                  </p>
+                </Panel>
+
+                <Panel>
+                  <p className="text-xs text-brand-muted">Số dư khả dụng</p>
+                  <p className="mt-3 font-sora text-2xl font-bold tabular-nums">
+                    {money(data.currentWalletBalance)}
+                  </p>
+                </Panel>
+              </div>
+
+              {/* All Lots -> show Per-Lot Breakdown Table ONLY; Specific Lot -> show Channel Breakdown + Revenue Rhythm ONLY */}
+              {selectedLotId === null ? (
+                lots.length > 0 && (
+                  <MerchantRevenueByLotTable
+                    lots={lots}
+                    breakdowns={data.revenueByParkingLot ?? []}
+                    selectedLotId={selectedLotId}
+                    onSelectLot={handleSelectLotFromTable}
+                    usePeriodValues={hasDateFilter}
+                    useGrossTransfer={!hasDateFilter}
+                    periodLabel={periodLabel}
+                  />
+                )
+              ) : (
+                <>
+                  <MerchantChannelBreakdownCards
+                    transferAmount={transferAmount}
+                    transferCount={transferCount}
+                    cashAmount={periodCashRevenue}
+                    cashBookingCount={periodCashBookings}
+                    scopeLabel={scopeLabel}
+                    periodLabel={periodLabel}
+                  />
+
+                  <Panel title="Nhịp doanh thu">
+                    <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+                      <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm">
+                        <p>
+                          Chuyển khoản trong kỳ:{' '}
+                          <strong>{money(periodTransferChartRevenue)}</strong>
+                        </p>
+                        <p className="text-[#d95f00]">
+                          Tiền mặt trong kỳ:{' '}
+                          <strong>{money(periodCashChartRevenue)}</strong>
+                        </p>
+                        <p>
+                          Tổng thực thu trong kỳ:{' '}
+                          <strong>
+                            {money(
+                              periodTransferChartRevenue +
+                                periodCashChartRevenue,
+                            )}
+                          </strong>
+                        </p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => handleSelectLotFromTable(null)}
+                        className="font-mono text-xs font-semibold text-[#d95f00] hover:underline cursor-pointer"
+                      >
+                        ← Xem tất cả bãi đỗ
+                      </button>
+                    </div>
+                    {points.length > 0 && (
+                      <p className="mb-4 text-xs text-brand-muted">
+                        Kỳ hiển thị: {points[0].period} →{' '}
+                        {points[points.length - 1].period}
+                        {selectedLotName ? ` · Bãi: ${selectedLotName}` : ''}
+                      </p>
+                    )}
+                    <MerchantRevenueChart points={points} />
+                  </Panel>
+                </>
+              )}
+            </>
+          )
+        }}
+      </QueryState>
+
       <MerchantWalletLedger />
       <DepositStatements scope="merchant" />
     </Workspace>

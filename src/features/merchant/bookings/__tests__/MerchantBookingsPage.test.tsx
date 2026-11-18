@@ -359,9 +359,10 @@ describe('SCR-034: MerchantBookingsPage (Table + Direct SCR-035 Link + Filters +
     expect(metricsStrip.children).toHaveLength(4)
     expect(metricsStrip.querySelector('.bg-brand-navy')).toBeNull()
     expect(within(metricsStrip).getByText('Tổng lượt đặt chỗ')).toHaveClass('font-mono', 'uppercase')
-    expect(within(metricsStrip).getByText('Chờ vào · trang này')).toHaveClass('font-mono', 'uppercase')
-    expect(within(metricsStrip).getByText('Đang đỗ · trang này')).toHaveClass('font-mono', 'uppercase')
-    expect(within(metricsStrip).getByText('Hoàn tất · trang này')).toHaveClass('font-mono', 'uppercase')
+    expect(within(metricsStrip).getByText('Chờ vào')).toHaveClass('font-mono', 'uppercase')
+    expect(within(metricsStrip).getByText('Đang đỗ')).toHaveClass('font-mono', 'uppercase')
+    expect(within(metricsStrip).getByText('Hoàn tất')).toHaveClass('font-mono', 'uppercase')
+    expect(screen.queryByText(/trang này/i)).not.toBeInTheDocument()
 
     // All-status tab displays full totalElements (7), not truncated to page-size 5
     expect(screen.getByRole('tab', { name: /Tất cả trạng thái/i })).toHaveTextContent('7')
@@ -558,5 +559,27 @@ describe('SCR-034: MerchantBookingsPage (Table + Direct SCR-035 Link + Filters +
 
     expect(await screen.findByText('Không có quyền truy cập')).toBeInTheDocument()
     expect(screen.queryByRole('heading', { name: 'Điều phối đặt chỗ' })).not.toBeInTheDocument()
+  })
+
+  it('truncates long booking codes with ellipsis in the bookings table while keeping link to detail page', async () => {
+    const longCode = 'BK0B45E18A4FC8430094B943425C1A94DE'
+    mockGetData.mockResolvedValue({
+      content: [
+        {
+          ...sampleBookings[0],
+          id: 950,
+          bookingCode: longCode,
+        },
+      ],
+      currentPage: 0,
+      totalPages: 1,
+      totalElements: 1,
+    })
+
+    renderBookingsApp(<MerchantBookingsPage />)
+
+    const truncatedLink = await screen.findByRole('link', { name: 'BK0B45E18A4FC843...' })
+    expect(truncatedLink).toHaveAttribute('href', '/merchant/bookings/950')
+    expect(screen.queryByText(longCode)).not.toBeInTheDocument()
   })
 })

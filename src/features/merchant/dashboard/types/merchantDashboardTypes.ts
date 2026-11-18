@@ -22,12 +22,52 @@ export interface RevenueSeriesPointDto {
   period: string
   revenue: number
   bookingCount: number
+  onlineTransferRevenue?: number
+  counterQrRevenue?: number
+  cashRevenue?: number
+  onlineTransferCount?: number
+  counterQrCount?: number
+  cashBookingCount?: number
+}
+
+export interface LotRevenueBreakdownDto {
+  parkingLotId: number
+  onlineTransferGrossRevenue?: number
+  onlineTransferRevenue: number
+  onlineTransferCount: number
+  counterQrGrossRevenue?: number
+  counterQrRevenue: number
+  counterQrCount: number
+  cashRevenue: number
+  cashBookingCount: number
+  periodOnlineTransferRevenue: number
+  periodOnlineTransferCount: number
+  periodCounterQrRevenue: number
+  periodCounterQrCount: number
+  periodCashRevenue: number
+  periodCashBookingCount: number
 }
 
 export interface RevenueStatsResponse {
   totalNetRevenue: number
   totalGrossRevenue?: number
   currentWalletBalance?: number
+  completedBookings?: number | null
+  onlineTransferGrossRevenue?: number
+  onlineTransferNetRevenue?: number
+  onlineTransferCount?: number
+  periodOnlineTransferNetRevenue?: number
+  periodOnlineTransferCount?: number
+  counterQrGrossRevenue?: number
+  counterQrNetRevenue?: number
+  counterQrCount?: number
+  periodCounterQrNetRevenue?: number
+  periodCounterQrCount?: number
+  totalCashRevenue?: number
+  totalCashBookings?: number
+  periodCashRevenue?: number
+  periodCashBookings?: number
+  revenueByParkingLot?: LotRevenueBreakdownDto[]
   series: RevenueSeriesPointDto[]
 }
 

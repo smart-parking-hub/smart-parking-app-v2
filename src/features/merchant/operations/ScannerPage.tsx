@@ -362,7 +362,15 @@ export function MerchantScannerPage() {
           onClose={() => { setSuccess(''); scan.reset() }}
           onComplete={result => {
             setCompletedSettlement(result)
-            for (const queryKey of [['merchant-bookings'], ['merchant-booking'], ['real-bookings'], ['booking'], ['merchant-revenue']])
+            for (const queryKey of [
+              ['merchant-bookings'],
+              ['merchant-booking'],
+              ['real-bookings'],
+              ['booking'],
+              ['merchant-revenue'],
+              ['merchant-dashboard-summary'],
+              ['merchant-revenue-stats'],
+            ])
               void cache.invalidateQueries({ queryKey })
           }}
         />

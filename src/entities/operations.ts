@@ -100,6 +100,34 @@ export interface Settlement {
   parkingMinutes: number
   bookingStatus: string
 }
+export interface LotRevenueBreakdown {
+  parkingLotId: number
+  onlineTransferGrossRevenue?: number
+  onlineTransferRevenue: number
+  onlineTransferCount: number
+  counterQrGrossRevenue?: number
+  counterQrRevenue: number
+  counterQrCount: number
+  cashRevenue: number
+  cashBookingCount: number
+  periodOnlineTransferRevenue: number
+  periodOnlineTransferCount: number
+  periodCounterQrRevenue: number
+  periodCounterQrCount: number
+  periodCashRevenue: number
+  periodCashBookingCount: number
+}
+export interface RevenueSeriesPoint {
+  period: string
+  revenue: number
+  bookingCount: number
+  onlineTransferRevenue?: number
+  counterQrRevenue?: number
+  cashRevenue?: number
+  onlineTransferCount?: number
+  counterQrCount?: number
+  cashBookingCount?: number
+}
 export interface Revenue {
   totalGrossRevenue: number
   totalPlatformFee: number
@@ -107,7 +135,22 @@ export interface Revenue {
   currentWalletBalance: number
   completedBookings: number
   minWithdrawalAmount: number
-  series: { period: string; revenue: number; bookingCount: number }[]
+  onlineTransferGrossRevenue?: number
+  onlineTransferNetRevenue?: number
+  onlineTransferCount?: number
+  periodOnlineTransferNetRevenue?: number
+  periodOnlineTransferCount?: number
+  counterQrGrossRevenue?: number
+  counterQrNetRevenue?: number
+  counterQrCount?: number
+  periodCounterQrNetRevenue?: number
+  periodCounterQrCount?: number
+  totalCashRevenue?: number
+  totalCashBookings?: number
+  periodCashRevenue?: number
+  periodCashBookings?: number
+  revenueByParkingLot?: LotRevenueBreakdown[]
+  series: RevenueSeriesPoint[]
 }
 export interface Withdrawal {
   id: number

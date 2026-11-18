@@ -15,6 +15,7 @@ import {
 import {
   formatBookingDateTime,
   formatBookingMoney,
+  formatShortBookingCode,
   resolveBookingPlate,
   resolveVehicleTypeLabel,
 } from '../api/merchantBookingsApi'
@@ -71,9 +72,11 @@ export function MerchantBookingsTable({
                 <TableCell className="py-2.5 whitespace-nowrap">
                   <Link
                     to={`/merchant/bookings/${row.id}`}
-                    className="font-mono font-semibold text-slate-900 hover:text-[#9e4300] hover:underline underline-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d95f00] focus-visible:ring-offset-1 rounded transition-colors"
+                    className="inline-block max-w-[180px] truncate align-bottom font-mono font-semibold text-slate-900 hover:text-[#9e4300] hover:underline underline-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d95f00] focus-visible:ring-offset-1 rounded transition-colors"
                   >
-                    {row.status === 'PENDING_PAYMENT' ? `Số đơn ${bookingReference(row)}` : bookingReference(row)}
+                    {row.status === 'PENDING_PAYMENT'
+                      ? `Số đơn ${bookingReference(row)}`
+                      : formatShortBookingCode(bookingReference(row), 16)}
                   </Link>
                 </TableCell>
 

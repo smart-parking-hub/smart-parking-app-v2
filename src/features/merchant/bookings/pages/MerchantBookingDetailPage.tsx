@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import { RefreshCw } from 'lucide-react'
+import { Check, Copy, Eye, RefreshCw } from 'lucide-react'
 import { bookingReference } from '@/entities/booking/bookingReference'
 import { errorMessage } from '@/shared/api/resources'
 import { Alert } from '@/shared/components/Alert'
@@ -11,6 +11,7 @@ import { ErrorState } from '@/shared/components/ErrorState'
 import { Toast } from '@/shared/components/Toast'
 import {
   button,
+  Dialog,
   secondary,
   Workspace,
 } from '@/shared/components/Workspace'
@@ -19,7 +20,9 @@ import {
   computeRemainingBookingAmount,
   formatBookingDateTime,
   formatBookingMoney,
+  formatShortBookingCode,
   parseValidBookingRouteId,
+  resolveBookingPlate,
 } from '../api/merchantBookingsApi'
 import { MerchantBookingBarrierTimeline } from '../components/MerchantBookingBarrierTimeline'
 import {
@@ -38,6 +41,7 @@ export function MerchantBookingDetailPage() {
   const data = detailQuery.data
 
   const [copiedCode, setCopiedCode] = useState(false)
+  const [isTicketCodeModalOpen, setIsTicketCodeModalOpen] = useState(false)
   const [toast, setToast] = useState<MerchantBookingToastState | null>(null)
   const nextToastIdRef = useRef(1)
   const copyTimerRef = useRef<number | null>(null)
@@ -200,9 +204,31 @@ export function MerchantBookingDetailPage() {
             className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5 lg:gap-4"
           >
             <div className="rounded-2xl border border-brand-border bg-white p-4 md:p-5 shadow-2xs">
-              <p className="text-xs font-medium text-brand-muted">{data.status === 'PENDING_PAYMENT' ? 'Số đơn' : 'Mã vé'}</p>
-              <p className="mt-2.5 break-all font-mono font-sora text-xl md:text-2xl font-bold text-brand-navy">
-                {bookingReference(data)}
+              <div className="flex items-center justify-between gap-2">
+                <p className="text-xs font-medium text-brand-muted">
+                  {data.status === 'PENDING_PAYMENT' ? 'Số đơn' : 'Mã vé'}
+                </p>
+
+                <button
+                  type="button"
+                  data-testid="ticket-code-eye-button"
+                  onClick={() => setIsTicketCodeModalOpen(true)}
+                  aria-label={
+                    data.status === 'PENDING_PAYMENT'
+                      ? 'Xem chi tiết số đơn'
+                      : 'Xem chi tiết mã vé'
+                  }
+                  className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 bg-slate-50 text-slate-600 transition-colors hover:border-[#d95f00]/50 hover:bg-orange-50 hover:text-[#9e4300] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d95f00] focus-visible:ring-offset-1 cursor-pointer"
+                >
+                  <Eye className="h-4 w-4" aria-hidden="true" />
+                </button>
+              </div>
+
+              <p
+                data-testid="ticket-code-short-value"
+                className="mt-2.5 truncate font-mono font-sora text-xl md:text-2xl font-bold text-brand-navy"
+              >
+                {formatShortBookingCode(bookingReference(data), 14)}
               </p>
               <p className="mt-1.5 text-xs text-brand-muted tabular-nums">
                 Khởi tạo: {formatBookingDateTime(data.createdAt)}
@@ -263,6 +289,92 @@ export function MerchantBookingDetailPage() {
             </div>
           </div>
         </div>
+      )}
+
+      {data && isTicketCodeModalOpen && (
+        <Dialog
+          isOpen={isTicketCodeModalOpen}
+          onClose={() => setIsTicketCodeModalOpen(false)}
+          title={
+            data.status === 'PENDING_PAYMENT'
+              ? 'Chi tiết số đơn'
+              : 'Chi tiết mã vé'
+          }
+          description="Thông tin đầy đủ mã đặt chỗ dùng để đối soát và tra cứu tại trạm kiểm soát."
+          maxWidth="sm"
+        >
+          <div data-testid="ticket-code-detail-modal" className="space-y-4">
+            <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+              <p className="text-xs font-medium text-brand-muted">
+                {data.status === 'PENDING_PAYMENT'
+                  ? 'Số đơn đầy đủ'
+                  : 'Mã vé đầy đủ'}
+              </p>
+              <p
+                data-testid="ticket-code-modal-full-value"
+                className="mt-2 break-all select-all font-mono text-lg font-bold tracking-wide text-brand-navy"
+              >
+                {bookingReference(data)}
+              </p>
+            </div>
+
+            <dl className="space-y-2.5 text-sm">
+              <div className="flex items-center justify-between gap-3">
+                <dt className="text-brand-muted">Trạng thái</dt>
+                <dd>
+                  <Badge value={data.status} dot size="sm" />
+                </dd>
+              </div>
+              <div className="flex items-center justify-between gap-3">
+                <dt className="text-brand-muted">Khởi tạo</dt>
+                <dd className="font-mono text-xs font-semibold tabular-nums text-slate-800">
+                  {formatBookingDateTime(data.createdAt)}
+                </dd>
+              </div>
+              <div className="flex items-center justify-between gap-3">
+                <dt className="text-brand-muted">Biển kiểm soát</dt>
+                <dd className="font-mono font-semibold text-slate-900">
+                  {resolveBookingPlate(data)}
+                </dd>
+              </div>
+              <div className="flex items-start justify-between gap-3">
+                <dt className="shrink-0 text-brand-muted">Bãi đỗ</dt>
+                <dd className="text-right font-medium text-slate-900">
+                  {data.parkingLotName || '—'}
+                </dd>
+              </div>
+            </dl>
+
+            <div className="flex flex-wrap items-center justify-end gap-2.5 border-t border-slate-100 pt-4">
+              {data.status !== 'PENDING_PAYMENT' && (
+                <button
+                  type="button"
+                  onClick={() => void handleCopyBookingCode(data.bookingCode)}
+                  className={button}
+                >
+                  {copiedCode ? (
+                    <>
+                      <Check className="h-4 w-4" aria-hidden="true" />
+                      <span>Đã sao chép mã vé</span>
+                    </>
+                  ) : (
+                    <>
+                      <Copy className="h-4 w-4" aria-hidden="true" />
+                      <span>Sao chép mã vé</span>
+                    </>
+                  )}
+                </button>
+              )}
+              <button
+                type="button"
+                onClick={() => setIsTicketCodeModalOpen(false)}
+                className={secondary}
+              >
+                Đóng
+              </button>
+            </div>
+          </div>
+        </Dialog>
       )}
 
       {toast && (
