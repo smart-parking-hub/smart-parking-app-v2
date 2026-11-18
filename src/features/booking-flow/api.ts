@@ -18,7 +18,7 @@ export const bookingSchema = z.object({
 export type Booking = z.infer<typeof bookingSchema>
 export interface Vehicle { id: number; licensePlate: string; vehicleType: 'SEDAN_SUV'|'BUS_COACH'|'LIGHT_TRUCK'|'HEAVY_TRUCK'|'CONTAINER'; status: string }
 export interface Tariff { vehicleType: Vehicle['vehicleType']; basePricePerHour: number; surgeMultiplier: number; surgeStartTime: string | null; surgeEndTime: string | null; overtimePenaltyMultiplier: number }
-export interface Lot { id: number; name: string; address: string; status: string; merchantId: number; slots: { vehicleType: Vehicle['vehicleType']; availableCapacity: number; totalCapacity: number }[]; pricingRules: Tariff[]; images?: ParkingLotImage[] | null }
+export interface Lot { id: number; name: string; address: string; status: string; description?: string; merchantId: number; slots: { vehicleType: Vehicle['vehicleType']; availableCapacity: number; totalCapacity: number }[]; pricingRules: Tariff[]; images?: ParkingLotImage[] | null }
 export async function fetchBooking(id: number) { return bookingSchema.parse(await getData<unknown>(`/api/v1/bookings/${id}`)) }
 export async function fetchBookings() { const page = await getData<Page<unknown>>('/api/v1/bookings', { size: 100 }); return page.content.map(row => bookingSchema.parse(row)) }
 export interface BookingFilters {

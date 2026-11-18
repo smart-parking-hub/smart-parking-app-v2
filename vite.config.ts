@@ -3,10 +3,14 @@ import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 import basicSsl from '@vitejs/plugin-basic-ssl'
 import path from 'path'
+import fs from 'fs'
 
 // https://vite.dev/config/
 export default defineConfig(() => {
   const isHttps = process.argv.includes('--https') || process.env.HTTPS === 'true'
+  const hasBrowserImageCompression = fs.existsSync(
+    path.resolve(__dirname, 'node_modules/browser-image-compression')
+  )
 
   return {
     plugins: [
@@ -17,6 +21,9 @@ export default defineConfig(() => {
     resolve: {
       alias: {
         '@': path.resolve(__dirname, './src'),
+        ...(!hasBrowserImageCompression
+          ? { 'browser-image-compression': path.resolve(__dirname, './src/shared/utils/browserImageCompressionFallback.ts') }
+          : {}),
       },
     },
     server: {
