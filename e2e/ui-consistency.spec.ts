@@ -3,7 +3,7 @@ import { mockEmptyDriverWallet, mockShellReads } from './fixtures/payment-reads'
 
 const profile = { merchantId: 7, userId: 12, fullName: 'Chủ bãi kiểm thử', phone: '0901234567' }
 const lot = { id: 12, name: 'Bãi Tân Cảng', address: 'Thủ Đức', status: 'CHANGES_REQUESTED' }
-const tooEarly = 'Chưa đến giờ check-in (chỉ được vào bãi trước tối đa 30 phút)!'
+const tooEarly = 'Còn 1 giờ 15 phút đến giờ check-in.'
 const booking = {
   id: 41, bookingCode: 'BK-HIDDEN-UNTIL-DEPOSIT', merchantId: 7, parkingLotId: 12,
   parkingLotName: lot.name, vehicleId: 3, vehiclePlate: '51C-12345',
@@ -90,7 +90,14 @@ for (const width of [390, 1440]) {
       await submit.click()
       const warning = page.getByRole('dialog', { name: 'Chưa thể cho xe vào bãi' })
       await expect(warning).toBeVisible()
-      await expect(warning.getByRole('alert')).toHaveText(tooEarly)
+      const message = warning.getByRole('alert')
+      await expect(message).toHaveText(tooEarly)
+      const renderedLines = await message.evaluate(element => {
+        const range = document.createRange()
+        range.selectNodeContents(element)
+        return range.getClientRects().length
+      })
+      expect(renderedLines).toBe(1)
       const bounds = (await warning.boundingBox())!
       expect(Math.abs(bounds.x + bounds.width / 2 - width / 2)).toBeLessThan(2)
       expect(Math.abs(bounds.y + bounds.height / 2 - 450)).toBeLessThan(2)
