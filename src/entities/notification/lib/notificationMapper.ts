@@ -1,4 +1,3 @@
-import { sessionRole, type Role } from '@/features/auth/model/session'
 import type { BadgeProps } from '@/shared/components/Badge'
 import type {
   BackendNotificationDto,
@@ -113,18 +112,12 @@ export function resolveNotificationAction(
   targetType?: string | null,
   targetId?: number | null,
   type?: NotificationTypeEnum | string,
-  role?: Role | string | null,
+  role?: string | null,
 ): NotificationActionTarget | null {
   const normalizedTarget = targetType?.trim().toUpperCase() ?? ''
   const normalizedType = normalizeNotificationType(type)
   const validTargetId = typeof targetId === 'number' && targetId > 0 ? targetId : null
-  const explicitRole = typeof role === 'string' ? role.trim() : ''
-  const roleString =
-    explicitRole.length > 0
-      ? explicitRole
-      : typeof sessionRole === 'function'
-        ? sessionRole()
-        : null
+  const roleString = typeof role === 'string' ? role.trim() : ''
   const currentRole = typeof roleString === 'string' ? roleString.trim().toUpperCase() : ''
 
   if (!normalizedTarget || !validTargetId) {
@@ -219,10 +212,9 @@ export function resolveNotificationAction(
 
 export function mapNotificationDto(
   dto: BackendNotificationDto,
-  role?: Role | string | null,
+  role?: string | null,
 ): NotificationViewModel {
-  const explicitRole = typeof role === 'string' ? role.trim() : ''
-  const normalizedRole = explicitRole.length > 0 ? (explicitRole as Role) : undefined
+  const normalizedRole = typeof role === 'string' && role.trim() ? role.trim() : undefined
   const normalizedType = normalizeNotificationType(dto.type)
   const readAtIso = toIsoNotificationDate(dto.readAt)
   const createdAtIso = toIsoNotificationDate(dto.createdAt)

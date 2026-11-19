@@ -12,6 +12,7 @@ import {
   markAllAsReadApi,
   markAsReadApi,
 } from '../api/notificationApi'
+import { sessionRole } from '@/features/auth'
 import { getNotificationStoreSnapshot } from '../store/notificationStore'
 import type { NotificationPage } from '../types/notificationTypes'
 
@@ -29,7 +30,7 @@ export function useNotificationsListQuery(
 ) {
   return useQuery({
     queryKey: notificationQueryKeys.list(page, size),
-    queryFn: () => fetchNotificationsPageApi({ page, size }),
+    queryFn: () => fetchNotificationsPageApi({ page, size, role: sessionRole() }),
     staleTime: 30_000,
     placeholderData: keepPreviousData,
     retry: false,
