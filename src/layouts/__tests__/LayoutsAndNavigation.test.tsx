@@ -145,7 +145,7 @@ describe('Layouts and Navigation System Comprehensive Tests', () => {
       expect(screen.getByRole('link', { name: 'Tổng quan' })).toBeInTheDocument()
       expect(screen.getByRole('link', { name: 'Bản đồ tìm bãi' })).toBeInTheDocument()
       expect(screen.getByRole('link', { name: 'Vé & Đặt chỗ' })).toBeInTheDocument()
-      expect(screen.getByRole('link', { name: 'Chờ vào bãi' })).toBeInTheDocument()
+      expect(screen.queryByRole('link', { name: 'Chờ vào bãi' })).not.toBeInTheDocument()
       expect(screen.getByRole('link', { name: 'Lịch sử cước' })).toBeInTheDocument()
       expect(screen.getByRole('link', { name: 'Đội xe của tôi' })).toBeInTheDocument()
       expect(screen.getByRole('link', { name: 'Khiếu nại' })).toBeInTheDocument()

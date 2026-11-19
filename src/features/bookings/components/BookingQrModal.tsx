@@ -46,6 +46,8 @@ export function BookingQrModal({ booking, isOpen, onClose }: BookingQrModalProps
   const isCheckinReady = booking.status === 'PENDING_CHECKIN'
   const isParked = ['PARKING', 'OVERTIME'].includes(booking.status)
   const isQrAvailable = isCheckinReady || isParked
+  const checkInEarlyMinutes = booking.checkInEarlyMinutes ?? ((booking.schedulePolicyVersion ?? 0) === 0 ? 30 : 15)
+  const earliestCheckIn = bookingTimestamp(booking.expectedCheckInTime) - checkInEarlyMinutes * 60_000
 
   const handleCopy = () => {
     void navigator.clipboard.writeText(booking.bookingCode).then(() => {
@@ -125,7 +127,7 @@ export function BookingQrModal({ booking, isOpen, onClose }: BookingQrModalProps
                 <Clock className="w-4 h-4 text-[#d95f00] shrink-0" />
                 <span className="break-words">
                   Khung giờ check-in hợp lệ:{' '}
-                  <strong>{bookingTimeLabel(bookingTimestamp(booking.expectedCheckInTime) - 30 * 60000)}</strong> đến{' '}
+                  <strong>{bookingTimeLabel(earliestCheckIn)}</strong> đến{' '}
                   <strong>{bookingTimeLabel(booking.expiresAt)}</strong>
                 </span>
               </div>
