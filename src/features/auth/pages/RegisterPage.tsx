@@ -40,6 +40,13 @@ const ROLE_OPTIONS: SelectOption[] = [
 
 const MAGIC_LINK_PARAMS = ['email', 'otpCode', 'otp', 'autoVerify']
 
+function normalizeRegisterPhone(rawPhone: string): string {
+  const compact = rawPhone.replace(/[\s\-().]/g, '')
+  if (compact.startsWith('+84')) return `0${compact.slice(3)}`
+  if (compact.startsWith('84') && compact.length === 11) return `0${compact.slice(2)}`
+  return compact
+}
+
 export function RegisterPage({ mode = 'register' }: { mode?: 'login' | 'register' | 'forgot' }) {
   const navigate = useNavigate()
   const location = useLocation()
@@ -277,7 +284,8 @@ export function RegisterPage({ mode = 'register' }: { mode?: 'login' | 'register
       if (variables.isAutoVerify) {
         const values = form.getValues()
         const hasFullName = Boolean(values.fullName && values.fullName.trim().length >= 2)
-        const hasPhone = Boolean(values.phone && /^(0|\+84)[35789][0-9]{8}$/.test(values.phone.replace(/\s/g, '')))
+        const normalizedPhone = normalizeRegisterPhone(values.phone ?? '')
+        const hasPhone = /^(0)[35789][0-9]{8}$/.test(normalizedPhone)
         const isMerchant = values.role === 'MERCHANT'
         const hasBank = isMerchant ? Boolean(values.bankName && values.bankAccountNum && /^\d{6,25}$/.test(values.bankAccountNum)) : true
         const hasCitizen = isMerchant ? Boolean(values.citizenId && /^(?:[0-9]{9}|[0-9]{12})$/.test(values.citizenId.trim())) : true
@@ -630,7 +638,7 @@ export function RegisterPage({ mode = 'register' }: { mode?: 'login' | 'register
     setMagicLinkNotice(null)
     const email = (form.getValues('email') ?? '').trim().toLowerCase()
     const rawPhone = form.getValues('phone') ?? ''
-    const cleanPhone = rawPhone.replace(/\s+/g, '')
+    const cleanPhone = normalizeRegisterPhone(rawPhone)
 
     if (mode === 'register') {
       if (!cleanPhone || !/^(0|\+84)[35789][0-9]{8}$/.test(cleanPhone)) {
@@ -748,10 +756,7 @@ export function RegisterPage({ mode = 'register' }: { mode?: 'login' | 'register
             {...form.register(name, {
               required: name !== 'citizenId' && name !== 'confirmPassword',
               ...options,
-              ...(name === 'phone' ? { setValueAs: (value: string) => {
-                const compact = (value ?? '').replace(/\s/g, '')
-                return mode === 'register' && compact.startsWith('+84') ? `0${compact.slice(3)}` : compact
-              } } : {}),
+              ...(name === 'phone' ? { setValueAs: (value: string) => mode === 'register' ? normalizeRegisterPhone(value ?? '') : (value ?? '').replace(/\s/g, '') } : {}),
               ...(['fullName', 'citizenId', 'bankAccountNum'].includes(name) ? { setValueAs: (value: string) => (value ?? '').trim() } : {}),
             })}
           />

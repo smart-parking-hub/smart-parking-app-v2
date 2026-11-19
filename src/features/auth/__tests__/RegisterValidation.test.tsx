@@ -202,6 +202,22 @@ it('displays duplicate phone rejection when requesting OTP and returns to info s
   }))
 })
 
+it.each(['0912-345-678', '0912.345.678', '(0912) 345 678', '84912345678'])(
+  'normalizes phone format %s before sending register OTP', async phone => {
+    const request = vi.spyOn(apiClient, 'request').mockResolvedValue(delivery)
+    mount()
+    fill('Họ và tên', 'Test Driver')
+    fill('Số điện thoại', phone)
+    await userEvent.click(next())
+    fill('Email nhận mã xác thực', 'newdriver@example.test')
+    await userEvent.click(screen.getByRole('button', { name: 'Gửi mã qua email' }))
+    await waitFor(() => expect(request).toHaveBeenCalledWith(expect.objectContaining({
+      url: '/api/v1/auth/otp/send',
+      data: { email: 'newdriver@example.test', phone: '0912345678' },
+    })))
+  },
+)
+
 it('shows duplicate CCCD rejection on final submission and focuses citizenId field', async () => {
   const message = 'CCCD/CMND đã tồn tại trong hệ thống!'
   const request = vi.spyOn(apiClient, 'request').mockResolvedValue(delivery)
