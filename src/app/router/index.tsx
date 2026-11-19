@@ -109,11 +109,38 @@ const MyBookingsPage = lazy(() =>
     default: module.MyBookingsPage,
   })),
 )
-const VirtualQueuesPage = lazy(() =>
-  import('@/features/queues').then((module) => ({
-    default: module.VirtualQueuesPage,
-  })),
-)
+function VirtualQueuesPage() {
+  return (
+    <section
+      aria-label="Tính năng hàng đợi đang tạm khóa"
+      className="mx-auto my-10 max-w-xl rounded-2xl border border-slate-200 bg-white p-6 text-center shadow-xs sm:p-8"
+    >
+      <span className="inline-flex rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-800">
+        Tạm khóa truy cập
+      </span>
+      <h1 className="mt-4 font-sora text-xl font-bold text-slate-900">
+        Tính năng Chờ vào bãi (Hàng đợi ảo) đang tạm khóa
+      </h1>
+      <p className="mt-2 text-sm leading-relaxed text-slate-600">
+        Trang hàng đợi ảo hiện không mở sử dụng. Bạn vui lòng đặt chỗ trực tiếp tại các bãi đỗ còn chỗ trống hoặc kiểm tra vé hiện có.
+      </p>
+      <div className="mt-6 flex flex-wrap justify-center gap-3">
+        <a
+          href="/parking"
+          className="inline-flex h-10 items-center justify-center rounded-xl bg-brand-primary px-4 text-xs font-semibold text-white hover:bg-brand-primary-hover"
+        >
+          Tìm bãi đỗ xe
+        </a>
+        <a
+          href="/dashboard"
+          className="inline-flex h-10 items-center justify-center rounded-xl border border-slate-200 bg-white px-4 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+        >
+          Về trang Tổng quan
+        </a>
+      </div>
+    </section>
+  )
+}
 const DriverWalletPage = lazy(() => import('@/features/driver-wallet').then(module => ({ default: module.DriverWalletPage })))
 const DriverPaymentsPage = lazy(() =>
   import('@/features/payments').then((module) => ({

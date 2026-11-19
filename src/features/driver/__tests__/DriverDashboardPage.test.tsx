@@ -77,11 +77,11 @@ describe('SCR-014: Driver Dashboard Home (Tổng quan Tài xế)', () => {
       screen.getByText(/HẠ TẦNG ĐIỀU PHỐI ĐIỂM ĐỖ THÔNG MINH/i),
     ).toBeInTheDocument()
 
-    // 2. Bento Grid 4 KPIs
+    // 2. Bento Grid 3 KPIs
     expect(screen.getByText(/03 Phương Tiện/i)).toBeInTheDocument()
     expect(screen.getByText(/48 Lượt/i)).toBeInTheDocument()
     expect(screen.getByText(/01 Chuyến Đang Đỗ/i)).toBeInTheDocument()
-    expect(screen.getByText(/00 Suất Chờ/i)).toBeInTheDocument()
+    expect(screen.queryByText(/00 Suất Chờ/i)).not.toBeInTheDocument()
 
     // 3. Active Trip Card details
     expect(screen.getByRole('heading', { name: 'Chuyến đỗ đang hoạt động' })).toBeInTheDocument()
