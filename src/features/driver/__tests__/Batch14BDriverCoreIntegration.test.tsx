@@ -172,11 +172,11 @@ describe('BATCH-14B: Driver Core — Search, Detail & Bookings Integration', () 
     const searchInput = screen.getByPlaceholderText(/Tra cứu nhanh biển số, mã đặt chỗ/i)
     expect(searchInput).toBeInTheDocument()
 
-    // KPI grid: 4 stat cards
+    // KPI grid: 3 stat cards
     expect(screen.getByText(/03 Phương Tiện/i)).toBeInTheDocument()
     expect(screen.getByText(/48 Lượt Đỗ/i)).toBeInTheDocument()
     expect(screen.getByText(/Chuyến Đang Đỗ/i)).toBeInTheDocument()
-    expect(screen.getByText(/Suất Chờ/i)).toBeInTheDocument()
+    expect(screen.queryByText(/Suất Chờ/i)).not.toBeInTheDocument()
 
     // Active trip card
     expect(screen.getByRole('heading', { name: 'Chuyến đỗ đang hoạt động' })).toBeInTheDocument()

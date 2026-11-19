@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { ArrowRight, ListPlus, Activity } from 'lucide-react'
+import { ArrowRight, Activity } from 'lucide-react'
 
 interface DriverWelcomeBannerProps {
   driverName: string
@@ -44,13 +44,6 @@ export function DriverWelcomeBanner({
           >
             <span>Tìm bãi đỗ gần nhất</span>
             <ArrowRight className="w-3.5 h-3.5" />
-          </Link>
-          <Link
-            to="/queues"
-            className="w-full inline-flex items-center justify-center gap-2 h-10 px-4 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 font-medium text-xs transition-colors border border-slate-700 cursor-pointer text-center"
-          >
-            <ListPlus className="w-3.5 h-3.5" />
-            <span>Đợi slot</span>
           </Link>
         </div>
       </div>
