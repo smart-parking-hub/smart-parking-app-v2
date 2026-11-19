@@ -17,6 +17,7 @@ export const DEFAULT_NOTIFICATION_PAGE_SIZE = 20
 export async function fetchNotificationsPageApi(params?: {
   page?: number
   size?: number
+  role?: string | null
 }): Promise<NotificationPage> {
   const safePage = Math.max(1, params?.page ?? 1)
   const safeSize = Math.max(1, params?.size ?? DEFAULT_NOTIFICATION_PAGE_SIZE)
@@ -46,7 +47,7 @@ export async function fetchNotificationsPageApi(params?: {
     ...adapted,
     currentPage: resolvedPage,
     pageSize: safeSize,
-    content: adapted.content.map(mapNotificationDto),
+    content: adapted.content.map((dto) => mapNotificationDto(dto, params?.role)),
   }
 }
 
