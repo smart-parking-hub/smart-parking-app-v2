@@ -177,6 +177,56 @@ it('displays duplicate email rejection when requesting OTP without claiming deli
   expect(screen.queryByText('Mã xác thực đã được gửi')).not.toBeInTheDocument()
   expect(screen.getByRole('button', { name: 'Gửi mã qua email' })).toBeEnabled()
   expect(request).toHaveBeenCalledExactlyOnceWith(expect.objectContaining({
-    url: '/api/v1/auth/otp/send', data: { email: 'existing@example.test' },
+    url: '/api/v1/auth/otp/send',
+    data: { email: 'existing@example.test', phone: '0901234567' },
   }))
+})
+
+it('displays duplicate phone rejection when requesting OTP and returns to info step with focus on phone', async () => {
+  const message = 'Số điện thoại đã liên kết với tài khoản khác. Vui lòng đăng nhập hoặc dùng số khác.'
+  const request = vi.spyOn(apiClient, 'request').mockRejectedValue(new Error(message))
+  mount()
+  fill('Họ và tên', 'Test Driver')
+  fill('Số điện thoại', '0901234567')
+  await userEvent.click(next())
+  fill('Email nhận mã xác thực', 'newdriver@example.test')
+  await userEvent.click(screen.getByRole('button', { name: 'Gửi mã qua email' }))
+  const alerts = await screen.findAllByText(message)
+  expect(alerts.length).toBeGreaterThanOrEqual(1)
+  expect(screen.getByLabelText('Số điện thoại')).toBeVisible()
+  expect(screen.getByLabelText('Số điện thoại')).toHaveFocus()
+  expect(screen.queryByText('Mã xác thực đã được gửi')).not.toBeInTheDocument()
+  expect(request).toHaveBeenCalledExactlyOnceWith(expect.objectContaining({
+    url: '/api/v1/auth/otp/send',
+    data: { email: 'newdriver@example.test', phone: '0901234567' },
+  }))
+})
+
+it.each(['0912-345-678', '0912.345.678', '(0912) 345 678', '84912345678'])(
+  'normalizes phone format %s before sending register OTP', async phone => {
+    const request = vi.spyOn(apiClient, 'request').mockResolvedValue(delivery)
+    mount()
+    fill('Họ và tên', 'Test Driver')
+    fill('Số điện thoại', phone)
+    await userEvent.click(next())
+    fill('Email nhận mã xác thực', 'newdriver@example.test')
+    await userEvent.click(screen.getByRole('button', { name: 'Gửi mã qua email' }))
+    await waitFor(() => expect(request).toHaveBeenCalledWith(expect.objectContaining({
+      url: '/api/v1/auth/otp/send',
+      data: { email: 'newdriver@example.test', phone: '0912345678' },
+    })))
+  },
+)
+
+it('shows duplicate CCCD rejection on final submission and focuses citizenId field', async () => {
+  const message = 'CCCD/CMND đã tồn tại trong hệ thống!'
+  const request = vi.spyOn(apiClient, 'request').mockResolvedValue(delivery)
+  await readyToSubmit({ citizenId: '079123456789' })
+  request.mockRejectedValueOnce(new Error(message))
+  await userEvent.click(screen.getByRole('button', { name: 'Tạo tài khoản' }))
+  await waitFor(() => expect(screen.getByLabelText('CCCD / CMND')).toBeVisible())
+  expect(screen.getByLabelText('CCCD / CMND')).toHaveFocus()
+  expect(screen.getByLabelText('CCCD / CMND')).toHaveAttribute('aria-invalid', 'true')
+  expect(screen.getByLabelText('CCCD / CMND')).toHaveAccessibleDescription(expect.stringContaining(message))
+  expect(screen.queryByText('Đăng ký thành công!')).not.toBeInTheDocument()
 })

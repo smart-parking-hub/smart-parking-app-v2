@@ -26,7 +26,7 @@ it('sends normalized email only and uses resend cooldown rather than code expiry
   const request = vi.spyOn(apiClient, 'request').mockResolvedValue({ data: { data: { expiresInSeconds: 300, resendAfterSeconds: 60 } } })
   await mount(); fireEvent.change(emailInput(), { target: { value: 'Driver@Example.test' } })
   await userEvent.click(screen.getByRole('button', { name: 'Gửi mã qua email' }))
-  await waitFor(() => expect(request).toHaveBeenCalledWith(expect.objectContaining({ url: '/api/v1/auth/otp/send', data: { email: 'driver@example.test' } })))
+  await waitFor(() => expect(request).toHaveBeenCalledWith(expect.objectContaining({ url: '/api/v1/auth/otp/send', data: { email: 'driver@example.test', phone: '0901234567' } })))
   expect(await screen.findByText('Mã xác thực đã được gửi')).toBeInTheDocument()
   expect(screen.getByText('driver@example.test')).toBeInTheDocument()
   expect(screen.getByRole('button', { name: 'Gửi lại sau 60s' })).toBeDisabled()
