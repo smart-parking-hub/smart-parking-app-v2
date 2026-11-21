@@ -1,5 +1,8 @@
 # Production retest: modal interaction and viewport coverage
 
+Later booking acceptance and the follow-up modal fix are recorded in the final
+section. Earlier backend/blocker findings below are historical observations.
+
 - Owner: SmartParkingHub frontend/backend maintainers
 - Last verified: 2026-11-21, UTC+7
 - Baseline: FE `ca439a8` (PR #118); BE `6d59f46` (PR #84).
@@ -92,3 +95,32 @@ Fresh host/config inspection found:
 Booking remains **OPEN/P0**. Do not restore #82's required URL variables until
 the actual routes and credentials are provisioned and verified. Do not bypass
 vehicle ownership or expose internal RPC endpoints publicly to make the UI pass.
+
+## Follow-up: Booking works, detail modal held an outdated snapshot
+
+Backend PR #85 released `a841f21` through successful CI/CD `44916304693`;
+independent verification reports 7/7 CURRENT, pending=0. VPS3 is authenticated
+into the expected Tailnet and the private Identity/Payment/Booking routes were
+verified from the caller containers, including a real owned-vehicle read.
+
+The live UI created booking 1236 with HTTP 201 / PENDING_PAYMENT. Cancellation
+returned HTTP 200 / CANCELLED, refund 0 / NONE. Availability moved 4 to 3 and
+back to 4. No payment was initiated. The open detail modal nevertheless retained
+its old payment/cancel actions after the server had cancelled the booking.
+
+`MyBookingsPage` passed the selected list snapshot as the authoritative `booking`
+prop to `BookingStatusPanel`. That disables its detail query for a pending
+booking; invalidating the query after cancellation cannot update the snapshot.
+The modal now passes only `bookingId`, letting the existing TanStack detail query
+read current state and participate in the existing invalidation/polling flow.
+Its heading reads the same query cache, so the order/ticket reference changes
+with server status too. Header and content observers share one query key.
+Deep links and other callers are unchanged; no new state store, API, permission,
+fee, refund rule or visual layout is introduced.
+
+Two component regressions fail before the fix: cancellation while details stay
+open, and opening a stale pending row that the server has already cancelled.
+Browser regressions at 390px/1440px keep the list stale deliberately, assert the
+fresh detail read, perform the existing confirmation flow and verify the stale
+payment/cancel actions disappear. Final head CI and repeated live acceptance
+are recorded in the follow-up PR receipt and private retest report.

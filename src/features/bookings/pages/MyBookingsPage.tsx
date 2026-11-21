@@ -163,6 +163,15 @@ export function MyBookingsPage() {
     refetchInterval: 10000,
   })
 
+  const detailModalId = detailModalBooking?.id
+  const detailQuery = useQuery({
+    queryKey: ['booking', detailModalId],
+    queryFn: () => fetchBooking(detailModalId!),
+    enabled: detailModalId !== undefined,
+    retry: false,
+  })
+  const currentModalBooking = detailModalBooking && (detailQuery.data ?? detailModalBooking)
+
   const scrolledSelection = useRef<number | null>(null)
   useEffect(() => {
     if (!selected.data || scrolledSelection.current === selectedId) return
@@ -926,9 +935,9 @@ export function MyBookingsPage() {
       )}
 
       {/* Modal hiển thị chi tiết vé ra giữa màn hình */}
-      {detailModalBooking && (
+      {currentModalBooking && (
         <Modal
-          isOpen={Boolean(detailModalBooking)}
+          isOpen={Boolean(currentModalBooking)}
           onClose={() => {
             setDetailModalBooking(null)
             setExpandedId(null)
@@ -939,19 +948,18 @@ export function MyBookingsPage() {
           <div className="flex flex-col max-h-[90vh] overflow-hidden">
             <div className="border-b border-slate-100 px-6 py-4 shrink-0 pr-12">
               <h3 className="font-sora text-lg font-semibold text-slate-900 break-all">
-                Chi tiết lượt đặt chỗ {bookingReference(detailModalBooking)}
+                Chi tiết lượt đặt chỗ {bookingReference(currentModalBooking)}
               </h3>
               <p className="text-xs text-slate-500 mt-1">
-                Bãi đỗ: <strong className="text-slate-800">{detailModalBooking.parkingLotName || `#${detailModalBooking.parkingLotId}`}</strong>
-                {detailModalBooking.vehiclePlate && (
-                  <> · Biển số: <strong className="font-mono text-slate-800">{detailModalBooking.vehiclePlate}</strong></>
+                Bãi đỗ: <strong className="text-slate-800">{currentModalBooking.parkingLotName || `#${currentModalBooking.parkingLotId}`}</strong>
+                {currentModalBooking.vehiclePlate && (
+                  <> · Biển số: <strong className="font-mono text-slate-800">{currentModalBooking.vehiclePlate}</strong></>
                 )}
               </p>
             </div>
             <div className="flex-1 overflow-y-auto px-6 py-4">
               <BookingStatusPanel
-                bookingId={detailModalBooking.id}
-                booking={detailModalBooking}
+                bookingId={currentModalBooking.id}
                 embedded
                 hideReview
               />
