@@ -1,7 +1,7 @@
 # Vehicle current parking
 
 - Owner: SPH frontend
-- Last verified: 2026-11-18
+- Last verified: 2026-11-21
 - Screen: SCR-020, `/vehicles` and existing vehicle route aliases
 
 ## Behavior and contracts
@@ -30,6 +30,19 @@ Parking reads run through TanStack Query, refresh every 15 seconds while the scr
 `VehiclesTable` stays in `features/vehicles/components`: it is specific to fleet management. The query is composed in `VehiclesPage`, and the typed, validated read stays in `vehicleDataApi`. Existing booking schema is reused via the booking-flow public export. No dependency, route, permission or shared token changes.
 
 ## Verification and limitations
+
+### 2026-11-21 vehicle editor viewport regression
+
+The create/edit editor now scrolls only its field/error area and retains a
+visible header and action row within the existing Modal. The vehicle schema,
+ownership, API payloads and save/retry behavior are unchanged. Eight browser
+cases cover create/edit at 320×568, 390×844, 1366×640 and 1440×900, including
+validation and a rejected save followed by a successful retry. Buttons are
+measured before the browser test can scroll them into view. All 29 existing
+vehicle tests pass. The production QA reassessment and current release evidence
+are in `docs/06-quality/production-qa-reassessment-20261121.md`.
+
+### Earlier current-parking verification
 
 - `npm run typecheck`: passed. `npm run build`: passed (TypeScript project build and Vite production bundle).
 - `npm run lint`: passed with zero errors/warnings.

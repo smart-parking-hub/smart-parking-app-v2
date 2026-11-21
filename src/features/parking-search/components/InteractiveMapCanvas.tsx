@@ -35,6 +35,7 @@ import {
 } from '@/shared/maps'
 import { createParkingMarkerElement } from '@/entities/parking-lot/parkingMapMarker'
 import type { ParkingLotItem } from '../types/parkingSearchTypes'
+import { mountClusteredParkingMarkers } from '../map/clusteredParkingMarkers'
 
 interface Props {
   lots: ParkingLotItem[]
@@ -491,7 +492,10 @@ export function InteractiveMapCanvas({
     const cleanups: (() => void)[] = []
     let activePopup: maplibregl.Popup | null = null
 
-    for (const lot of lots.filter(isValidCoordinates)) {
+    const removeClusteredMarkers = mountClusteredParkingMarkers(instance,
+      lots.filter(lot => lot.id !== selectedLot?.id), lot => select.current(lot))
+
+    for (const lot of lots.filter(lot => lot.id === selectedLot?.id && isValidCoordinates(lot))) {
       const isSelected = lot.id === selectedLot?.id
       const pinElement = createParkingMarkerElement({
         hourlyRate: lot.hourlyRate,
@@ -558,6 +562,7 @@ export function InteractiveMapCanvas({
     }
 
     return () => {
+      removeClusteredMarkers()
       activePopup?.remove()
       for (const cleanup of cleanups) {
         cleanup()
