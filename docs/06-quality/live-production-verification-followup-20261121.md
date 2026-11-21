@@ -59,5 +59,13 @@ dimensions, route handoff, selector state, browser versions and images in the PR
 receipt and private input report. Raw credentials/account screenshots remain
 ignored locally. A passing CI or form render is not a real financial transaction.
 
+The first full head CI caught an existing withdrawal browser-test race: after an
+invalid submit, React Hook Form's deferred error-focus pass moved focus to the
+empty account number while the test was already searching for a bank. Its popup
+correctly closed on blur. The test now completes and validates those preceding
+invalid fields before querying the bank. It retains no-match, invalid-bank,
+keyboard selection, submission payload and responsive assertions; no sleep,
+timeout increase, retry increase or production financial logic change is added.
+
 Rollback: revert this FE patch and use the normal Vercel integration. No database,
 provider credential, backend deployment or volume rollback is involved.
