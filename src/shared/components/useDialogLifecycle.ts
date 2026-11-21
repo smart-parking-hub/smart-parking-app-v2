@@ -13,6 +13,7 @@ export function useDialogLifecycle(
 
   useLayoutEffect(() => {
     const element = dialogRef.current
+    if (!isOpen || !element) return
     const previous = returnFocusRef?.current ?? document.activeElement
     const previousOverflow = document.body.style.overflow
     const keepFocusInside = (event: KeyboardEvent) => {

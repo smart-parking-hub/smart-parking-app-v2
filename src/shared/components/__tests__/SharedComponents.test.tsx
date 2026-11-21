@@ -160,6 +160,25 @@ describe('Shared Design System Components', () => {
       await Promise.resolve()
       expect(screen.getByRole('textbox', { name: 'Điểm focus sau đóng' })).toHaveFocus()
     })
+
+    it('does not restore focus for a modal that was never opened', async () => {
+      function Example() {
+        const [mounted, setMounted] = useState(false)
+        return <><button onClick={() => setMounted(true)}>Gắn modal đóng</button>
+          <input aria-label="Đang nhập" /><button onClick={() => setMounted(false)}>Bỏ modal đóng</button>
+          {mounted && <Modal isOpen={false} onClose={vi.fn()} title="Không mở">Nội dung</Modal>}
+        </>
+      }
+      render(<Example />)
+      const mount = screen.getByRole('button', { name: 'Gắn modal đóng' })
+      mount.focus()
+      fireEvent.click(mount)
+      const input = screen.getByRole('textbox', { name: 'Đang nhập' })
+      input.focus()
+      fireEvent.click(screen.getByRole('button', { name: 'Bỏ modal đóng' }))
+      await Promise.resolve()
+      expect(input).toHaveFocus()
+    })
   })
 
   describe('Input Component', () => {
