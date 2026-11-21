@@ -10,7 +10,7 @@ export function VehiclesTable({ vehicles, parking, parkingLoading, onEdit, onDea
 }) {
   const action = 'inline-flex min-h-9 items-center justify-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition-all duration-150 cursor-pointer shadow-2xs hover:shadow-xs active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-orange'
   return <div role="region" aria-label="Bảng phương tiện và bãi hiện tại" tabIndex={0} className="overflow-x-auto focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-orange">
-    <table className="w-full min-w-[1100px] text-left text-sm">
+    <table className="w-full min-w-[1100px] text-left text-sm lg:min-w-full lg:[&_th]:px-3 lg:[&_td]:px-3 xl:[&_th]:px-5 xl:[&_td]:px-5">
       <caption className="sr-only">Danh sách phương tiện đã đăng ký</caption>
       <thead className="bg-brand-navy text-white">
         <tr>{['Biển số', 'Loại xe', 'Nhãn hiệu / Model', 'Trọng tải', 'Bãi hiện tại', 'Trạng thái', 'Thao tác'].map(label =>
@@ -30,7 +30,7 @@ export function VehiclesTable({ vehicles, parking, parkingLoading, onEdit, onDea
           <td className="px-5 py-4">{vehicleTypes[vehicle.vehicleType]}</td>
           <td className="max-w-56 break-words px-5 py-4 text-brand-muted">{vehicle.brandModel || '—'}</td>
           <td className="whitespace-nowrap px-5 py-4 font-semibold tabular-nums">{vehicle.weightTon} tấn</td>
-          <td className="min-w-52 max-w-72 px-5 py-4">
+          <td className="min-w-52 max-w-72 px-5 py-4 lg:min-w-40 xl:min-w-52">
             {current ? <div className="flex items-start gap-2">
               <MapPin size={16} aria-hidden="true" className="mt-0.5 shrink-0 text-brand-orange-ink" />
               <div className="break-words"><p className="font-semibold text-brand-navy">{current.parkingLotName?.trim() || `Bãi #${current.parkingLotId}`}</p>
