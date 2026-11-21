@@ -92,7 +92,7 @@ export function DriverHeader() {
             className="driver-header-brand flex shrink-0 items-center gap-3"
           >
             <img
-              src="/image-smart-parking-hub.png"
+              src="/image-smart-parking-hub-168.png"
               alt="Smart Parking Hub Logo"
               className="hidden h-10 w-10 rounded-xl object-contain sm:flex"
             />

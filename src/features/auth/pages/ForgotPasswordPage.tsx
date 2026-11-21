@@ -468,7 +468,7 @@ export function ForgotPasswordPage() {
               className="inline-flex items-center gap-3.5 font-sora text-xl sm:text-2xl font-bold text-black mb-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d95f00] rounded-2xl p-1.5 transition-all hover:scale-105 group"
             >
               <img
-                src="/image-smart-parking-hub.png"
+                src="/image-smart-parking-hub-168.png"
                 alt="Smart Parking Hub Logo"
                 className="w-11 h-11 sm:w-12 sm:h-12 rounded-2xl object-contain shrink-0 shadow-md ring-1 ring-white/60 group-hover:shadow-lg transition-all"
               />

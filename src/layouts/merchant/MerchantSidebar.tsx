@@ -98,7 +98,7 @@ export function MerchantSidebar({ mobileOpen = false, onCloseMobile, collapsed =
               onClick={onCloseMobile}
             >
               <img
-                src="/image-smart-parking-hub.png"
+                src="/image-smart-parking-hub-168.png"
                 alt="Smart Parking Hub Logo"
                 className="w-9 h-9 rounded-xl object-contain shrink-0"
               />

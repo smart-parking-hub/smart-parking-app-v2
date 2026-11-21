@@ -53,7 +53,7 @@ export function AccessPage({ notFound = false }: { notFound?: boolean }) {
             aria-label="SmartTruck Hub"
           >
             <img
-              src="/image-smart-parking-hub.png"
+              src="/image-smart-parking-hub-168.png"
               alt="Smart Parking Hub Logo"
               className="size-8 sm:size-9 rounded-xl object-contain shrink-0 shadow-sm ring-1 ring-white/20 group-hover:shadow-md transition-all"
             />

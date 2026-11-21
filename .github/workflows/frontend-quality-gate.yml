@@ -63,6 +63,7 @@ jobs:
           e2e/booking-schedule.spec.ts
           e2e/booking-rate-limit.spec.ts
           e2e/ui-consistency.spec.ts
+          e2e/public-mobile-performance.spec.ts
           e2e/driver-dashboard-real-data.spec.ts
           e2e/merchant-slots.spec.ts
 

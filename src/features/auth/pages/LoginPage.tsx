@@ -19,7 +19,7 @@ export function LoginPage() {
             className="inline-flex items-center gap-2.5 font-sora text-lg sm:text-xl font-bold text-black mb-2 sm:mb-2.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d95f00] rounded-xl p-1 transition-all hover:scale-105 group"
           >
             <img
-              src="/image-smart-parking-hub.png"
+              src="/image-smart-parking-hub-168.png"
               alt="Smart Parking Hub Logo"
               className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl object-contain shrink-0 shadow-sm ring-1 ring-white/60 group-hover:shadow-md transition-all"
             />

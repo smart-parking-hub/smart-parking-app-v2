@@ -61,11 +61,22 @@ export function AuthLayout({ children }: AuthLayoutProps) {
       <ScrollToTop />
 
       {/* 1. Ảnh bãi đỗ xe chụp thực tế trải rộng toàn màn hình (full-bleed), tĩnh 100% */}
-      <img
-        src="/images/auth-parking-lot-bg.jpg"
-        alt="SmartTruck Hub Commercial Logistics Parking Depot"
-        className="fixed inset-0 h-full w-full object-cover object-[30%_center] sm:object-center scale-100"
-      />
+      <picture className="fixed inset-0 h-full w-full">
+        <source
+          type="image/webp"
+          srcSet="/images/auth-parking-lot-bg-720.webp 720w, /images/auth-parking-lot-bg.webp 1376w"
+          sizes="(min-aspect-ratio: 43/24) 100vw, 179.167vh"
+        />
+        <img
+          src="/images/auth-parking-lot-bg.jpg"
+          alt="SmartTruck Hub Commercial Logistics Parking Depot"
+          width={1376}
+          height={768}
+          decoding="async"
+          fetchPriority="high"
+          className="fixed inset-0 h-full w-full object-cover object-[30%_center] sm:object-center scale-100"
+        />
+      </picture>
 
       {/* Lớp phủ gradient mờ điện ảnh để card modal và thông điệp nổi bật rõ nét */}
       <div className="fixed inset-0 bg-gradient-to-l from-slate-950/45 via-slate-950/20 to-transparent pointer-events-none" />
