@@ -37,7 +37,7 @@ export function VehiclesTable({ vehicles, parking, parkingLoading, onEdit, onDea
                 {current.parkingLotAddress && <p className="mt-1 text-xs text-brand-muted">{current.parkingLotAddress}</p>}
                 {current.physicalSlotCode && <p className="mt-1 text-xs text-brand-muted">Vị trí: {current.physicalSlotCode}</p>}
               </div>
-            </div> : <span className="text-xs text-brand-muted">{parkingLoading ? 'Đang tải bãi…' : parking ? '—' : 'Chưa xác định'}</span>}
+            </div> : <span className="text-xs text-brand-muted">{parkingLoading ? 'Đang tải bãi…' : parking ? 'Chưa vào bãi' : 'Chưa xác định'}</span>}
           </td>
           <td className="px-5 py-4">
             <div className="flex flex-col items-start gap-2">

@@ -12,7 +12,7 @@ The fleet table adds **Bãi hiện tại**, displaying the booking's lot name, a
 
 `GET /api/v1/bookings` is called with each of `status=PARKING` and `status=OVERTIME`, `size=100`, and `sort=createdAt,desc`. All pages of each filtered result are read. Only these two statuses, without `checkOutTime`, represent current parking. `AWAITING_FINAL_PAYMENT` already has a checkout timestamp and is excluded along with reservations and historical trips. These are driver-owned reads; backend role/ownership checks remain authoritative.
 
-The operational badges are **Đang đỗ**, **Đỗ quá giờ**, and **Không đỗ tại bãi**. Existing **Đang sử dụng / Ngừng sử dụng** badges and all create/edit/deactivate actions remain available. No vehicle status enum or backend transition changes.
+The operational badges are **Đang đỗ**, **Đỗ quá giờ**, and **Không đỗ tại bãi**. When parking data has loaded successfully and a vehicle has no active parking booking, its current-lot cell says **Chưa vào bãi**; loading and failed reads keep their separate states. Existing **Đang sử dụng / Ngừng sử dụng** badges and all create/edit/deactivate actions remain available. No vehicle status enum or backend transition changes.
 
 Parking reads run through TanStack Query, refresh every 15 seconds while the screen is active, and accept cancellation. They run only when the fleet is nonempty. Loading shows **Đang tải bãi…**; failed reads show **Chưa xác định**, an error notice and retry. An error, including a failed background refresh, never presents the vehicle as outside the lot. Fleet reads and actions remain independent of parking availability.
 
