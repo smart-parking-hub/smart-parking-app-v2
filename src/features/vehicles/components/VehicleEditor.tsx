@@ -49,8 +49,8 @@ export function VehicleEditor({ vehicle, onClose, onSaved }: {
   const describedBy = (field: keyof VehicleInput) => `${id}-${field}-hint${errors[field] ? ` ${id}-${field}-error` : ''}`
 
   return (
-    <Modal isOpen onClose={onClose} maxWidth="xl">
-      <div className="mb-6 flex items-start gap-3">
+    <Modal isOpen onClose={onClose} maxWidth="xl" className="flex flex-col overflow-hidden p-0">
+      <div className="flex shrink-0 items-start gap-3 px-6 pb-6 pt-6 pr-14">
         <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-brand-orange/10 text-brand-orange-ink">
           <Truck size={22} aria-hidden="true" />
         </span>
@@ -60,7 +60,8 @@ export function VehicleEditor({ vehicle, onClose, onSaved }: {
         </div>
       </div>
 
-      <form noValidate className="space-y-6" onSubmit={form.handleSubmit(values => save.mutate(values))}>
+      <form noValidate className="flex min-h-0 flex-col" onSubmit={form.handleSubmit(values => save.mutate(values))}>
+        <div className="min-h-0 space-y-6 overflow-y-auto px-6 pb-6">
         <fieldset disabled={save.isPending} className="grid gap-x-5 gap-y-5 sm:grid-cols-2">
           <legend className="sr-only">Thông tin phương tiện</legend>
 
@@ -201,8 +202,9 @@ export function VehicleEditor({ vehicle, onClose, onSaved }: {
         </aside>
 
         {save.isError && <Notice error>{errorMessage(save.error)}</Notice>}
+        </div>
 
-        <div className="flex flex-wrap gap-3 border-t border-brand-border pt-4">
+        <div className="flex shrink-0 flex-wrap gap-3 border-t border-brand-border bg-white px-6 py-4">
           <button
             type="submit"
             className={`${button} min-h-12 cursor-pointer hover:bg-[#b84e00] hover:shadow-md hover:shadow-orange-500/25 active:scale-[0.98] transition-all`}

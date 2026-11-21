@@ -17,6 +17,13 @@ const mockMapInstance = {
     mapHandlers[event] = [...(mapHandlers[event] ?? []), cb]
   }),
   setStyle: vi.fn(),
+  off: vi.fn((event: string, cb: () => void) => {
+    mapHandlers[event] = (mapHandlers[event] ?? []).filter(handler => handler !== cb)
+  }),
+  isStyleLoaded: vi.fn(() => true),
+  getStyle: vi.fn(() => ({})),
+  isSourceLoaded: vi.fn(() => true),
+  queryRenderedFeatures: vi.fn(() => []),
   resize: vi.fn(),
   remove: vi.fn(),
   flyTo: vi.fn(),

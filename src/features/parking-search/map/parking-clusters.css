@@ -1,0 +1,19 @@
+.parking-map-lot-point { padding: 0; }
+.parking-map-marker.parking-map-cluster {
+  display: grid;
+  place-items: center;
+  min-width: 44px;
+  height: 44px;
+  padding: 0 8px;
+  border: 3px solid var(--color-surface);
+  border-radius: 9999px;
+  background: var(--color-brand-navy);
+  color: var(--color-text-inverse);
+  font: 600 14px/1 var(--font-body);
+  cursor: pointer;
+  box-shadow: 0 2px 6px #0d1c2e33;
+}
+.parking-map-marker.parking-map-cluster:focus-visible {
+  outline: 3px solid var(--color-border-focus);
+  outline-offset: 3px;
+}
