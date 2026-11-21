@@ -65,6 +65,8 @@ jobs:
           e2e/ui-consistency.spec.ts
           e2e/driver-vehicle-parking.spec.ts
           e2e/driver-vehicle-modal.spec.ts
+          e2e/modal-production-regressions.spec.ts
+          e2e/merchant-withdrawals.spec.ts
           e2e/parking-map-clusters.spec.ts
           e2e/public-mobile-performance.spec.ts
           e2e/driver-dashboard-real-data.spec.ts

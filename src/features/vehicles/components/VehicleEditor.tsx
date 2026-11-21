@@ -1,4 +1,4 @@
-import { useId } from 'react'
+import { useId, type RefObject } from 'react'
 import { Controller, useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useMutation } from '@tanstack/react-query'
@@ -20,10 +20,11 @@ const weightExamples: Record<VehicleInput['vehicleType'], string> = {
   CONTAINER: '32.0',
 }
 
-export function VehicleEditor({ vehicle, onClose, onSaved }: {
+export function VehicleEditor({ vehicle, onClose, onSaved, returnFocusRef }: {
   vehicle?: VehicleRecord
   onClose: () => void
   onSaved: () => Promise<void>
+  returnFocusRef: RefObject<HTMLElement | null>
 }) {
   const id = useId()
   const form = useForm<VehicleInput>({
@@ -49,13 +50,13 @@ export function VehicleEditor({ vehicle, onClose, onSaved }: {
   const describedBy = (field: keyof VehicleInput) => `${id}-${field}-hint${errors[field] ? ` ${id}-${field}-error` : ''}`
 
   return (
-    <Modal isOpen onClose={onClose} maxWidth="xl" className="flex flex-col overflow-hidden p-0">
+    <Modal isOpen onClose={onClose} maxWidth="xl" ariaLabelledBy={`${id}-title`} returnFocusRef={returnFocusRef} className="flex flex-col overflow-hidden p-0">
       <div className="flex shrink-0 items-start gap-3 px-6 pb-6 pt-6 pr-14">
         <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-brand-orange/10 text-brand-orange-ink">
           <Truck size={22} aria-hidden="true" />
         </span>
         <div>
-          <h2 className="font-sora text-xl font-semibold">{vehicle ? 'Cập nhật phương tiện' : 'Thêm phương tiện'}</h2>
+          <h2 id={`${id}-title`} className="font-sora text-xl font-semibold">{vehicle ? 'Cập nhật phương tiện' : 'Thêm phương tiện'}</h2>
           <p className="mt-1 text-sm leading-6 text-brand-muted">Thông tin dùng khi đặt chỗ. Các mục có dấu * là bắt buộc.</p>
         </div>
       </div>

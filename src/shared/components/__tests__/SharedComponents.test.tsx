@@ -1,5 +1,7 @@
 import { describe, it, expect, vi } from 'vitest'
-import { render, screen, fireEvent } from '@testing-library/react'
+import { render, screen, fireEvent, waitFor } from '@testing-library/react'
+import { useRef, useState } from 'react'
+import { Dialog } from '../Dialog'
 import {
   Button,
   Badge,
@@ -96,7 +98,7 @@ describe('Shared Design System Components', () => {
       expect(handleClose).toHaveBeenCalled()
 
       unmount()
-      expect(document.body.style.overflow).toBe('unset')
+      expect(document.body.style.overflow).toBe('')
     })
 
     it('closes on Escape key press', () => {
@@ -109,6 +111,73 @@ describe('Shared Design System Components', () => {
 
       fireEvent.keyDown(window, { key: 'Escape' })
       expect(handleClose).toHaveBeenCalledTimes(1)
+    })
+
+    it('restores the existing body scroll setting after closing', () => {
+      const original = document.body.style.overflow
+      document.body.style.overflow = 'clip'
+      try {
+        const { unmount } = render(<Modal isOpen onClose={vi.fn()} title="Scroll lock"><p>Nội dung</p></Modal>)
+        expect(document.body.style.overflow).toBe('hidden')
+        unmount()
+        expect(document.body.style.overflow).toBe('clip')
+      } finally {
+        document.body.style.overflow = original
+      }
+    })
+
+    it('returns focus to a trigger re-enabled in the closing commit', async () => {
+      function Example() {
+        const [open, setOpen] = useState(false)
+        const trigger = useRef<HTMLButtonElement>(null)
+        return <><button ref={trigger} disabled={open} onClick={() => setOpen(true)}>Mở hộp thoại</button>
+          <Modal isOpen={open} onClose={() => setOpen(false)} title="Giữ focus" returnFocusRef={trigger}><input aria-label="Nội dung" /></Modal>
+        </>
+      }
+      render(<Example />)
+      const trigger = screen.getByRole('button', { name: 'Mở hộp thoại' })
+      fireEvent.click(trigger)
+      expect(trigger).toBeDisabled()
+      expect(screen.getByRole('dialog', { name: 'Giữ focus' })).toBeInTheDocument()
+      fireEvent.click(screen.getByRole('button', { name: 'Đóng cửa sổ' }))
+      await waitFor(() => expect(trigger).toHaveFocus())
+      expect(trigger).toBeEnabled()
+    })
+
+    it('preserves an explicit after-close focus callback', async () => {
+      function Example() {
+        const [open, setOpen] = useState(false)
+        const destination = useRef<HTMLInputElement>(null)
+        return <><button onClick={() => setOpen(true)}>Mở thông báo</button><input ref={destination} aria-label="Điểm focus sau đóng" />
+          <Dialog isOpen={open} title="Thông báo" onClose={() => setOpen(false)} onAfterClose={() => destination.current?.focus()}>Nội dung</Dialog>
+        </>
+      }
+      render(<Example />)
+      const trigger = screen.getByRole('button', { name: 'Mở thông báo' })
+      trigger.focus()
+      fireEvent.click(trigger)
+      fireEvent.click(screen.getByRole('button', { name: 'Đóng' }))
+      await Promise.resolve()
+      expect(screen.getByRole('textbox', { name: 'Điểm focus sau đóng' })).toHaveFocus()
+    })
+
+    it('does not restore focus for a modal that was never opened', async () => {
+      function Example() {
+        const [mounted, setMounted] = useState(false)
+        return <><button onClick={() => setMounted(true)}>Gắn modal đóng</button>
+          <input aria-label="Đang nhập" /><button onClick={() => setMounted(false)}>Bỏ modal đóng</button>
+          {mounted && <Modal isOpen={false} onClose={vi.fn()} title="Không mở">Nội dung</Modal>}
+        </>
+      }
+      render(<Example />)
+      const mount = screen.getByRole('button', { name: 'Gắn modal đóng' })
+      mount.focus()
+      fireEvent.click(mount)
+      const input = screen.getByRole('textbox', { name: 'Đang nhập' })
+      input.focus()
+      fireEvent.click(screen.getByRole('button', { name: 'Bỏ modal đóng' }))
+      await Promise.resolve()
+      expect(input).toHaveFocus()
     })
   })
 

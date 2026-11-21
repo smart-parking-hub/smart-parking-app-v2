@@ -1,6 +1,7 @@
-import { useEffect, useId, useRef, type ReactNode, type RefObject } from 'react'
+import { useId, useRef, type ReactNode, type RefObject } from 'react'
 import { X } from 'lucide-react'
 import { cn } from '@/shared/utils/cn'
+import { useDialogLifecycle } from './useDialogLifecycle'
 
 export interface DialogProps {
   isOpen?: boolean
@@ -13,6 +14,7 @@ export interface DialogProps {
   className?: string
   maxWidth?: 'sm' | 'md' | 'lg' | 'xl' | 'full'
   closeOnBackdrop?: boolean
+  footer?: ReactNode
 }
 
 export function Dialog({
@@ -26,54 +28,13 @@ export function Dialog({
   className,
   maxWidth = 'md',
   closeOnBackdrop = true,
+  footer,
 }: DialogProps) {
   const dialogRef = useRef<HTMLDialogElement>(null)
   const titleId = useId()
   const descId = useId()
-  const afterClose = useRef(onAfterClose)
-  useEffect(() => { afterClose.current = onAfterClose }, [onAfterClose])
-
-  useEffect(() => {
-    const element = dialogRef.current
-    const previous = document.activeElement
-    const previousOverflow = document.body.style.overflow
-
-    if (isOpen && element) {
-      if (typeof element.showModal === 'function' && !element.open) {
-        try {
-          element.showModal()
-        } catch {
-          element.setAttribute('open', '')
-        }
-      } else {
-        element.setAttribute('open', '')
-      }
-      document.body.style.overflow = 'hidden'
-      initialFocusRef?.current?.focus()
-    }
-
-    return () => {
-      if (isOpen) document.body.style.overflow = previousOverflow
-      if (element) {
-        if (typeof element.close === 'function' && element.open) {
-          try {
-            element.close()
-          } catch {
-            element.removeAttribute('open')
-          }
-        } else {
-          element.removeAttribute('open')
-        }
-      }
-      if (previous instanceof HTMLElement && previous !== document.body && previous.isConnected) {
-        const target = previous.matches(':disabled')
-          ? previous.closest('form')?.querySelector<HTMLElement>('input:not(:disabled), select:not(:disabled), button:not(:disabled)')
-          : previous
-        target?.focus()
-      }
-      if (isOpen) afterClose.current?.()
-    }
-  }, [isOpen, initialFocusRef])
+  useDialogLifecycle(dialogRef, isOpen, initialFocusRef, onAfterClose)
+  const hasFooter = footer != null
 
   if (!isOpen) return null
 
@@ -102,10 +63,11 @@ export function Dialog({
       className={cn(
         'm-auto max-h-[88vh] overflow-y-auto overflow-x-hidden rounded-2xl border border-slate-200 bg-white p-6 text-slate-800 shadow-2xl backdrop:bg-slate-900/60 backdrop:backdrop-blur-xs animate-in fade-in duration-200',
         maxWidthStyles[maxWidth],
+        hasFooter && 'hidden flex-col overflow-hidden p-0 open:flex',
         className
       )}
     >
-      <div className="mb-5 flex items-start justify-between gap-4">
+      <div className={cn('mb-5 flex items-start justify-between gap-4', hasFooter && 'mb-0 shrink-0 p-6 pb-5')}>
         <div className="min-w-0 flex-1">
           <h2 id={titleId} className="font-sora text-xl font-semibold text-slate-900 break-words">
             {title}
@@ -126,7 +88,8 @@ export function Dialog({
         </button>
       </div>
 
-      <div className="text-slate-700">{children}</div>
+      <div className={cn('text-slate-700', hasFooter && 'min-h-0 overflow-y-auto px-6 pb-6')}>{children}</div>
+      {hasFooter && <div className="shrink-0 border-t border-slate-200 bg-white p-6">{footer}</div>}
     </dialog>
   )
 }

@@ -1,6 +1,7 @@
-import React, { useEffect } from 'react'
+import React, { useEffect, useId, useRef } from 'react'
 import { X } from 'lucide-react'
 import { cn } from '@/shared/utils/cn'
+import { useDialogLifecycle } from './useDialogLifecycle'
 
 export interface ModalProps {
   isOpen: boolean
@@ -11,6 +12,8 @@ export interface ModalProps {
   className?: string
   maxWidth?: 'sm' | 'md' | 'lg' | 'xl' | 'full'
   closeOnBackdrop?: boolean
+  ariaLabelledBy?: string
+  returnFocusRef?: React.RefObject<HTMLElement | null>
 }
 
 export function Modal({
@@ -22,19 +25,27 @@ export function Modal({
   className,
   maxWidth = 'md',
   closeOnBackdrop = true,
+  ariaLabelledBy,
+  returnFocusRef,
 }: ModalProps) {
+  const dialogRef = useRef<HTMLDialogElement>(null)
+  const titleId = useId()
+  const descriptionId = useId()
+  useDialogLifecycle(dialogRef, isOpen, undefined, undefined, returnFocusRef)
+
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && isOpen) {
+      if (e.key !== 'Escape' || !isOpen || e.defaultPrevented) return
+      const dialogs = document.querySelectorAll('dialog[open]')
+      if (dialogs[dialogs.length - 1] === dialogRef.current) {
+        e.preventDefault()
         onClose()
       }
     }
     if (isOpen) {
-      document.body.style.overflow = 'hidden'
       window.addEventListener('keydown', handleKeyDown)
     }
     return () => {
-      document.body.style.overflow = 'unset'
       window.removeEventListener('keydown', handleKeyDown)
     }
   }, [isOpen, onClose])
@@ -50,10 +61,14 @@ export function Modal({
   }
 
   return (
-    <div
+    <dialog
+      ref={dialogRef}
       role="dialog"
       aria-modal="true"
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in duration-200"
+      aria-labelledby={ariaLabelledBy ?? (title ? titleId : undefined)}
+      aria-describedby={description ? descriptionId : undefined}
+      onCancel={event => { event.preventDefault(); onClose() }}
+      className="fixed inset-0 z-50 m-0 hidden h-dvh max-h-none w-full max-w-none items-center justify-center border-0 p-4 bg-slate-900/60 backdrop-blur-xs backdrop:bg-transparent open:flex animate-in fade-in duration-200"
       onClick={closeOnBackdrop ? onClose : undefined}
     >
       <div
@@ -75,14 +90,14 @@ export function Modal({
 
         {title && (
           <div className="mb-4 pr-8">
-            <h3 className="text-lg font-bold text-slate-900 leading-tight">{title}</h3>
-            {description && <p className="text-sm text-slate-500 mt-1 leading-relaxed">{description}</p>}
+            <h3 id={titleId} className="text-lg font-bold text-slate-900 leading-tight">{title}</h3>
+            {description && <p id={descriptionId} className="text-sm text-slate-500 mt-1 leading-relaxed">{description}</p>}
           </div>
         )}
 
         {children}
       </div>
-    </div>
+    </dialog>
   )
 }
 
