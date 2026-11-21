@@ -187,6 +187,7 @@ it('does not treat a reservation, settled trip or a checked-out vehicle as curre
   ? page([...['PENDING_CHECKIN','PENDING_PAYMENT','AWAITING_FINAL_PAYMENT','COMPLETED','CANCELLED','EXPIRED','REVIEWED'].map((status,id)=>({...parkedBooking,id,status})),{...parkedBooking,checkOutTime:'2026-11-18T10:00:00'}]) : page(rows))
  mount(<VehiclesPage/>);
  expect(await screen.findByText('Không đỗ tại bãi')).toBeInTheDocument()
+ expect(screen.getByText('Chưa vào bãi')).toBeInTheDocument()
  expect(screen.queryByText('Bãi Sóng Thần')).not.toBeInTheDocument()
 })
 
