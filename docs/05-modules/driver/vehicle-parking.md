@@ -60,6 +60,16 @@ Autocomplete Escape still closes only its suggestions. See
 - Screenshots: `.artifacts/playwright/vehicle-current-parking-390.png`, `vehicle-current-parking-mobile-scrolled.png`, `vehicle-current-parking-1440.png`.
 - API source contracts and mocked browser behavior are verified locally; no live gate event or production backend acceptance is claimed. Missing or incorrect server events affect physical-location accuracy. The UI reflects the latest successful read, with a polling delay of up to 15 seconds while active.
 
+## Live verification follow-up (2026-11-21)
+
+The mounted selector is `VehicleEditor`, whose native arrow is already suppressed;
+the old `RegisterVehicleModal` is not mounted by `/vehicles`. Keep its behavior.
+The table now fits medium desktop containers using 12px cell padding and a
+160px current-lot minimum at 1024–1279px; wide desktop and mobile spacing remain
+unchanged. Mobile retains the named seven-column scroll region and all actions.
+See `../../06-quality/live-production-verification-followup-20261121.md` for the
+measured 2px baseline, bootstrap scope, regression tests and release gate.
+
 ## Task report
 
 - Objective: display which lot each vehicle is currently in and a suitable operational status.

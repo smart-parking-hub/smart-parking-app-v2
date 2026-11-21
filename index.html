@@ -12,7 +12,12 @@
     <link rel="preload" href="/fonts/be-vietnam-pro-800-vietnamese.woff2" as="font" type="font/woff2" crossorigin />
   </head>
   <body class="bg-white font-inter text-slate-800 antialiased selection:bg-brand-orange selection:text-white">
-    <div id="root"></div>
+    <div id="root">
+      <p id="app-bootstrap" role="status" aria-live="polite"
+         style="margin: 0; padding: 2rem; color: var(--color-brand-muted, #64748b); font: 400 1rem/1.5 Inter, system-ui, sans-serif">
+        Đang tải giao diện…
+      </p>
+    </div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
