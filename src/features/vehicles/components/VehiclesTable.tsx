@@ -5,7 +5,7 @@ export function VehiclesTable({ vehicles, parking, parkingLoading, onEdit, onDea
   vehicles: VehicleRecord[]
   parking: VehicleParking[] | undefined
   parkingLoading: boolean
-  onEdit: (vehicle: VehicleRecord) => void
+  onEdit: (vehicle: VehicleRecord, trigger: HTMLButtonElement) => void
   onDeactivate: (vehicle: VehicleRecord) => void
 }) {
   const action = 'inline-flex min-h-9 items-center justify-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition-all duration-150 cursor-pointer shadow-2xs hover:shadow-xs active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-orange'
@@ -55,7 +55,7 @@ export function VehiclesTable({ vehicles, parking, parkingLoading, onEdit, onDea
               <button
                 type="button"
                 className={`${action} border border-slate-200 bg-white text-slate-700 hover:border-[#d95f00] hover:bg-orange-50/80 hover:text-[#d95f00]`}
-                onClick={() => onEdit(vehicle)}
+                onClick={event => onEdit(vehicle, event.currentTarget)}
                 aria-label={`Sửa xe ${vehicle.licensePlate}`}
               >
                 <Pencil size={14} aria-hidden="true" />

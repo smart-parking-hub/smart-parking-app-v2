@@ -60,3 +60,14 @@ See [task report](../../09-audit/sp-s3-pay-03-report.md) for exact commands, res
 ## SP-PAY-01 extension — 2026-11-17
 
 An on-demand “Xem đối soát tiền cọc” panel now reads GET /api/v1/merchant/revenue/deposits. It shows actual payment-linked postings for collected deposits, policy refunds, completed/outstanding refunds, remaining escrow, platform fee and merchant net. This panel is separate from the legacy cumulative KPI/chart limitations above and never recomputes historical fees using the current rate. See ../payments/driver-wallet.md and the backend driver-wallet contract.
+
+## 2026-11-21 withdrawal modal viewport follow-up
+
+The deep production retest found the submit action clipped on small/short
+viewports and after validation expanded the dialog. Withdrawal fields now scroll
+separately from the action/error footer; the invalid field is kept visible.
+Native form association preserves validation, default/other receiving accounts,
+pending state and the existing withdrawal request payload. Approval, ledger,
+balance calculations and backend permissions are unchanged. Browser coverage
+includes invalid amounts followed by an exact-payload successful mocked submit.
+See `docs/06-quality/production-qa-retest-deep-20261121.md`.

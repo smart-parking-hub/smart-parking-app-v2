@@ -44,6 +44,13 @@ are in `docs/06-quality/production-qa-reassessment-20261121.md`.
 
 ### Earlier current-parking verification
 
+The deep production retest on 2026-11-21 additionally found keyboard focus could
+leave the vehicle editor and fail to return after close. The editor now records
+the create/edit trigger before it is disabled, uses the native Modal top layer,
+wraps keyboard focus and restores the trigger after the closing React commit.
+Autocomplete Escape still closes only its suggestions. See
+`docs/06-quality/production-qa-retest-deep-20261121.md` for scope and evidence.
+
 - `npm run typecheck`: passed. `npm run build`: passed (TypeScript project build and Vite production bundle).
 - `npm run lint`: passed with zero errors/warnings.
 - `npm run test -- --maxWorkers=2 --reporter=dot`: **95 files, 864 tests passed**, including 29 vehicle component/schema tests. An initial highly concurrent run had seven failures/timeouts across other screens; limiting worker concurrency passed the complete suite. Existing layout tests still emit JSDOM network error diagnostics for unmocked requests; these do not fail assertions.

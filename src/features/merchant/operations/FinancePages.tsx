@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useId, useLayoutEffect, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Controller, useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -171,6 +171,7 @@ function WithdrawalDialog({
   minimum: number
   onClose: () => void
 }) {
+  const formId = useId()
   const cache = useQueryClient()
   const [accountChoice, setAccountChoice] = useState<'default' | 'other'>('default')
 
@@ -224,6 +225,12 @@ function WithdrawalDialog({
   })
 
   const isBalanceValid = balance >= minimum
+  const errorCount = Object.keys(form.formState.errors).length
+  useLayoutEffect(() => {
+    if (errorCount > 0) {
+      document.getElementById(formId)?.querySelector<HTMLElement>('[aria-invalid="true"]')?.scrollIntoView?.({ block: 'nearest' })
+    }
+  }, [errorCount, formId])
 
   return (
     <Dialog
@@ -231,8 +238,43 @@ function WithdrawalDialog({
       onClose={() => {
         if (!mutation.isPending) onClose()
       }}
+      footer={<div className="space-y-4">
+        {errorCount > 0 && (
+          <Notice error>
+            Vui lòng kiểm tra lại thông tin: Số tiền từ {money(minimum)} đến{' '}
+            {money(balance)} và điền đầy đủ tài khoản ngân hàng.
+          </Notice>
+        )}
+        {mutation.isError && (
+          <Notice error>{errorMessage(mutation.error)}</Notice>
+        )}
+        <button
+          type="submit"
+          form={formId}
+          className={cn(
+            `${button} w-full`,
+            (!isBalanceValid || waitingForDefault || mutation.isPending) &&
+              'cursor-not-allowed opacity-60',
+          )}
+          disabled={!isBalanceValid || waitingForDefault || mutation.isPending}
+        >
+          {mutation.isPending ? (
+            <>
+              <LoaderCircle
+                size={18}
+                className="animate-spin"
+                aria-hidden="true"
+              />
+              Đang gửi yêu cầu phê duyệt…
+            </>
+          ) : (
+            'Gửi yêu cầu phê duyệt'
+          )}
+        </button>
+      </div>}
     >
       <form
+        id={formId}
         onSubmit={form.handleSubmit((data) => {
           if (waitingForDefault || mutation.isPending) return
           mutation.mutate(
@@ -424,37 +466,6 @@ function WithdrawalDialog({
             </div>
           )}
         </fieldset>
-        {Object.keys(form.formState.errors).length > 0 && (
-          <Notice error>
-            Vui lòng kiểm tra lại thông tin: Số tiền từ {money(minimum)} đến{' '}
-            {money(balance)} và điền đầy đủ tài khoản ngân hàng.
-          </Notice>
-        )}
-        {mutation.isError && (
-          <Notice error>{errorMessage(mutation.error)}</Notice>
-        )}
-        <button
-          type="submit"
-          className={cn(
-            `${button} w-full`,
-            (!isBalanceValid || waitingForDefault || mutation.isPending) &&
-              'cursor-not-allowed opacity-60',
-          )}
-          disabled={!isBalanceValid || waitingForDefault || mutation.isPending}
-        >
-          {mutation.isPending ? (
-            <>
-              <LoaderCircle
-                size={18}
-                className="animate-spin"
-                aria-hidden="true"
-              />
-              Đang gửi yêu cầu phê duyệt…
-            </>
-          ) : (
-            'Gửi yêu cầu phê duyệt'
-          )}
-        </button>
       </form>
     </Dialog>
   )
