@@ -65,6 +65,47 @@ beforeEach(() => {
     },
   })
 })
+it('refreshes the open detail modal after cancelling a pending booking', async () => {
+  let current = { ...booking, status: 'PENDING_PAYMENT', refundAmount: 0, refundStatus: 'NONE' }
+  vi.mocked(apiClient.get).mockImplementation(async url => ({ data: { data:
+    String(url).endsWith('/bookings') ? { content: [current] }
+      : String(url).endsWith('/bookings/41') ? current
+        : String(url).endsWith('/driver/wallet') ? { availableAmount: 0, heldAmount: 0, currency: 'VND', enabled: true }
+          : String(url).endsWith('/payments/wallet') ? null : { content: [] },
+  } }))
+  vi.mocked(apiClient.request).mockImplementation(async request => {
+    if (request.url === '/api/v1/bookings/41/cancel') current = { ...current, status: 'CANCELLED' }
+    return { data: { data: current } }
+  })
+  mount(<MyBookingsPage />, '/bookings', '/bookings')
+  fireEvent.click(await screen.findByRole('button', { name: 'Xem vé & chi tiết' }))
+  const detail = screen.getByRole('dialog')
+  const cancelButton = await within(detail).findByRole('button', { name: 'Hủy booking' })
+  await waitFor(() => expect(cancelButton).toBeEnabled())
+  fireEvent.click(cancelButton)
+  const confirmation = await screen.findByRole('dialog', { name: 'Xác nhận hủy đặt chỗ' })
+  fireEvent.click(within(confirmation).getByRole('checkbox'))
+  fireEvent.click(within(confirmation).getByRole('button', { name: 'Xác nhận hủy và hoàn vào ví' }))
+  await waitFor(() => expect(within(detail).queryByRole('button', { name: 'Hủy booking' })).not.toBeInTheDocument())
+  expect(within(detail).queryByRole('button', { name: /Thanh toán cọc .* qua PayOS/ })).not.toBeInTheDocument()
+  expect(within(detail).getByText(/Khoản được hoàn: 0/)).toBeInTheDocument()
+  expect(within(detail).getByRole('heading', { name: 'Chi tiết lượt đặt chỗ BK-API-41' })).toBeInTheDocument()
+  expect(apiClient.request).toHaveBeenCalledWith(expect.objectContaining({ method: 'post', url: '/api/v1/bookings/41/cancel' }))
+})
+it('reads fresh status when opening details from an outdated pending list row', async () => {
+  vi.mocked(apiClient.get).mockImplementation(async url => ({ data: { data:
+    String(url).endsWith('/bookings') ? { content: [{ ...booking, status: 'PENDING_PAYMENT' }] }
+      : String(url).endsWith('/bookings/41') ? { ...booking, status: 'CANCELLED', refundAmount: 0, refundStatus: 'NONE' }
+        : String(url).endsWith('/driver/wallet') ? { availableAmount: 0, heldAmount: 0, currency: 'VND', enabled: true }
+          : String(url).endsWith('/payments/wallet') ? null : { content: [] },
+  } }))
+  mount(<MyBookingsPage />, '/bookings', '/bookings')
+  fireEvent.click(await screen.findByRole('button', { name: 'Xem vé & chi tiết' }))
+  const detail = screen.getByRole('dialog')
+  expect(await within(detail).findByText(/Khoản được hoàn: 0/)).toBeInTheDocument()
+  expect(within(detail).getByRole('heading', { name: 'Chi tiết lượt đặt chỗ BK-API-41' })).toBeInTheDocument()
+  expect(within(detail).queryByRole('button', { name: 'Hủy booking' })).not.toBeInTheDocument()
+})
 it('renders the server booking and check-in state without inventing a parking state', async () => {
   mount(<MyBookingsPage />, '/bookings', '/bookings')
   expect(await screen.findByText('BK-API-41')).toBeInTheDocument()
@@ -92,6 +133,8 @@ it('keeps many tickets compact, expands one at a time and requests the next serv
       const page = Number((config?.params as { page?: number } | undefined)?.page ?? 0)
       return { data: { data: { content: Array.from({ length: 8 }, (_, index) => ({ ...booking, id: 41 + page * 8 + index, bookingCode: `BK-API-${41 + page * 8 + index}`, status: 'PENDING_PAYMENT' })), totalElements: 24, totalPages: 3, currentPage: page } } }
     }
+    const selected = String(url).match(/\/bookings\/(\d+)$/)
+    if (selected) return { data: { data: { ...booking, id: Number(selected[1]), bookingCode: `BK-API-${selected[1]}`, status: 'PENDING_PAYMENT' } } }
     return { data: { data: { content: [] } } }
   })
   mount(<MyBookingsPage />, '/bookings', '/bookings')
@@ -100,12 +143,14 @@ it('keeps many tickets compact, expands one at a time and requests the next serv
   expect(screen.queryByRole('button', { name: /Thanh toán cọc .* qua PayOS/ })).not.toBeInTheDocument()
   fireEvent.click(toggles[0])
   expect(toggles[0]).toHaveAttribute('aria-expanded', 'true')
-  expect(screen.getByRole('button', { name: /Thanh toán cọc .* qua PayOS/ })).toBeInTheDocument()
+  expect(await screen.findByRole('button', { name: /Thanh toán cọc .* qua PayOS/ })).toBeInTheDocument()
+  fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Đóng', exact: true }))
   fireEvent.click(toggles[1])
   expect(toggles[0]).toHaveAttribute('aria-expanded', 'false')
   expect(toggles[1]).toHaveAttribute('aria-expanded', 'true')
+  fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Đóng', exact: true }))
+  expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
   fireEvent.click(screen.getByRole('button', { name: 'Trang sau' }))
-  expect(await screen.findByText(/Số đơn/)).toBeInTheDocument()
   expect(await screen.findByText('#49')).toBeInTheDocument()
   expect(screen.queryByText(/#41 · BK-API-41/)).not.toBeInTheDocument()
   expect(apiClient.get).toHaveBeenCalledWith('/api/v1/bookings', expect.objectContaining({ params: { page: 1, size: 8, sort: 'createdAt,desc' } }))
@@ -455,7 +500,7 @@ it('displays dynamic deposit amount on payment CTA when booking is in PENDING_PA
   expect(within(modal).getByRole('heading', { name: /Chi tiết lượt đặt chỗ/i })).toBeInTheDocument()
 
   // Nút thanh toán tiền cọc hiển thị đúng số tiền cọc dynamic
-  const depositButton = within(modal).getByRole('button', { name: /Thanh toán cọc 150\.000\s?₫ qua PayOS/i })
+  const depositButton = await within(modal).findByRole('button', { name: /Thanh toán cọc 150\.000\s?₫ qua PayOS/i })
   expect(depositButton).toBeInTheDocument()
 })
 
