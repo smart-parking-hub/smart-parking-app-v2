@@ -30,7 +30,7 @@ const navGroups = [
 function AdminNavigation({ onNavigate }: { onNavigate?: () => void }) {
   return <>
     <NavLink to="/admin/dashboard" className="admin-brand" onClick={onNavigate}>
-      <img src="/image-smart-parking-hub.png" alt="" className="admin-brand-logo" />
+      <img src="/image-smart-parking-hub-168.png" alt="" className="admin-brand-logo" />
       <span><strong>SMARTTRUCK<span>HUB</span></strong><small>KHÔNG GIAN QUẢN TRỊ</small></span>
     </NavLink>
     <nav aria-label="Quản trị" className="admin-navigation">

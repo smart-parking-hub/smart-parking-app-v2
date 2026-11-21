@@ -9,7 +9,7 @@ export function LandingFooter() {
           <div>
             <Link to="/" className="inline-flex items-center gap-2 mb-4 group" aria-label="SmartTruckHub Trang chủ">
               <img
-                src="/image-smart-parking-hub.png"
+                src="/image-smart-parking-hub-168.png"
                 alt="Smart Parking Hub Logo"
                 className="w-8 h-8 rounded-lg object-contain transition-transform group-hover:scale-105"
               />

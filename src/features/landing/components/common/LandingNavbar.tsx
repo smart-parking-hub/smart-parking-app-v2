@@ -222,23 +222,23 @@ export function LandingNavbar() {
 
       <div
         ref={navRef}
-        className="max-w-[1440px] mx-auto h-20 px-4 xl:px-8 flex items-center justify-between gap-4"
+        className="max-w-[1440px] mx-auto h-20 px-4 xl:px-8 max-[410px]:px-3 flex items-center justify-between gap-4 max-[410px]:gap-2"
       >
         {/* Brand Logo */}
         <Link
           to="/"
-          className="flex items-center gap-2.5 shrink-0 group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-orange rounded-xl p-1"
+          className="flex items-center gap-2.5 max-[410px]:gap-2 shrink-0 group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-orange rounded-xl p-1"
           aria-label="SmartTruckHub Trang chủ"
         >
           <img
-            src="/image-smart-parking-hub.png"
+            src="/image-smart-parking-hub-168.png"
             alt="Smart Parking Hub Logo"
             className="w-10 h-10 rounded-xl object-contain shadow-xs transition-transform group-hover:scale-105"
           />
           <div className="flex items-center gap-1.5">
             <span
               className={cn(
-                'font-sora font-bold text-lg sm:text-xl tracking-tight leading-none',
+                'font-sora font-bold text-lg max-[410px]:text-base sm:text-xl tracking-tight leading-none',
                 isDarkNav ? 'text-white' : 'text-brand-navy'
               )}
             >
@@ -401,7 +401,7 @@ export function LandingNavbar() {
         </nav>
 
         {/* Right Actions: Hotline + Login + CTA + Mobile Toggle */}
-        <div className="flex items-center gap-3 shrink-0 whitespace-nowrap">
+        <div className="flex items-center gap-3 max-[410px]:gap-2 shrink-0 whitespace-nowrap">
           <a
             href="tel:19006868"
             className={cn(
@@ -467,7 +467,7 @@ export function LandingNavbar() {
 
           <a
             href={ctaHref}
-            className="inline-flex items-center justify-center bg-brand-orange hover:bg-brand-orange-hover text-[#060D1A] text-xs sm:text-sm font-bold px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-xl transition-all shadow-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-orange focus-visible:ring-offset-2 cursor-pointer"
+            className="inline-flex items-center justify-center bg-brand-orange hover:bg-brand-orange-hover text-[#060D1A] text-xs sm:text-sm font-bold px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-xl transition-all shadow-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-orange focus-visible:ring-offset-2 cursor-pointer max-[360px]:hidden"
           >
             {ctaLabel}
           </a>
@@ -564,6 +564,14 @@ export function LandingNavbar() {
               )
             })}
           </div>
+
+          <a
+            href={ctaHref}
+            onClick={() => setMobileMenuOpen(false)}
+            className="hidden max-[360px]:inline-flex w-full items-center justify-center bg-brand-orange hover:bg-brand-orange-hover text-[#060D1A] text-sm font-bold px-4 py-3 rounded-xl transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-orange focus-visible:ring-offset-2"
+          >
+            {ctaLabel}
+          </a>
 
           <div className="pt-6 mt-6 border-t border-slate-800/80 space-y-3">
             <a
