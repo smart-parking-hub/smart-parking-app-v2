@@ -12,7 +12,7 @@ export function MerchantLayout() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
 
   return (
-    <div className="min-h-screen bg-[#f8f9ff] text-[#0d1c2e] antialiased">
+    <div className="min-h-screen bg-[#f8f9ff] text-[#0d1c2e] antialiased overflow-x-clip w-full max-w-full">
       <ScrollToTop />
       {/* Responsive merchant sidebar */}
       <MerchantSidebar

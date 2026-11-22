@@ -639,9 +639,9 @@ export function MyBookingsPage() {
           </p>
 
           {/* Bookings Table với Sticky Action Column trên Mobile */}
-          <div role="region" aria-label="Bảng vé đặt chỗ" className="overflow-x-auto rounded-2xl border border-slate-200 bg-white shadow-xs focus-visible:outline-2 focus-visible:outline-brand-primary">
-            <table className="w-full text-left border-collapse text-xs">
-              <thead className="border-b border-slate-200 bg-slate-50/80 text-[11px] font-semibold text-slate-500 uppercase tracking-wider sticky top-0 z-20">
+          <div role="region" aria-label="Bảng vé đặt chỗ" className="overflow-x-visible md:overflow-x-auto rounded-2xl border border-slate-200 bg-white shadow-xs focus-visible:outline-2 focus-visible:outline-brand-primary">
+            <table className="block w-full md:table text-left border-collapse text-xs">
+              <thead className="hidden md:table-header-group border-b border-slate-200 bg-slate-50/80 text-[11px] font-semibold text-slate-500 uppercase tracking-wider sticky top-0 z-20">
                 <tr>
                   <th scope="col" className="py-3.5 px-4 font-semibold">Mã vé / Đơn</th>
                   <th scope="col" className="py-3.5 px-4 font-semibold">Bãi đỗ xe</th>
@@ -652,7 +652,7 @@ export function MyBookingsPage() {
                   <th scope="col" className="py-3.5 px-4 font-semibold text-right sticky right-0 bg-slate-100/95 z-30 shadow-[-6px_0_10px_-4px_rgba(0,0,0,0.08)] backdrop-blur-xs">Thao tác</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100">
+              <tbody className="block space-y-3 p-3.5 md:p-0 md:table-row-group md:space-y-0 md:divide-y md:divide-slate-100">
                 {filteredBookings
                   .filter((booking) => !selected.data || booking.id !== selectedId)
                   .map((booking, idx) => {
@@ -665,32 +665,35 @@ export function MyBookingsPage() {
                     return (
                       <Fragment key={booking.id}>
                         <tr
-                          className={`group hover:bg-slate-50/70 transition-colors ${
-                            expanded ? 'bg-orange-50/20' : ''
+                          className={`block rounded-xl border border-slate-200 bg-white p-4 shadow-2xs space-y-3 md:table-row md:rounded-none md:border-0 md:p-0 md:shadow-none md:space-y-0 group hover:bg-slate-50/70 transition-colors ${
+                            expanded ? 'bg-orange-50/20 md:bg-orange-50/20' : ''
                           }`}
                         >
                           {/* 1. Mã vé */}
-                          <td className="py-3.5 px-4 whitespace-nowrap align-middle">
-                            <span
-                              className="font-mono font-bold text-slate-900 block truncate max-w-44"
-                              title={bookingReference(booking)}
-                            >
-                              {booking.status === 'PENDING_PAYMENT' ? (
-                                <>
-                                  <span>Số đơn</span>
-                                  <span className="text-slate-500 ml-1">#{booking.id}</span>
-                                </>
-                              ) : (
-                                <>
-                                  <span className="text-slate-400">#{booking.id} · </span>
-                                  <span>{booking.bookingCode}</span>
-                                </>
-                              )}
-                            </span>
+                          <td className="block md:table-cell p-0 md:py-3.5 md:px-4 md:whitespace-nowrap md:align-middle">
+                            <div className="flex items-center justify-between border-b border-slate-100 pb-2 md:border-0 md:pb-0">
+                              <span
+                                className="font-mono font-bold text-slate-900 block truncate max-w-44 text-sm md:text-xs"
+                                title={bookingReference(booking)}
+                              >
+                                {booking.status === 'PENDING_PAYMENT' ? (
+                                  <>
+                                    <span>Số đơn</span>
+                                    <span className="text-slate-500 ml-1">#{booking.id}</span>
+                                  </>
+                                ) : (
+                                  <>
+                                    <span className="text-slate-400">#{booking.id} · </span>
+                                    <span>{booking.bookingCode}</span>
+                                  </>
+                                )}
+                              </span>
+                              <span className="md:hidden text-[11px] text-slate-400">Đơn đặt chỗ</span>
+                            </div>
                           </td>
 
                           {/* 2. Bãi đỗ */}
-                          <td className="py-3.5 px-4 max-w-[200px] align-middle">
+                          <td className="block md:table-cell p-0 md:py-3.5 md:px-4 md:max-w-[200px] md:align-middle">
                             <div
                               className="font-semibold text-slate-900 truncate"
                               title={booking.parkingLotName || `Bãi đỗ #${booking.parkingLotId}`}
@@ -708,60 +711,70 @@ export function MyBookingsPage() {
                           </td>
 
                           {/* 3. Biển số xe */}
-                          <td className="py-3.5 px-4 whitespace-nowrap align-middle">
-                            {booking.vehiclePlate ? (
-                              <span className="rounded-md border border-slate-200 bg-slate-50 px-2 py-0.5 font-mono text-xs font-bold text-slate-800">
-                                {booking.vehiclePlate}
-                              </span>
-                            ) : (
-                              <span className="text-slate-400">—</span>
-                            )}
-                          </td>
-
-                          {/* 4. Khung giờ */}
-                          <td className="py-3.5 px-4 whitespace-nowrap align-middle text-[11px] leading-relaxed">
-                            <div>
-                              Vào: <strong className="font-medium text-slate-900">{bookingTimeLabel(booking.expectedCheckInTime)}</strong>
-                            </div>
-                            <div>
-                              Ra: <strong className="font-medium text-slate-900">{bookingTimeLabel(booking.expectedCheckOutTime)}</strong>
-                            </div>
-                          </td>
-
-                          {/* 5. Tiền cọc & Phí */}
-                          <td className="py-3.5 px-4 whitespace-nowrap align-middle text-[11px] leading-relaxed">
-                            <div>
-                              Cọc: <strong className="font-semibold text-emerald-700">{formatMoney(booking.advanceDeposit)}</strong>
-                            </div>
-                            <div>
-                              {['AWAITING_FINAL_PAYMENT', 'COMPLETED', 'REVIEWED'].includes(booking.status)
-                                ? 'Quyết toán: '
-                                : 'Dự kiến: '}
-                              <strong className="font-medium text-slate-900">
-                                {booking.totalAmount == null ? 'Chưa có' : formatMoney(booking.totalAmount)}
-                              </strong>
-                            </div>
-                          </td>
-
-                          {/* 6. Trạng thái */}
-                          <td className="py-3.5 px-4 whitespace-nowrap align-middle">
-                            <div className="flex flex-col gap-1 items-start">
-                              <Badge value={booking.status} size="sm">
-                                {statusLabels[booking.status] ?? booking.status}
-                              </Badge>
-                              {existingDispute && (
-                                <Badge value={existingDispute.status} size="sm" dot>
-                                  Khiếu nại KN-{existingDispute.id}
-                                </Badge>
+                          <td className="block md:table-cell p-0 md:py-3.5 md:px-4 md:whitespace-nowrap md:align-middle">
+                            <div className="flex items-center justify-between md:justify-start">
+                              <span className="md:hidden text-slate-500 font-medium">Biển số:</span>
+                              {booking.vehiclePlate ? (
+                                <span className="rounded-md border border-slate-200 bg-slate-50 px-2 py-0.5 font-mono text-xs font-bold text-slate-800">
+                                  {booking.vehiclePlate}
+                                </span>
+                              ) : (
+                                <span className="text-slate-400">—</span>
                               )}
                             </div>
                           </td>
 
+                          {/* 4. Khung giờ */}
+                          <td className="block md:table-cell p-0 md:py-3.5 md:px-4 md:whitespace-nowrap md:align-middle text-[11px] leading-relaxed">
+                            <div className="grid grid-cols-2 gap-2 bg-slate-50/70 p-2.5 rounded-lg border border-slate-100 md:bg-transparent md:p-0 md:border-0 md:block">
+                              <div>
+                                Vào: <strong className="font-medium text-slate-900">{bookingTimeLabel(booking.expectedCheckInTime)}</strong>
+                              </div>
+                              <div>
+                                Ra: <strong className="font-medium text-slate-900">{bookingTimeLabel(booking.expectedCheckOutTime)}</strong>
+                              </div>
+                            </div>
+                          </td>
+
+                          {/* 5. Tiền cọc & Phí */}
+                          <td className="block md:table-cell p-0 md:py-3.5 md:px-4 md:whitespace-nowrap md:align-middle text-[11px] leading-relaxed">
+                            <div className="flex items-center justify-between md:block text-xs md:text-[11px]">
+                              <div>
+                                Cọc: <strong className="font-semibold text-emerald-700">{formatMoney(booking.advanceDeposit)}</strong>
+                              </div>
+                              <div>
+                                {['AWAITING_FINAL_PAYMENT', 'COMPLETED', 'REVIEWED'].includes(booking.status)
+                                  ? 'Quyết toán: '
+                                  : 'Dự kiến: '}
+                                <strong className="font-medium text-slate-900">
+                                  {booking.totalAmount == null ? 'Chưa có' : formatMoney(booking.totalAmount)}
+                                </strong>
+                              </div>
+                            </div>
+                          </td>
+
+                          {/* 6. Trạng thái */}
+                          <td className="block md:table-cell p-0 md:py-3.5 md:px-4 md:whitespace-nowrap md:align-middle">
+                            <div className="flex items-center justify-between md:flex-col md:items-start md:gap-1">
+                              <span className="md:hidden text-slate-500 font-medium">Trạng thái:</span>
+                              <div className="flex flex-wrap gap-1 items-center md:items-start">
+                                <Badge value={booking.status} size="sm">
+                                  {statusLabels[booking.status] ?? booking.status}
+                                </Badge>
+                                {existingDispute && (
+                                  <Badge value={existingDispute.status} size="sm" dot>
+                                    Khiếu nại KN-{existingDispute.id}
+                                  </Badge>
+                                )}
+                              </div>
+                            </div>
+                          </td>
+
                           {/* 7. Thao tác: Nút Chi tiết, Đánh giá, Tác vụ (Sticky bên phải để luôn hiển thị trên mobile) */}
-                          <td className={`py-3.5 px-4 whitespace-nowrap align-middle text-right sticky right-0 z-10 shadow-[-6px_0_10px_-4px_rgba(0,0,0,0.08)] transition-colors ${
-                            expanded ? 'bg-orange-50/95' : 'bg-white/95 group-hover:bg-slate-50/95'
+                          <td className={`block md:table-cell p-0 pt-3 border-t border-slate-100 md:border-0 md:pt-0 md:py-3.5 md:px-4 md:whitespace-nowrap md:align-middle md:text-right md:sticky md:right-0 md:z-10 md:shadow-[-6px_0_10px_-4px_rgba(0,0,0,0.08)] transition-colors ${
+                            expanded ? 'bg-transparent md:bg-orange-50/95' : 'bg-transparent md:bg-white/95 md:group-hover:bg-slate-50/95'
                           }`}>
-                            <div className="flex items-center justify-end gap-1.5">
+                            <div className="flex items-center justify-end flex-wrap gap-1.5">
                               {/* Nút Xem QR vé (cho PENDING_CHECKIN hoặc PARKING / OVERTIME) */}
                               {['PENDING_CHECKIN', 'PARKING', 'OVERTIME'].includes(booking.status) && (
                                 <button
