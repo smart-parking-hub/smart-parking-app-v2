@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from 'react'
+import { useState, useMemo, type ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import { ArrowLeft, ArrowRight, ArrowUpDown, ChevronDown, ChevronUp } from 'lucide-react'
 import { cn } from '@/shared/utils/cn'
@@ -60,23 +60,55 @@ export function DataTable<T extends { id?: string | number }>({
   const [sortKey, setSortKey] = useState<string | null>(null)
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc')
 
-  const filteredRows = searchText
-    ? rows.filter((row) =>
-        searchText(row)
-          .toLocaleLowerCase('vi')
-          .includes(search.toLocaleLowerCase('vi'))
-      )
-    : rows
+  const sortedAndFilteredRows = useMemo(() => {
+    let result = searchText
+      ? rows.filter((row) =>
+          searchText(row)
+            .toLocaleLowerCase('vi')
+            .includes(search.toLocaleLowerCase('vi'))
+        )
+      : [...rows]
+
+    if (sortKey) {
+      result = [...result].sort((a, b) => {
+        const valA = (a as Record<string, unknown>)[sortKey]
+        const valB = (b as Record<string, unknown>)[sortKey]
+
+        if (valA === valB) return 0
+        if (valA == null) return 1
+        if (valB == null) return -1
+
+        let comparison = 0
+        if (typeof valA === 'number' && typeof valB === 'number') {
+          comparison = valA - valB
+        } else if (typeof valA === 'string' && typeof valB === 'string') {
+          const dateA = Date.parse(valA)
+          const dateB = Date.parse(valB)
+          if (!isNaN(dateA) && !isNaN(dateB) && valA.length >= 10 && valB.length >= 10) {
+            comparison = dateA - dateB
+          } else {
+            comparison = valA.localeCompare(valB, 'vi', { numeric: true, sensitivity: 'base' })
+          }
+        } else {
+          comparison = String(valA).localeCompare(String(valB), 'vi', { numeric: true })
+        }
+
+        return sortOrder === 'asc' ? comparison : -comparison
+      })
+    }
+
+    return result
+  }, [rows, searchText, search, sortKey, sortOrder])
 
   const isAllSelected =
     selectable &&
-    filteredRows.length > 0 &&
-    filteredRows.every((r) => r.id !== undefined && selectedIds.includes(r.id))
+    sortedAndFilteredRows.length > 0 &&
+    sortedAndFilteredRows.every((r) => r.id !== undefined && selectedIds.includes(r.id))
 
   const isSomeSelected =
     selectable &&
     !isAllSelected &&
-    filteredRows.some((r) => r.id !== undefined && selectedIds.includes(r.id))
+    sortedAndFilteredRows.some((r) => r.id !== undefined && selectedIds.includes(r.id))
 
   const handleHeaderSort = (colKey?: string) => {
     if (!colKey) return
@@ -129,11 +161,15 @@ export function DataTable<T extends { id?: string | number }>({
           <Spinner size="lg" variant="primary" />
           <p className="text-xs text-slate-500 font-medium">Đang tải dữ liệu...</p>
         </div>
+      ) : sortedAndFilteredRows.length === 0 ? (
+        <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50/50 py-14 px-4 text-center text-slate-500 text-sm font-medium">
+          {emptyText}
+        </div>
       ) : (
         <>
-          {renderMobileCard && filteredRows.length > 0 && (
+          {renderMobileCard && (
             <div className="space-y-3 md:hidden">
-              {filteredRows.map((row, idx) => (
+              {sortedAndFilteredRows.map((row, idx) => (
                 <div key={row.id ?? idx}>{renderMobileCard(row)}</div>
               ))}
             </div>
@@ -142,7 +178,7 @@ export function DataTable<T extends { id?: string | number }>({
           <div
             className={cn(
               'overflow-x-auto rounded-xl border border-slate-200/80',
-              renderMobileCard && filteredRows.length > 0 && 'hidden md:block'
+              renderMobileCard && 'hidden md:block'
             )}
           >
             <table className="w-full text-left text-sm border-collapse">
@@ -207,7 +243,7 @@ export function DataTable<T extends { id?: string | number }>({
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 bg-white">
-                {filteredRows.map((row, idx) => {
+                {sortedAndFilteredRows.map((row, idx) => {
                   const rowId = row.id ?? idx
                   const isChecked = row.id !== undefined && selectedIds.includes(row.id)
 
@@ -257,12 +293,6 @@ export function DataTable<T extends { id?: string | number }>({
                 })}
               </tbody>
             </table>
-
-            {filteredRows.length === 0 && (
-              <div className="py-16 text-center text-slate-400 text-sm font-medium">
-                {emptyText}
-              </div>
-            )}
           </div>
         </>
       )}

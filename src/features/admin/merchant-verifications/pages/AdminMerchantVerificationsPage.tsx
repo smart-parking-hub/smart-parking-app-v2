@@ -149,9 +149,9 @@ export function AdminMerchantVerificationsPage() {
       {/* Data Table */}
       {!isLoading && !isError && data && (
         <div className="rounded-xl border border-slate-200 bg-white shadow-xs overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm border-collapse">
-              <thead>
+          <div className="overflow-x-auto p-2 sm:p-0">
+            <table className="block md:table w-full text-left text-sm border-collapse">
+              <thead className="hidden md:table-header-group">
                 <tr className="border-b border-slate-200 bg-slate-50/75 text-xs uppercase font-semibold text-slate-600">
                   <th className="py-3 px-4">Mã hồ sơ</th>
                   <th className="py-3 px-4">Mã chủ bãi</th>
@@ -163,43 +163,55 @@ export function AdminMerchantVerificationsPage() {
                   <th className="py-3 px-4 text-right">Thao tác</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100">
+              <tbody className="block md:table-row-group divide-y divide-slate-100">
                 {data.content.length > 0 ? (
                   data.content.map((item) => (
-                    <tr key={item.id} className="hover:bg-slate-50/60 transition-colors">
-                      <td className="py-3.5 px-4 font-mono font-semibold text-slate-900">
-                        #{item.id}
+                    <tr
+                      key={item.id}
+                      className="block md:table-row rounded-xl border border-slate-200 md:border-0 p-4 md:p-0 mb-3 md:mb-0 bg-white shadow-2xs md:shadow-none hover:bg-slate-50/60 transition-colors"
+                    >
+                      <td className="flex items-center justify-between md:table-cell py-1.5 md:py-3.5 px-0 md:px-4 font-mono font-semibold text-slate-900">
+                        <span className="md:hidden text-xs text-slate-400 font-sans">Hồ sơ:</span>
+                        <span>#{item.id}</span>
                       </td>
-                      <td className="py-3.5 px-4 text-slate-700 font-mono">
-                        Merchant #{item.merchantId}
+                      <td className="flex items-center justify-between md:table-cell py-1 md:py-3.5 px-0 md:px-4 text-slate-700 font-mono text-xs md:text-sm">
+                        <span className="md:hidden text-xs text-slate-400 font-sans">Chủ bãi:</span>
+                        <span>Merchant #{item.merchantId}</span>
                       </td>
-                      <td className="py-3.5 px-4 font-medium text-slate-900 max-w-xs truncate">
-                        {item.legalName || '—'}
+                      <td className="block md:table-cell py-1.5 md:py-3.5 px-0 md:px-4 font-medium text-slate-900 max-w-xs truncate">
+                        <span className="md:hidden text-xs text-slate-400 block font-normal font-sans">Tên công ty:</span>
+                        <span>{item.legalName || '—'}</span>
                       </td>
-                      <td className="py-3.5 px-4 font-mono text-slate-800">
-                        {item.businessRegistrationNumber || '—'}
+                      <td className="flex items-center justify-between md:table-cell py-1 md:py-3.5 px-0 md:px-4 font-mono text-slate-800 text-xs md:text-sm">
+                        <span className="md:hidden text-xs text-slate-400 font-sans">MST/GPKD:</span>
+                        <span>{item.businessRegistrationNumber || '—'}</span>
                       </td>
-                      <td className="py-3.5 px-4 text-slate-700 font-medium">
-                        v{item.submissionVersion}
+                      <td className="flex items-center justify-between md:table-cell py-1 md:py-3.5 px-0 md:px-4 text-slate-700 font-medium text-xs md:text-sm">
+                        <span className="md:hidden text-xs text-slate-400 font-sans">Bản nộp:</span>
+                        <span>v{item.submissionVersion}</span>
                       </td>
-                      <td className="py-3.5 px-4">
+                      <td className="flex items-center justify-between md:table-cell py-1.5 md:py-3.5 px-0 md:px-4">
+                        <span className="md:hidden text-xs text-slate-400 font-sans">OCR:</span>
                         {renderAssessmentBadge(item.assessmentStatus)}
                       </td>
-                      <td className="py-3.5 px-4 text-xs text-slate-500 tabular-nums">
-                        {item.submittedAt
-                          ? new Date(item.submittedAt).toLocaleString('vi-VN', {
-                              day: '2-digit',
-                              month: '2-digit',
-                              year: 'numeric',
-                              hour: '2-digit',
-                              minute: '2-digit',
-                            })
-                          : '—'}
+                      <td className="flex items-center justify-between md:table-cell py-1 md:py-3.5 px-0 md:px-4 text-xs text-slate-500 tabular-nums">
+                        <span className="md:hidden text-xs text-slate-400 font-sans">Thời điểm:</span>
+                        <span>
+                          {item.submittedAt
+                            ? new Date(item.submittedAt).toLocaleString('vi-VN', {
+                                day: '2-digit',
+                                month: '2-digit',
+                                year: 'numeric',
+                                hour: '2-digit',
+                                minute: '2-digit',
+                              })
+                            : '—'}
+                        </span>
                       </td>
-                      <td className="py-3.5 px-4 text-right">
+                      <td className="block md:table-cell py-2 md:py-3.5 px-0 md:px-4 text-right pt-3 md:pt-3.5 border-t border-slate-100 md:border-t-0">
                         <Link
                           to={`/admin/merchant-verifications/${item.id}`}
-                          className="inline-flex items-center gap-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-800 px-3 py-1.5 text-xs font-semibold transition-colors"
+                          className="inline-flex w-full md:w-auto items-center justify-center gap-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-800 px-3.5 py-2 md:py-1.5 text-xs font-semibold transition-colors min-h-10 md:min-h-0"
                         >
                           <Eye className="h-3.5 w-3.5" /> Thẩm định
                         </Link>

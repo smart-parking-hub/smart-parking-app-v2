@@ -369,6 +369,49 @@ describe('Shared Compounds and UI Patterns Suite', () => {
       fireEvent.click(selectAll)
       expect(handleSelectAll).toHaveBeenCalled()
     })
+
+    it('supports in-memory column sorting when clicking sortable header', () => {
+      render(
+        <MemoryRouter>
+          <DataTable
+            rows={testRows}
+            columns={columns}
+          />
+        </MemoryRouter>
+      )
+
+      const sortHeader = screen.getByText('Mã đặt chỗ')
+      // Initial order: BK-001, BK-002, BK-003
+      // First click: asc (BK-001, BK-002, BK-003)
+      fireEvent.click(sortHeader)
+      let cells = screen.getAllByRole('cell')
+      expect(cells[0]).toHaveTextContent('BK-001')
+
+      // Second click: desc (BK-003, BK-002, BK-001)
+      fireEvent.click(sortHeader)
+      cells = screen.getAllByRole('cell')
+      expect(cells[0]).toHaveTextContent('BK-003')
+
+      // Third click: toggle back to asc
+      fireEvent.click(sortHeader)
+      cells = screen.getAllByRole('cell')
+      expect(cells[0]).toHaveTextContent('BK-001')
+    })
+
+    it('renders clean responsive empty card when rows are empty', () => {
+      render(
+        <MemoryRouter>
+          <DataTable
+            rows={[]}
+            columns={columns}
+            emptyText="Không có giao dịch nào."
+          />
+        </MemoryRouter>
+      )
+
+      expect(screen.getByText('Không có giao dịch nào.')).toBeInTheDocument()
+      expect(screen.queryByRole('table')).not.toBeInTheDocument()
+    })
   })
 
   describe('SearchToolbar & FilterBar & FilterDrawer', () => {
