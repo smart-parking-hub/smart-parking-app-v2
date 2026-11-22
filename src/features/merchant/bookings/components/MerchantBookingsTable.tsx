@@ -30,7 +30,12 @@ export function MerchantBookingsTable({
   isFetching = false,
 }: MerchantBookingsTableProps) {
   return (
-    <TableContainer className="border-0 rounded-none shadow-none">
+    <TableContainer
+      role="region"
+      aria-label="Khu vực cuộn danh sách đơn đặt chỗ"
+      tabIndex={0}
+      className="border-0 rounded-none shadow-none overflow-x-auto focus-visible:outline-2 focus-visible:outline-brand-orange"
+    >
       <Table aria-label="Bảng danh sách đơn đặt chỗ" className="min-w-[780px]">
         <TableHeader>
           <tr className="border-b border-slate-200 bg-slate-50/90 text-xs font-semibold tracking-wider text-slate-600 uppercase">
@@ -52,7 +57,11 @@ export function MerchantBookingsTable({
             <TableHead scope="col" className="py-2.5 whitespace-nowrap">
               Trạng thái
             </TableHead>
-            <TableHead scope="col" align="right" className="py-2.5 whitespace-nowrap">
+            <TableHead
+              scope="col"
+              align="right"
+              className="py-2.5 px-4 whitespace-nowrap sticky right-0 bg-slate-50/95 z-20 shadow-[-6px_0_10px_-4px_rgba(0,0,0,0.12)]"
+            >
               Thao tác
             </TableHead>
           </tr>
@@ -67,7 +76,7 @@ export function MerchantBookingsTable({
               <TableRow
                 key={row.id}
                 data-booking-row-id={row.id}
-                className="hover:bg-slate-50/90"
+                className="group hover:bg-slate-50/90"
               >
                 <TableCell className="py-2.5 whitespace-nowrap">
                   <Link
@@ -120,11 +129,14 @@ export function MerchantBookingsTable({
                   <Badge value={row.status} dot size="sm" />
                 </TableCell>
 
-                <TableCell align="right" className="py-2.5 whitespace-nowrap">
+                <TableCell
+                  align="right"
+                  className="py-2.5 px-4 whitespace-nowrap sticky right-0 bg-white group-hover:bg-slate-50/90 z-10 shadow-[-6px_0_10px_-4px_rgba(0,0,0,0.08)] transition-colors"
+                >
                   <Link
                     to={`/merchant/bookings/${row.id}`}
                     aria-label={`Xem chi tiết đơn ${bookingReference(row)}`}
-                    className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-white px-2.5 py-1 text-xs font-semibold text-slate-800 hover:border-[#d95f00]/50 hover:bg-orange-50/70 hover:text-[#9e4300] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d95f00] focus-visible:ring-offset-1 transition-colors shadow-2xs"
+                    className="inline-flex min-h-10 sm:min-h-8 items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-800 hover:border-[#d95f00]/50 hover:bg-orange-50/70 hover:text-[#9e4300] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d95f00] focus-visible:ring-offset-1 transition-colors shadow-2xs"
                   >
                     <Eye className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
                     <span>Chi tiết</span>

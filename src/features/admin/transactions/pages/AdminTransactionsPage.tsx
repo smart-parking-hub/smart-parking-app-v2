@@ -17,7 +17,7 @@ export function AdminTransactionsPage() {
     retry: false,
   })
   const detailButton = (row: AdminTransaction) => <button type="button"
-    className={`${secondary} min-h-11 focus-visible:outline-2 focus-visible:outline-brand-primary`}
+    className={`${secondary} !py-1.5 !px-3 !text-xs whitespace-nowrap focus-visible:outline-2 focus-visible:outline-brand-primary`}
     aria-label={`Xem chi tiết giao dịch ${row.transactionCode}`}
     onClick={() => setSelectedId(row.id)}>Xem chi tiết</button>
 
@@ -56,7 +56,14 @@ export function AdminTransactionsPage() {
         <p className="break-all text-sm">Booking: {row.bookingCode || '—'}</p>
         <div className="flex flex-wrap items-center gap-2"><TransactionType value={row.type} /><span>{row.gateway}</span></div>
         <p className="text-xs text-brand-muted">{date(row.createdAt)}</p>
-        {detailButton(row)}
+        <button
+          type="button"
+          className={`${secondary} w-full min-h-11 justify-center focus-visible:outline-2 focus-visible:outline-brand-primary`}
+          aria-label={`Xem chi tiết giao dịch ${row.transactionCode}`}
+          onClick={() => setSelectedId(row.id)}
+        >
+          Xem chi tiết
+        </button>
       </article>} />}</QueryState>
     {selectedId !== null && <TransactionDetailDialog key={selectedId} id={selectedId} onClose={() => setSelectedId(null)} />}
   </Workspace>

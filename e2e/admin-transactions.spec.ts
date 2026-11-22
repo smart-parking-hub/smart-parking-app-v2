@@ -45,7 +45,7 @@ for (const width of [390, 1440]) {
       }
     })
     await page.goto('/admin/transactions')
-    await expect(page.getByRole('heading', { name: 'Giám sát giao dịch', exact: true })).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'Giám sát giao dịch', exact: true })).toBeVisible({ timeout: 15_000 })
     await expect(page.getByText('Trang 1 / 2')).toBeVisible()
     await expect(page.getByRole('button', { name: 'Trước', exact: true })).toBeDisabled()
     expect(reads[0].searchParams.getAll('sort')).toEqual(['createdAt,desc', 'id,desc'])

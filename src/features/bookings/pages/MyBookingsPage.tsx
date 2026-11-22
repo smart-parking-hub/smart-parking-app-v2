@@ -780,7 +780,7 @@ export function MyBookingsPage() {
                                 <button
                                   type="button"
                                   onClick={() => setQrModalBooking(booking)}
-                                  className="inline-flex items-center gap-1.5 rounded-xl bg-[#d95f00] px-3 py-1.5 text-xs font-semibold text-white hover:bg-[#b84e00] focus-visible:ring-2 focus-visible:ring-[#d95f00] shadow-2xs hover:shadow transition-all cursor-pointer"
+                                  className="inline-flex items-center gap-1.5 rounded-xl bg-[#d95f00] px-3 py-1.5 text-xs font-semibold text-white hover:bg-[#b84e00] focus-visible:ring-2 focus-visible:ring-[#d95f00] shadow-2xs hover:shadow transition-all cursor-pointer min-h-9 sm:min-h-8"
                                   title={booking.status === 'PENDING_CHECKIN' ? 'Xem mã QR check-in vào bãi' : 'Xem mã QR check-out ra bãi'}
                                 >
                                   <QrCode className="h-3.5 w-3.5 text-white" aria-hidden="true" />
@@ -793,7 +793,7 @@ export function MyBookingsPage() {
                                 <button
                                   type="button"
                                   onClick={() => setReviewBooking(booking)}
-                                  className="inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 hover:border-slate-300 focus-visible:ring-2 focus-visible:ring-brand-primary transition-colors shadow-2xs cursor-pointer"
+                                  className="inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 hover:border-slate-300 focus-visible:ring-2 focus-visible:ring-brand-primary transition-colors shadow-2xs cursor-pointer min-h-9 sm:min-h-8"
                                 >
                                   <span>{booking.status === 'COMPLETED' ? 'Đánh giá' : 'Đã đánh giá'}</span>
                                 </button>
@@ -803,7 +803,7 @@ export function MyBookingsPage() {
                               {existingDispute && (
                                 <Link
                                   to={`/disputes/${existingDispute.id}`}
-                                  className="inline-flex items-center gap-1 rounded-xl border border-orange-200 bg-orange-50 px-2.5 py-1.5 text-xs font-semibold text-brand-primary-active hover:bg-orange-100 focus-visible:ring-2 focus-visible:ring-brand-primary transition-colors"
+                                  className="inline-flex items-center gap-1 rounded-xl border border-orange-200 bg-orange-50 px-2.5 py-1.5 text-xs font-semibold text-brand-primary-active hover:bg-orange-100 focus-visible:ring-2 focus-visible:ring-brand-primary transition-colors min-h-9 sm:min-h-8"
                                 >
                                   <ExternalLink className="h-3.5 w-3.5" aria-hidden="true" />
                                   <span>Xem khiếu nại #KN-{existingDispute.id}</span>
@@ -813,7 +813,7 @@ export function MyBookingsPage() {
                               {/* Nút Chi tiết - mở modal ra giữa màn hình */}
                               <button
                                 type="button"
-                                className="inline-flex items-center justify-center gap-1 rounded-xl border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 hover:border-slate-300 focus-visible:ring-2 focus-visible:ring-brand-primary cursor-pointer transition-colors shadow-2xs"
+                                className="inline-flex items-center justify-center gap-1 rounded-xl border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 hover:border-slate-300 focus-visible:ring-2 focus-visible:ring-brand-primary cursor-pointer transition-colors shadow-2xs min-h-9 sm:min-h-8"
                                 aria-label="Xem vé & chi tiết"
                                 aria-expanded={detailModalBooking?.id === booking.id || expanded}
                                 onClick={() => {
@@ -827,7 +827,7 @@ export function MyBookingsPage() {
                               {/* Dropdown Tác vụ - side='top' cho các dòng gần cuối bảng */}
                               <Dropdown>
                                 <DropdownTrigger
-                                  className="gap-1 rounded-xl border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 hover:border-slate-300 focus-visible:ring-2 focus-visible:ring-brand-primary transition-colors shadow-2xs"
+                                  className="gap-1 rounded-xl border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 hover:border-slate-300 focus-visible:ring-2 focus-visible:ring-brand-primary transition-colors shadow-2xs min-h-9 sm:min-h-8"
                                 >
                                   <MoreHorizontal className="h-4 w-4 text-slate-500" aria-hidden="true" />
                                   <span className="hidden sm:inline">Tác vụ</span>

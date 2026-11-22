@@ -169,7 +169,6 @@ export function AdminUsersTable({
       onPage={onPageChange}
       isLoading={isLoading}
       columns={[...columns, { label: 'Xử lý', render: renderActions }]}
-      detailLink={(r) => `/admin/users/${r.id}`}
       renderMobileCard={renderMobileCard}
       emptyText="Không tìm thấy tài khoản phù hợp với điều kiện lọc."
     />
