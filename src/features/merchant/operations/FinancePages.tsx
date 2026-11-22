@@ -141,6 +141,36 @@ export function MerchantWithdrawalsPage() {
             page={page}
             totalPages={data.totalPages}
             onPage={setPage}
+            renderMobileCard={(r) => (
+              <article
+                aria-label={`Yêu cầu rút tiền WD-${r.id}`}
+                className="rounded-xl border border-slate-200 bg-white p-4 space-y-3 shadow-2xs text-xs"
+              >
+                <div className="flex items-center justify-between gap-2 border-b border-slate-100 pb-2.5">
+                  <span className="font-mono font-bold text-brand-navy">WD-{r.id}</span>
+                  <Badge value={r.status} />
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <span className="text-slate-500 block">Số tiền</span>
+                    <span className="font-semibold text-slate-900">{money(r.amount)}</span>
+                  </div>
+                  <div>
+                    <span className="text-slate-500 block">Ngày yêu cầu</span>
+                    <span className="text-slate-700">{date(r.requestedAt)}</span>
+                  </div>
+                </div>
+                <div className="pt-1 border-t border-slate-100">
+                  <span className="text-slate-500 block">Tài khoản nhận</span>
+                  <span className="font-medium text-slate-800">{r.bankName || '—'} · {r.maskedBankAccount || '—'}</span>
+                </div>
+                {r.decisionReason && (
+                  <div className="text-amber-800 bg-amber-50 p-2 rounded-lg border border-amber-200">
+                    <span className="font-medium">Phản hồi: </span>{r.decisionReason}
+                  </div>
+                )}
+              </article>
+            )}
             columns={[
               { label: 'Yêu cầu', render: (r) => `WD-${r.id}` },
               {
@@ -372,7 +402,7 @@ function WithdrawalDialog({
             <span className="font-medium">Chọn nhanh:</span>
             <button
               type="button"
-              className="inline-flex min-h-9 items-center justify-center rounded-lg border border-slate-200 bg-slate-50 px-3 py-1.5 font-semibold text-brand-primary hover:bg-slate-100 hover:border-brand-primary transition-colors cursor-pointer"
+              className="inline-flex min-h-11 items-center justify-center rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 font-semibold text-brand-primary hover:bg-slate-100 hover:border-brand-primary transition-colors cursor-pointer text-xs"
               onClick={() =>
                 form.setValue('amount', minimum, { shouldValidate: true })
               }
@@ -381,7 +411,7 @@ function WithdrawalDialog({
             </button>
             <button
               type="button"
-              className="inline-flex min-h-9 items-center justify-center rounded-lg border border-slate-200 bg-slate-50 px-3 py-1.5 font-semibold text-brand-primary hover:bg-slate-100 hover:border-brand-primary transition-colors cursor-pointer"
+              className="inline-flex min-h-11 items-center justify-center rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 font-semibold text-brand-primary hover:bg-slate-100 hover:border-brand-primary transition-colors cursor-pointer text-xs"
               onClick={() =>
                 form.setValue('amount', balance, { shouldValidate: true })
               }
@@ -394,7 +424,7 @@ function WithdrawalDialog({
           <legend className="mb-3 text-sm font-medium">Tài khoản nhận tiền</legend>
           <div className="grid gap-3 sm:grid-cols-2">
             <label className={cn(
-              'flex cursor-pointer items-center gap-2 rounded-xl border p-3 text-sm',
+              'flex cursor-pointer items-center gap-3 rounded-xl border p-3.5 min-h-[48px] text-sm',
               useDefaultAccount || waitingForDefault
                 ? 'border-brand-primary bg-brand-surface'
                 : 'border-brand-border',
@@ -407,12 +437,12 @@ function WithdrawalDialog({
                 checked={useDefaultAccount || waitingForDefault}
                 disabled={!hasDefaultAccount || profileQuery.isPending}
                 onChange={() => { setAccountChoice('default'); form.clearErrors() }}
-                className="accent-brand-primary"
+                className="size-5 shrink-0 accent-brand-primary cursor-pointer"
               />
               Tài khoản mặc định
             </label>
             <label className={cn(
-              'flex cursor-pointer items-center gap-2 rounded-xl border p-3 text-sm',
+              'flex cursor-pointer items-center gap-3 rounded-xl border p-3.5 min-h-[48px] text-sm',
               !useDefaultAccount && !waitingForDefault
                 ? 'border-brand-primary bg-brand-surface'
                 : 'border-brand-border',
@@ -423,7 +453,7 @@ function WithdrawalDialog({
                 value="other"
                 checked={!useDefaultAccount && !waitingForDefault}
                 onChange={() => { setAccountChoice('other'); form.clearErrors() }}
-                className="accent-brand-primary"
+                className="size-5 shrink-0 accent-brand-primary cursor-pointer"
               />
               Tài khoản khác
             </label>

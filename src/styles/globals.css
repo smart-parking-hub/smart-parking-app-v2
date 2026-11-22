@@ -192,7 +192,10 @@
   html, body {
     margin: 0;
     padding: 0;
+    overflow-x: clip;
+    max-width: 100%;
     scroll-behavior: smooth;
+    -webkit-tap-highlight-color: transparent;
   }
 }
 

@@ -135,7 +135,11 @@ export function ReservationFlow({lotId}:{lotId:number}) {
     </div>}
     {blocked&&<Notice error>Bãi chưa nhận đặt chỗ hoặc chưa cấu hình sức chứa/bảng giá cho loại xe này.</Notice>}
     {save.isError&&<BookingHoldRestrictionNotice error={save.error}/>}
-    <button className={`${button} w-full`} disabled={blocked||!ready||timeline.isError||save.isPending||holdRestriction.blocked}>{save.isPending?'Đang xác minh và giữ chỗ…':holdRestriction.blocked?`Có thể thử lại sau ${holdRestriction.remaining}`:'Tạo booking và xem tiền cọc'}</button>
-    <p className="text-center text-xs leading-relaxed text-brand-muted">Tiền cọc chính xác hiển thị ở bước tiếp theo, trước khi thanh toán. Giá và lịch trống được xác minh lại khi đặt.</p>
+    <div className="sticky bottom-0 z-20 -mx-4 -mb-4 bg-white/95 backdrop-blur-md p-4 border-t border-slate-200 shadow-[0_-4px_12px_rgba(0,0,0,0.06)] md:static md:mx-0 md:mb-0 md:p-0 md:bg-transparent md:border-0 md:shadow-none space-y-2">
+      <button className={`${button} w-full min-h-12 text-sm font-semibold shadow-xs`} disabled={blocked||!ready||timeline.isError||save.isPending||holdRestriction.blocked}>
+        {save.isPending?'Đang xác minh và giữ chỗ…':holdRestriction.blocked?`Có thể thử lại sau ${holdRestriction.remaining}`:'Tạo booking và xem tiền cọc'}
+      </button>
+      <p className="text-center text-xs leading-relaxed text-brand-muted">Tiền cọc chính xác hiển thị ở bước tiếp theo, trước khi thanh toán. Giá và lịch trống được xác minh lại khi đặt.</p>
+    </div>
   </form>
 }

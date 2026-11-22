@@ -8,7 +8,7 @@ export function VehiclesTable({ vehicles, parking, parkingLoading, onEdit, onDea
   onEdit: (vehicle: VehicleRecord, trigger: HTMLButtonElement) => void
   onDeactivate: (vehicle: VehicleRecord) => void
 }) {
-  const action = 'inline-flex min-h-9 items-center justify-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition-all duration-150 cursor-pointer shadow-2xs hover:shadow-xs active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-orange'
+  const action = 'inline-flex min-h-10 sm:min-h-9 items-center justify-center gap-1.5 rounded-lg px-3.5 py-2 sm:px-3 sm:py-1.5 text-xs font-semibold transition-all duration-150 cursor-pointer shadow-2xs hover:shadow-xs active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-orange'
   return <div role="region" aria-label="Bảng phương tiện và bãi hiện tại" tabIndex={0} className="overflow-x-auto focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-orange">
     <table className="w-full min-w-[1100px] text-left text-sm lg:min-w-full lg:[&_th]:px-3 lg:[&_td]:px-3 xl:[&_th]:px-5 xl:[&_td]:px-5">
       <caption className="sr-only">Danh sách phương tiện đã đăng ký</caption>
