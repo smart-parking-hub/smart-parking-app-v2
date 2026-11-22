@@ -47,6 +47,16 @@ const pages = [
     title: 'Bản tin & kiến thức logistics',
     description: 'Theo dõi bản tin SmartTruckHub về vận tải, quản lý bãi đỗ, chuyển đổi số và những xu hướng của ngành logistics.',
   },
+  {
+    paths: ['/terms', '/company/terms', '/dieu-khoan'],
+    title: 'Điều khoản dịch vụ',
+    description: 'Quy định và điều khoản sử dụng nền tảng đặt chỗ và quản lý bãi đỗ xe tải SmartTruckHub.',
+  },
+  {
+    paths: ['/privacy', '/company/privacy', '/chinh-sach-bao-mat'],
+    title: 'Chính sách bảo mật',
+    description: 'Cam kết bảo vệ dữ liệu cá nhân, thông tin định vị và lịch sử chuyến xe theo chuẩn ISO/IEC 27001 và Nghị định 13/2023/NĐ-CP tại SmartTruckHub.',
+  },
 ]
 
 export function LandingMetadata() {

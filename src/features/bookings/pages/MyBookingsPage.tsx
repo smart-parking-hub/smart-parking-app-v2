@@ -590,7 +590,18 @@ export function MyBookingsPage() {
       </section>
 
       {query.isPending ? (
-        <p role="status">Đang tải đặt chỗ…</p>
+        <div role="status" aria-label="Đang tải đặt chỗ…" className="overflow-hidden rounded-2xl border border-brand-border bg-white p-6 space-y-4 animate-pulse">
+          <span className="sr-only">Đang tải đặt chỗ…</span>
+          <div className="flex justify-between items-center pb-4 border-b border-brand-border">
+            <div className="h-6 w-48 bg-slate-200 rounded" />
+            <div className="h-8 w-32 bg-slate-100 rounded-lg" />
+          </div>
+          <div className="space-y-3 pt-2">
+            {[1, 2, 3, 4, 5].map((i) => (
+              <div key={i} className="h-16 bg-slate-50 border border-slate-100 rounded-xl" />
+            ))}
+          </div>
+        </div>
       ) : query.isError ? (
         <Notice error>
           <div>

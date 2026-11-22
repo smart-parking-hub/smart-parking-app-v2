@@ -110,8 +110,13 @@ export function LandingFooter() {
                 </Link>
               </li>
               <li>
-                <Link className="hover:text-brand-orange transition-colors" to="/about">
-                  Điều khoản dịch vụ &amp; Bảo mật
+                <Link className="hover:text-brand-orange transition-colors" to="/terms">
+                  Điều khoản dịch vụ
+                </Link>
+              </li>
+              <li>
+                <Link className="hover:text-brand-orange transition-colors" to="/privacy">
+                  Chính sách bảo mật
                 </Link>
               </li>
               <li>

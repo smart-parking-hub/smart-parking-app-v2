@@ -35,7 +35,23 @@ export function VehiclesPage() {
     {editor && <VehicleEditor key={editor === 'new' ? 'new' : editor.id} vehicle={editor === 'new' ? undefined : editor} returnFocusRef={editorTrigger} onClose={() => setEditor(null)} onSaved={async () => { setEditor(null); setSuccess('Đã lưu phương tiện.'); await refresh() }} />}
     {parking.isError && <Notice error><div>Chưa tải được bãi hiện tại của xe. {errorMessage(parking.error)}<button className={`${secondary} ml-3`} onClick={() => void parking.refetch()}>Thử lại dữ liệu bãi</button></div></Notice>}
     {deleting && <Panel title="Ngừng sử dụng phương tiện?"><p className="mb-4">Xe {deleting.licensePlate} sẽ không còn được chọn khi đặt chỗ. Thông tin xe vẫn được giữ trong hồ sơ.</p><div className="flex flex-wrap gap-3"><button className={button} disabled={remove.isPending} onClick={() => remove.mutate(deleting.id)}>Xác nhận ngừng sử dụng</button><button className={secondary} disabled={remove.isPending} onClick={() => { setDeleting(null); remove.reset() }}>Hủy</button></div>{remove.isError && <div className="mt-4"><Notice error>{errorMessage(remove.error)}</Notice></div>}</Panel>}
-    {query.isPending ? <p role="status">Đang tải phương tiện…</p> : query.isError ? <Notice error><div>{errorMessage(query.error)}<button className={`${secondary} mt-3`} onClick={() => void query.refetch()}>Thử lại</button></div></Notice> : <section aria-labelledby="vehicles-list-title" className="overflow-hidden rounded-2xl border border-brand-border bg-white">
+    {query.isPending ? (
+      <div role="status" aria-label="Đang tải phương tiện…" className="overflow-hidden rounded-2xl border border-brand-border bg-white p-6 space-y-4 animate-pulse">
+        <span className="sr-only">Đang tải phương tiện…</span>
+        <div className="flex justify-between items-center pb-4 border-b border-brand-border">
+          <div className="space-y-2">
+            <div className="h-6 w-48 bg-slate-200 rounded" />
+            <div className="h-4 w-72 bg-slate-100 rounded" />
+          </div>
+          <div className="h-10 w-64 bg-slate-100 rounded-xl" />
+        </div>
+        <div className="space-y-3 pt-2">
+          {[1, 2, 3, 4, 5].map((i) => (
+            <div key={i} className="h-12 bg-slate-50 border border-slate-100 rounded-lg" />
+          ))}
+        </div>
+      </div>
+    ) : query.isError ? <Notice error><div>{errorMessage(query.error)}<button className={`${secondary} mt-3`} onClick={() => void query.refetch()}>Thử lại</button></div></Notice> : <section aria-labelledby="vehicles-list-title" className="overflow-hidden rounded-2xl border border-brand-border bg-white">
       <div className="flex flex-wrap items-end justify-between gap-4 border-b border-brand-border bg-brand-surface px-5 py-4">
         <div>
           <h2 id="vehicles-list-title" className="font-sora text-lg font-semibold">Phương tiện đã đăng ký ({query.data.totalElements})</h2>

@@ -5,13 +5,26 @@ import { errorMessage } from '@/shared/api/resources'
 import { fetchLot, ReservationFlow } from '@/features/booking-flow'
 import { ParkingLotGallery } from '../components/ParkingLotGallery'
 import { ParkingCapacityPricing } from '../components/ParkingCapacityPricing'
+import { ParkingDetailSkeleton } from '../components/ParkingDetailSkeleton'
 export function ParkingDetailPage(){
   const {id}=useParams<{id:string}>();const lotId=Number(id)
   const query=useQuery({queryKey:['reservable-lot',lotId],queryFn:()=>fetchLot(lotId),enabled:Number.isSafeInteger(lotId)&&lotId>0,retry:false})
   if(!Number.isSafeInteger(lotId)||lotId<=0)return <Notice error>Mã bãi đỗ không hợp lệ.</Notice>
   const images=query.data?.images??[]
   return <Workspace title={query.data?.name||'Thông tin bãi đỗ'} eyebrow="CHI TIẾT BÃI ĐỖ" description={query.data?.address} actions={<Link className={secondary} to="/parking">Về bản đồ</Link>}>
-    {query.isPending?<p role="status">Đang tải bãi đỗ…</p>:query.isError?<Notice error><div>{errorMessage(query.error)}<button className={secondary} onClick={()=>void query.refetch()}>Thử lại</button></div></Notice>:<>
+    {query.isPending ? (
+      <div role="status" aria-label="Đang tải bãi đỗ…">
+        <span className="sr-only">Đang tải bãi đỗ…</span>
+        <ParkingDetailSkeleton />
+      </div>
+    ) : query.isError ? (
+      <Notice error>
+        <div>
+          {errorMessage(query.error)}
+          <button className={secondary} onClick={() => void query.refetch()}>Thử lại</button>
+        </div>
+      </Notice>
+    ) : <>
       <div className={`grid min-w-0 items-start gap-6 ${images.length?'lg:grid-cols-2':''}`}>
         <ParkingLotGallery images={images} lotName={query.data.name}/>
         <ParkingCapacityPricing lot={query.data} compact={images.length>0}/>
