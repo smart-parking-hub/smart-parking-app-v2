@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { clearSession } from '@/features/auth'
 import { useQuery } from '@tanstack/react-query'
 import { getData } from '@/shared/api/resources'
@@ -15,6 +16,7 @@ import {
 } from 'lucide-react'
 import { cn } from '@/shared/utils/cn'
 import { UnreadNotificationDot } from '@/features/notifications'
+import { ConfirmationDialog } from '@/shared/components/ConfirmationDialog'
 
 interface MerchantHeaderProps {
   onToggleMobileMenu?: () => void
@@ -24,6 +26,7 @@ interface MerchantHeaderProps {
 
 export function MerchantHeader({ onToggleMobileMenu, sidebarCollapsed = false, onToggleSidebar }: MerchantHeaderProps) {
   const navigate = useNavigate()
+  const [logoutModalOpen, setLogoutModalOpen] = useState(false)
   const { data: profile } = useQuery({
     queryKey: ['merchant-header-profile'],
     queryFn: () => getData<{ merchantId: number; fullName: string | null } | null>('/api/v1/merchant/profile'),
@@ -52,7 +55,20 @@ export function MerchantHeader({ onToggleMobileMenu, sidebarCollapsed = false, o
         <button type="button" onClick={onToggleMobileMenu} aria-label="Mở menu" className="cursor-pointer rounded-lg p-2 text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900 lg:hidden focus-visible:outline-2 focus-visible:outline-brand-orange"><Menu size={22} /></button>
         <nav aria-label="Đường dẫn" className="flex flex-wrap items-center gap-2 text-brand-muted"><Link to="/merchant/dashboard" className="hover:text-brand-navy">Tổng quan</Link><span aria-hidden="true">/</span><span aria-current="page" className="font-semibold text-brand-navy">Hồ sơ chủ bãi</span></nav>
       </div>
-      <button type="button" className="inline-flex min-h-10 shrink-0 cursor-pointer items-center justify-center gap-2 rounded-xl border border-red-200 bg-white px-3.5 py-2 text-sm font-semibold text-red-700 transition-all hover:border-red-300 hover:bg-red-50 hover:text-red-800 hover:shadow-xs active:bg-red-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-500" onClick={() => { clearSession(); navigate('/login', { replace: true }) }}><LogOut size={16} aria-hidden="true" />Đăng xuất</button>
+      <button type="button" className="inline-flex min-h-10 shrink-0 cursor-pointer items-center justify-center gap-2 rounded-xl border border-red-200 bg-white px-3.5 py-2 text-sm font-semibold text-red-700 transition-all hover:border-red-300 hover:bg-red-50 hover:text-red-800 hover:shadow-xs active:bg-red-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-500" onClick={() => setLogoutModalOpen(true)}><LogOut size={16} aria-hidden="true" />Đăng xuất</button>
+      <ConfirmationDialog
+        isOpen={logoutModalOpen}
+        onClose={() => setLogoutModalOpen(false)}
+        onConfirm={() => {
+          clearSession()
+          navigate('/login', { replace: true })
+        }}
+        title="Xác nhận đăng xuất"
+        message="Bạn có chắc chắn muốn đăng xuất khỏi cổng quản lý chủ bãi?"
+        confirmText="Đăng xuất"
+        cancelText="Hủy"
+        variant="danger"
+      />
     </header>
   )
 
@@ -119,7 +135,7 @@ export function MerchantHeader({ onToggleMobileMenu, sidebarCollapsed = false, o
 
         <div className="h-6 w-px bg-slate-200 hidden sm:block" />
 
-        <button type="button" className="inline-flex min-h-10 cursor-pointer items-center justify-center gap-2 rounded-xl border border-red-200 bg-white px-3.5 py-2 text-sm font-semibold text-red-700 transition-all hover:border-red-300 hover:bg-red-50 hover:text-red-800 hover:shadow-xs active:bg-red-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-500" onClick={() => { clearSession(); navigate('/login', { replace: true }) }}><LogOut size={16} aria-hidden="true" />Đăng xuất</button>
+        <button type="button" className="inline-flex min-h-10 cursor-pointer items-center justify-center gap-2 rounded-xl border border-red-200 bg-white px-3.5 py-2 text-sm font-semibold text-red-700 transition-all hover:border-red-300 hover:bg-red-50 hover:text-red-800 hover:shadow-xs active:bg-red-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-500" onClick={() => setLogoutModalOpen(true)}><LogOut size={16} aria-hidden="true" />Đăng xuất</button>
         {/* Merchant Profile */}
         <Link
           to="/merchant/profile"
@@ -136,6 +152,19 @@ export function MerchantHeader({ onToggleMobileMenu, sidebarCollapsed = false, o
           </div>
         </Link>
       </div>
+      <ConfirmationDialog
+        isOpen={logoutModalOpen}
+        onClose={() => setLogoutModalOpen(false)}
+        onConfirm={() => {
+          clearSession()
+          navigate('/login', { replace: true })
+        }}
+        title="Xác nhận đăng xuất"
+        message="Bạn có chắc chắn muốn đăng xuất khỏi cổng quản lý chủ bãi?"
+        confirmText="Đăng xuất"
+        cancelText="Hủy"
+        variant="danger"
+      />
     </header>
   )
 }

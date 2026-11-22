@@ -6,6 +6,7 @@ import { ScrollToTop } from '@/shared/components/ScrollToTop'
 import { UnreadNotificationDot } from '@/features/notifications'
 import { Dialog } from '@/shared/components/Dialog'
 import { ShieldCheck, Menu, LogOut, LayoutDashboard, Warehouse, Users, CreditCard, ArrowDownToLine, Scale, ScrollText, Bell, UserCheck, ChevronRight, ArrowUpRight } from 'lucide-react'
+import { useDocumentTitle } from '@/shared/utils/useDocumentTitle'
 import './admin-layout.css'
 
 const navGroups = [
@@ -48,6 +49,7 @@ function AdminNavigation({ onNavigate }: { onNavigate?: () => void }) {
 }
 
 export function AdminLayout() {
+  useDocumentTitle()
   const [open, setOpen] = useState(false)
   const navigate = useNavigate()
   const location = useLocation()

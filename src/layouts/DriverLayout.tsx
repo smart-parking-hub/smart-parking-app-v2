@@ -3,8 +3,10 @@ import { DriverHeader } from './driver/DriverHeader'
 import { DriverFooter } from './driver/DriverFooter'
 import { AiCopilot } from '@/features/copilot'
 import { ScrollToTop } from '@/shared/components/ScrollToTop'
+import { useDocumentTitle } from '@/shared/utils/useDocumentTitle'
 
 export function DriverLayout() {
+  useDocumentTitle()
   const { pathname } = useLocation()
   const isProfile = ['/profile', '/dashboard/profile', '/driver/profile'].includes(pathname)
   const isPaymentResult = /^\/(?:dashboard\/|driver\/)?payment\/(?:cancel|success|return)$/.test(pathname)

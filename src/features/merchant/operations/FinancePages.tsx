@@ -26,6 +26,7 @@ import {
   control,
   button,
 } from '@/shared/components/Workspace'
+import { Toast, ToastContainer } from '@/shared/components/Toast'
 import { cn } from '@/shared/utils/cn'
 
 export { MerchantRevenuePage } from './MerchantRevenuePage'
@@ -40,6 +41,7 @@ type WithdrawalForm = {
 export function MerchantWithdrawalsPage() {
   const [page, setPage] = useState(0)
   const [open, setOpen] = useState(false)
+  const [toastMessage, setToastMessage] = useState<string | null>(null)
   const query = useQuery({
     queryKey: ['merchant-withdrawals', page],
     queryFn: () =>
@@ -92,6 +94,16 @@ export function MerchantWithdrawalsPage() {
         </div>
       }
     >
+      {toastMessage && (
+        <ToastContainer position="top-right">
+          <Toast
+            variant="success"
+            title="Thành công"
+            message={toastMessage}
+            onClose={() => setToastMessage(null)}
+          />
+        </ToastContainer>
+      )}
       {isBalanceInsufficient && (
         <Notice>
           Số dư khả dụng hiện tại ({money(currentBalance)}) chưa đạt hạn mức tối thiểu ({money(minWithdrawal)}) để tạo yêu cầu rút tiền về tài khoản ngân hàng.
@@ -155,6 +167,7 @@ export function MerchantWithdrawalsPage() {
         <WithdrawalDialog
           balance={currentBalance}
           minimum={minWithdrawal}
+          onSuccess={() => setToastMessage('Yêu cầu rút tiền thành công. Tiền sẽ được đối soát và chuyển trong 24h.')}
           onClose={() => setOpen(false)}
         />
       )}
@@ -165,10 +178,12 @@ export function MerchantWithdrawalsPage() {
 function WithdrawalDialog({
   balance,
   minimum,
+  onSuccess,
   onClose,
 }: {
   balance: number
   minimum: number
+  onSuccess?: () => void
   onClose: () => void
 }) {
   const formId = useId()
@@ -220,6 +235,7 @@ function WithdrawalDialog({
     onSuccess: () => {
       void cache.invalidateQueries({ queryKey: ['merchant-withdrawals'] })
       void cache.invalidateQueries({ queryKey: ['merchant-revenue'] })
+      onSuccess?.()
       onClose()
     },
   })
@@ -352,21 +368,20 @@ function WithdrawalDialog({
           />
         </Field>
         {isBalanceValid && (
-          <div className="-mt-3 flex flex-wrap items-center gap-2 text-xs text-brand-muted">
-            <span>Chọn nhanh:</span>
+          <div className="-mt-2 flex flex-wrap items-center gap-2 text-xs text-brand-muted">
+            <span className="font-medium">Chọn nhanh:</span>
             <button
               type="button"
-              className="font-medium text-brand-primary hover:underline"
+              className="inline-flex min-h-9 items-center justify-center rounded-lg border border-slate-200 bg-slate-50 px-3 py-1.5 font-semibold text-brand-primary hover:bg-slate-100 hover:border-brand-primary transition-colors cursor-pointer"
               onClick={() =>
                 form.setValue('amount', minimum, { shouldValidate: true })
               }
             >
               Tối thiểu ({money(minimum)})
             </button>
-            <span>·</span>
             <button
               type="button"
-              className="font-medium text-brand-primary hover:underline"
+              className="inline-flex min-h-9 items-center justify-center rounded-lg border border-slate-200 bg-slate-50 px-3 py-1.5 font-semibold text-brand-primary hover:bg-slate-100 hover:border-brand-primary transition-colors cursor-pointer"
               onClick={() =>
                 form.setValue('amount', balance, { shouldValidate: true })
               }

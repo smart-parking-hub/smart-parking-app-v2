@@ -4,8 +4,10 @@ import { MerchantSidebar } from './merchant/MerchantSidebar'
 import { MerchantHeader } from './merchant/MerchantHeader'
 import { ScrollToTop } from '@/shared/components/ScrollToTop'
 import { AiCopilot } from '@/features/copilot'
+import { useDocumentTitle } from '@/shared/utils/useDocumentTitle'
 
 export function MerchantLayout() {
+  useDocumentTitle()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
 
