@@ -40,6 +40,13 @@ describe('Merged route ownership', () => {
       props: { to: '/profile#bao-mat', replace: true },
     })
   })
+  it.each(['/terms', '/company/terms', '/privacy', '/company/privacy'])(
+    'matches public legal route (%s)',
+    (path) => {
+      const match = matchRoutes(router.routes, path)?.at(-1)
+      expect(match?.route.path).toBe(path)
+    },
+  )
   it('does not shadow routes with duplicate path shapes', () => {
     const visit = (routes: RouteObject[]) => {
       const shapes = routes

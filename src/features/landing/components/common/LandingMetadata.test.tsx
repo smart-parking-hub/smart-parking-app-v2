@@ -42,4 +42,13 @@ describe('Landing metadata', () => {
       )
     },
   )
+
+  it.each([
+    ['/terms', 'Điều khoản dịch vụ'],
+    ['/privacy', 'Chính sách bảo mật'],
+  ])('sets metadata for legal page %s', (path, titleSubstring) => {
+    render(<MemoryRouter initialEntries={[path]}><LandingMetadata /></MemoryRouter>)
+    expect(document.title).toContain(titleSubstring)
+    expect(document.title).toContain('SmartTruckHub')
+  })
 })

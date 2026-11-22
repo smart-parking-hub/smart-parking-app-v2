@@ -2,6 +2,7 @@ import { useEffect, useState, type CSSProperties, type ReactNode } from 'react'
 import { ShieldCheck, RefreshCw } from 'lucide-react'
 import { ScrollToTop } from '@/shared/components/ScrollToTop'
 import { checkServerConnectivity } from '@/shared/api/health'
+import { useDocumentTitle } from '@/shared/utils/useDocumentTitle'
 
 export interface AuthLayoutProps {
   children: ReactNode
@@ -14,6 +15,7 @@ const RECOVERY_TYPOGRAPHY_SCOPE: CSSProperties = {
 } as CSSProperties
 
 export function AuthLayout({ children }: AuthLayoutProps) {
+  useDocumentTitle()
   const [isConnected, setIsConnected] = useState<boolean>(
     import.meta.env.MODE === 'test' ? true : false,
   )

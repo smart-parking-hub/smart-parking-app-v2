@@ -14,7 +14,7 @@ export function VehiclesTable({ vehicles, parking, parkingLoading, onEdit, onDea
       <caption className="sr-only">Danh sách phương tiện đã đăng ký</caption>
       <thead className="bg-brand-navy text-white">
         <tr>{['Biển số', 'Loại xe', 'Nhãn hiệu / Model', 'Trọng tải', 'Bãi hiện tại', 'Trạng thái', 'Thao tác'].map(label =>
-          <th scope="col" key={label} className="whitespace-nowrap px-5 py-3.5 text-xs font-semibold uppercase tracking-wide">{label}</th>,
+          <th scope="col" key={label} className={`whitespace-nowrap px-5 py-3.5 text-xs font-semibold uppercase tracking-wide ${label === 'Thao tác' ? 'sticky right-0 bg-brand-navy z-20 shadow-[-6px_0_10px_-4px_rgba(0,0,0,0.35)]' : ''}`}>{label}</th>,
         )}</tr>
       </thead>
       <tbody className="divide-y divide-brand-border">
@@ -50,7 +50,7 @@ export function VehiclesTable({ vehicles, parking, parkingLoading, onEdit, onDea
             </span>
             </div>
           </td>
-          <td className="px-5 py-4">
+          <td className="px-5 py-4 sticky right-0 bg-white group-hover:bg-brand-orange/5 transition-colors z-10 shadow-[-6px_0_10px_-4px_rgba(0,0,0,0.08)]">
             <div className="flex items-center gap-2">
               <button
                 type="button"

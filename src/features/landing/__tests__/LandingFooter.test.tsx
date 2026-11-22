@@ -30,7 +30,8 @@ describe('LandingFooter Component (ISSUE-NAV-02)', () => {
     expect(screen.getByRole('link', { name: /Trung tâm điều phối & Hỗ trợ 24\/7/i })).toHaveAttribute('href', '/contact')
     expect(screen.getByRole('link', { name: /Bản tin & Báo cáo logistics/i })).toHaveAttribute('href', '/company/blog')
     expect(screen.getByRole('link', { name: /Cơ hội nghề nghiệp & Tuyển dụng/i })).toHaveAttribute('href', '/careers')
-    expect(screen.getByRole('link', { name: /Điều khoản dịch vụ & Bảo mật/i })).toHaveAttribute('href', '/about')
+    expect(screen.getByRole('link', { name: /^Điều khoản dịch vụ$/i })).toHaveAttribute('href', '/terms')
+    expect(screen.getByRole('link', { name: /^Chính sách bảo mật$/i })).toHaveAttribute('href', '/privacy')
 
     // Protocols
     expect(screen.getByRole('link', { name: '1900 6868' })).toHaveAttribute('href', 'tel:19006868')

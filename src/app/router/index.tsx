@@ -28,6 +28,12 @@ const RequireRole = lazy(() =>
 const ContactPage = lazy(() =>
   import('@/features/landing/pages/ContactPage').then((module) => ({ default: module.ContactPage })),
 )
+const TermsPage = lazy(() =>
+  import('@/features/landing/pages/TermsPage').then((module) => ({ default: module.TermsPage })),
+)
+const PrivacyPage = lazy(() =>
+  import('@/features/landing/pages/PrivacyPage').then((module) => ({ default: module.PrivacyPage })),
+)
 const MerchantBookingsPage = lazy(() =>
   import('@/features/merchant/operations').then((module) => ({ default: module.MerchantBookingsPage })),
 )
@@ -267,6 +273,12 @@ export const router = createBrowserRouter([
   { path: '/company/about', element: <AboutUsPage /> },
   { path: '/company/careers', element: <CareersPage /> },
   { path: '/company/blog', element: <InsightsPage /> },
+  { path: '/terms', element: <TermsPage /> },
+  { path: '/company/terms', element: <TermsPage /> },
+  { path: '/dieu-khoan', element: <TermsPage /> },
+  { path: '/privacy', element: <PrivacyPage /> },
+  { path: '/company/privacy', element: <PrivacyPage /> },
+  { path: '/chinh-sach-bao-mat', element: <PrivacyPage /> },
   {
     path: '/disputes',
     element: (

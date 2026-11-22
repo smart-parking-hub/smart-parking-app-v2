@@ -590,7 +590,18 @@ export function MyBookingsPage() {
       </section>
 
       {query.isPending ? (
-        <p role="status">Đang tải đặt chỗ…</p>
+        <div role="status" aria-label="Đang tải đặt chỗ…" className="overflow-hidden rounded-2xl border border-brand-border bg-white p-6 space-y-4 animate-pulse">
+          <span className="sr-only">Đang tải đặt chỗ…</span>
+          <div className="flex justify-between items-center pb-4 border-b border-brand-border">
+            <div className="h-6 w-48 bg-slate-200 rounded" />
+            <div className="h-8 w-32 bg-slate-100 rounded-lg" />
+          </div>
+          <div className="space-y-3 pt-2">
+            {[1, 2, 3, 4, 5].map((i) => (
+              <div key={i} className="h-16 bg-slate-50 border border-slate-100 rounded-xl" />
+            ))}
+          </div>
+        </div>
       ) : query.isError ? (
         <Notice error>
           <div>
@@ -627,10 +638,10 @@ export function MyBookingsPage() {
             {activeFilters.hasFilters ? '(theo bộ lọc)' : ''} · Mở từng vé để xem QR, thanh toán và chi tiết.
           </p>
 
-          {/* Bookings Table (Dạng Table theo yêu cầu Hình 5) */}
-          <div className="overflow-x-auto rounded-2xl border border-slate-200 bg-white shadow-xs">
+          {/* Bookings Table với Sticky Action Column trên Mobile */}
+          <div role="region" aria-label="Bảng vé đặt chỗ" className="overflow-x-auto rounded-2xl border border-slate-200 bg-white shadow-xs focus-visible:outline-2 focus-visible:outline-brand-primary">
             <table className="w-full text-left border-collapse text-xs">
-              <thead className="border-b border-slate-200 bg-slate-50/80 text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
+              <thead className="border-b border-slate-200 bg-slate-50/80 text-[11px] font-semibold text-slate-500 uppercase tracking-wider sticky top-0 z-20">
                 <tr>
                   <th scope="col" className="py-3.5 px-4 font-semibold">Mã vé / Đơn</th>
                   <th scope="col" className="py-3.5 px-4 font-semibold">Bãi đỗ xe</th>
@@ -638,7 +649,7 @@ export function MyBookingsPage() {
                   <th scope="col" className="py-3.5 px-4 font-semibold">Thời gian vào / ra</th>
                   <th scope="col" className="py-3.5 px-4 font-semibold">Cọc & Phí</th>
                   <th scope="col" className="py-3.5 px-4 font-semibold">Trạng thái</th>
-                  <th scope="col" className="py-3.5 px-4 font-semibold text-right">Thao tác</th>
+                  <th scope="col" className="py-3.5 px-4 font-semibold text-right sticky right-0 bg-slate-100/95 z-30 shadow-[-6px_0_10px_-4px_rgba(0,0,0,0.08)] backdrop-blur-xs">Thao tác</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
@@ -654,7 +665,7 @@ export function MyBookingsPage() {
                     return (
                       <Fragment key={booking.id}>
                         <tr
-                          className={`hover:bg-slate-50/70 transition-colors ${
+                          className={`group hover:bg-slate-50/70 transition-colors ${
                             expanded ? 'bg-orange-50/20' : ''
                           }`}
                         >
@@ -746,8 +757,10 @@ export function MyBookingsPage() {
                             </div>
                           </td>
 
-                          {/* 7. Thao tác: Nút Chi tiết, Đánh giá, Tác vụ */}
-                          <td className="py-3.5 px-4 whitespace-nowrap align-middle text-right">
+                          {/* 7. Thao tác: Nút Chi tiết, Đánh giá, Tác vụ (Sticky bên phải để luôn hiển thị trên mobile) */}
+                          <td className={`py-3.5 px-4 whitespace-nowrap align-middle text-right sticky right-0 z-10 shadow-[-6px_0_10px_-4px_rgba(0,0,0,0.08)] transition-colors ${
+                            expanded ? 'bg-orange-50/95' : 'bg-white/95 group-hover:bg-slate-50/95'
+                          }`}>
                             <div className="flex items-center justify-end gap-1.5">
                               {/* Nút Xem QR vé (cho PENDING_CHECKIN hoặc PARKING / OVERTIME) */}
                               {['PENDING_CHECKIN', 'PARKING', 'OVERTIME'].includes(booking.status) && (

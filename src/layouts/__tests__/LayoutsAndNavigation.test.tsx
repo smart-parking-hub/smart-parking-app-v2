@@ -13,6 +13,7 @@ import { DriverHeader } from '../driver/DriverHeader'
 import { DriverFooter } from '../driver/DriverFooter'
 import { MerchantLayout } from '../MerchantLayout'
 import { MerchantSidebar } from '../merchant/MerchantSidebar'
+import { MerchantHeader } from '../merchant/MerchantHeader'
 import { AdminLayout } from '../AdminLayout'
 import { RootLayout } from '../RootLayout'
 import { RequireRole } from '@/features/auth/components/RequireRole'
@@ -312,6 +313,45 @@ describe('Layouts and Navigation System Comprehensive Tests', () => {
 
       fireEvent.keyDown(window, { key: 'Escape' })
       expect(handleClose).toHaveBeenCalled()
+    })
+
+    it('prompts confirmation dialog when clicking logout in MerchantHeader and cancels cleanly', () => {
+      const queryClient = createTestQueryClient()
+      render(
+        <QueryClientProvider client={queryClient}>
+          <MemoryRouter initialEntries={['/merchant/dashboard']}>
+            <MerchantHeader />
+          </MemoryRouter>
+        </QueryClientProvider>
+      )
+
+      const logoutBtn = screen.getByRole('button', { name: 'Đăng xuất' })
+      fireEvent.click(logoutBtn)
+
+      expect(screen.getByRole('dialog')).toBeInTheDocument()
+      expect(screen.getByText('Xác nhận đăng xuất')).toBeInTheDocument()
+      expect(screen.getByText('Bạn có chắc chắn muốn đăng xuất khỏi cổng quản lý chủ bãi?')).toBeInTheDocument()
+      expect(screen.getByRole('button', { name: 'Hủy' })).toBeInTheDocument()
+
+      fireEvent.click(screen.getByRole('button', { name: 'Hủy' }))
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+    })
+
+    it('updates document.title dynamically according to merchant route', () => {
+      const queryClient = createTestQueryClient()
+      render(
+        <QueryClientProvider client={queryClient}>
+          <MemoryRouter initialEntries={['/merchant/withdrawals']}>
+            <Routes>
+              <Route path="/merchant" element={<MerchantLayout />}>
+                <Route path="withdrawals" element={<div data-testid="outlet">Ví</div>} />
+              </Route>
+            </Routes>
+          </MemoryRouter>
+        </QueryClientProvider>
+      )
+
+      expect(document.title).toBe('Ví & Yêu cầu rút tiền | SmartTruckHub')
     })
   })
 
