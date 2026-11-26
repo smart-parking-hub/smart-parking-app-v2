@@ -1,5 +1,15 @@
 # Capability Parity Matrix — 4 Landing Screens: Trang Chủ, Tài Xế, Chủ Bãi & Bảng Giá
 
+## SCR-010 demo account picker — 2026-11-26
+
+| Capability | Current screen behavior | API / permission | Status |
+|---|---|---|---|
+| Choose one of four sample identities | Public picker fills phone/password; visible in production and development | Existing seeded users; public login | Preserved and exposed in production |
+| Authenticate and select role destination | Existing login form, server JWT validation, role-based route | `POST /api/v1/auth/login`; backend validates credentials and account status | Preserved |
+| Register, password recovery, remember phone, reveal password, error/loading states | Existing controls remain below the picker | Existing auth flows | Preserved |
+
+Demo credentials are public and include a seeded `ADMIN`; this UI change does not seed or reset production data. Live API verification on 2026-11-26: all four choices returned HTTP 200 with a JWT and their expected role through the production Vercel proxy; no database changes were required.
+
 ## Full arrival choices — 2026-11-17
 
 User-requested: the arrival dropdown now disables and labels full/buffer/past blocks from the same daily timeline. Preserved: editable date, visible existing intent after a capacity refresh, keyboard/Escape handling, duration controls, exact-window validation, physical-slot filtering, idempotency and payment flow. No extra per-time requests. [Behavior](../05-modules/bookings/schedule.md).

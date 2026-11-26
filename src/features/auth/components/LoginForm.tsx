@@ -53,7 +53,7 @@ export function LoginForm() {
   })
   const submit = form.handleSubmit((fields) => { if (!login.isPending) login.mutate(fields) })
   return <>
-    {import.meta.env.DEV && <section aria-label="Tài khoản trải nghiệm" className="mb-3.5 sm:mb-4 rounded-xl border border-slate-200/90 bg-slate-50/90 backdrop-blur-md p-2.5 sm:p-3 shadow-xs">
+    <section aria-label="Tài khoản trải nghiệm" className="mb-3.5 sm:mb-4 rounded-xl border border-slate-200/90 bg-slate-50/90 backdrop-blur-md p-2.5 sm:p-3 shadow-xs">
       <div className="mb-2 flex items-center justify-between gap-2">
         <div className="flex items-center gap-1.5">
           <p className="font-sora text-xs sm:text-sm font-semibold text-black">Chọn vai trò mẫu</p>
@@ -77,7 +77,7 @@ export function LoginForm() {
         </button>)}
       </div>
       <p role="status" className="mt-1.5 text-[11px] text-black/70 font-normal">{selectedPhone ? 'Đã điền tài khoản mẫu. Nhấn Đăng nhập để tiếp tục.' : '4 tài khoản mẫu · 2 tài xế / 1 chủ bãi / 1 quản trị viên'}</p>
-    </section>}
+    </section>
     <form noValidate onSubmit={submit} className="space-y-3.5" aria-busy={login.isPending}>
       <fieldset disabled={login.isPending} className="space-y-3">
         <div className="space-y-1">

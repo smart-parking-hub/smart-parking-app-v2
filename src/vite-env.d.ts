@@ -19,6 +19,6 @@ interface ImportMeta {
 declare module 'browser-image-compression' {
   export default function imageCompression(
     image: Blob | File,
-    options?: any,
+  options?: unknown,
   ): Promise<Blob>
 }
