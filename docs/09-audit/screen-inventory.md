@@ -50,6 +50,8 @@
 
 SCR-052 (2026-11-12, owner: SPH): `/admin/notifications` dùng `features/admin/pages/AdminNotificationsPage.tsx`, giữ `AdminLayout`/guard ADMIN; feed, phân trang 20 mục, tổng chưa đọc, PUT read/read-all, retry và cache theo phiên. **IMPLEMENTED — ACCEPTANCE PENDING**: 14 component tests và 13 E2E (API giả lập), chờ backend thật/nghiệm thu. Xem [module](../05-modules/admin/scr-052-notifications.md) và [báo cáo](./sp-s3-ui-16-admin-notifications-report.md).
 
+SCR-010 (2026-11-26): `/login` exposes the four existing seeded demo-account choices in production as well as development. Selecting one fills the login form; authentication still uses `POST /api/v1/auth/login`, server-issued JWT validation and role redirect. Demo identities/password are public and depend on the identity database having applied its seed migration. Live API verification on 2026-11-26: all four sample logins returned HTTP 200 with a JWT and their expected role through the production Vercel proxy; no database changes were required.
+
 SCR-010 (2026-11-05): /login dùng LoginPage + AuthLayout riêng; Redux session sync, guest guard, role redirect, toast; 217 unit/component tests và 7 E2E PASS. Live backend acceptance pending. Xem [báo cáo](./scr-010-login-record.md).
 
 SCR-012 (2026-11-08): `/forgot-password` dùng `ForgotPasswordPage` + `AuthLayout` (`variant="recovery"`) theo Stitch bản 1; quy trình 2 bước (gửi OTP qua `POST /api/v1/auth/forgot-password/otp` và đặt lại mật khẩu qua `POST /api/v1/auth/forgot-password/reset`), tách biệt TTL (`expiresInSeconds`) và cooldown (`resendAfterSeconds`), chống race condition và không lưu dữ liệu nhạy cảm. Chi tiết tại [tài liệu module auth](../05-modules/auth/scr-012-forgot-password.md).

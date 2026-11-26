@@ -30,8 +30,26 @@ async function fill() {
   fireEvent.change(screen.getByLabelText('Mật khẩu'), { target: { value: 'test-only-password' } })
 }
 beforeEach(() => { localStorage.clear(); vi.restoreAllMocks() })
-afterEach(() => { cleanup(); vi.useRealTimers() })
+afterEach(() => { cleanup(); vi.useRealTimers(); vi.unstubAllEnvs() })
 describe('SCR-010 user journey', () => {
+  it.each([
+    ['Nguyễn Văn Hùng', '0909128374'],
+    ['Trần Quốc Tuấn', '0918239485'],
+    ['Lê Văn Thành', '0908123456'],
+    ['Nguyễn Hoàng Nam', '0903829145'],
+  ])('fills %s in a production environment without submitting', (name, phone) => {
+    vi.stubEnv('DEV', false)
+    vi.stubEnv('PROD', true)
+    const request = vi.spyOn(apiClient, 'request')
+    setup()
+    const choice = screen.getByRole('button', { name: new RegExp(name) })
+    fireEvent.click(choice)
+    expect(choice).toHaveAttribute('aria-pressed', 'true')
+    expect(screen.getByLabelText('Số điện thoại')).toHaveValue(phone)
+    expect(screen.getByLabelText('Mật khẩu')).toHaveValue('password123')
+    expect(screen.getByRole('status')).toHaveTextContent('Đã điền tài khoản mẫu')
+    expect(request).not.toHaveBeenCalled()
+  })
   it('validates empty input, supports visibility and auth navigation', async () => {
     const request = vi.spyOn(apiClient, 'request')
     setup(); fireEvent.click(screen.getByRole('button', { name: /^Đăng nhập$/ }))
